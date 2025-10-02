@@ -68,7 +68,7 @@ jobs:
         args: --severity-threshold=high --json-file-output=snyk-report.json
     
     - name: Upload security reports
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-reports
         path: |
@@ -220,7 +220,7 @@ jobs:
       uses: actions/checkout@v4
     
     - name: Download security reports
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: security-reports
         path: ./security-reports
@@ -232,7 +232,7 @@ jobs:
         echo "✅ Security summary generated"
     
     - name: Upload security summary
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: security-summary
         path: ./security-summary.md
