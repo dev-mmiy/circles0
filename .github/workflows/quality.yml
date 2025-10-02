@@ -166,14 +166,14 @@ jobs:
         npm run test -- --coverage --watchAll=false
     
     - name: Upload Python coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: backend/coverage.xml
         flags: backend
         name: backend-coverage
     
     - name: Upload Node.js coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v5
       with:
         file: frontend/coverage/lcov.info
         flags: frontend
