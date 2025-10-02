@@ -44,6 +44,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      target: development
     container_name: disease-community-frontend
     ports:
       - "3000:3000"
@@ -55,7 +56,6 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules
-    command: npm run dev
 
 volumes:
   postgres_data:
