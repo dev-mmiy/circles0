@@ -24,6 +24,9 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Ensure public directory exists
+RUN mkdir -p ./public
+
 # Build the application
 RUN npm run build
 
@@ -43,6 +46,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Copy public directory (create empty if not exists)
 RUN mkdir -p ./public
+# Copy public directory if it exists, otherwise create empty directory
 COPY --from=builder /app/public ./public
 
 USER nextjs
