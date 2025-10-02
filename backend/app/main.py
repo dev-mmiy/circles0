@@ -17,7 +17,7 @@ app = FastAPI(
 # CORS middleware
 allowed_origins = ["*"] if ENVIRONMENT == "development" else [
     "https://disease-community-frontend-asia-northeast1-disease-community-platform.a.run.app",
-    "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app"
+    "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app"  # noqa: E501
 ]
 
 app.add_middleware(
@@ -28,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     return {
@@ -36,6 +37,7 @@ async def root():
         "version": "1.0.0"
     }
 
+
 @app.get("/health")
 async def health_check():
     return {
@@ -43,6 +45,7 @@ async def health_check():
         "environment": ENVIRONMENT,
         "service": "disease-community-api"
     }
+
 
 @app.get("/info")
 async def info():
