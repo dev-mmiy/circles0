@@ -1,0 +1,49 @@
+steps:
+  # Build backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia.gcr.io/$PROJECT_ID/backend:$COMMIT_SHA', '-f', 'backend/Dockerfile', '--target', 'production', 'backend']
+  
+  # Build frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'asia.gcr.io/$PROJECT_ID/frontend:$COMMIT_SHA', '-f', 'frontend/Dockerfile', 'frontend']
+  
+  # Push backend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia.gcr.io/$PROJECT_ID/backend:$COMMIT_SHA']
+  
+  # Push frontend image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'asia.gcr.io/$PROJECT_ID/frontend:$COMMIT_SHA']
+  
+  # Deploy backend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'disease-community-api'
+      - '--image=asia.gcr.io/$PROJECT_ID/backend:$COMMIT_SHA'
+      - '--region=asia-northeast1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=ENVIRONMENT=production'
+      - '--set-env-vars=DATABASE_URL=${_DATABASE_URL}'
+  
+  # Deploy frontend to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'disease-community-frontend'
+      - '--image=asia.gcr.io/$PROJECT_ID/frontend:$COMMIT_SHA'
+      - '--region=asia-northeast1'
+      - '--platform=managed'
+      - '--allow-unauthenticated'
+      - '--set-env-vars=NEXT_PUBLIC_API_URL=https://disease-community-api-asia-northeast1-$PROJECT_ID.a.run.app'
+
+substitutions:
+  _DATABASE_URL: 'postgresql://user:password@host:5432/database'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

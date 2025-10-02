@@ -1,0 +1,314 @@
+name: Continuous Deployment
+
+on:
+  push:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - prod
+      service:
+        description: 'Service to deploy'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - backend
+        - frontend
+
+env:
+  PROJECT_ID: disease-community-platform
+  REGION: asia-northeast1
+  REGISTRY: asia.gcr.io
+
+jobs:
+  # 開発環境へのデプロイ
+  deploy-dev:
+    name: Deploy to Development
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'dev')
+    environment: development
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Google Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: _json_key
+        password: ${{ secrets.GCP_SA_KEY }}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:dev-${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:dev-latest
+        target: production
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:dev-${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:dev-latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker ${{ env.REGISTRY }}
+    
+    - name: Deploy backend to Cloud Run
+      run: |
+        gcloud run deploy disease-community-api-dev \
+          --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:dev-${{ github.sha }} \
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars ENVIRONMENT=development \
+          --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL_DEV }} \
+          --set-env-vars LOG_LEVEL=DEBUG \
+          --memory 1Gi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 10 \
+          --timeout 300
+    
+    - name: Deploy frontend to Cloud Run
+      run: |
+        gcloud run deploy disease-community-frontend-dev \
+          --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:dev-${{ github.sha }} \
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app \
+          --set-env-vars NODE_ENV=development \
+          --memory 512Mi \
+          --cpu 1 \
+          --min-instances 0 \
+          --max-instances 5 \
+          --timeout 300
+    
+    - name: Run health checks
+      run: |
+        echo "🏥 Running health checks..."
+        sleep 30
+        
+        # Backend health check
+        curl -f https://disease-community-api-dev-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app/health || {
+          echo "❌ Backend health check failed!"
+          exit 1
+        }
+        
+        # Frontend health check
+        curl -f https://disease-community-frontend-dev-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app || {
+          echo "❌ Frontend health check failed!"
+          exit 1
+        }
+        
+        echo "✅ All health checks passed!"
+    
+    - name: Notify deployment success
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  # 本番環境へのデプロイ
+  deploy-prod:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'prod')
+    environment: production
+    needs: [] # 必要に応じてCIジョブの完了を待つ
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Log in to Google Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: _json_key
+        password: ${{ secrets.GCP_SA_KEY }}
+    
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:prod-${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:prod-latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:latest
+        target: production
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:prod-${{ github.sha }}
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:prod-latest
+          ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+    
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker ${{ env.REGISTRY }}
+    
+    - name: Deploy backend to Cloud Run
+      run: |
+        gcloud run deploy disease-community-api \
+          --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/backend:prod-${{ github.sha }} \
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars ENVIRONMENT=production \
+          --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL_PROD }} \
+          --set-env-vars LOG_LEVEL=INFO \
+          --memory 2Gi \
+          --cpu 2 \
+          --min-instances 1 \
+          --max-instances 100 \
+          --timeout 300 \
+          --concurrency 1000
+    
+    - name: Deploy frontend to Cloud Run
+      run: |
+        gcloud run deploy disease-community-frontend \
+          --image ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/frontend:prod-${{ github.sha }} \
+          --region ${{ env.REGION }} \
+          --platform managed \
+          --allow-unauthenticated \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app \
+          --set-env-vars NODE_ENV=production \
+          --memory 1Gi \
+          --cpu 1 \
+          --min-instances 1 \
+          --max-instances 50 \
+          --timeout 300 \
+          --concurrency 1000
+    
+    - name: Run health checks
+      run: |
+        echo "🏥 Running health checks..."
+        sleep 30
+        
+        # Backend health check
+        curl -f https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app/health || {
+          echo "❌ Backend health check failed!"
+          exit 1
+        }
+        
+        # Frontend health check
+        curl -f https://disease-community-frontend-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app || {
+          echo "❌ Frontend health check failed!"
+          exit 1
+        }
+        
+        echo "✅ All health checks passed!"
+    
+    - name: Run smoke tests
+      run: |
+        echo "🧪 Running smoke tests..."
+        
+        # API smoke test
+        curl -f https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app/info || {
+          echo "❌ API smoke test failed!"
+          exit 1
+        }
+        
+        # Frontend smoke test
+        curl -f https://disease-community-frontend-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app || {
+          echo "❌ Frontend smoke test failed!"
+          exit 1
+        }
+        
+        echo "✅ All smoke tests passed!"
+    
+    - name: Notify deployment success
+      uses: 8398a7/action-slack@v3
+      if: always()
+      with:
+        status: ${{ job.status }}
+        channel: '#deployments'
+        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        fields: repo,message,commit,author,action,eventName,ref,workflow
+
+  # ロールバック機能
+  rollback:
+    name: Rollback Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'rollback'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        service_account_key: ${{ secrets.GCP_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+    
+    - name: Rollback backend
+      run: |
+        gcloud run services update-traffic disease-community-api \
+          --to-revisions=disease-community-api-00001-abc \
+          --region ${{ env.REGION }}
+    
+    - name: Rollback frontend
+      run: |
+        gcloud run services update-traffic disease-community-frontend \
+          --to-revisions=disease-community-frontend-00001-abc \
+          --region ${{ env.REGION }}
+    
+    - name: Verify rollback
+      run: |
+        echo "🔄 Verifying rollback..."
+        sleep 30
+        curl -f https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app/health
+        curl -f https://disease-community-frontend-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app
+        echo "✅ Rollback completed successfully!"
