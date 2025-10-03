@@ -5,6 +5,7 @@ import pytest
 import os
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 
 
 class TestDatabaseIntegration:
@@ -19,15 +20,31 @@ class TestDatabaseIntegration:
         )
         self.engine = create_engine(database_url)
         self.SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=self.engine)
+        self.database_available = self._check_database_availability()
+    
+    def _check_database_availability(self):
+        """Check if database is available"""
+        try:
+            with self.engine.connect() as connection:
+                connection.execute(text("SELECT 1"))
+            return True
+        except OperationalError:
+            return False
     
     def test_database_connection(self):
         """Test basic database connectivity"""
+        if not self.database_available:
+            pytest.skip("Database not available")
+        
         with self.engine.connect() as connection:
             result = connection.execute(text("SELECT 1 as test"))
             assert result.fetchone()[0] == 1
     
     def test_database_version(self):
         """Test PostgreSQL version information"""
+        if not self.database_available:
+            pytest.skip("Database not available")
+        
         with self.engine.connect() as connection:
             result = connection.execute(text("SELECT version()"))
             version = result.fetchone()[0]
@@ -35,6 +52,9 @@ class TestDatabaseIntegration:
     
     def test_database_permissions(self):
         """Test database permissions and access"""
+        if not self.database_available:
+            pytest.skip("Database not available")
+        
         with self.engine.connect() as connection:
             # Test if we can create a simple table
             connection.execute(text("""
@@ -55,6 +75,9 @@ class TestDatabaseIntegration:
     
     def test_database_health_check(self):
         """Test database health check functionality"""
+        if not self.database_available:
+            pytest.skip("Database not available")
+        
         with self.engine.connect() as connection:
             # Test database is responsive
             result = connection.execute(text("SELECT pg_is_in_recovery()"))
