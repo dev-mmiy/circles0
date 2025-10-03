@@ -26,4 +26,4 @@ mypy==1.7.1
 fastapi-cors==0.0.6
 
 # Performance testing
-locust==2.17.0
+locust==2.34.0
