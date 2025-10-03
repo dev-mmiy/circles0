@@ -10,7 +10,8 @@ WORKDIR /app
 COPY package*.json ./
 # Remove package-lock.json to avoid version conflicts
 RUN rm -f package-lock.json
-RUN npm install --legacy-peer-deps
+# Install dependencies with legacy peer deps to resolve conflicts
+RUN npm install --legacy-peer-deps --no-audit --no-fund
 
 # Development stage
 FROM base AS development
