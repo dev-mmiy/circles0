@@ -1,0 +1,59 @@
+# Docker Compose for CI/CD - Service-to-service communication only
+# No port exposure to avoid conflicts
+
+services:
+  # PostgreSQL Database for CI
+  postgres:
+    image: postgres:15-alpine
+    container_name: disease-community-db-ci
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    # No ports exposed - service-to-service communication only
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d test_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - postgres_ci_data:/var/lib/postgresql/data
+
+  # FastAPI Backend for CI
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    container_name: disease-community-backend-ci
+    # No ports exposed - service-to-service communication only
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test_db
+      - ENVIRONMENT=test
+      - LOG_LEVEL=INFO
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+
+  # Next.js Frontend for CI
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: disease-community-frontend-ci
+    # No ports exposed - service-to-service communication only
+    environment:
+      - NEXT_PUBLIC_API_URL=http://backend:8000
+      - NODE_ENV=test
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+volumes:
+  postgres_ci_data:
