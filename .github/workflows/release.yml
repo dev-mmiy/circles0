@@ -274,19 +274,19 @@ jobs:
         
         echo "✅ All smoke tests passed!"
     
-    - name: Notify deployment success
-      uses: 8398a7/action-slack@v3
-      with:
-        status: ${{ job.status }}
-        channel: '#releases'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
-        custom_payload: |
-          {
-            "text": "🚀 Production deployment successful!",
-            "attachments": [
-              {
-                "color": "good",
+    # - name: Notify deployment success
+    #   uses: 8398a7/action-slack@v3
+    #   with:
+    #     status: ${{ job.status }}
+    #     channel: '#releases'
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    #     fields: repo,message,commit,author,action,eventName,ref,workflow
+    #     custom_payload: |
+    #       {
+    #         "text": "🚀 Production deployment successful!",
+    #         "attachments": [
+    #           {
+    #             "color": "good",
                 "fields": [
                   {
                     "title": "Version",
@@ -350,23 +350,23 @@ jobs:
           --to-revisions=disease-community-frontend-00001-abc \
           --region ${{ env.REGION }}
     
-    - name: Notify rollback
-      uses: 8398a7/action-slack@v3
-      with:
-        status: failure
-        channel: '#releases'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        custom_payload: |
-          {
-            "text": "🔄 Production rollback initiated",
-            "attachments": [
-              {
-                "color": "warning",
-                "fields": [
-                  {
-                    "title": "Failed Version",
-                    "value": "${{ needs.prepare-release.outputs.version }}",
-                    "short": true
+    # - name: Notify rollback
+    #   uses: 8398a7/action-slack@v3
+    #   with:
+    #     status: failure
+    #     channel: '#releases'
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    #     custom_payload: |
+    #       {
+    #         "text": "🔄 Production rollback initiated",
+    #         "attachments": [
+    #           {
+    #             "color": "warning",
+    #             "fields": [
+    #               {
+    #                 "title": "Failed Version",
+    #                 "value": "${{ needs.prepare-release.outputs.version }}",
+    #                 "short": true
                   },
                   {
                     "title": "Rollback Version",

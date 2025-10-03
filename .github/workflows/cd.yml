@@ -132,14 +132,14 @@ jobs:
         
         echo "✅ All health checks passed!"
     
-    - name: Notify deployment success
-      uses: 8398a7/action-slack@v3
-      if: always()
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
+    # - name: Notify deployment success
+    #   uses: 8398a7/action-slack@v3
+    #   if: always()
+    #   with:
+    #     status: ${{ job.status }}
+    #     channel: '#deployments'
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    #     fields: repo,message,commit,author,action,eventName,ref,workflow
 
   # 本番環境へのデプロイ
   deploy-prod:
@@ -267,14 +267,14 @@ jobs:
         
         echo "✅ All smoke tests passed!"
     
-    - name: Notify deployment success
-      uses: 8398a7/action-slack@v3
-      if: always()
-      with:
-        status: ${{ job.status }}
-        channel: '#deployments'
-        webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-        fields: repo,message,commit,author,action,eventName,ref,workflow
+    # - name: Notify deployment success
+    #   uses: 8398a7/action-slack@v3
+    #   if: always()
+    #   with:
+    #     status: ${{ job.status }}
+    #     channel: '#deployments'
+    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+    #     fields: repo,message,commit,author,action,eventName,ref,workflow
 
   # ロールバック機能
   rollback:

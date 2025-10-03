@@ -1,83 +1,28 @@
-# Dependabot configuration for Disease Community Platform
-
 version: 2
 updates:
-  # Python dependencies (backend)
+  # Backend Python dependencies
   - package-ecosystem: "pip"
     directory: "/backend"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "disease-community-team"
-    assignees:
-      - "disease-community-team"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "python"
-      - "backend"
+    open-pull-requests-limit: 10
 
-  # Node.js dependencies (frontend)
+  # Frontend Node.js dependencies
   - package-ecosystem: "npm"
     directory: "/frontend"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 5
-    reviewers:
-      - "disease-community-team"
-    assignees:
-      - "disease-community-team"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "javascript"
-      - "frontend"
+    open-pull-requests-limit: 10
+    # Ignore ESLint updates to prevent version conflicts
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint-config-next"
+        update-types: ["version-update:semver-major"]
 
-  # Docker dependencies
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "disease-community-team"
-    assignees:
-      - "disease-community-team"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "docker"
-      - "infrastructure"
-
-  # GitHub Actions dependencies
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-      day: "monday"
-      time: "09:00"
-    open-pull-requests-limit: 3
-    reviewers:
-      - "disease-community-team"
-    assignees:
-      - "disease-community-team"
-    commit-message:
-      prefix: "chore"
-      include: "scope"
-    labels:
-      - "dependencies"
-      - "github-actions"
-      - "ci-cd"
+    open-pull-requests-limit: 5
