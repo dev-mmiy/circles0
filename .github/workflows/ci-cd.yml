@@ -105,11 +105,11 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # 開発環境へのデプロイ
+  # 開発環境へのデプロイ - 一時的に無効化
   deploy-dev:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    if: false  # 一時的に無効化
     environment: development
     
     steps:
@@ -144,11 +144,11 @@ jobs:
           --allow-unauthenticated \
           --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app
 
-  # 本番環境へのデプロイ
+  # 本番環境へのデプロイ - 一時的に無効化
   deploy-prod:
     needs: build-and-push
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: false  # 一時的に無効化
     environment: production
     
     steps:
