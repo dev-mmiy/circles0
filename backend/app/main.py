@@ -15,10 +15,14 @@ app = FastAPI(
 )
 
 # CORS middleware
-allowed_origins = ["*"] if ENVIRONMENT == "development" else [
-    "https://disease-community-frontend-asia-northeast1-disease-community-platform.a.run.app",
-    "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app"  # noqa: E501
-]
+allowed_origins = (
+    ["*"]
+    if ENVIRONMENT == "development"
+    else [
+        "https://disease-community-frontend-asia-northeast1-disease-community-platform.a.run.app",
+        "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app",  # noqa: E501
+    ]
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,11 +35,7 @@ app.add_middleware(
 
 @app.get("/")
 async def root():
-    return {
-        "message": "Hello World!",
-        "environment": ENVIRONMENT,
-        "version": "1.0.0"
-    }
+    return {"message": "Hello World!", "environment": ENVIRONMENT, "version": "1.0.0"}
 
 
 @app.get("/health")
@@ -43,7 +43,7 @@ async def health_check():
     return {
         "status": "healthy",
         "environment": ENVIRONMENT,
-        "service": "disease-community-api"
+        "service": "disease-community-api",
     }
 
 
@@ -53,5 +53,5 @@ async def info():
         "service": "Disease Community API",
         "version": "1.0.0",
         "environment": ENVIRONMENT,
-        "log_level": LOG_LEVEL
+        "log_level": LOG_LEVEL,
     }

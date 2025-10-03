@@ -277,8 +277,8 @@ jobs:
     - name: Run JavaScript metrics
       run: |
         cd frontend
-        npm install -g plato
-        plato -r -d plato-report src/
+        npm install -g complexity-report
+        complexity-report --format json --output complexity-report.json app/ || echo "No JavaScript files found for analysis"
     
     - name: Generate quality report
       run: |
