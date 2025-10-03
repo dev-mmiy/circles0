@@ -159,11 +159,14 @@ jobs:
         format: 'sarif'
         output: 'trivy-results.sarif'
     
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
+    # Trivy scan results are saved as artifacts, not uploaded to GitHub Security tab
+    - name: Save Trivy scan results as artifacts
+      uses: actions/upload-artifact@v4
       if: always()
       with:
-        sarif_file: 'trivy-results.sarif'
+        name: trivy-results
+        path: trivy-results.sarif
+        retention-days: 30
     
     - name: Run Snyk to check for vulnerabilities
       uses: snyk/actions/node@master

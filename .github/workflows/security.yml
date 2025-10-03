@@ -115,17 +115,22 @@ jobs:
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
     
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always() && hashFiles('trivy-backend-results.sarif') != '' && hashFiles('trivy-backend-results.sarif') != 'null'
+    # Trivy scan results are saved as artifacts, not uploaded to GitHub Security tab
+    - name: Save Trivy scan results as artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
-        sarif_file: 'trivy-backend-results.sarif'
+        name: trivy-backend-results
+        path: trivy-backend-results.sarif
+        retention-days: 30
     
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always() && hashFiles('trivy-frontend-results.sarif') != '' && hashFiles('trivy-frontend-results.sarif') != 'null'
+    - name: Save Trivy scan results as artifacts
+      uses: actions/upload-artifact@v4
+      if: always()
       with:
-        sarif_file: 'trivy-frontend-results.sarif'
+        name: trivy-frontend-results
+        path: trivy-frontend-results.sarif
+        retention-days: 30
 
   # シークレットスキャン
   secret-scan:
