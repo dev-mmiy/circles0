@@ -8,6 +8,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  // experimental: {
+  //   optimizeCss: true,  // crittersモジュールエラーのため無効化
+  // },
 };
 
 module.exports = nextConfig;

@@ -80,7 +80,9 @@ jobs:
         project_id: ${{ env.PROJECT_ID }}
 
     - name: Configure Docker for GCR
-      run: gcloud auth configure-docker asia.gcr.io
+      run: |
+        gcloud auth configure-docker asia.gcr.io
+        gcloud auth configure-docker gcr.io
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
@@ -93,6 +95,7 @@ jobs:
         target: production
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        platforms: linux/amd64
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
