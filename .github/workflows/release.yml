@@ -273,45 +273,6 @@ jobs:
         }
         
         echo "✅ All smoke tests passed!"
-    
-    # - name: Notify deployment success
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: ${{ job.status }}
-    #     channel: '#releases'
-    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-    #     fields: repo,message,commit,author,action,eventName,ref,workflow
-    #     custom_payload: |
-    #       {
-    #         "text": "🚀 Production deployment successful!",
-    #         "attachments": [
-    #           {
-    #             "color": "good",
-                "fields": [
-                  {
-                    "title": "Version",
-                    "value": "${{ needs.prepare-release.outputs.version }}",
-                    "short": true
-                  },
-                  {
-                    "title": "Environment",
-                    "value": "Production",
-                    "short": true
-                  },
-                  {
-                    "title": "Backend URL",
-                    "value": "https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app",
-                    "short": false
-                  },
-                  {
-                    "title": "Frontend URL",
-                    "value": "https://disease-community-frontend-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app",
-                    "short": false
-                  }
-                ]
-              }
-            ]
-          }
 
   # ロールバック準備
   rollback-preparation:
@@ -349,31 +310,3 @@ jobs:
         gcloud run services update-traffic disease-community-frontend \
           --to-revisions=disease-community-frontend-00001-abc \
           --region ${{ env.REGION }}
-    
-    # - name: Notify rollback
-    #   uses: 8398a7/action-slack@v3
-    #   with:
-    #     status: failure
-    #     channel: '#releases'
-    #     webhook_url: ${{ secrets.SLACK_WEBHOOK }}
-    #     custom_payload: |
-    #       {
-    #         "text": "🔄 Production rollback initiated",
-    #         "attachments": [
-    #           {
-    #             "color": "warning",
-    #             "fields": [
-    #               {
-    #                 "title": "Failed Version",
-    #                 "value": "${{ needs.prepare-release.outputs.version }}",
-    #                 "short": true
-                  },
-                  {
-                    "title": "Rollback Version",
-                    "value": "${{ env.PREVIOUS_VERSION }}",
-                    "short": true
-                  }
-                ]
-              }
-            ]
-          }
