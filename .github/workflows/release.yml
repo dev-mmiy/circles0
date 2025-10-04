@@ -6,20 +6,20 @@ name: Release Management
 #     tags:
 #       - 'v*'
 #   workflow_dispatch:
-    inputs:
-      version:
-        description: 'Release version'
-        required: true
-        type: string
-      release_type:
-        description: 'Release type'
-        required: true
-        default: 'patch'
-        type: choice
-        options:
-        - patch
-        - minor
-        - major
+#     inputs:
+#       version:
+#         description: 'Release version'
+#         required: true
+#         type: string
+#       release_type:
+#         description: 'Release type'
+#         required: true
+#         default: 'patch'
+#         type: choice
+#         options:
+#         - patch
+#         - minor
+#         - major
 
 env:
   PROJECT_ID: disease-community-platform
