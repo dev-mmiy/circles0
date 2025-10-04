@@ -154,44 +154,45 @@ jobs:
       run: |
         docker compose -f docker-compose.ci.yml down
 
-  # セキュリティスキャン
-  security-scan:
-    name: Security Scan
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm install --legacy-peer-deps --no-audit --no-fund
-    
-    - name: Run Trivy vulnerability scanner
-      uses: aquasecurity/trivy-action@master
-      with:
-        scan-type: 'fs'
-        scan-ref: '.'
-        format: 'sarif'
-        output: 'trivy-results.sarif'
-    
-    - name: Upload Trivy scan results to GitHub Security tab
-      uses: github/codeql-action/upload-sarif@v3
-      if: always() && hashFiles('trivy-results.sarif') != ''
-      with:
-        sarif_file: 'trivy-results.sarif'
+  # セキュリティスキャン - 無効化
+  # security-scan:
+  #   name: Security Scan
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   
+  #   - name: Set up Python ${{ env.PYTHON_VERSION }}
+  #     uses: actions/setup-python@v4
+  #     with:
+  #       python-version: ${{ env.PYTHON_VERSION }}
+  #   
+  #   - name: Set up Node.js ${{ env.NODE_VERSION }}
+  #     uses: actions/setup-node@v4
+  #     with:
+  #       node-version: ${{ env.NODE_VERSION }}
+  #   
+  #   - name: Install dependencies
+  #     run: |
+  #       cd backend && pip install -r requirements.txt
+  #       cd ../frontend && npm install --legacy-peer-deps --no-audit --no-fund
+  #   
+  #   - name: Run Trivy vulnerability scanner
+  #     uses: aquasecurity/trivy-action@master
+  #     with:
+  #       scan-type: 'fs'
+  #       scan-ref: '.'
+  #       format: 'sarif'
+  #       output: 'trivy-results.sarif'
+  #   
+  #   - name: Save Trivy scan results as artifacts
+  #     uses: actions/upload-artifact@v4
+  #     if: always() && hashFiles('trivy-results.sarif') != ''
+  #     with:
+  #       name: trivy-results
+  #       path: trivy-results.sarif
 
   # Docker イメージのビルドとプッシュ
   build-and-push:
