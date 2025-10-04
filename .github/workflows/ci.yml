@@ -217,14 +217,30 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
         export_default_credentials: true
+        install_components: 'beta'
 
-    - name: Configure Docker for GCR
+    - name: Authenticate with Service Account
       run: |
+        # Service Account認証を明示的に実行
+        echo "Authenticating with Service Account..."
+        echo "${{ secrets.GCP_SA_KEY }}" | gcloud auth activate-service-account --key-file=-
+        
         # 認証状態を確認
         echo "Checking authentication status..."
         gcloud auth list
         
+        # アクティブなアカウントを確認
+        echo "Active account:"
+        gcloud config get-value account
+        
+        # プロジェクトを確認
+        echo "Active project:"
+        gcloud config get-value project
+
+    - name: Configure Docker for GCR
+      run: |
         # GCR認証を設定
+        echo "Configuring Docker for GCR..."
         gcloud auth configure-docker asia.gcr.io --quiet
         gcloud auth configure-docker gcr.io --quiet
         gcloud auth configure-docker us.gcr.io --quiet
@@ -290,6 +306,7 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
         export_default_credentials: true
+        install_components: 'beta'
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker asia.gcr.io
@@ -331,6 +348,7 @@ jobs:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
         export_default_credentials: true
+        install_components: 'beta'
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker asia.gcr.io
