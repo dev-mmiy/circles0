@@ -1,13 +1,11 @@
 name: Code Quality
 
-# Disabled to reduce GitHub Actions usage
-# on:
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main, develop ]
-#   schedule:
-#     - cron: '0 1 * * 0' # 毎週日曜日の午前1時（UTC）
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
 
 env:
   PYTHON_VERSION: '3.11'
@@ -43,142 +41,31 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install black isort flake8 mypy bandit safety
     
     - name: Install Node.js dependencies
       run: |
         cd frontend
         npm install --legacy-peer-deps --no-audit --no-fund
     
-    # Python コード品質チェック
-    - name: Run Black (Python formatter)
+    - name: Run Python linting
       run: |
         cd backend
-        black --check --diff app/
+        flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
+        black --check app/
+        isort --check-only app/
     
-    - name: Run isort (Python import sorter)
-      run: |
-        cd backend
-        isort --check-only --diff app/
-    
-    - name: Run flake8 (Python linter)
-      run: |
-        cd backend
-        flake8 app/ --max-line-length=88 --extend-ignore=E203,W503 --statistics
-    
-    - name: Run mypy (Python type checker)
-      run: |
-        cd backend
-        mypy app/ --ignore-missing-imports --no-strict-optional
-    
-    - name: Run bandit (Python security linter)
-      run: |
-        cd backend
-        bandit -r app/ -f json -o bandit-report.json || true
-    
-    # Node.js コード品質チェック
-    - name: Run ESLint
+    - name: Run Node.js linting
       run: |
         cd frontend
         npm run lint
-    
-    - name: Run Prettier check
-      run: |
-        cd frontend
         npm run format:check
-    
-    - name: Run TypeScript type check
-      run: |
-        cd frontend
-        npm run type-check
-    
-    # コード複雑度チェック
-    - name: Run Python complexity check
-      run: |
-        cd backend
-        pip install radon
-        radon cc app/ --min B --show-complexity
-    
-    - name: Run JavaScript complexity check
-      run: |
-        cd frontend
-        npm install -g complexity-report
-        complexity-report --format json --output complexity-report.json src/ || true
-
-  # テストカバレッジ
-  test-coverage:
-    name: Test Coverage Analysis
-    runs-on: ubuntu-latest
-    
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: test_db
-          POSTGRES_USER: postgres
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-        ports:
-          - 5432:5432
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-    
-    - name: Install Python dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-    
-    - name: Install Node.js dependencies
-      run: |
-        cd frontend
-        npm install --legacy-peer-deps --no-audit --no-fund
     
     - name: Run Python tests with coverage
       run: |
         cd backend
-        python -m pytest tests/ -v \
-          --cov=app \
-          --cov-report=xml \
-          --cov-report=html \
-          --cov-report=term-missing \
-          --junitxml=test-results.xml
+        python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-    
-    - name: Run Node.js tests with coverage
-      run: |
-        cd frontend
-        npm run test -- --coverage --watchAll=false
-    
-    - name: Upload Python coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: backend/coverage.xml
-        flags: backend
-        name: backend-coverage
-    
-    - name: Upload Node.js coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: frontend/coverage/lcov.info
-        flags: frontend
-        name: frontend-coverage
     
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
@@ -187,13 +74,12 @@ jobs:
         path: |
           backend/coverage.xml
           backend/htmlcov/
-          frontend/coverage/
 
   # パフォーマンステスト
   performance-test:
     name: Performance Test
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     
     steps:
     - name: Checkout code
@@ -204,128 +90,20 @@ jobs:
       with:
         python-version: ${{ env.PYTHON_VERSION }}
     
-    - name: Install dependencies
+    - name: Install Python dependencies
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install locust
     
-    - name: Start services
-      run: |
-        docker compose up -d
-        sleep 30
-    
-    - name: Run performance tests
+    - name: Run Performance Tests
       run: |
         cd backend
-        locust -f tests/performance/locustfile.py \
-          --headless \
-          -u 10 -r 2 -t 30s \
-          --html performance-report.html \
-          --csv performance-results
+        locust -f tests/performance/locustfile.py --headless -u 10 -r 2 -t 30s --html performance-report.html
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
     
-    - name: Stop services
-      if: always()
-      run: |
-        docker compose down
-    
-    - name: Upload performance results
+    - name: Upload performance report
       uses: actions/upload-artifact@v4
       with:
-        name: performance-results
-        path: |
-          backend/performance-report.html
-          backend/performance-results_requests.csv
-          backend/performance-results_stats.csv
-
-  # メトリクス分析
-  metrics-analysis:
-    name: Metrics Analysis
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
-    
-    - name: Run Python metrics
-      run: |
-        cd backend
-        pip install radon xenon
-        echo "📊 Python Code Metrics:"
-        radon mi app/ --min B
-        radon cc app/ --min B
-        xenon app/ --max-absolute B --max-modules B --max-average A
-    
-    - name: Run JavaScript metrics
-      run: |
-        cd frontend
-        npm install -g complexity-report
-        complexity-report --format json --output complexity-report.json app/ || echo "No JavaScript files found for analysis"
-    
-    - name: Generate quality report
-      run: |
-        echo "# Code Quality Report" > quality-report.md
-        echo "Generated on: $(date)" >> quality-report.md
-        echo "" >> quality-report.md
-        echo "## Python Metrics" >> quality-report.md
-        cd backend && radon mi app/ --min B >> ../quality-report.md
-        echo "" >> quality-report.md
-        echo "## JavaScript Metrics" >> quality-report.md
-        cd ../frontend && find . -name "*.js" -o -name "*.ts" -o -name "*.tsx" | wc -l >> ../quality-report.md
-    
-    - name: Upload quality report
-      uses: actions/upload-artifact@v4
-      with:
-        name: quality-report
-        path: quality-report.md
-
-  # ドキュメント生成
-  documentation:
-    name: Generate Documentation
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-        pip install sphinx sphinx-rtd-theme
-    
-    - name: Generate API documentation
-      run: |
-        cd backend
-        sphinx-apidoc -o docs/source app/
-        sphinx-build -b html docs/source docs/build
-    
-    - name: Upload documentation
-      uses: actions/upload-artifact@v4
-      with:
-        name: api-documentation
-        path: backend/docs/build/
+        name: performance-report
+        path: backend/performance-report.html

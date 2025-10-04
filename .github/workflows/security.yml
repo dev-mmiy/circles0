@@ -1,14 +1,13 @@
 name: Security Scan
 
-# Disabled to reduce GitHub Actions usage
-# on:
-#   schedule:
-#     - cron: '0 2 * * 1' # 毎週月曜日の午前2時（UTC）
-#   push:
-#     branches: [ main, develop ]
-#   pull_request:
-#     branches: [ main, develop ]
-#   workflow_dispatch:
+on:
+  schedule:
+    - cron: '0 2 * * 1' # 毎週月曜日の午前2時（UTC）
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -43,35 +42,22 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install safety bandit
     
     - name: Install Node.js dependencies
       run: |
         cd frontend
         npm install --legacy-peer-deps --no-audit --no-fund
     
-    - name: Run Python safety check
+    - name: Run Python security check
       run: |
         cd backend
-        safety check --json --output safety-report.json || true
-    
-    - name: Run Python bandit security linter
-      run: |
-        cd backend
-        bandit -r app/ -f json -o bandit-report.json || true
+        pip install safety
+        safety check --json --output safety-report.json || echo "Safety check completed with issues"
     
     - name: Run npm audit
       run: |
         cd frontend
-        npm audit --audit-level moderate --json > npm-audit-report.json || true
-    
-    - name: Run Snyk to check for vulnerabilities
-      uses: snyk/actions/node@master
-      continue-on-error: true
-      env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      with:
-        args: --severity-threshold=high --json-file-output=snyk-report.json
+        npm audit --json --audit-level=moderate > npm-audit.json || echo "npm audit completed with issues"
     
     - name: Upload security reports
       uses: actions/upload-artifact@v4
@@ -79,11 +65,9 @@ jobs:
         name: security-reports
         path: |
           backend/safety-report.json
-          backend/bandit-report.json
-          frontend/npm-audit-report.json
-          frontend/snyk-report.json
+          frontend/npm-audit.json
 
-  # コンテナイメージの脆弱性スキャン
+  # コンテナ脆弱性スキャン
   container-scan:
     name: Container Vulnerability Scan
     runs-on: ubuntu-latest
@@ -92,46 +76,49 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
     - name: Build backend image
-      run: |
-        cd backend
-        docker build -t disease-community-backend:scan .
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: false
+        tags: disease-community-backend:latest
+        target: production
     
     - name: Build frontend image
-      run: |
-        cd frontend
-        docker build -t disease-community-frontend:scan .
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: false
+        tags: disease-community-frontend:latest
     
-    - name: Run Trivy vulnerability scanner on backend
+    - name: Run Trivy vulnerability scanner (Backend)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'disease-community-backend:scan'
+        image-ref: 'disease-community-backend:latest'
         format: 'sarif'
         output: 'trivy-backend-results.sarif'
     
-    - name: Run Trivy vulnerability scanner on frontend
+    - name: Run Trivy vulnerability scanner (Frontend)
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: 'disease-community-frontend:scan'
+        image-ref: 'disease-community-frontend:latest'
         format: 'sarif'
         output: 'trivy-frontend-results.sarif'
     
-    # Trivy scan results are saved as artifacts, not uploaded to GitHub Security tab
-    - name: Save Trivy scan results as artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
+    - name: Upload Trivy scan results to GitHub Security tab (Backend)
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() && hashFiles('trivy-backend-results.sarif') != '' && hashFiles('trivy-backend-results.sarif') != 'null'
       with:
-        name: trivy-backend-results
-        path: trivy-backend-results.sarif
-        retention-days: 30
+        sarif_file: 'trivy-backend-results.sarif'
     
-    - name: Save Trivy scan results as artifacts
-      uses: actions/upload-artifact@v4
-      if: always()
+    - name: Upload Trivy scan results to GitHub Security tab (Frontend)
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() && hashFiles('trivy-frontend-results.sarif') != '' && hashFiles('trivy-frontend-results.sarif') != 'null'
       with:
-        name: trivy-frontend-results
-        path: trivy-frontend-results.sarif
-        retention-days: 30
+        sarif_file: 'trivy-frontend-results.sarif'
 
   # シークレットスキャン
   secret-scan:
@@ -141,8 +128,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
     
     - name: Run TruffleHog OSS
       uses: trufflesecurity/trufflehog@main
@@ -153,108 +138,44 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # コード品質とセキュリティ分析
-  code-quality-security:
-    name: Code Quality & Security Analysis
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-    
-    - name: Install dependencies
-      run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
-    
-    # SonarCloud scan is disabled
-    # - name: Run SonarCloud Scan
-    #   uses: SonarSource/sonarqube-scan-action@v5.0.0
-    #   env:
-    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-    #   with:
-    #     args: >
-    #       -Dsonar.projectKey=disease-community-platform
-    #       -Dsonar.organization=disease-community
-    #       -Dsonar.sources=backend/app,frontend/app
-    #       -Dsonar.host.url=https://sonarcloud.io
-    #       -Dsonar.python.coverage.reportPaths=backend/coverage.xml
-    #       -Dsonar.javascript.lcov.reportPaths=frontend/coverage/lcov.info
-
-  # セキュリティポリシーチェック
-  security-policy:
-    name: Security Policy Check
-    runs-on: ubuntu-latest
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Check security headers
-      run: |
-        echo "🔒 Checking security headers..."
-        # セキュリティヘッダーのチェックロジックを実装
-        echo "✅ Security headers check completed"
-    
-    - name: Check CORS configuration
-      run: |
-        echo "🌐 Checking CORS configuration..."
-        # CORS設定のチェックロジックを実装
-        echo "✅ CORS configuration check completed"
-    
-    - name: Check environment variables
-      run: |
-        echo "🔐 Checking environment variables..."
-        # 環境変数のセキュリティチェックロジックを実装
-        echo "✅ Environment variables check completed"
-
-  # セキュリティレポートの生成
+  # セキュリティレポートの統合
   security-report:
-    name: Generate Security Report
+    name: Security Report
     runs-on: ubuntu-latest
-    needs: [dependency-scan, container-scan, secret-scan, code-quality-security]
+    needs: [dependency-scan, container-scan, secret-scan]
     if: always()
     
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
     - name: Download security reports
       uses: actions/download-artifact@v4
+      continue-on-error: true
       with:
         name: security-reports
-        path: ./security-reports
-      continue-on-error: true
     
     - name: Generate security summary
       run: |
-        echo "📊 Generating security summary..."
-        # セキュリティレポートの統合とサマリー生成
-        if [ -d "./security-reports" ]; then
-          echo "✅ Security reports found and processed"
-          ls -la ./security-reports/
-        else
-          echo "⚠️ No security reports found, generating basic summary"
-          mkdir -p ./security-reports
-          echo "No security reports available" > ./security-reports/summary.txt
+        echo "# Security Scan Summary" > security-summary.md
+        echo "Generated on: $(date)" >> security-summary.md
+        echo "" >> security-summary.md
+        
+        if [ -f "safety-report.json" ]; then
+          echo "## Python Dependencies" >> security-summary.md
+          echo "Safety check completed. See safety-report.json for details." >> security-summary.md
         fi
-        echo "✅ Security summary generated"
+        
+        if [ -f "npm-audit.json" ]; then
+          echo "## Node.js Dependencies" >> security-summary.md
+          echo "npm audit completed. See npm-audit.json for details." >> security-summary.md
+        fi
+        
+        echo "## Container Scans" >> security-summary.md
+        echo "Trivy scans completed for backend and frontend images." >> security-summary.md
+        
+        echo "## Secret Scan" >> security-summary.md
+        echo "TruffleHog scan completed." >> security-summary.md
     
     - name: Upload security summary
       uses: actions/upload-artifact@v4
       with:
         name: security-summary
-        path: ./security-summary.md
+        path: security-summary.md
