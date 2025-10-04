@@ -1,8 +1,9 @@
 name: Deploy to Development
 
-on:
-  push:
-    branches: [ develop ]
+# Disabled to reduce GitHub Actions usage
+# on:
+#   push:
+#     branches: [ develop ]
   workflow_dispatch:
 
 env:

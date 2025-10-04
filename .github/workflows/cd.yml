@@ -1,9 +1,10 @@
 name: Continuous Deployment
 
-on:
-  push:
-    branches: [ main, develop ]
-  workflow_dispatch:
+# Disabled to reduce GitHub Actions usage
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   workflow_dispatch:
     inputs:
       environment:
         description: 'Deployment environment'

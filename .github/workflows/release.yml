@@ -1,10 +1,11 @@
 name: Release Management
 
-on:
-  push:
-    tags:
-      - 'v*'
-  workflow_dispatch:
+# Disabled to reduce GitHub Actions usage
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+#   workflow_dispatch:
     inputs:
       version:
         description: 'Release version'
