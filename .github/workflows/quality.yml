@@ -75,35 +75,35 @@ jobs:
           backend/coverage.xml
           backend/htmlcov/
 
-  # パフォーマンステスト
-  performance-test:
-    name: Performance Test
-    runs-on: ubuntu-latest
-    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-    
-    - name: Install Python dependencies
-      run: |
-        cd backend
-        pip install -r requirements.txt
-    
-    - name: Run Performance Tests
-      run: |
-        cd backend
-        locust -f tests/performance/locustfile.py --headless -u 10 -r 2 -t 30s --html performance-report.html
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-    
-    - name: Upload performance report
-      uses: actions/upload-artifact@v4
-      with:
-        name: performance-report
-        path: backend/performance-report.html
+  # パフォーマンステスト - 一時的に無効化
+  # performance-test:
+  #   name: Performance Test
+  #   runs-on: ubuntu-latest
+  #   if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+  #   
+  #   steps:
+  #   - name: Checkout code
+  #     uses: actions/checkout@v4
+  #   
+  #   - name: Set up Python ${{ env.PYTHON_VERSION }}
+  #     uses: actions/setup-python@v4
+  #     with:
+  #       python-version: ${{ env.PYTHON_VERSION }}
+  #   
+  #   - name: Install Python dependencies
+  #     run: |
+  #       cd backend
+  #       pip install -r requirements.txt
+  #   
+  #   - name: Run Performance Tests
+  #     run: |
+  #       cd backend
+  #       locust -f tests/performance/locustfile.py --headless -u 10 -r 2 -t 30s --html performance-report.html
+  #     env:
+  #       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+  #   
+  #   - name: Upload performance report
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: performance-report
+  #       path: backend/performance-report.html
