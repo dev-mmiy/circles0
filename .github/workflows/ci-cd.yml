@@ -82,14 +82,19 @@ jobs:
       with:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
+        export_default_credentials: true
 
     - name: Configure Docker for GCR
       run: |
+        # 認証状態を確認
+        echo "Checking authentication status..."
+        gcloud auth list
+        
         # GCR認証を設定
-        gcloud auth configure-docker asia.gcr.io
-        gcloud auth configure-docker gcr.io
-        gcloud auth configure-docker us.gcr.io
-        gcloud auth configure-docker eu.gcr.io
+        gcloud auth configure-docker asia.gcr.io --quiet
+        gcloud auth configure-docker gcr.io --quiet
+        gcloud auth configure-docker us.gcr.io --quiet
+        gcloud auth configure-docker eu.gcr.io --quiet
         
         # Docker認証を確認
         echo "Testing Docker authentication..."
@@ -149,6 +154,7 @@ jobs:
       with:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
+        export_default_credentials: true
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker asia.gcr.io
@@ -188,6 +194,7 @@ jobs:
       with:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
+        export_default_credentials: true
 
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker asia.gcr.io
