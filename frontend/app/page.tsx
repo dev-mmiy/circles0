@@ -62,7 +62,8 @@ export default function Home() {
                 <strong>Debug Info:</strong>
               </p>
               <p className="text-xs text-gray-600">
-                API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+                API URL:{' '}
+                {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
               </p>
               <p className="text-xs text-gray-600">
                 Environment: {process.env.NODE_ENV || 'unknown'}
