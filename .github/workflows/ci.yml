@@ -332,13 +332,7 @@ jobs:
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
-          --no-allow-unauthenticated
-        
-        # IAM Policyを手動で設定
-        gcloud run services add-iam-policy-binding disease-community-api-dev \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker
+          --allow-unauthenticated
 
     - name: Deploy Frontend to Cloud Run (Development)
       run: |
@@ -352,13 +346,7 @@ jobs:
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
-          --no-allow-unauthenticated
-        
-        # IAM Policyを手動で設定
-        gcloud run services add-iam-policy-binding disease-community-frontend-dev \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker
+          --allow-unauthenticated
 
   # 本番環境へのデプロイ
   deploy-prod:
@@ -400,13 +388,7 @@ jobs:
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
-          --no-allow-unauthenticated
-        
-        # IAM Policyを手動で設定
-        gcloud run services add-iam-policy-binding disease-community-api \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker
+          --allow-unauthenticated
 
     - name: Deploy Frontend to Cloud Run (Production)
       run: |
@@ -420,13 +402,7 @@ jobs:
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
-          --no-allow-unauthenticated
-        
-        # IAM Policyを手動で設定
-        gcloud run services add-iam-policy-binding disease-community-frontend \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker
+          --allow-unauthenticated
 
   # ヘルスチェック
   health-check:
