@@ -333,6 +333,12 @@ jobs:
           --cpu=1 \
           --max-instances=10 \
           --allow-unauthenticated
+        
+        # IAM権限を手動で設定
+        gcloud run services add-iam-policy-binding disease-community-api-dev \
+          --region=${{ env.REGION }} \
+          --member=allUsers \
+          --role=roles/run.invoker || echo "IAM policy binding failed, but deployment succeeded"
 
     - name: Deploy Frontend to Cloud Run (Development)
       run: |
@@ -340,13 +346,19 @@ jobs:
           --image asia.gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} \
           --region ${{ env.REGION }} \
           --platform managed \
-          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-508246122017.asia-northeast1.run.app \
           --port=3000 \
           --timeout=300 \
           --memory=512Mi \
           --cpu=1 \
           --max-instances=10 \
           --allow-unauthenticated
+        
+        # IAM権限を手動で設定
+        gcloud run services add-iam-policy-binding disease-community-frontend-dev \
+          --region=${{ env.REGION }} \
+          --member=allUsers \
+          --role=roles/run.invoker || echo "IAM policy binding failed, but deployment succeeded"
 
   # 本番環境へのデプロイ
   deploy-prod:
