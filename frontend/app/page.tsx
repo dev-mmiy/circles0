@@ -18,6 +18,8 @@ export default function Home() {
       try {
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        console.log('API URL:', apiUrl);
+        console.log('Environment variables:', process.env);
         const response = await fetch(`${apiUrl}/`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -55,6 +57,17 @@ export default function Home() {
               Make sure the backend is running on{' '}
               {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
             </p>
+            <div className="mt-4 p-4 bg-yellow-100 rounded">
+              <p className="text-sm text-gray-700">
+                <strong>Debug Info:</strong>
+              </p>
+              <p className="text-xs text-gray-600">
+                API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+              </p>
+              <p className="text-xs text-gray-600">
+                Environment: {process.env.NODE_ENV || 'unknown'}
+              </p>
+            </div>
           </div>
         )}
 
