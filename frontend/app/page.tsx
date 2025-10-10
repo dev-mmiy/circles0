@@ -16,12 +16,13 @@ export default function Home() {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        // 環境変数を取得
+        // 環境変数を取得（ビルド時に設定される）
         const apiUrl =
           process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         console.log('API URL:', apiUrl);
         console.log('Environment variables:', process.env);
         console.log('NODE_ENV:', process.env.NODE_ENV);
+        console.log('All env vars:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
         const response = await fetch(`${apiUrl}/`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
