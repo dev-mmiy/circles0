@@ -17,7 +17,8 @@ export default function Home() {
     const fetchApiData = async () => {
       try {
         // 環境変数を取得
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        const apiUrl =
+          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         console.log('API URL:', apiUrl);
         console.log('Environment variables:', process.env);
         console.log('NODE_ENV:', process.env.NODE_ENV);
