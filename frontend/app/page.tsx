@@ -16,19 +16,11 @@ export default function Home() {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        // 環境変数を動的に取得
-        const apiUrl =
-          typeof window !== 'undefined'
-            ? (window as any).NEXT_PUBLIC_API_URL ||
-              process.env.NEXT_PUBLIC_API_URL ||
-              'http://localhost:8000'
-            : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        // 環境変数を取得
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
         console.log('API URL:', apiUrl);
         console.log('Environment variables:', process.env);
-        console.log(
-          'Window object:',
-          typeof window !== 'undefined' ? (window as any) : 'SSR'
-        );
+        console.log('NODE_ENV:', process.env.NODE_ENV);
         const response = await fetch(`${apiUrl}/`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -76,6 +68,9 @@ export default function Home() {
               </p>
               <p className="text-xs text-gray-600">
                 Environment: {process.env.NODE_ENV || 'unknown'}
+              </p>
+              <p className="text-xs text-gray-600">
+                Build Time: {new Date().toISOString()}
               </p>
             </div>
           </div>
