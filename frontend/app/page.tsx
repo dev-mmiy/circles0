@@ -16,13 +16,30 @@ export default function Home() {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        // 環境変数を取得（ビルド時に設定される）
-        const apiUrl =
-          process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        // ランタイムで環境変数を動的に取得
+        const getApiUrl = () => {
+          // クライアントサイドで環境変数を取得
+          if (typeof window !== 'undefined') {
+            // ブラウザ環境では、現在のホストからAPI URLを推測
+            const hostname = window.location.hostname;
+            if (hostname.includes('disease-community-frontend-dev')) {
+              return 'https://disease-community-api-dev-508246122017.asia-northeast1.run.app';
+            }
+            if (hostname.includes('disease-community-frontend')) {
+              return 'https://disease-community-api-508246122017.asia-northeast1.run.app';
+            }
+            if (hostname === 'localhost' || hostname === '127.0.0.1') {
+              return 'http://localhost:8000';
+            }
+          }
+          // サーバーサイドまたはフォールバック
+          return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+        };
+
+        const apiUrl = getApiUrl();
         console.log('API URL:', apiUrl);
-        console.log('Environment variables:', process.env);
-        console.log('NODE_ENV:', process.env.NODE_ENV);
-        console.log('All env vars:', Object.keys(process.env).filter(key => key.startsWith('NEXT_PUBLIC')));
+        console.log('Hostname:', typeof window !== 'undefined' ? window.location.hostname : 'SSR');
+        console.log('Environment:', process.env.NODE_ENV);
         const response = await fetch(`${apiUrl}/`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -43,9 +60,7 @@ export default function Home() {
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
       <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
         <h1 className="text-4xl font-bold text-center mb-8">Hello World!</h1>
-        <p className="text-center text-gray-600 mb-8">
-          Disease Community Platform
-        </p>
+        <p className="text-center text-gray-600 mb-8">Disease Community Platform</p>
 
         {loading && (
           <div className="text-center">
@@ -65,15 +80,12 @@ export default function Home() {
                 <strong>Debug Info:</strong>
               </p>
               <p className="text-xs text-gray-600">
-                API URL:{' '}
-                {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+                API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
               </p>
               <p className="text-xs text-gray-600">
                 Environment: {process.env.NODE_ENV || 'unknown'}
               </p>
-              <p className="text-xs text-gray-600">
-                Build Time: {new Date().toISOString()}
-              </p>
+              <p className="text-xs text-gray-600">Build Time: {new Date().toISOString()}</p>
             </div>
           </div>
         )}

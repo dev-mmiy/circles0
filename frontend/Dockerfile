@@ -30,10 +30,6 @@ COPY . .
 # Ensure public directory exists
 RUN mkdir -p ./public
 
-# Set environment variables for build
-ARG NEXT_PUBLIC_API_URL
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-
 # Build the application
 RUN npm run build
 
