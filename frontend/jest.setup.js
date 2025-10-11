@@ -15,16 +15,7 @@ jest.mock('next/navigation', () => ({
   useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
-// Mock next-i18next
-jest.mock('next-i18next', () => ({
-  useTranslation: jest.fn(() => ({
-    t: jest.fn(key => key),
-    i18n: {
-      changeLanguage: jest.fn(),
-      language: 'en',
-    },
-  })),
-}));
+// Mock next-i18next (removed since we're not using it anymore)
 
 // Mock fetch
 global.fetch = jest.fn();
