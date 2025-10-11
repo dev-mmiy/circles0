@@ -13,8 +13,8 @@ app = FastAPI(
     title="Disease Community API",
     description="API for Disease Community Platform",
     version="1.0.0",
-    docs_url="/docs" if ENVIRONMENT == "development" else None,
-    redoc_url="/redoc" if ENVIRONMENT == "development" else None,
+    docs_url="/docs" if ENVIRONMENT in ["development", "test"] else None,
+    redoc_url="/redoc" if ENVIRONMENT in ["development", "test"] else None,
 )
 
 # Add market middleware
@@ -23,7 +23,7 @@ app.add_middleware(MarketMiddleware)
 # CORS middleware
 allowed_origins = (
     ["*"]
-    if ENVIRONMENT == "development"
+    if ENVIRONMENT in ["development", "test"]
     else [
         "https://disease-community-frontend-asia-northeast1-disease-community-platform.a.run.app",  # noqa: E501
         "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app",  # noqa: E501

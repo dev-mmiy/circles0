@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { Market, getMarket, isValidMarket, DEFAULT_MARKET } from '@/lib/markets';
@@ -19,10 +19,7 @@ interface MarketProviderProps {
   initialMarket?: string;
 }
 
-export const MarketProvider: React.FC<MarketProviderProps> = ({ 
-  children, 
-  initialMarket 
-}) => {
+export const MarketProvider: React.FC<MarketProviderProps> = ({ children, initialMarket }) => {
   const [market, setMarketState] = useState<string>(initialMarket || DEFAULT_MARKET);
   const [marketConfig, setMarketConfig] = useState<Market | undefined>(
     getMarket(initialMarket || DEFAULT_MARKET)
@@ -32,7 +29,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
   useEffect(() => {
     const config = getMarket(market);
     setMarketConfig(config);
-    
+
     // Save to localStorage
     if (typeof window !== 'undefined') {
       localStorage.setItem('market', market);
@@ -46,7 +43,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     // Check URL parameters first
     const urlParams = new URLSearchParams(window.location.search);
     const urlMarket = urlParams.get('market');
-    
+
     if (urlMarket && isValidMarket(urlMarket)) {
       setMarketState(urlMarket);
       return;
@@ -81,16 +78,16 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
 
   const formatDateTime = (date: Date, options?: Intl.DateTimeFormatOptions): string => {
     if (!marketConfig) return date.toISOString();
-    
+
     return new Intl.DateTimeFormat(marketConfig.locale, {
       timeZone: marketConfig.timezone,
-      ...options
+      ...options,
     }).format(date);
   };
 
   const formatCurrency = (amount: number): string => {
     if (!marketConfig) return amount.toString();
-    
+
     return new Intl.NumberFormat(marketConfig.locale, {
       style: 'currency',
       currency: marketConfig.currency,
@@ -99,7 +96,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
 
   const formatNumber = (number: number): string => {
     if (!marketConfig) return number.toString();
-    
+
     return new Intl.NumberFormat(marketConfig.locale).format(number);
   };
 
@@ -111,7 +108,7 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
         setMarket,
         formatDateTime,
         formatCurrency,
-        formatNumber
+        formatNumber,
       }}
     >
       {children}
@@ -130,19 +127,19 @@ export const useMarket = (): MarketContextType => {
 // Helper function to detect market from Accept-Language
 const detectMarketFromAcceptLanguage = (acceptLanguage: string): string | null => {
   const languages = acceptLanguage.split(',').map(lang => lang.trim().split(';')[0]);
-  
+
   for (const lang of languages) {
     // Check for exact match (e.g., "ja-JP")
     const exactMatch = lang.toLowerCase().replace('_', '-');
     if (isValidMarket(exactMatch)) {
       return exactMatch;
     }
-    
+
     // Check for language match (e.g., "ja" -> "ja-jp")
     const language = lang.split('-')[0].toLowerCase();
     if (language === 'ja') return 'ja-jp';
     if (language === 'en') return 'en-us';
   }
-  
+
   return null;
 };

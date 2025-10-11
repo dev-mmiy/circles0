@@ -17,40 +17,40 @@ export interface Market {
 
 // Market configuration
 export const MARKETS: Record<string, Market> = {
-  "en-us": {
-    locale: "en-us",
-    language: "en",
-    country: "us",
-    currency: "USD",
-    timezone: "America/New_York",
-    date_format: "MM/DD/YYYY",
-    number_format: "1,234.56",
-    display_name: "English (US)",
-    flag: "🇺🇸"
+  'en-us': {
+    locale: 'en-us',
+    language: 'en',
+    country: 'us',
+    currency: 'USD',
+    timezone: 'America/New_York',
+    date_format: 'MM/DD/YYYY',
+    number_format: '1,234.56',
+    display_name: 'English (US)',
+    flag: '🇺🇸',
   },
-  "ja-jp": {
-    locale: "ja-jp",
-    language: "ja",
-    country: "jp",
-    currency: "JPY",
-    timezone: "Asia/Tokyo",
-    date_format: "YYYY/MM/DD",
-    number_format: "1,234.56",
-    display_name: "日本語 (日本)",
-    flag: "🇯🇵"
-  }
+  'ja-jp': {
+    locale: 'ja-jp',
+    language: 'ja',
+    country: 'jp',
+    currency: 'JPY',
+    timezone: 'Asia/Tokyo',
+    date_format: 'YYYY/MM/DD',
+    number_format: '1,234.56',
+    display_name: '日本語 (日本)',
+    flag: '🇯🇵',
+  },
 };
 
-export const DEFAULT_MARKET = "en-us";
-export const SUPPORTED_MARKETS = ["en-us", "ja-jp"];
+export const DEFAULT_MARKET = 'en-us';
+export const SUPPORTED_MARKETS = ['en-us', 'ja-jp'];
 
 // Market detection order
 export const MARKET_DETECTION_ORDER = [
-  "url-param",
-  "header", 
-  "accept-language",
-  "cookie",
-  "default"
+  'url-param',
+  'header',
+  'accept-language',
+  'cookie',
+  'default',
 ];
 
 // Helper functions
@@ -77,5 +77,5 @@ export const getMarketDisplayName = (locale: string): string => {
 
 export const getMarketFlag = (locale: string): string => {
   const market = getMarket(locale);
-  return market ? market.flag : "🌍";
+  return market ? market.flag : '🌍';
 };

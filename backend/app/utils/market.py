@@ -37,7 +37,6 @@ def format_currency_for_market(amount: float, market_code: str) -> str:
     """Format currency for the specified market."""
     market_config = get_market_config(market_code)
     currency = market_config["currency"]
-    number_format = market_config["number_format"]
 
     # Simple currency formatting
     if currency == "USD":

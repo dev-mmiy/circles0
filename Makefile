@@ -158,15 +158,15 @@ init-db: ## データベースを初期化
 test-local: ## ローカル環境でテストを実行
 	@echo "🧪 Running local tests..."
 	@echo "📋 Backend tests..."
-	cd backend && python -m pytest tests/ -v --cov=app --cov-report=html
+	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
 	@echo "📋 Frontend tests..."
-	cd frontend && npm run type-check
-	cd frontend && npm run lint
-	cd frontend && npm run format:check
+	docker compose exec frontend npm run type-check
+	docker compose exec frontend npm run lint
+	docker compose exec frontend npm run format:check
 	@echo "📋 Integration tests..."
 	docker compose -f docker-compose.ci.yml up --build -d
 	sleep 10
-	cd backend && python -m pytest tests/integration/ -v
+	docker compose exec backend python -m pytest tests/integration/ -v
 	docker compose -f docker-compose.ci.yml down
 	@echo "✅ Local tests completed successfully!"
 

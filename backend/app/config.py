@@ -21,11 +21,20 @@ class Settings:
 
         # Environment-specific database URLs
         if self.environment == "development":
-            return "postgresql://circles_dev:circles_dev_password@localhost:5432/circles_db_dev"
+            return (
+                "postgresql://circles_dev:circles_dev_password@"
+                "localhost:5432/circles_db_dev"
+            )
         elif self.environment == "production":
-            return "postgresql://circles_prod:circles_prod_password@localhost:5432/circles_db_prod"
+            return (
+                "postgresql://circles_prod:circles_prod_password@"
+                "localhost:5432/circles_db_prod"
+            )
         elif self.environment == "test":
-            return "postgresql://circles_test:circles_test_password@localhost:5432/circles_db_test"
+            return (
+                "postgresql://circles_test:circles_test_password@"
+                "localhost:5432/circles_db_test"
+            )
         else:
             # Default to development
             return "postgresql://postgres:postgres@localhost:5432/test_db"
