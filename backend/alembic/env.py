@@ -19,8 +19,8 @@ database_url = os.getenv("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
 
-# add your model's MetaData object here
-# for 'autogenerate' support
+    # add your model's MetaData object here
+    # for 'autogenerate' support
     from app.models import Base
 
 target_metadata = Base.metadata
