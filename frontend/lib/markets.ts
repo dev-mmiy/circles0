@@ -15,12 +15,34 @@ export interface Market {
   flag: string;
 }
 
-// Load market configuration
-import marketConfig from '../../config/markets.json';
+// Market configuration
+export const MARKETS: Record<string, Market> = {
+  "en-us": {
+    locale: "en-us",
+    language: "en",
+    country: "us",
+    currency: "USD",
+    timezone: "America/New_York",
+    date_format: "MM/DD/YYYY",
+    number_format: "1,234.56",
+    display_name: "English (US)",
+    flag: "🇺🇸"
+  },
+  "ja-jp": {
+    locale: "ja-jp",
+    language: "ja",
+    country: "jp",
+    currency: "JPY",
+    timezone: "Asia/Tokyo",
+    date_format: "YYYY/MM/DD",
+    number_format: "1,234.56",
+    display_name: "日本語 (日本)",
+    flag: "🇯🇵"
+  }
+};
 
-export const MARKETS: Record<string, Market> = marketConfig.markets;
-export const DEFAULT_MARKET = marketConfig.default;
-export const SUPPORTED_MARKETS = marketConfig.supported;
+export const DEFAULT_MARKET = "en-us";
+export const SUPPORTED_MARKETS = ["en-us", "ja-jp"];
 
 // Market detection order
 export const MARKET_DETECTION_ORDER = [

@@ -1,7 +1,7 @@
 # Disease Community Platform - Makefile
 # 開発・ビルド・デプロイの自動化
 
-.PHONY: help install dev test lint format build clean deploy
+.PHONY: help install dev test lint format build clean deploy test-local test-production
 
 # デフォルトターゲット
 help: ## 利用可能なコマンドを表示
@@ -153,6 +153,37 @@ init-db: ## データベースを初期化
 	sleep 10
 	psql -h localhost -U postgres -d disease_community -f database_schema.sql
 	@echo "✅ Database initialized!"
+
+# ローカルテスト
+test-local: ## ローカル環境でテストを実行
+	@echo "🧪 Running local tests..."
+	@echo "📋 Backend tests..."
+	cd backend && python -m pytest tests/ -v --cov=app --cov-report=html
+	@echo "📋 Frontend tests..."
+	cd frontend && npm run type-check
+	cd frontend && npm run lint
+	cd frontend && npm run format:check
+	@echo "📋 Integration tests..."
+	docker compose -f docker-compose.ci.yml up --build -d
+	sleep 10
+	cd backend && python -m pytest tests/integration/ -v
+	docker compose -f docker-compose.ci.yml down
+	@echo "✅ Local tests completed successfully!"
+
+# プロダクションテスト
+test-production: ## プロダクション環境でテストを実行
+	@echo "🏭 Running production tests..."
+	@echo "📋 Building production images..."
+	docker compose build
+	@echo "📋 Testing production environment..."
+	ENVIRONMENT=production docker compose up -d
+	sleep 15
+	@echo "📋 Health check..."
+	curl -f http://localhost:8000/health || (echo "❌ Backend health check failed" && exit 1)
+	curl -f http://localhost:3000/ || (echo "❌ Frontend health check failed" && exit 1)
+	@echo "📋 Market detection test..."
+	curl -f "http://localhost:8000/?market=ja-jp" | grep -q "ja-jp" || (echo "❌ Market detection failed" && exit 1)
+	@echo "✅ Production tests completed successfully!"
 
 # ヘルスチェック
 health: ## アプリケーションのヘルスチェック
