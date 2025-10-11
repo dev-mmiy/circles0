@@ -8,9 +8,21 @@ test.describe('Register Page E2E Tests', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify([
-          { order_code: 'western', display_name: 'Western (First Middle Last)', format_template: '{first} {middle} {last}' },
-          { order_code: 'eastern', display_name: 'Eastern (Last First Middle)', format_template: '{last} {first} {middle}' },
-          { order_code: 'japanese', display_name: 'Japanese (Last First)', format_template: '{last} {first}' },
+          {
+            order_code: 'western',
+            display_name: 'Western (First Middle Last)',
+            format_template: '{first} {middle} {last}',
+          },
+          {
+            order_code: 'eastern',
+            display_name: 'Eastern (Last First Middle)',
+            format_template: '{last} {first} {middle}',
+          },
+          {
+            order_code: 'japanese',
+            display_name: 'Japanese (Last First)',
+            format_template: '{last} {first}',
+          },
           { order_code: 'custom', display_name: 'Custom Format', format_template: '{custom}' },
         ]),
       });
@@ -41,7 +53,7 @@ test.describe('Register Page E2E Tests', () => {
 
   test('should show validation errors for required fields', async ({ page }) => {
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     await expect(page.getByText('Email address is required')).toBeVisible();
     await expect(page.getByText('Nickname is required')).toBeVisible();
     await expect(page.getByText('First name is required')).toBeVisible();
@@ -51,21 +63,21 @@ test.describe('Register Page E2E Tests', () => {
   test('should validate email format', async ({ page }) => {
     await page.getByLabel('Email Address').fill('invalid-email');
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     await expect(page.getByText('Please enter a valid email address')).toBeVisible();
   });
 
   test('should validate nickname length', async ({ page }) => {
     await page.getByLabel('Nickname').fill('ab');
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     await expect(page.getByText('Nickname must be at least 3 characters')).toBeVisible();
   });
 
   test('should validate phone number format', async ({ page }) => {
     await page.getByLabel('Phone Number').fill('invalid-phone');
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     await expect(page.getByText('Please enter a valid phone number')).toBeVisible();
   });
 
@@ -74,14 +86,14 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('First Name').fill('John');
     await page.getByLabel('Middle Name').fill('Michael');
     await page.getByLabel('Last Name').fill('Doe');
-    
+
     // Check Western order (default)
     await expect(page.getByText('John Michael Doe')).toBeVisible();
-    
+
     // Test Eastern order
     await page.getByLabel('Name Display Order').selectOption('eastern');
     await expect(page.getByText('Doe John Michael')).toBeVisible();
-    
+
     // Test Japanese order
     await page.getByLabel('Name Display Order').selectOption('japanese');
     await expect(page.getByText('Doe John')).toBeVisible();
@@ -89,7 +101,7 @@ test.describe('Register Page E2E Tests', () => {
 
   test('should show custom name format field when custom order is selected', async ({ page }) => {
     await page.getByLabel('Name Display Order').selectOption('custom');
-    
+
     await expect(page.getByLabel('Custom Name Format')).toBeVisible();
     await expect(page.getByText('Use {first}, {middle}, {last} to format your name')).toBeVisible();
   });
@@ -99,13 +111,13 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('First Name').fill('John');
     await page.getByLabel('Middle Name').fill('Michael');
     await page.getByLabel('Last Name').fill('Doe');
-    
+
     // Select custom format
     await page.getByLabel('Name Display Order').selectOption('custom');
-    
+
     // Enter custom format
     await page.getByLabel('Custom Name Format').fill('{last}, {first} {middle}');
-    
+
     // Check preview
     await expect(page.getByText('Doe, John Michael')).toBeVisible();
   });
@@ -114,10 +126,10 @@ test.describe('Register Page E2E Tests', () => {
     // Trigger validation error
     await page.getByRole('button', { name: 'Create Account' }).click();
     await expect(page.getByText('Email address is required')).toBeVisible();
-    
+
     // Start typing in email field
     await page.getByLabel('Email Address').fill('test@example.com');
-    
+
     // Error should be cleared
     await expect(page.getByText('Email address is required')).not.toBeVisible();
   });
@@ -143,10 +155,10 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('Nickname').fill('testuser');
     await page.getByLabel('First Name').fill('Test');
     await page.getByLabel('Last Name').fill('User');
-    
+
     // Submit form
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     // Check loading state
     await expect(page.getByText('Creating Account...')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Creating Account...' })).toBeDisabled();
@@ -171,10 +183,10 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('Nickname').fill('testuser');
     await page.getByLabel('First Name').fill('Test');
     await page.getByLabel('Last Name').fill('User');
-    
+
     // Submit form
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     // Should navigate to profile page
     await expect(page).toHaveURL(/\/profile\/123e4567-e89b-12d3-a456-426614174000/);
   });
@@ -194,10 +206,10 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('Nickname').fill('testuser');
     await page.getByLabel('First Name').fill('Test');
     await page.getByLabel('Last Name').fill('User');
-    
+
     // Submit form
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     // Should show error message
     await expect(page.getByText('Email already exists')).toBeVisible();
   });
@@ -213,10 +225,10 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('Nickname').fill('testuser');
     await page.getByLabel('First Name').fill('Test');
     await page.getByLabel('Last Name').fill('User');
-    
+
     // Submit form
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     // Should show network error message
     await expect(page.getByText('Network error. Please check your connection.')).toBeVisible();
   });
@@ -224,20 +236,20 @@ test.describe('Register Page E2E Tests', () => {
   test('should be responsive on mobile devices', async ({ page }) => {
     // Set mobile viewport
     await page.setViewportSize({ width: 375, height: 667 });
-    
+
     // Check that form is still accessible
     await expect(page.getByText('Create Your Account')).toBeVisible();
     await expect(page.getByLabel('Email Address')).toBeVisible();
     await expect(page.getByLabel('Nickname')).toBeVisible();
     await expect(page.getByLabel('First Name')).toBeVisible();
     await expect(page.getByLabel('Last Name')).toBeVisible();
-    
+
     // Check that form is usable on mobile
     await page.getByLabel('Email Address').fill('test@example.com');
     await page.getByLabel('Nickname').fill('testuser');
     await page.getByLabel('First Name').fill('Test');
     await page.getByLabel('Last Name').fill('User');
-    
+
     // Form should be functional
     await expect(page.getByText('Test User')).toBeVisible();
   });
@@ -269,13 +281,13 @@ test.describe('Register Page E2E Tests', () => {
     await page.getByLabel('Bio').fill('This is a test bio');
     await page.getByLabel('Preferred Language').selectOption('en');
     await page.getByLabel('Preferred Locale').selectOption('en-us');
-    
+
     // Check name preview
     await expect(page.getByText('John Michael Doe')).toBeVisible();
-    
+
     // Submit form
     await page.getByRole('button', { name: 'Create Account' }).click();
-    
+
     // Should navigate to profile page
     await expect(page).toHaveURL(/\/profile\/123e4567-e89b-12d3-a456-426614174000/);
   });

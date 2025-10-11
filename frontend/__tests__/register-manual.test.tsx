@@ -22,16 +22,16 @@ const mockTranslation = jest.fn();
 describe('Register Page Manual Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mocks
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
-    
+
     // Setup translation mock
     mockTranslation.mockImplementation((key: string) => {
       const translations: Record<string, string> = {
@@ -92,9 +92,7 @@ describe('Register Page Manual Tests', () => {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {mockTranslation('register.title')}
               </h1>
-              <p className="text-gray-600">
-                {mockTranslation('register.subtitle')}
-              </p>
+              <p className="text-gray-600">{mockTranslation('register.subtitle')}</p>
             </div>
 
             <form className="space-y-6">
@@ -117,7 +115,10 @@ describe('Register Page Manual Tests', () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="nickname"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.nickname')} *
                     </label>
                     <input
@@ -138,7 +139,10 @@ describe('Register Page Manual Tests', () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="first_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.first_name')} *
                     </label>
                     <input
@@ -150,7 +154,10 @@ describe('Register Page Manual Tests', () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="middle_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="middle_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.middle_name')}
                     </label>
                     <input
@@ -162,7 +169,10 @@ describe('Register Page Manual Tests', () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="last_name"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.last_name')} *
                     </label>
                     <input
@@ -195,7 +205,10 @@ describe('Register Page Manual Tests', () => {
                     />
                   </div>
                   <div>
-                    <label htmlFor="birth_date" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="birth_date"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.birth_date')}
                     </label>
                     <input
@@ -215,7 +228,10 @@ describe('Register Page Manual Tests', () => {
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="preferred_language"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.preferred_language')}
                     </label>
                     <select
@@ -228,7 +244,10 @@ describe('Register Page Manual Tests', () => {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="preferred_locale" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="preferred_locale"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                    >
                       {mockTranslation('register.preferred_locale')}
                     </label>
                     <select
@@ -260,9 +279,9 @@ describe('Register Page Manual Tests', () => {
         </div>
       </div>
     );
-    
+
     render(<RegisterForm />);
-    
+
     // Check main sections
     expect(screen.getByText('Create Your Account')).toBeInTheDocument();
     expect(screen.getByText('Join our community and connect with others')).toBeInTheDocument();
@@ -270,7 +289,7 @@ describe('Register Page Manual Tests', () => {
     expect(screen.getByText('Name Information')).toBeInTheDocument();
     expect(screen.getByText('Additional Information')).toBeInTheDocument();
     expect(screen.getByText('Preferences')).toBeInTheDocument();
-    
+
     // Check form fields
     expect(screen.getByLabelText('Email Address *')).toBeInTheDocument();
     expect(screen.getByLabelText('Nickname *')).toBeInTheDocument();
@@ -281,7 +300,7 @@ describe('Register Page Manual Tests', () => {
     expect(screen.getByLabelText('Birth Date')).toBeInTheDocument();
     expect(screen.getByLabelText('Preferred Language')).toBeInTheDocument();
     expect(screen.getByLabelText('Preferred Locale')).toBeInTheDocument();
-    
+
     // Check buttons
     expect(screen.getByText('Back to Home')).toBeInTheDocument();
     expect(screen.getByText('Create Account')).toBeInTheDocument();
@@ -403,9 +422,9 @@ describe('Register Page Manual Tests', () => {
         </form>
       );
     };
-    
+
     render(<RegisterForm />);
-    
+
     // Test input changes
     const emailInput = screen.getByLabelText('Email Address *');
     const nicknameInput = screen.getByLabelText('Nickname *');
@@ -415,7 +434,7 @@ describe('Register Page Manual Tests', () => {
     const birthDateInput = screen.getByLabelText('Birth Date');
     const languageSelect = screen.getByLabelText('Preferred Language');
     const localeSelect = screen.getByLabelText('Preferred Locale');
-    
+
     fireEvent.change(emailInput, { target: { value: 'test@example.com' } });
     fireEvent.change(nicknameInput, { target: { value: 'testuser' } });
     fireEvent.change(firstNameInput, { target: { value: 'Test' } });
@@ -424,7 +443,7 @@ describe('Register Page Manual Tests', () => {
     fireEvent.change(birthDateInput, { target: { value: '1990-01-01' } });
     fireEvent.change(languageSelect, { target: { value: 'en' } });
     fireEvent.change(localeSelect, { target: { value: 'en-us' } });
-    
+
     expect(emailInput).toHaveValue('test@example.com');
     expect(nicknameInput).toHaveValue('testuser');
     expect(firstNameInput).toHaveValue('Test');
@@ -441,12 +460,12 @@ describe('Register Page Manual Tests', () => {
       member_id: '123456789012',
       formatted_member_id: '1234-5678-9012',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     const RegisterForm = () => {
       const [formData, setFormData] = React.useState({
         email: 'test@example.com',
@@ -498,7 +517,7 @@ describe('Register Page Manual Tests', () => {
               id="email"
               name="email"
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
             />
           </div>
           <div>
@@ -508,7 +527,7 @@ describe('Register Page Manual Tests', () => {
               id="nickname"
               name="nickname"
               value={formData.nickname}
-              onChange={(e) => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, nickname: e.target.value }))}
             />
           </div>
           <div>
@@ -518,7 +537,7 @@ describe('Register Page Manual Tests', () => {
               id="first_name"
               name="first_name"
               value={formData.first_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
             />
           </div>
           <div>
@@ -528,7 +547,7 @@ describe('Register Page Manual Tests', () => {
               id="last_name"
               name="last_name"
               value={formData.last_name}
-              onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+              onChange={e => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
             />
           </div>
           <button type="submit" disabled={loading}>
@@ -538,12 +557,12 @@ describe('Register Page Manual Tests', () => {
         </form>
       );
     };
-    
+
     render(<RegisterForm />);
-    
+
     const submitButton = screen.getByText('Create Account');
     fireEvent.click(submitButton);
-    
+
     await waitFor(() => {
       expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/', {
         method: 'POST',
@@ -553,7 +572,7 @@ describe('Register Page Manual Tests', () => {
         body: expect.stringContaining('test@example.com'),
       });
     });
-    
+
     await waitFor(() => {
       expect(mockPush).toHaveBeenCalledWith('/profile/123e4567-e89b-12d3-a456-426614174000');
     });

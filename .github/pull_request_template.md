@@ -1,38 +1,41 @@
 # Pull Request
 
-## 📝 概要
-<!-- このPRで何を変更するか簡潔に説明してください -->
+## 📝 Description
+Brief description of the changes made in this PR.
 
-## 🔧 変更内容
-<!-- 具体的な変更内容を箇条書きで記載してください -->
-- [ ] 
-- [ ] 
-- [ ] 
+## 🔧 Changes Made
+- [ ] Backend changes
+- [ ] Frontend changes
+- [ ] Database changes
+- [ ] Configuration changes
+- [ ] Documentation updates
 
-## 🧪 テスト
-<!-- テストの実行方法や結果を記載してください -->
-- [ ] 単体テストが通る
-- [ ] 統合テストが通る
-- [ ] 手動テストを実行した
+## 🧪 Testing
+- [ ] Local tests pass
+- [ ] Backend tests pass
+- [ ] Frontend tests pass
+- [ ] Integration tests pass
+- [ ] Security scans pass
+- [ ] Manual testing completed
 
-## 📸 スクリーンショット
-<!-- UIの変更がある場合は、スクリーンショットを添付してください -->
+## 📋 Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-review completed
+- [ ] Code is properly commented
+- [ ] No breaking changes (or documented if necessary)
+- [ ] Database migrations included (if applicable)
+- [ ] Environment variables updated (if applicable)
 
-## 🔗 関連Issue
-<!-- 関連するIssueがある場合は記載してください -->
-Closes #
+## 🚀 Deployment
+- [ ] Ready for dev deployment
+- [ ] Ready for staging deployment
+- [ ] Ready for production deployment
 
-## 📋 チェックリスト
-<!-- PR作成前に以下を確認してください -->
-- [ ] コードが既存のコーディング規約に従っている
-- [ ] 適切なコメントが記載されている
-- [ ] 不要なコードやコメントが削除されている
-- [ ] テストが追加されている（必要に応じて）
-- [ ] ドキュメントが更新されている（必要に応じて）
-- [ ] 破壊的変更がない、または適切に文書化されている
+## 📸 Screenshots (if applicable)
+<!-- Add screenshots here -->
 
-## 🚀 デプロイメント
-<!-- デプロイメントに関する注意事項があれば記載してください -->
+## 🔗 Related Issues
+Closes #<!-- issue number -->
 
-## 📚 追加情報
-<!-- その他、レビュワーに伝えたい情報があれば記載してください -->
+## 📚 Additional Notes
+<!-- Any additional information that reviewers should know -->

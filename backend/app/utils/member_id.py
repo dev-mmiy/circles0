@@ -2,8 +2,6 @@
 Member ID generation utilities.
 """
 import random
-import string
-from typing import Optional
 
 from sqlalchemy.orm import Session
 
@@ -53,7 +51,9 @@ def generate_unique_member_id(db: Session, length: int = 12) -> str:
             return member_id
     
     # If we can't generate a unique ID after max_attempts, raise an error
-    raise RuntimeError(f"Could not generate unique member ID after {max_attempts} attempts")
+    raise RuntimeError(
+        f"Could not generate unique member ID after {max_attempts} attempts"
+    )
 
 
 def format_member_id(member_id: str) -> str:
@@ -68,7 +68,10 @@ def format_member_id(member_id: str) -> str:
     """
     if len(member_id) == 12:
         # Format as XXX-XXX-XXX-XXX
-        return f"{member_id[:3]}-{member_id[3:6]}-{member_id[6:9]}-{member_id[9:12]}"
+        return (
+            f"{member_id[:3]}-{member_id[3:6]}-"
+            f"{member_id[6:9]}-{member_id[9:12]}"
+        )
     return member_id
 
 

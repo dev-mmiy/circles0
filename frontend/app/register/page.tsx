@@ -92,29 +92,29 @@ export default function RegisterPage() {
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
 
-        if (!formData.email) {
-          newErrors.email = 'Email address is required';
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-          newErrors.email = 'Please enter a valid email address';
-        }
+    if (!formData.email) {
+      newErrors.email = 'Email address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
 
-        if (!formData.nickname) {
-          newErrors.nickname = 'Nickname is required';
-        } else if (formData.nickname.length < 3) {
-          newErrors.nickname = 'Nickname must be at least 3 characters';
-        }
+    if (!formData.nickname) {
+      newErrors.nickname = 'Nickname is required';
+    } else if (formData.nickname.length < 3) {
+      newErrors.nickname = 'Nickname must be at least 3 characters';
+    }
 
-        if (!formData.first_name) {
-          newErrors.first_name = 'First name is required';
-        }
+    if (!formData.first_name) {
+      newErrors.first_name = 'First name is required';
+    }
 
-        if (!formData.last_name) {
-          newErrors.last_name = 'Last name is required';
-        }
+    if (!formData.last_name) {
+      newErrors.last_name = 'Last name is required';
+    }
 
-        if (formData.phone && !/^\+?[\d\s\-\(\)]+$/.test(formData.phone)) {
-          newErrors.phone = 'Please enter a valid phone number';
-        }
+    if (formData.phone && !/^\+?[\d\s\-\(\)]+$/.test(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -131,7 +131,7 @@ export default function RegisterPage() {
 
     try {
       console.log('Submitting form data:', formData);
-      
+
       const response = await fetch('http://localhost:8000/api/v1/users/', {
         method: 'POST',
         headers: {
@@ -154,7 +154,7 @@ export default function RegisterPage() {
       } else {
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        
+
         try {
           const errorData = JSON.parse(errorText);
           setErrors({ submit: errorData.detail || 'Registration failed. Please try again.' });
@@ -164,7 +164,9 @@ export default function RegisterPage() {
       }
     } catch (error) {
       console.error('Network error:', error);
-      setErrors({ submit: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}` });
+      setErrors({
+        submit: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
     } finally {
       setLoading(false);
     }
@@ -196,20 +198,31 @@ export default function RegisterPage() {
         <div className="bg-white shadow-xl rounded-lg">
           <div className="px-6 py-8">
             <div className="text-center mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{color: '#111827'}}>Create Your Account</h1>
-              <p className="text-gray-600" style={{color: '#6b7280'}}>Join our community and connect with others</p>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ color: '#111827' }}>
+                Create Your Account
+              </h1>
+              <p className="text-gray-600" style={{ color: '#6b7280' }}>
+                Join our community and connect with others
+              </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Basic Information */}
               <div className="border-b border-gray-200 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4" style={{color: '#111827'}}>
+                <h2
+                  className="text-lg font-semibold text-gray-900 mb-4"
+                  style={{ color: '#111827' }}
+                >
                   Basic Information
                 </h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                      style={{ color: '#374151' }}
+                    >
                       Email Address *
                     </label>
                     <input
@@ -253,9 +266,7 @@ export default function RegisterPage() {
 
               {/* Name Information */}
               <div className="border-b border-gray-200 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Name Information
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Name Information</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
@@ -364,7 +375,9 @@ export default function RegisterPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       placeholder="{first} {middle} {last}"
                     />
-                    <p className="mt-1 text-sm text-gray-500">Use {first}, {middle}, {last} to format your name</p>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Use {first}, {middle}, {last} to format your name
+                    </p>
                   </div>
                 )}
 
@@ -379,13 +392,15 @@ export default function RegisterPage() {
 
               {/* Additional Information */}
               <div className="border-b border-gray-200 pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Additional Information
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                    <label
+                      htmlFor="phone"
+                      className="block text-sm font-medium text-gray-700 mb-1"
+                      style={{ color: '#374151' }}
+                    >
                       Phone Number
                     </label>
                     <input
@@ -466,7 +481,11 @@ export default function RegisterPage() {
                 </div>
 
                 <div className="mt-4">
-                  <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                  <label
+                    htmlFor="bio"
+                    className="block text-sm font-medium text-gray-700 mb-1"
+                    style={{ color: '#374151' }}
+                  >
                     Bio
                   </label>
                   <textarea
@@ -483,9 +502,7 @@ export default function RegisterPage() {
 
               {/* Preferences */}
               <div className="pb-6">
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                  Preferences
-                </h2>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Preferences</h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>

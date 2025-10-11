@@ -21,16 +21,16 @@ const mockTranslation = jest.fn();
 describe('ProfilePage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mocks
     (useParams as jest.Mock).mockReturnValue({
       id: '123e4567-e89b-12d3-a456-426614174000',
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
-    
+
     // Setup translation mock
     mockTranslation.mockImplementation((key: string) => {
       const translations: Record<string, string> = {
@@ -45,7 +45,7 @@ describe('ProfilePage', () => {
 
   it('shows loading state initially', () => {
     render(<ProfilePage />);
-    
+
     expect(screen.getByText('Loading profile...')).toBeInTheDocument();
   });
 
@@ -73,14 +73,14 @@ describe('ProfilePage', () => {
       created_at: '2023-01-01T00:00:00Z',
       last_active_at: '2023-01-02T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test User')).toBeInTheDocument();
       expect(screen.getByText('@testuser')).toBeInTheDocument();
@@ -96,9 +96,9 @@ describe('ProfilePage', () => {
       ok: false,
       status: 404,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('User not found')).toBeInTheDocument();
     });
@@ -109,9 +109,9 @@ describe('ProfilePage', () => {
       ok: false,
       status: 403,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Profile is private')).toBeInTheDocument();
     });
@@ -119,9 +119,9 @@ describe('ProfilePage', () => {
 
   it('displays error message when network error occurs', async () => {
     (global.fetch as jest.Mock).mockRejectedValueOnce(new Error('Network error'));
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Network error')).toBeInTheDocument();
     });
@@ -142,14 +142,14 @@ describe('ProfilePage', () => {
       is_profile_public: true,
       created_at: '2023-01-01T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/years old/)).toBeInTheDocument();
     });
@@ -170,14 +170,14 @@ describe('ProfilePage', () => {
       is_profile_public: true,
       created_at: '2023-01-01T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Not shown')).toBeInTheDocument();
     });
@@ -197,14 +197,14 @@ describe('ProfilePage', () => {
       is_profile_public: true,
       created_at: '2023-01-01T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       const avatar = screen.getByAltText('Test User');
       expect(avatar).toBeInTheDocument();
@@ -225,14 +225,14 @@ describe('ProfilePage', () => {
       is_profile_public: true,
       created_at: '2023-01-01T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('TU')).toBeInTheDocument();
     });
@@ -252,14 +252,14 @@ describe('ProfilePage', () => {
       created_at: '2023-01-01T00:00:00Z',
       last_active_at: '2023-01-02T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       // Check that dates are displayed (format may vary by locale)
       expect(screen.getByText(/1\/1\/2023/)).toBeInTheDocument();
@@ -279,14 +279,14 @@ describe('ProfilePage', () => {
       is_profile_public: true,
       created_at: '2023-01-01T00:00:00Z',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     render(<ProfilePage />);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test User')).toBeInTheDocument();
       expect(screen.getByText('@testuser')).toBeInTheDocument();

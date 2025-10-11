@@ -145,13 +145,13 @@ export default function Home() {
               >
                 Create Account
               </Link>
-                  <Link
-                    href="http://localhost:8000/docs"
-                    className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                    target="_blank"
-                  >
-                    API Documentation
-                  </Link>
+              <Link
+                href="http://localhost:8000/docs"
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                target="_blank"
+              >
+                API Documentation
+              </Link>
             </div>
           </div>
         </div>

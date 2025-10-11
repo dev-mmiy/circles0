@@ -1,7 +1,7 @@
 """
 User-related SQLAlchemy models.
 """
-from datetime import datetime
+# from datetime import datetime  # Unused import
 from typing import Optional
 
 from sqlalchemy import (
@@ -28,7 +28,11 @@ class User(Base):
     __tablename__ = "users"
 
     # Primary key and identifiers
-    id = Column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
+    id = Column(
+        UUID(as_uuid=True), 
+        primary_key=True, 
+        server_default=func.gen_random_uuid()
+    )
     member_id = Column(String(12), unique=True, nullable=False, index=True)
     idp_id = Column(String(255), unique=True, nullable=False)
     idp_provider = Column(String(50), default="auth0")
@@ -95,15 +99,31 @@ class User(Base):
 
     # Timestamps
     created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
+    updated_at = Column(
+        DateTime, 
+        default=func.current_timestamp(), 
+        onupdate=func.current_timestamp()
+    )
     last_login_at = Column(DateTime)
     email_verified_at = Column(DateTime)
     phone_verified_at = Column(DateTime)
 
     # Relationships
-    preferences = relationship("UserPreference", back_populates="user", cascade="all, delete-orphan")
-    sessions = relationship("UserSession", back_populates="user", cascade="all, delete-orphan")
-    activity_logs = relationship("UserActivityLog", back_populates="user", cascade="all, delete-orphan")
+    preferences = relationship(
+        "UserPreference", 
+        back_populates="user", 
+        cascade="all, delete-orphan"
+    )
+    sessions = relationship(
+        "UserSession", 
+        back_populates="user", 
+        cascade="all, delete-orphan"
+    )
+    activity_logs = relationship(
+        "UserActivityLog", 
+        back_populates="user", 
+        cascade="all, delete-orphan"
+    )
     # user_diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")  # To be implemented later
 
     def get_full_name(self, locale: Optional[str] = None) -> str:

@@ -18,7 +18,7 @@ jest.mock('next/navigation', () => ({
 // Mock next-i18next
 jest.mock('next-i18next', () => ({
   useTranslation: jest.fn(() => ({
-    t: jest.fn((key) => key),
+    t: jest.fn(key => key),
     i18n: {
       changeLanguage: jest.fn(),
       language: 'en',

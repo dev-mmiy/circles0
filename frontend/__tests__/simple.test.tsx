@@ -21,16 +21,16 @@ const mockTranslation = jest.fn();
 describe('Simple Component Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mocks
     (useRouter as jest.Mock).mockReturnValue({
       push: jest.fn(),
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
-    
+
     // Setup translation mock
     mockTranslation.mockImplementation((key: string) => {
       const translations: Record<string, string> = {
@@ -85,9 +85,9 @@ describe('Simple Component Tests', () => {
         <p>This is a test</p>
       </div>
     );
-    
+
     render(<TestComponent />);
-    
+
     expect(screen.getByText('Test Component')).toBeInTheDocument();
     expect(screen.getByText('This is a test')).toBeInTheDocument();
   });
@@ -118,9 +118,9 @@ describe('Simple Component Tests', () => {
         <button type="submit">{mockTranslation('register.create_account')}</button>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     expect(screen.getByText('Create Your Account')).toBeInTheDocument();
     expect(screen.getByText('Join our community and connect with others')).toBeInTheDocument();
     expect(screen.getByText('Email Address *')).toBeInTheDocument();
@@ -131,10 +131,10 @@ describe('Simple Component Tests', () => {
   it('should handle form validation', () => {
     const TestForm = () => {
       const [errors, setErrors] = React.useState({});
-      
+
       const validateForm = () => {
         const newErrors = {};
-        
+
         // Simulate validation
         if (!document.getElementById('email')?.value) {
           newErrors.email = mockTranslation('validation.email_required');
@@ -142,13 +142,18 @@ describe('Simple Component Tests', () => {
         if (!document.getElementById('nickname')?.value) {
           newErrors.nickname = mockTranslation('validation.nickname_required');
         }
-        
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
       };
-      
+
       return (
-        <form onSubmit={(e) => { e.preventDefault(); validateForm(); }}>
+        <form
+          onSubmit={e => {
+            e.preventDefault();
+            validateForm();
+          }}
+        >
           <div>
             <label htmlFor="email">{mockTranslation('register.email')} *</label>
             <input
@@ -173,12 +178,12 @@ describe('Simple Component Tests', () => {
         </form>
       );
     };
-    
+
     render(<TestForm />);
-    
+
     const submitButton = screen.getByText('Create Account');
     submitButton.click();
-    
+
     expect(screen.getByText('Email address is required')).toBeInTheDocument();
     expect(screen.getByText('Nickname is required')).toBeInTheDocument();
   });
@@ -189,12 +194,12 @@ describe('Simple Component Tests', () => {
       member_id: '123456789012',
       formatted_member_id: '1234-5678-9012',
     };
-    
+
     (global.fetch as jest.Mock).mockResolvedValueOnce({
       ok: true,
       json: async () => mockUser,
     });
-    
+
     const response = await fetch('/api/v1/users/', {
       method: 'POST',
       headers: {
@@ -207,7 +212,7 @@ describe('Simple Component Tests', () => {
         last_name: 'User',
       }),
     });
-    
+
     expect(response.ok).toBe(true);
     const user = await response.json();
     expect(user.id).toBe('123e4567-e89b-12d3-a456-426614174000');

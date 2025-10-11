@@ -20,9 +20,7 @@ export default function RegisterSimplePage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -76,7 +74,7 @@ export default function RegisterSimplePage() {
 
     try {
       console.log('Submitting form data:', formData);
-      
+
       const response = await fetch('http://localhost:8000/api/v1/users/', {
         method: 'POST',
         headers: {
@@ -99,7 +97,7 @@ export default function RegisterSimplePage() {
       } else {
         const errorText = await response.text();
         console.error('Error response:', errorText);
-        
+
         try {
           const errorData = JSON.parse(errorText);
           setErrors({ submit: errorData.detail || 'Registration failed. Please try again.' });
@@ -109,7 +107,9 @@ export default function RegisterSimplePage() {
       }
     } catch (error) {
       console.error('Network error:', error);
-      setErrors({ submit: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}` });
+      setErrors({
+        submit: `Network error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
     } finally {
       setLoading(false);
     }
@@ -120,14 +120,22 @@ export default function RegisterSimplePage() {
       <div className="bg-white shadow-xl rounded-lg max-w-2xl w-full overflow-hidden">
         <div className="px-6 py-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{color: '#111827'}}>Create Your Account</h1>
-            <p className="text-gray-600" style={{color: '#6b7280'}}>Join our community and connect with others</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2" style={{ color: '#111827' }}>
+              Create Your Account
+            </h1>
+            <p className="text-gray-600" style={{ color: '#6b7280' }}>
+              Join our community and connect with others
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  style={{ color: '#374151' }}
+                >
                   Email Address *
                 </label>
                 <input
@@ -145,7 +153,11 @@ export default function RegisterSimplePage() {
               </div>
 
               <div>
-                <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                <label
+                  htmlFor="nickname"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  style={{ color: '#374151' }}
+                >
                   Nickname *
                 </label>
                 <input
@@ -163,7 +175,11 @@ export default function RegisterSimplePage() {
               </div>
 
               <div>
-                <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                <label
+                  htmlFor="first_name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  style={{ color: '#374151' }}
+                >
                   First Name *
                 </label>
                 <input
@@ -177,11 +193,17 @@ export default function RegisterSimplePage() {
                   }`}
                   placeholder="Enter your first name"
                 />
-                {errors.first_name && <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>}
+                {errors.first_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.first_name}</p>
+                )}
               </div>
 
               <div>
-                <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1" style={{color: '#374151'}}>
+                <label
+                  htmlFor="last_name"
+                  className="block text-sm font-medium text-gray-700 mb-1"
+                  style={{ color: '#374151' }}
+                >
                   Last Name *
                 </label>
                 <input
@@ -195,7 +217,9 @@ export default function RegisterSimplePage() {
                   }`}
                   placeholder="Enter your last name"
                 />
-                {errors.last_name && <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>}
+                {errors.last_name && (
+                  <p className="mt-1 text-sm text-red-600">{errors.last_name}</p>
+                )}
               </div>
             </div>
 
@@ -209,7 +233,9 @@ export default function RegisterSimplePage() {
                 disabled={loading}
                 className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                  <span style={{color: '#ffffff'}}>{loading ? 'Creating Account...' : 'Create Account'}</span>
+                <span style={{ color: '#ffffff' }}>
+                  {loading ? 'Creating Account...' : 'Create Account'}
+                </span>
               </button>
             </div>
 

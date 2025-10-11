@@ -22,16 +22,16 @@ const mockTranslation = jest.fn();
 describe('RegisterPage Integration Tests', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Setup mocks
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
     });
-    
+
     (useTranslation as jest.Mock).mockReturnValue({
       t: mockTranslation,
     });
-    
+
     // Setup translation mock
     mockTranslation.mockImplementation((key: string) => {
       const translations: Record<string, string> = {
@@ -90,33 +90,45 @@ describe('RegisterPage Integration Tests', () => {
         member_id: '123456789012',
         formatted_member_id: '1234-5678-9012',
       };
-      
+
       const mockOrders = [
-        { order_code: 'western', display_name: 'Western (First Middle Last)', format_template: '{first} {middle} {last}' },
-        { order_code: 'eastern', display_name: 'Eastern (Last First Middle)', format_template: '{last} {first} {middle}' },
-        { order_code: 'japanese', display_name: 'Japanese (Last First)', format_template: '{last} {first}' },
+        {
+          order_code: 'western',
+          display_name: 'Western (First Middle Last)',
+          format_template: '{first} {middle} {last}',
+        },
+        {
+          order_code: 'eastern',
+          display_name: 'Eastern (Last First Middle)',
+          format_template: '{last} {first} {middle}',
+        },
+        {
+          order_code: 'japanese',
+          display_name: 'Japanese (Last First)',
+          format_template: '{last} {first}',
+        },
         { order_code: 'custom', display_name: 'Custom Format', format_template: '{custom}' },
       ];
-      
+
       const mockFormats = [
         { locale: 'en-us', default_order_code: 'western' },
         { locale: 'ja-jp', default_order_code: 'japanese' },
       ];
-      
+
       // Mock API calls
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
         .mockResolvedValueOnce({ ok: true, json: async () => mockFormats })
         .mockResolvedValueOnce({ ok: true, json: async () => mockUser });
-      
+
       render(<RegisterPage />);
-      
+
       // Wait for initial data to load
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/locale-formats/');
       });
-      
+
       // Fill in all form fields
       fireEvent.change(screen.getByLabelText(/Email Address/), {
         target: { value: 'test@example.com' },
@@ -154,14 +166,14 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Preferred Locale/), {
         target: { value: 'en-us' },
       });
-      
+
       // Check name preview
       expect(screen.getByText('John Michael Doe')).toBeInTheDocument();
-      
+
       // Submit form
       const submitButton = screen.getByText('Create Account');
       fireEvent.click(submitButton);
-      
+
       // Verify API call
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/', {
@@ -172,7 +184,7 @@ describe('RegisterPage Integration Tests', () => {
           body: expect.stringContaining('test@example.com'),
         });
       });
-      
+
       // Verify navigation
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/profile/123e4567-e89b-12d3-a456-426614174000');
@@ -181,21 +193,33 @@ describe('RegisterPage Integration Tests', () => {
 
     it('handles different name display orders correctly', async () => {
       const mockOrders = [
-        { order_code: 'western', display_name: 'Western (First Middle Last)', format_template: '{first} {middle} {last}' },
-        { order_code: 'eastern', display_name: 'Eastern (Last First Middle)', format_template: '{last} {first} {middle}' },
-        { order_code: 'japanese', display_name: 'Japanese (Last First)', format_template: '{last} {first}' },
+        {
+          order_code: 'western',
+          display_name: 'Western (First Middle Last)',
+          format_template: '{first} {middle} {last}',
+        },
+        {
+          order_code: 'eastern',
+          display_name: 'Eastern (Last First Middle)',
+          format_template: '{last} {first} {middle}',
+        },
+        {
+          order_code: 'japanese',
+          display_name: 'Japanese (Last First)',
+          format_template: '{last} {first}',
+        },
       ];
-      
+
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
         .mockResolvedValueOnce({ ok: true, json: async () => [] });
-      
+
       render(<RegisterPage />);
-      
+
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
       });
-      
+
       // Fill in name fields
       fireEvent.change(screen.getByLabelText(/First Name/), {
         target: { value: 'John' },
@@ -206,16 +230,16 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Last Name/), {
         target: { value: 'Doe' },
       });
-      
+
       // Test Western order (default)
       expect(screen.getByText('John Michael Doe')).toBeInTheDocument();
-      
+
       // Test Eastern order
       fireEvent.change(screen.getByLabelText(/Name Display Order/), {
         target: { value: 'eastern' },
       });
       expect(screen.getByText('Doe John Michael')).toBeInTheDocument();
-      
+
       // Test Japanese order
       fireEvent.change(screen.getByLabelText(/Name Display Order/), {
         target: { value: 'japanese' },
@@ -227,17 +251,17 @@ describe('RegisterPage Integration Tests', () => {
       const mockOrders = [
         { order_code: 'custom', display_name: 'Custom Format', format_template: '{custom}' },
       ];
-      
+
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
         .mockResolvedValueOnce({ ok: true, json: async () => [] });
-      
+
       render(<RegisterPage />);
-      
+
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
       });
-      
+
       // Fill in name fields
       fireEvent.change(screen.getByLabelText(/First Name/), {
         target: { value: 'John' },
@@ -248,38 +272,38 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Last Name/), {
         target: { value: 'Doe' },
       });
-      
+
       // Select custom format
       fireEvent.change(screen.getByLabelText(/Name Display Order/), {
         target: { value: 'custom' },
       });
-      
+
       // Custom format field should appear
       expect(screen.getByLabelText(/Custom Name Format/)).toBeInTheDocument();
-      
+
       // Enter custom format
       fireEvent.change(screen.getByLabelText(/Custom Name Format/), {
         target: { value: '{last}, {first} {middle}' },
       });
-      
+
       // Check preview
       expect(screen.getByText('Doe, John Michael')).toBeInTheDocument();
     });
 
     it('handles form validation with multiple errors', async () => {
       render(<RegisterPage />);
-      
+
       // Submit empty form
       const submitButton = screen.getByText('Create Account');
       fireEvent.click(submitButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Email address is required')).toBeInTheDocument();
         expect(screen.getByText('Nickname is required')).toBeInTheDocument();
         expect(screen.getByText('First name is required')).toBeInTheDocument();
         expect(screen.getByText('Last name is required')).toBeInTheDocument();
       });
-      
+
       // Fill in invalid data
       fireEvent.change(screen.getByLabelText(/Email Address/), {
         target: { value: 'invalid-email' },
@@ -290,9 +314,9 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Phone Number/), {
         target: { value: 'invalid-phone' },
       });
-      
+
       fireEvent.click(submitButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
         expect(screen.getByText('Nickname must be at least 3 characters')).toBeInTheDocument();
@@ -302,20 +326,28 @@ describe('RegisterPage Integration Tests', () => {
 
     it('handles API errors gracefully', async () => {
       const mockOrders = [
-        { order_code: 'western', display_name: 'Western (First Middle Last)', format_template: '{first} {middle} {last}' },
+        {
+          order_code: 'western',
+          display_name: 'Western (First Middle Last)',
+          format_template: '{first} {middle} {last}',
+        },
       ];
-      
+
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
         .mockResolvedValueOnce({ ok: true, json: async () => [] })
-        .mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({ detail: 'Email already exists' }) });
-      
+        .mockResolvedValueOnce({
+          ok: false,
+          status: 400,
+          json: async () => ({ detail: 'Email already exists' }),
+        });
+
       render(<RegisterPage />);
-      
+
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
       });
-      
+
       // Fill in required fields
       fireEvent.change(screen.getByLabelText(/Email Address/), {
         target: { value: 'test@example.com' },
@@ -329,10 +361,10 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Last Name/), {
         target: { value: 'User' },
       });
-      
+
       const submitButton = screen.getByText('Create Account');
       fireEvent.click(submitButton);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Email already exists')).toBeInTheDocument();
       });
@@ -340,20 +372,24 @@ describe('RegisterPage Integration Tests', () => {
 
     it('handles network errors during form submission', async () => {
       const mockOrders = [
-        { order_code: 'western', display_name: 'Western (First Middle Last)', format_template: '{first} {middle} {last}' },
+        {
+          order_code: 'western',
+          display_name: 'Western (First Middle Last)',
+          format_template: '{first} {middle} {last}',
+        },
       ];
-      
+
       (global.fetch as jest.Mock)
         .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
         .mockResolvedValueOnce({ ok: true, json: async () => [] })
         .mockRejectedValueOnce(new Error('Network error'));
-      
+
       render(<RegisterPage />);
-      
+
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
       });
-      
+
       // Fill in required fields
       fireEvent.change(screen.getByLabelText(/Email Address/), {
         target: { value: 'test@example.com' },
@@ -367,12 +403,14 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.change(screen.getByLabelText(/Last Name/), {
         target: { value: 'User' },
       });
-      
+
       const submitButton = screen.getByText('Create Account');
       fireEvent.click(submitButton);
-      
+
       await waitFor(() => {
-        expect(screen.getByText('Network error. Please check your connection.')).toBeInTheDocument();
+        expect(
+          screen.getByText('Network error. Please check your connection.')
+        ).toBeInTheDocument();
       });
     });
   });

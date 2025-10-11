@@ -1,7 +1,7 @@
 """
 User management API endpoints.
 """
-from typing import List, Optional
+from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -190,14 +190,14 @@ async def delete_user(user_id: UUID, db: Session = Depends(get_db)):
 @router.get("/name-display-orders/", response_model=List[NameDisplayOrderResponse])
 async def get_name_display_orders(db: Session = Depends(get_db)):
     """Get available name display orders."""
-    orders = db.query(NameDisplayOrder).filter(NameDisplayOrder.is_active == True).all()
+    orders = db.query(NameDisplayOrder).filter(NameDisplayOrder.is_active).all()
     return orders
 
 
 @router.get("/locale-formats/", response_model=List[LocaleNameFormatResponse])
 async def get_locale_formats(db: Session = Depends(get_db)):
     """Get locale-specific name formats."""
-    formats = db.query(LocaleNameFormat).filter(LocaleNameFormat.is_active == True).all()
+    formats = db.query(LocaleNameFormat).filter(LocaleNameFormat.is_active).all()
     return formats
 
 
@@ -255,7 +255,10 @@ async def create_user_preference(
     return preference
 
 
-@router.put("/{user_id}/preferences/{preference_id}", response_model=UserPreferenceResponse)
+@router.put(
+    "/{user_id}/preferences/{preference_id}", 
+    response_model=UserPreferenceResponse
+)
 async def update_user_preference(
     user_id: UUID,
     preference_id: int,

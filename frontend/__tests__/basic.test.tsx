@@ -9,9 +9,9 @@ describe('Basic Tests', () => {
         <p>This is a test</p>
       </div>
     );
-    
+
     render(<TestComponent />);
-    
+
     expect(screen.getByText('Test Component')).toBeInTheDocument();
     expect(screen.getByText('This is a test')).toBeInTheDocument();
   });
@@ -23,21 +23,11 @@ describe('Basic Tests', () => {
         <p>Join our community and connect with others</p>
         <div>
           <label htmlFor="email">Email Address *</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="Enter your email address"
-          />
+          <input type="email" id="email" name="email" placeholder="Enter your email address" />
         </div>
         <div>
           <label htmlFor="nickname">Nickname *</label>
-          <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            placeholder="Choose a unique nickname"
-          />
+          <input type="text" id="nickname" name="nickname" placeholder="Choose a unique nickname" />
         </div>
         <div>
           <label htmlFor="first_name">First Name *</label>
@@ -50,19 +40,14 @@ describe('Basic Tests', () => {
         </div>
         <div>
           <label htmlFor="last_name">Last Name *</label>
-          <input
-            type="text"
-            id="last_name"
-            name="last_name"
-            placeholder="Enter your last name"
-          />
+          <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" />
         </div>
         <button type="submit">Create Account</button>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     expect(screen.getByText('Create Your Account')).toBeInTheDocument();
     expect(screen.getByText('Join our community and connect with others')).toBeInTheDocument();
     expect(screen.getByText('Email Address *')).toBeInTheDocument();
@@ -78,21 +63,11 @@ describe('Basic Tests', () => {
         <h1>Create Your Account</h1>
         <div>
           <label htmlFor="email">Email Address *</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="Enter your email address"
-          />
+          <input type="email" id="email" name="email" placeholder="Enter your email address" />
         </div>
         <div>
           <label htmlFor="nickname">Nickname *</label>
-          <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            placeholder="Choose a unique nickname"
-          />
+          <input type="text" id="nickname" name="nickname" placeholder="Choose a unique nickname" />
         </div>
         <div>
           <label htmlFor="first_name">First Name *</label>
@@ -105,29 +80,15 @@ describe('Basic Tests', () => {
         </div>
         <div>
           <label htmlFor="last_name">Last Name *</label>
-          <input
-            type="text"
-            id="last_name"
-            name="last_name"
-            placeholder="Enter your last name"
-          />
+          <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" />
         </div>
         <div>
           <label htmlFor="phone">Phone Number</label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            placeholder="Enter your phone number"
-          />
+          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" />
         </div>
         <div>
           <label htmlFor="birth_date">Birth Date</label>
-          <input
-            type="date"
-            id="birth_date"
-            name="birth_date"
-          />
+          <input type="date" id="birth_date" name="birth_date" />
         </div>
         <div>
           <label htmlFor="country">Country</label>
@@ -148,12 +109,7 @@ describe('Basic Tests', () => {
         </div>
         <div>
           <label htmlFor="bio">Bio</label>
-          <textarea
-            id="bio"
-            name="bio"
-            placeholder="Tell us about yourself"
-            rows={3}
-          />
+          <textarea id="bio" name="bio" placeholder="Tell us about yourself" rows={3} />
         </div>
         <div>
           <label htmlFor="preferred_language">Preferred Language</label>
@@ -172,9 +128,9 @@ describe('Basic Tests', () => {
         <button type="submit">Create Account</button>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     // Check all form fields are present
     expect(screen.getByLabelText('Email Address *')).toBeInTheDocument();
     expect(screen.getByLabelText('Nickname *')).toBeInTheDocument();
@@ -219,9 +175,9 @@ describe('Basic Tests', () => {
         </div>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     expect(screen.getByLabelText('Name Display Order')).toBeInTheDocument();
     expect(screen.getByLabelText('Custom Name Format')).toBeInTheDocument();
     expect(screen.getByText('Name Preview:')).toBeInTheDocument();
@@ -233,22 +189,12 @@ describe('Basic Tests', () => {
       <form>
         <div>
           <label htmlFor="email">Email Address *</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            placeholder="Enter your email address"
-          />
+          <input type="email" id="email" name="email" placeholder="Enter your email address" />
           <p className="error">Email address is required</p>
         </div>
         <div>
           <label htmlFor="nickname">Nickname *</label>
-          <input
-            type="text"
-            id="nickname"
-            name="nickname"
-            placeholder="Choose a unique nickname"
-          />
+          <input type="text" id="nickname" name="nickname" placeholder="Choose a unique nickname" />
           <p className="error">Nickname is required</p>
         </div>
         <div>
@@ -263,29 +209,19 @@ describe('Basic Tests', () => {
         </div>
         <div>
           <label htmlFor="last_name">Last Name *</label>
-          <input
-            type="text"
-            id="last_name"
-            name="last_name"
-            placeholder="Enter your last name"
-          />
+          <input type="text" id="last_name" name="last_name" placeholder="Enter your last name" />
           <p className="error">Last name is required</p>
         </div>
         <div>
           <label htmlFor="phone">Phone Number</label>
-          <input
-            type="tel"
-            id="phone"
-            name="phone"
-            placeholder="Enter your phone number"
-          />
+          <input type="tel" id="phone" name="phone" placeholder="Enter your phone number" />
           <p className="error">Please enter a valid phone number</p>
         </div>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     expect(screen.getByText('Email address is required')).toBeInTheDocument();
     expect(screen.getByText('Nickname is required')).toBeInTheDocument();
     expect(screen.getByText('First name is required')).toBeInTheDocument();
@@ -301,9 +237,9 @@ describe('Basic Tests', () => {
         </button>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     const submitButton = screen.getByText('Creating Account...');
     expect(submitButton).toBeInTheDocument();
     expect(submitButton).toBeDisabled();
@@ -323,9 +259,9 @@ describe('Basic Tests', () => {
         </div>
       </form>
     );
-    
+
     render(<TestForm />);
-    
+
     expect(screen.getByText('Registration failed. Please try again.')).toBeInTheDocument();
     expect(screen.getByText('Network error. Please check your connection.')).toBeInTheDocument();
     expect(screen.getByText('Email already exists')).toBeInTheDocument();

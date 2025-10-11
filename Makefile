@@ -227,3 +227,53 @@ logs-frontend: ## フロントエンドログを表示
 logs-db: ## データベースログを表示
 	@echo "📋 Showing database logs..."
 	docker compose logs -f postgres
+
+# ローカルテスト
+test-local: ## ローカルで包括的なテストを実行
+	@echo "🧪 Running comprehensive local tests..."
+	./scripts/local-test.sh
+
+# デプロイメント前のチェック
+pre-deploy: ## デプロイメント前のチェック
+	@echo "🔍 Running pre-deployment checks..."
+	@echo "1. Code quality checks..."
+	make lint
+	@echo "2. Running tests..."
+	make test
+	@echo "3. Security scans..."
+	cd backend && safety check -r requirements.txt
+	cd frontend && npm audit --audit-level moderate
+	@echo "✅ Pre-deployment checks completed!"
+
+# デプロイメント用のブランチ作成
+create-release-branch: ## リリース用ブランチを作成
+	@echo "🌿 Creating release branch..."
+	git checkout -b release/$(shell date +%Y%m%d-%H%M%S)
+	@echo "✅ Release branch created!"
+
+# デプロイメント用のコミット
+commit-for-deploy: ## デプロイメント用のコミット
+	@echo "📝 Committing changes for deployment..."
+	git add .
+	git commit -m "feat: prepare for deployment $(shell date +%Y%m%d-%H%M%S)"
+	@echo "✅ Changes committed!"
+
+# デプロイメント用のプッシュ
+push-for-deploy: ## デプロイメント用のプッシュ
+	@echo "🚀 Pushing changes for deployment..."
+	git push origin develop
+	@echo "✅ Changes pushed!"
+
+# 完全なデプロイメントフロー
+deploy-flow: ## 完全なデプロイメントフローを実行
+	@echo "🚀 Starting complete deployment flow..."
+	@echo "1. Running pre-deployment checks..."
+	make pre-deploy
+	@echo "2. Creating release branch..."
+	make create-release-branch
+	@echo "3. Committing changes..."
+	make commit-for-deploy
+	@echo "4. Pushing to repository..."
+	make push-for-deploy
+	@echo "✅ Deployment flow completed!"
+	@echo "🌐 Check GitHub Actions for deployment status"

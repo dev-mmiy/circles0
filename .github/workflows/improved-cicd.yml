@@ -1,0 +1,557 @@
+name: Improved CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, feature/* ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+        - dev
+        - staging
+        - production
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+  POSTGRES_VERSION: '15'
+  PROJECT_ID: circles-202510
+  REGION: asia-northeast1
+
+jobs:
+  # Stage 1: コード品質チェック（全ブランチ）
+  code-quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
+    - name: Set up Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package.json
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps --no-audit --no-fund
+
+    - name: Backend linting
+      run: |
+        cd backend
+        flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
+        black --check app/
+        isort --check-only app/
+
+    - name: Frontend linting
+      run: |
+        cd frontend
+        npm run lint
+        npm run format:check
+
+    - name: TypeScript type check
+      run: |
+        cd frontend
+        npm run type-check
+
+  # Stage 2: バックエンドテスト
+  backend-test:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Run database migrations
+      run: |
+        cd backend
+        alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+    - name: Run backend tests
+      run: |
+        cd backend
+        python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+    - name: Upload coverage reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: backend-coverage
+        path: backend/coverage.xml
+
+  # Stage 3: フロントエンドテスト
+  frontend-test:
+    name: Frontend Tests
+    runs-on: ubuntu-latest
+    needs: code-quality
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package.json
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps --no-audit --no-fund
+
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm run test -- --coverage --watchAll=false
+
+    - name: Build frontend
+      run: |
+        cd frontend
+        npm run build
+
+    - name: Upload frontend build
+      uses: actions/upload-artifact@v4
+      with:
+        name: frontend-build
+        path: frontend/.next/
+
+  # Stage 4: 統合テスト（develop/mainブランチのみ）
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Run database migrations
+      run: |
+        cd backend
+        alembic upgrade head
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+    - name: Run integration tests
+      run: |
+        cd backend
+        python -m pytest tests/integration/ -v
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+  # Stage 5: セキュリティスキャン
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test]
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/main'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
+    - name: Set up Node.js ${{ env.NODE_VERSION }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: frontend/package.json
+
+    - name: Install Python dependencies
+      run: |
+        cd backend
+        pip install -r requirements.txt
+
+    - name: Install Node.js dependencies
+      run: |
+        cd frontend
+        npm install --legacy-peer-deps --no-audit --no-fund
+
+    - name: Run Python security scan
+      run: |
+        cd backend
+        pip install safety bandit
+        safety check -r requirements.txt
+        bandit -r app/ -f json -o bandit-report.json || true
+
+    - name: Run Node.js security scan
+      run: |
+        cd frontend
+        npm audit --audit-level moderate
+
+  # Stage 6: ビルド・プッシュ（develop/mainブランチ）
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+    needs: [backend-test, frontend-test, integration-test, security-scan]
+    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.backend-test.result == 'success' && needs.frontend-test.result == 'success' && (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped') && (needs.security-scan.result == 'success' || needs.security-scan.result == 'skipped')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        driver-opts: |
+          image=moby/buildkit:latest
+          network=host
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        install_components: 'beta'
+        export_default_credentials: true
+
+    - name: Configure Docker for GCR
+      run: |
+        gcloud auth configure-docker asia.gcr.io --quiet
+        gcloud auth configure-docker gcr.io --quiet
+
+    - name: Build and push backend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: |
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }}
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push frontend image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend
+        push: true
+        tags: |
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }}
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Stage 7: Dev環境デプロイ（developブランチ）
+  deploy-dev:
+    name: Deploy to Dev Environment
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/develop' && needs.build-and-push.result == 'success'
+    environment: dev
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        install_components: 'beta'
+        export_default_credentials: true
+
+    - name: Deploy backend to Cloud Run (Dev)
+      run: |
+        gcloud run deploy disease-community-api-dev \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10 \
+          --set-env-vars ENVIRONMENT=development
+
+    - name: Deploy frontend to Cloud Run (Dev)
+      run: |
+        gcloud run deploy disease-community-frontend-dev \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 3000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10 \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-508246122017.asia-northeast1.run.app
+
+    - name: Health check (Dev)
+      run: |
+        sleep 30
+        BACKEND_URL="https://disease-community-api-dev-508246122017.asia-northeast1.run.app"
+        FRONTEND_URL="https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app"
+        
+        curl -f "$BACKEND_URL/health" || (echo "❌ Backend health check failed" && exit 1)
+        curl -f "$FRONTEND_URL" || (echo "❌ Frontend health check failed" && exit 1)
+        
+        echo "✅ Dev deployment successful!"
+        echo "🌐 Backend URL: $BACKEND_URL"
+        echo "🌐 Frontend URL: $FRONTEND_URL"
+
+    - name: Comment on PR
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🚀 **Dev Environment Deployed Successfully!**\n\n- Backend: https://disease-community-api-dev-508246122017.asia-northeast1.run.app\n- Frontend: https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app\n- API Docs: https://disease-community-api-dev-508246122017.asia-northeast1.run.app/docs'
+          })
+
+  # Stage 8: Staging環境デプロイ（mainブランチ）
+  deploy-staging:
+    name: Deploy to Staging Environment
+    runs-on: ubuntu-latest
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && needs.build-and-push.result == 'success'
+    environment: staging
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        install_components: 'beta'
+        export_default_credentials: true
+
+    - name: Deploy backend to Cloud Run (Staging)
+      run: |
+        gcloud run deploy disease-community-api-staging \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8000 \
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 2 \
+          --max-instances 20 \
+          --set-env-vars ENVIRONMENT=staging
+
+    - name: Deploy frontend to Cloud Run (Staging)
+      run: |
+        gcloud run deploy disease-community-frontend-staging \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 3000 \
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 2 \
+          --max-instances 20 \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-staging-508246122017.asia-northeast1.run.app
+
+    - name: Health check (Staging)
+      run: |
+        sleep 30
+        BACKEND_URL="https://disease-community-api-staging-508246122017.asia-northeast1.run.app"
+        FRONTEND_URL="https://disease-community-frontend-staging-508246122017.asia-northeast1.run.app"
+        
+        curl -f "$BACKEND_URL/health" || (echo "❌ Backend health check failed" && exit 1)
+        curl -f "$FRONTEND_URL" || (echo "❌ Frontend health check failed" && exit 1)
+        
+        echo "✅ Staging deployment successful!"
+        echo "🌐 Backend URL: $BACKEND_URL"
+        echo "🌐 Frontend URL: $FRONTEND_URL"
+
+  # Stage 9: プロダクション環境デプロイ（手動承認が必要）
+  deploy-production:
+    name: Deploy to Production Environment
+    runs-on: ubuntu-latest
+    needs: [deploy-staging]
+    if: github.ref == 'refs/heads/main' && needs.deploy-staging.result == 'success'
+    environment: production
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: ${{ env.PROJECT_ID }}
+        install_components: 'beta'
+        export_default_credentials: true
+
+    - name: Deploy backend to Cloud Run (Production)
+      run: |
+        gcloud run deploy disease-community-api \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8000 \
+          --timeout 300 \
+          --memory 2Gi \
+          --cpu 4 \
+          --max-instances 100 \
+          --set-env-vars ENVIRONMENT=production
+
+    - name: Deploy frontend to Cloud Run (Production)
+      run: |
+        gcloud run deploy disease-community-frontend \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 3000 \
+          --timeout 300 \
+          --memory 2Gi \
+          --cpu 4 \
+          --max-instances 100 \
+          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app
+
+    - name: Health check (Production)
+      run: |
+        sleep 30
+        BACKEND_URL="https://disease-community-api-508246122017.asia-northeast1.run.app"
+        FRONTEND_URL="https://disease-community-frontend-508246122017.asia-northeast1.run.app"
+        
+        curl -f "$BACKEND_URL/health" || (echo "❌ Backend health check failed" && exit 1)
+        curl -f "$FRONTEND_URL" || (echo "❌ Frontend health check failed" && exit 1)
+        
+        echo "✅ Production deployment successful!"
+        echo "🌐 Backend URL: $BACKEND_URL"
+        echo "🌐 Frontend URL: $FRONTEND_URL"
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: v${{ github.run_number }}
+        release_name: Release v${{ github.run_number }}
+        body: |
+          🚀 **Production Deployment Successful!**
+          
+          - Backend: https://disease-community-api-508246122017.asia-northeast1.run.app
+          - Frontend: https://disease-community-frontend-508246122017.asia-northeast1.run.app
+          - API Docs: https://disease-community-api-508246122017.asia-northeast1.run.app/docs
+        draft: false
+        prerelease: false
