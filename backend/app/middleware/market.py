@@ -1,93 +1,50 @@
 """
-Market detection middleware for FastAPI
+Market detection middleware for FastAPI.
 """
-from fastapi import Request, HTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import Response
-from typing import Optional
-import re
+from starlette.requests import Request
+from starlette.types import ASGIApp
 
-from app.markets import (
-    MARKETS, 
-    DEFAULT_MARKET, 
-    get_market, 
-    is_valid_market,
-    MARKET_DETECTION_ORDER
-)
+from app.markets import MARKETS, DEFAULT_MARKET, SUPPORTED_MARKETS
 
 
 class MarketMiddleware(BaseHTTPMiddleware):
-    """Middleware to detect and set market for requests."""
-    
+    """Middleware to detect and set market context."""
+
+    def __init__(self, app: ASGIApp):
+        super().__init__(app)
+
     async def dispatch(self, request: Request, call_next):
-        # Detect market
-        market = self.detect_market(request)
-        
-        # Set market in request state
-        request.state.market = market
-        request.state.market_config = get_market(market)
-        
-        # Process request
+        market_code = self.detect_market(request)
+        request.state.market = market_code
+        request.state.market_config = MARKETS.get(market_code, MARKETS[DEFAULT_MARKET])
         response = await call_next(request)
-        
-        # Add market info to response headers
-        response.headers["X-Market"] = market
-        
         return response
-    
+
     def detect_market(self, request: Request) -> str:
-        """Detect market from request."""
-        
-        # 1. URL parameter
+        """Detect market from request parameters."""
+        # Check URL parameter first
         if market := request.query_params.get("market"):
-            if is_valid_market(market):
+            if market in SUPPORTED_MARKETS:
                 return market
-        
-        # 2. Header
+
+        # Check header
         if market := request.headers.get("x-market"):
-            if is_valid_market(market):
+            if market in SUPPORTED_MARKETS:
                 return market
-        
-        # 3. Accept-Language header
+
+        # Check Accept-Language header
         if accept_lang := request.headers.get("accept-language"):
-            market = self.parse_accept_language(accept_lang)
-            if market:
-                return market
-        
-        # 4. Cookie
+            # Simple language detection
+            if "ja" in accept_lang.lower():
+                return "ja-jp"
+            if "en" in accept_lang.lower():
+                return "en-us"
+
+        # Check cookie
         if market := request.cookies.get("market"):
-            if is_valid_market(market):
+            if market in SUPPORTED_MARKETS:
                 return market
-        
-        # 5. Default
+
+        # Default to en-us
         return DEFAULT_MARKET
-    
-    def parse_accept_language(self, accept_language: str) -> Optional[str]:
-        """Parse Accept-Language header to detect market."""
-        # Split by comma and process each language
-        languages = [lang.strip().split(';')[0] for lang in accept_language.split(',')]
-        
-        for lang in languages:
-            # Check for exact match (e.g., "ja-JP")
-            exact_match = lang.lower().replace('_', '-')
-            if is_valid_market(exact_match):
-                return exact_match
-            
-            # Check for language match (e.g., "ja" -> "ja-jp")
-            language = lang.split('-')[0].lower()
-            if language == 'ja':
-                return 'ja-jp'
-            if language == 'en':
-                return 'en-us'
-        
-        return None
-
-
-def get_market_from_request(request: Request) -> str:
-    """Get market from request state."""
-    return getattr(request.state, 'market', DEFAULT_MARKET)
-
-
-def get_market_config_from_request(request: Request):
-    """Get market config from request state."""
-    return getattr(request.state, 'market_config', get_market(DEFAULT_MARKET))

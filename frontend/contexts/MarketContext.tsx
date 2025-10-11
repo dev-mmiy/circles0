@@ -94,16 +94,13 @@ export const MarketProvider: React.FC<MarketProviderProps> = ({
     return new Intl.NumberFormat(marketConfig.locale, {
       style: 'currency',
       currency: marketConfig.currency,
-      timeZone: marketConfig.timezone
     }).format(amount);
   };
 
   const formatNumber = (number: number): string => {
     if (!marketConfig) return number.toString();
     
-    return new Intl.NumberFormat(marketConfig.locale, {
-      timeZone: marketConfig.timezone
-    }).format(number);
+    return new Intl.NumberFormat(marketConfig.locale).format(number);
   };
 
   return (

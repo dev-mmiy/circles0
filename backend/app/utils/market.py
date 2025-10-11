@@ -1,74 +1,60 @@
 """
-Market utility functions for formatting and localization
+Market utility functions.
 """
 from datetime import datetime
-from typing import Optional
 import pytz
-from app.markets import get_market
+from typing import Dict, Any
+
+from app.markets import MARKETS, DEFAULT_MARKET
+
+
+def get_market_config(market_code: str) -> Dict[str, Any]:
+    """Get market configuration by code."""
+    return MARKETS.get(market_code, MARKETS[DEFAULT_MARKET])
 
 
 def format_datetime_for_market(
-    dt: datetime, 
-    market: str, 
-    format_type: str = "datetime"
+    dt: datetime,
+    market_code: str,
+    format_key: str = "date_format"
 ) -> str:
-    """Format datetime for specific market."""
-    market_config = get_market(market)
-    if not market_config:
-        return dt.isoformat()
-    
-    # Convert to market timezone
-    timezone = pytz.timezone(market_config.timezone)
-    localized_dt = dt.astimezone(timezone)
-    
-    if format_type == "date":
-        return localized_dt.strftime(market_config.date_format)
-    elif format_type == "time":
-        return localized_dt.strftime("%H:%M")
-    elif format_type == "datetime":
-        return localized_dt.strftime(f"{market_config.date_format} %H:%M")
-    else:
-        return localized_dt.isoformat()
+    """
+    Format a datetime object according to the specified market's timezone and date format.
+    """
+    market_config = get_market_config(market_code)
+    timezone_str = market_config["timezone"]
+    date_format_str = market_config[format_key]
+
+    # Convert to market's timezone
+    tz = pytz.timezone(timezone_str)
+    localized_dt = dt.astimezone(tz)
+
+    # Format the datetime
+    return localized_dt.strftime(date_format_str + " %H:%M")
 
 
-def format_currency_for_market(amount: float, market: str) -> str:
-    """Format currency for specific market."""
-    market_config = get_market(market)
-    if not market_config:
-        return str(amount)
-    
-    # Simple currency formatting (can be enhanced with proper currency formatting)
-    if market_config.currency == "USD":
+def format_currency_for_market(amount: float, market_code: str) -> str:
+    """Format currency for the specified market."""
+    market_config = get_market_config(market_code)
+    currency = market_config["currency"]
+    number_format = market_config["number_format"]
+
+    # Simple currency formatting
+    if currency == "USD":
         return f"${amount:,.2f}"
-    elif market_config.currency == "JPY":
+    elif currency == "JPY":
         return f"¥{amount:,.0f}"
     else:
-        return f"{amount:,.2f} {market_config.currency}"
+        return f"{amount:,.2f} {currency}"
 
 
-def format_number_for_market(number: float, market: str) -> str:
-    """Format number for specific market."""
-    market_config = get_market(market)
-    if not market_config:
-        return str(number)
-    
-    # Simple number formatting (can be enhanced with proper number formatting)
-    return f"{number:,.2f}"
+def get_market_timezone(market_code: str) -> str:
+    """Get timezone for the specified market."""
+    market_config = get_market_config(market_code)
+    return market_config["timezone"]
 
 
-def get_market_timezone(market: str) -> Optional[str]:
-    """Get timezone for market."""
-    market_config = get_market(market)
-    return market_config.timezone if market_config else None
-
-
-def get_market_currency(market: str) -> Optional[str]:
-    """Get currency for market."""
-    market_config = get_market(market)
-    return market_config.currency if market_config else None
-
-
-def get_market_date_format(market: str) -> Optional[str]:
-    """Get date format for market."""
-    market_config = get_market(market)
-    return market_config.date_format if market_config else None
+def get_market_currency(market_code: str) -> str:
+    """Get currency for the specified market."""
+    market_config = get_market_config(market_code)
+    return market_config["currency"]

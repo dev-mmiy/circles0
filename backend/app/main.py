@@ -43,7 +43,7 @@ app.add_middleware(
 async def root(request: Request):
     market = getattr(request.state, 'market', 'en-us')
     market_config = getattr(request.state, 'market_config', None)
-    
+
     return {
         "message": "Hello World!",
         "environment": ENVIRONMENT,

@@ -9,9 +9,9 @@ export interface Market {
   country: string;
   currency: string;
   timezone: string;
-  dateFormat: string;
-  numberFormat: string;
-  displayName: string;
+  date_format: string;
+  number_format: string;
+  display_name: string;
   flag: string;
 }
 
@@ -50,7 +50,7 @@ export const isValidMarket = (locale: string): boolean => {
 
 export const getMarketDisplayName = (locale: string): string => {
   const market = getMarket(locale);
-  return market ? market.displayName : locale;
+  return market ? market.display_name : locale;
 };
 
 export const getMarketFlag = (locale: string): string => {
