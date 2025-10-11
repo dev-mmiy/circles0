@@ -106,7 +106,9 @@ class User(Base):
     activity_logs = relationship(
         "UserActivityLog", back_populates="user", cascade="all, delete-orphan"
     )
-    # user_diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")  # To be implemented later
+    # user_diseases = relationship(
+    #     "UserDisease", back_populates="user", cascade="all, delete-orphan"
+    # )  # To be implemented later
 
     def get_full_name(self, locale: Optional[str] = None) -> str:
         """Get formatted full name based on user's display order preference."""
