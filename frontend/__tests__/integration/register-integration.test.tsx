@@ -5,7 +5,7 @@ import RegisterPage from '../../app/register/page';
 
 // Mock next-i18next
 jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn(() => ({ t: (key) => key })),
+  useTranslation: jest.fn(() => ({ t: key => key })),
 }));
 
 // Mock next/navigation
@@ -125,8 +125,12 @@ describe('RegisterPage Integration Tests', () => {
 
       // Wait for initial data to load
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/locale-formats/');
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/name-display-orders/'
+        );
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/locale-formats/'
+        );
       });
 
       // Fill in all form fields
@@ -217,7 +221,9 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/name-display-orders/'
+        );
       });
 
       // Fill in name fields
@@ -259,7 +265,9 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/name-display-orders/'
+        );
       });
 
       // Fill in name fields
@@ -296,13 +304,13 @@ describe('RegisterPage Integration Tests', () => {
         if (url.includes('/name-display-orders/')) {
           return Promise.resolve({
             ok: true,
-            json: async () => []
+            json: async () => [],
           });
         }
         if (url.includes('/locale-formats/')) {
           return Promise.resolve({
             ok: true,
-            json: async () => []
+            json: async () => [],
           });
         }
         return Promise.reject(new Error('Unmocked fetch call'));
@@ -363,49 +371,9 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
-      });
-
-      // Fill in required fields
-      fireEvent.change(screen.getByLabelText(/Email Address/), {
-        target: { value: 'test@example.com' },
-      });
-      fireEvent.change(screen.getByLabelText(/Nickname/), {
-        target: { value: 'testuser' },
-      });
-      fireEvent.change(screen.getByLabelText(/First Name/), {
-        target: { value: 'Test' },
-      });
-      fireEvent.change(screen.getByLabelText(/Last Name/), {
-        target: { value: 'User' },
-      });
-
-      const submitButton = screen.getByText('Create Account');
-      fireEvent.click(submitButton);
-
-      await waitFor(() => {
-        expect(screen.getByText(/User with this email or IDP ID already exists/)).toBeInTheDocument();
-      });
-    });
-
-    it('handles network errors during form submission', async () => {
-      const mockOrders = [
-        {
-          order_code: 'western',
-          display_name: 'Western (First Middle Last)',
-          format_template: '{first} {middle} {last}',
-        },
-      ];
-
-      (global.fetch as jest.Mock)
-        .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
-        .mockResolvedValueOnce({ ok: true, json: async () => [] })
-        .mockRejectedValueOnce(new Error('Network error'));
-
-      render(<RegisterPage />);
-
-      await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/name-display-orders/'
+        );
       });
 
       // Fill in required fields
@@ -427,8 +395,52 @@ describe('RegisterPage Integration Tests', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText(/Network error: Network error/)
+          screen.getByText(/User with this email or IDP ID already exists/)
         ).toBeInTheDocument();
+      });
+    });
+
+    it('handles network errors during form submission', async () => {
+      const mockOrders = [
+        {
+          order_code: 'western',
+          display_name: 'Western (First Middle Last)',
+          format_template: '{first} {middle} {last}',
+        },
+      ];
+
+      (global.fetch as jest.Mock)
+        .mockResolvedValueOnce({ ok: true, json: async () => mockOrders })
+        .mockResolvedValueOnce({ ok: true, json: async () => [] })
+        .mockRejectedValueOnce(new Error('Network error'));
+
+      render(<RegisterPage />);
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          'http://localhost:8000/api/v1/users/name-display-orders/'
+        );
+      });
+
+      // Fill in required fields
+      fireEvent.change(screen.getByLabelText(/Email Address/), {
+        target: { value: 'test@example.com' },
+      });
+      fireEvent.change(screen.getByLabelText(/Nickname/), {
+        target: { value: 'testuser' },
+      });
+      fireEvent.change(screen.getByLabelText(/First Name/), {
+        target: { value: 'Test' },
+      });
+      fireEvent.change(screen.getByLabelText(/Last Name/), {
+        target: { value: 'User' },
+      });
+
+      const submitButton = screen.getByText('Create Account');
+      fireEvent.click(submitButton);
+
+      await waitFor(() => {
+        expect(screen.getByText(/Network error: Network error/)).toBeInTheDocument();
       });
     });
   });

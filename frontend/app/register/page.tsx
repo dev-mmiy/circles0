@@ -182,10 +182,15 @@ export default function RegisterPage() {
         .replace('{last}', last_name || '');
     }
 
-    const order = nameDisplayOrders && nameDisplayOrders.length > 0 ? nameDisplayOrders.find(o => o.order_code === name_display_order) : null;
+    const order =
+      nameDisplayOrders && nameDisplayOrders.length > 0
+        ? nameDisplayOrders.find(o => o.order_code === name_display_order)
+        : null;
     if (!order || !order.format_template) {
       // Fallback to default western format
-      return `${first_name || ''} ${middle_name || ''} ${last_name || ''}`.trim().replace(/\s+/g, ' ');
+      return `${first_name || ''} ${middle_name || ''} ${last_name || ''}`
+        .trim()
+        .replace(/\s+/g, ' ');
     }
 
     return order.format_template
@@ -351,11 +356,13 @@ export default function RegisterPage() {
                     onChange={handleInputChange}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {nameDisplayOrders && nameDisplayOrders.length > 0 ? nameDisplayOrders.map(order => (
-                      <option key={order.order_code} value={order.order_code}>
-                        {order.display_name}
-                      </option>
-                    )) : (
+                    {nameDisplayOrders && nameDisplayOrders.length > 0 ? (
+                      nameDisplayOrders.map(order => (
+                        <option key={order.order_code} value={order.order_code}>
+                          {order.display_name}
+                        </option>
+                      ))
+                    ) : (
                       <option value="western">Western (First Middle Last)</option>
                     )}
                   </select>
@@ -367,7 +374,7 @@ export default function RegisterPage() {
                     <label
                       htmlFor="custom_name_format"
                       className="block text-sm font-medium text-gray-700 mb-1"
-                      style={{color: '#374151'}}
+                      style={{ color: '#374151' }}
                     >
                       Custom Name Format
                     </label>

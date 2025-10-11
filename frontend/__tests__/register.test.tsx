@@ -5,7 +5,7 @@ import RegisterPage from '../app/register/page';
 
 // Mock next-i18next
 jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn(() => ({ t: (key) => key })),
+  useTranslation: jest.fn(() => ({ t: key => key })),
 }));
 
 // Mock next/navigation
@@ -92,27 +92,27 @@ describe('RegisterPage', () => {
               order_code: 'western',
               display_name: 'Western (First Middle Last)',
               format_template: '{first} {middle} {last}',
-              description: 'English standard format'
+              description: 'English standard format',
             },
             {
               order_code: 'eastern',
               display_name: 'Eastern (Last First Middle)',
               format_template: '{last} {first} {middle}',
-              description: 'East Asian standard format'
+              description: 'East Asian standard format',
             },
             {
               order_code: 'japanese',
               display_name: 'Japanese (Last First)',
               format_template: '{last} {first}',
-              description: 'Japanese standard format'
+              description: 'Japanese standard format',
             },
             {
               order_code: 'custom',
               display_name: 'Custom Format',
               format_template: '{custom}',
-              description: 'User-defined format'
-            }
-          ]
+              description: 'User-defined format',
+            },
+          ],
         });
       }
       if (url.includes('/locale-formats/')) {
@@ -120,8 +120,8 @@ describe('RegisterPage', () => {
           ok: true,
           json: async () => [
             { locale: 'ja-jp', default_order_code: 'japanese' },
-            { locale: 'en-us', default_order_code: 'western' }
-          ]
+            { locale: 'en-us', default_order_code: 'western' },
+          ],
         });
       }
       if (url.includes('/api/v1/users/') && url.endsWith('/')) {
@@ -131,8 +131,8 @@ describe('RegisterPage', () => {
           json: async () => ({
             id: '123e4567-e89b-12d3-a456-426614174000',
             member_id: '123456789012',
-            formatted_member_id: '1234-5678-9012'
-          })
+            formatted_member_id: '1234-5678-9012',
+          }),
         });
       }
       return Promise.reject(new Error('Unmocked fetch call'));
@@ -202,7 +202,7 @@ describe('RegisterPage', () => {
     fireEvent.change(nicknameInput, { target: { value: 'testuser' } });
     fireEvent.change(firstNameInput, { target: { value: 'Test' } });
     fireEvent.change(lastNameInput, { target: { value: 'User' } });
-    
+
     // Submit the form
     const form = emailInput.closest('form');
     fireEvent.submit(form!);
@@ -219,13 +219,13 @@ describe('RegisterPage', () => {
       if (url.includes('/name-display-orders/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       if (url.includes('/locale-formats/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       return Promise.reject(new Error('Unmocked fetch call'));
@@ -250,13 +250,13 @@ describe('RegisterPage', () => {
       if (url.includes('/name-display-orders/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       if (url.includes('/locale-formats/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       return Promise.reject(new Error('Unmocked fetch call'));
@@ -281,13 +281,13 @@ describe('RegisterPage', () => {
       if (url.includes('/name-display-orders/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       if (url.includes('/locale-formats/')) {
         return Promise.resolve({
           ok: true,
-          json: async () => []
+          json: async () => [],
         });
       }
       return Promise.reject(new Error('Unmocked fetch call'));
@@ -315,12 +315,12 @@ describe('RegisterPage', () => {
     });
 
     const nameDisplayOrderSelect = screen.getByLabelText(/Name Display Order/) as HTMLSelectElement;
-    
+
     // Check if 'custom' option exists
     const hasCustomOption = Array.from(nameDisplayOrderSelect.options).some(
       option => option.value === 'custom'
     );
-    
+
     // Only test if custom option is available
     if (hasCustomOption) {
       // Change to custom format
@@ -393,9 +393,9 @@ describe('RegisterPage', () => {
               order_code: 'western',
               display_name: 'Western (First Middle Last)',
               format_template: '{first} {middle} {last}',
-              description: 'English standard format'
-            }
-          ]
+              description: 'English standard format',
+            },
+          ],
         });
       }
       if (url.includes('/locale-formats/')) {
@@ -403,8 +403,8 @@ describe('RegisterPage', () => {
           ok: true,
           json: async () => [
             { locale: 'ja-jp', default_order_code: 'japanese' },
-            { locale: 'en-us', default_order_code: 'western' }
-          ]
+            { locale: 'en-us', default_order_code: 'western' },
+          ],
         });
       }
       if (url.includes('/api/v1/users/') && url.endsWith('/')) {
@@ -452,9 +452,9 @@ describe('RegisterPage', () => {
               order_code: 'western',
               display_name: 'Western (First Middle Last)',
               format_template: '{first} {middle} {last}',
-              description: 'English standard format'
-            }
-          ]
+              description: 'English standard format',
+            },
+          ],
         });
       }
       if (url.includes('/locale-formats/')) {
@@ -462,8 +462,8 @@ describe('RegisterPage', () => {
           ok: true,
           json: async () => [
             { locale: 'ja-jp', default_order_code: 'japanese' },
-            { locale: 'en-us', default_order_code: 'western' }
-          ]
+            { locale: 'en-us', default_order_code: 'western' },
+          ],
         });
       }
       if (url.includes('/api/v1/users/') && url.endsWith('/')) {
@@ -542,8 +542,12 @@ describe('RegisterPage', () => {
     render(<RegisterPage />);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
-      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/locale-formats/');
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/users/name-display-orders/'
+      );
+      expect(global.fetch).toHaveBeenCalledWith(
+        'http://localhost:8000/api/v1/users/locale-formats/'
+      );
     });
   });
 

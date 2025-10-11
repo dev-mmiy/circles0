@@ -5,7 +5,7 @@ import ProfilePage from '../app/profile/[id]/page';
 
 // Mock next-i18next
 jest.mock('react-i18next', () => ({
-  useTranslation: jest.fn(() => ({ t: (key) => key })),
+  useTranslation: jest.fn(() => ({ t: key => key })),
 }));
 
 // Mock next/navigation
