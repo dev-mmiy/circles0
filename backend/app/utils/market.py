@@ -18,7 +18,7 @@ def format_datetime_for_market(
     dt: datetime, market_code: str, format_key: str = "date_format"
 ) -> str:
     """
-    Format a datetime object according to the specified market's timezone and date format.
+    Format datetime for market timezone.
     """
     market_config = get_market_config(market_code)
     timezone_str = market_config["timezone"]
