@@ -1,6 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
 
 interface ApiResponse {
   message: string;
@@ -129,6 +133,28 @@ export default function Home() {
             </div>
           </div>
         )}
+
+        {/* Navigation Links */}
+        <div className="mt-8 space-y-4">
+          <div className="text-center">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/register"
+                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+              >
+                Create Account
+              </Link>
+                  <Link
+                    href="http://localhost:8000/docs"
+                    className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                    target="_blank"
+                  >
+                    API Documentation
+                  </Link>
+            </div>
+          </div>
+        </div>
       </div>
     </main>
   );

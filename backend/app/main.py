@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.middleware.market import MarketMiddleware
+from app.api.users import router as users_router
 
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -31,6 +32,15 @@ allowed_origins = (
     ]
 )
 
+# Add localhost origins for development
+if ENVIRONMENT in ["development", "test"]:
+    allowed_origins.extend([
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
+    ])
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -38,6 +48,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Include routers
+app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 
 
 @app.get("/")
