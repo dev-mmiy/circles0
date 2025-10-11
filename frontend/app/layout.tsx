@@ -5,14 +5,16 @@ import './globals.css';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Disease Community',
-  description: 'Connect with others who understand your journey',
+  title: 'Disease Community Platform',
+  description: 'A platform for people with diseases to connect and share experiences',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+      </body>
     </html>
   );
 }

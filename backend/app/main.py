@@ -1,7 +1,9 @@
 import os
+from datetime import datetime
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from app.middleware.market import MarketMiddleware
 
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
@@ -14,6 +16,9 @@ app = FastAPI(
     docs_url="/docs" if ENVIRONMENT == "development" else None,
     redoc_url="/redoc" if ENVIRONMENT == "development" else None,
 )
+
+# Add market middleware
+app.add_middleware(MarketMiddleware)
 
 # CORS middleware
 allowed_origins = (
@@ -35,16 +40,30 @@ app.add_middleware(
 
 
 @app.get("/")
-async def root():
-    return {"message": "Hello World!", "environment": ENVIRONMENT, "version": "1.0.0"}
+async def root(request: Request):
+    market = getattr(request.state, 'market', 'en-us')
+    market_config = getattr(request.state, 'market_config', None)
+    
+    return {
+        "message": "Hello World!",
+        "environment": ENVIRONMENT,
+        "version": "1.0.0",
+        "market": market,
+        "timestamp": datetime.utcnow().isoformat(),
+        "timezone": market_config.timezone if market_config else "UTC",
+        "currency": market_config.currency if market_config else "USD",
+    }
 
 
 @app.get("/health")
-async def health_check():
+async def health_check(request: Request):
+    market = getattr(request.state, 'market', 'en-us')
     return {
         "status": "healthy",
         "environment": ENVIRONMENT,
         "service": "disease-community-api",
+        "market": market,
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 

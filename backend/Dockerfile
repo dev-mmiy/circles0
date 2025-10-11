@@ -25,12 +25,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Development stage
 FROM base AS development
 COPY . .
+
+# Copy market configuration
+COPY config/markets.json /app/config/markets.json
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 # Production stage
 FROM base AS production
 COPY . .
+
+# Copy market configuration
+COPY config/markets.json /app/config/markets.json
 
 # Create non-root user
 RUN adduser --disabled-password --gecos '' appuser && \

@@ -16,6 +16,56 @@ install: ## 全依存関係をインストール
 	cd frontend && npm ci
 	@echo "✅ Dependencies installed successfully!"
 
+# データベース関連
+db-create: ## データベースを作成
+	@echo "🗄️ Creating databases..."
+	./scripts/create_databases.sh all
+	@echo "✅ Databases created successfully!"
+
+db-create-dev: ## 開発用データベースを作成
+	@echo "🗄️ Creating development database..."
+	./scripts/create_databases.sh dev
+	@echo "✅ Development database created successfully!"
+
+db-create-prod: ## 本番用データベースを作成
+	@echo "🗄️ Creating production database..."
+	./scripts/create_databases.sh prod
+	@echo "✅ Production database created successfully!"
+
+db-create-test: ## テスト用データベースを作成
+	@echo "🗄️ Creating test database..."
+	./scripts/create_databases.sh test
+	@echo "✅ Test database created successfully!"
+
+db-migrate: ## マイグレーションを実行
+	@echo "🔄 Running migrations..."
+	./scripts/migrate.sh dev upgrade
+	@echo "✅ Migrations completed successfully!"
+
+db-migrate-prod: ## 本番環境のマイグレーションを実行
+	@echo "🔄 Running production migrations..."
+	./scripts/migrate.sh prod upgrade
+	@echo "✅ Production migrations completed successfully!"
+
+db-migrate-test: ## テスト環境のマイグレーションを実行
+	@echo "🔄 Running test migrations..."
+	./scripts/migrate.sh test upgrade
+	@echo "✅ Test migrations completed successfully!"
+
+db-revision: ## 新しいマイグレーションを作成
+	@echo "📝 Creating new migration..."
+	@read -p "Enter migration message: " message; \
+	./scripts/migrate.sh dev revision "$$message"
+	@echo "✅ Migration created successfully!"
+
+db-history: ## マイグレーション履歴を表示
+	@echo "📋 Migration history:"
+	./scripts/migrate.sh dev history
+
+db-current: ## 現在のマイグレーション状態を表示
+	@echo "📍 Current migration status:"
+	./scripts/migrate.sh dev current
+
 # 開発環境の起動
 dev: ## 開発環境を起動
 	@echo "🚀 Starting development environment..."
