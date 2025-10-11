@@ -1,15 +1,8 @@
 """
 SQLAlchemy models package.
 """
-from .user import (
-    Base,
-    LocaleNameFormat,
-    NameDisplayOrder,
-    User,
-    UserActivityLog,
-    UserPreference,
-    UserSession,
-)
+from .user import (Base, LocaleNameFormat, NameDisplayOrder, User,
+                   UserActivityLog, UserPreference, UserSession)
 
 __all__ = [
     "Base",

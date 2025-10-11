@@ -8,18 +8,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import LocaleNameFormat, NameDisplayOrder, User, UserPreference
-from app.schemas.user import (
-    LocaleNameFormatResponse,
-    NameDisplayOrderResponse,
-    UserCreate,
-    UserPreferenceCreate,
-    UserPreferenceResponse,
-    UserPreferenceUpdate,
-    UserPublic,
-    UserResponse,
-    UserUpdate,
-)
+from app.models.user import (LocaleNameFormat, NameDisplayOrder, User,
+                             UserPreference)
+from app.schemas.user import (LocaleNameFormatResponse,
+                              NameDisplayOrderResponse, UserCreate,
+                              UserPreferenceCreate, UserPreferenceResponse,
+                              UserPreferenceUpdate, UserPublic, UserResponse,
+                              UserUpdate)
 from app.utils.member_id import format_member_id, generate_unique_member_id
 
 router = APIRouter()
