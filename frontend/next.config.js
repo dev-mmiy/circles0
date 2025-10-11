@@ -3,6 +3,15 @@ const nextConfig = {
   output: 'standalone',
   images: {
     unoptimized: true,
+    domains: ['example.com', 'localhost'],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'example.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
   },
   // Disable static optimization for pages that use client-side code
   experimental: {

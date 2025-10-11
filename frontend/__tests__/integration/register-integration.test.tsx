@@ -1,11 +1,11 @@
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useTranslation } from 'next-i18next';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 import RegisterPage from '../../app/register/page';
 
 // Mock next-i18next
-jest.mock('next-i18next', () => ({
-  useTranslation: jest.fn(),
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(() => ({ t: (key) => key })),
 }));
 
 // Mock next/navigation
@@ -125,8 +125,8 @@ describe('RegisterPage Integration Tests', () => {
 
       // Wait for initial data to load
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/locale-formats/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/locale-formats/');
       });
 
       // Fill in all form fields
@@ -176,7 +176,7 @@ describe('RegisterPage Integration Tests', () => {
 
       // Verify API call
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/', {
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -217,7 +217,7 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
       });
 
       // Fill in name fields
@@ -259,7 +259,7 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
       });
 
       // Fill in name fields
@@ -291,6 +291,23 @@ describe('RegisterPage Integration Tests', () => {
     });
 
     it('handles form validation with multiple errors', async () => {
+      // Mock the API calls
+      (global.fetch as jest.Mock).mockImplementation((url: string) => {
+        if (url.includes('/name-display-orders/')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => []
+          });
+        }
+        if (url.includes('/locale-formats/')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => []
+          });
+        }
+        return Promise.reject(new Error('Unmocked fetch call'));
+      });
+
       render(<RegisterPage />);
 
       // Submit empty form
@@ -315,12 +332,13 @@ describe('RegisterPage Integration Tests', () => {
         target: { value: 'invalid-phone' },
       });
 
-      fireEvent.click(submitButton);
+      const form = screen.getByLabelText(/Email Address/).closest('form');
+      fireEvent.submit(form!);
 
       await waitFor(() => {
-        expect(screen.getByText('Please enter a valid email address')).toBeInTheDocument();
-        expect(screen.getByText('Nickname must be at least 3 characters')).toBeInTheDocument();
-        expect(screen.getByText('Please enter a valid phone number')).toBeInTheDocument();
+        expect(screen.getByText(/Please enter a valid email address/)).toBeInTheDocument();
+        expect(screen.getByText(/Nickname must be at least 3 characters/)).toBeInTheDocument();
+        expect(screen.getByText(/Please enter a valid phone number/)).toBeInTheDocument();
       });
     });
 
@@ -339,13 +357,13 @@ describe('RegisterPage Integration Tests', () => {
         .mockResolvedValueOnce({
           ok: false,
           status: 400,
-          json: async () => ({ detail: 'Email already exists' }),
+          text: async () => 'User with this email or IDP ID already exists',
         });
 
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
       });
 
       // Fill in required fields
@@ -366,7 +384,7 @@ describe('RegisterPage Integration Tests', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Email already exists')).toBeInTheDocument();
+        expect(screen.getByText(/User with this email or IDP ID already exists/)).toBeInTheDocument();
       });
     });
 
@@ -387,7 +405,7 @@ describe('RegisterPage Integration Tests', () => {
       render(<RegisterPage />);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/name-display-orders/');
+        expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/name-display-orders/');
       });
 
       // Fill in required fields
@@ -409,7 +427,7 @@ describe('RegisterPage Integration Tests', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Network error. Please check your connection.')
+          screen.getByText(/Network error: Network error/)
         ).toBeInTheDocument();
       });
     });

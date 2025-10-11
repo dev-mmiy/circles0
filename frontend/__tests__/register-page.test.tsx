@@ -1,11 +1,11 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 
 // Mock next-i18next
-jest.mock('next-i18next', () => ({
-  useTranslation: jest.fn(),
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(() => ({ t: (key) => key })),
 }));
 
 // Mock next/navigation
@@ -643,7 +643,7 @@ describe('Register Page Tests', () => {
         setError('');
 
         try {
-          const response = await fetch('/api/v1/users/', {
+          const response = await fetch('http://localhost:8000/api/v1/users/', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -725,7 +725,7 @@ describe('Register Page Tests', () => {
     fireEvent.click(submitButton);
 
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/v1/users/', {
+      expect(global.fetch).toHaveBeenCalledWith('http://localhost:8000/api/v1/users/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

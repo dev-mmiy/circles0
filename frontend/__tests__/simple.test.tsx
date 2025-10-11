@@ -1,11 +1,11 @@
 import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { useTranslation } from 'next-i18next';
+import { render, screen, waitFor } from '@testing-library/react';
+import { useTranslation } from 'react-i18next';
 import { useRouter } from 'next/navigation';
 
 // Mock next-i18next
-jest.mock('next-i18next', () => ({
-  useTranslation: jest.fn(),
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(() => ({ t: (key) => key })),
 }));
 
 // Mock next/navigation
@@ -128,7 +128,7 @@ describe('Simple Component Tests', () => {
     expect(screen.getByText('Create Account')).toBeInTheDocument();
   });
 
-  it('should handle form validation', () => {
+  it('should handle form validation', async () => {
     const TestForm = () => {
       const [errors, setErrors] = React.useState({});
 
@@ -184,8 +184,10 @@ describe('Simple Component Tests', () => {
     const submitButton = screen.getByText('Create Account');
     submitButton.click();
 
-    expect(screen.getByText('Email address is required')).toBeInTheDocument();
-    expect(screen.getByText('Nickname is required')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('Email address is required')).toBeInTheDocument();
+      expect(screen.getByText('Nickname is required')).toBeInTheDocument();
+    });
   });
 
   it('should mock API calls', async () => {
@@ -200,7 +202,7 @@ describe('Simple Component Tests', () => {
       json: async () => mockUser,
     });
 
-    const response = await fetch('/api/v1/users/', {
+    const response = await fetch('http://localhost:8000/api/v1/users/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

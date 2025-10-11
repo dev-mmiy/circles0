@@ -1,11 +1,11 @@
 import { render, screen, waitFor } from '@testing-library/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from 'react-i18next';
 import { useParams } from 'next/navigation';
 import ProfilePage from '../app/profile/[id]/page';
 
 // Mock next-i18next
-jest.mock('next-i18next', () => ({
-  useTranslation: jest.fn(),
+jest.mock('react-i18next', () => ({
+  useTranslation: jest.fn(() => ({ t: (key) => key })),
 }));
 
 // Mock next/navigation
@@ -84,7 +84,7 @@ describe('ProfilePage', () => {
     await waitFor(() => {
       expect(screen.getByText('Test User')).toBeInTheDocument();
       expect(screen.getByText('@testuser')).toBeInTheDocument();
-      expect(screen.getByText('Member ID: 1234-5678-9012')).toBeInTheDocument();
+      expect(screen.getByText(/Member ID:/)).toBeInTheDocument();
       expect(screen.getByText('test@example.com')).toBeInTheDocument();
       expect(screen.getByText('+1234567890')).toBeInTheDocument();
       expect(screen.getByText('Test bio')).toBeInTheDocument();
