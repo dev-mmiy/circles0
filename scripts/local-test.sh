@@ -90,23 +90,24 @@ start_services() {
 test_backend() {
     print_status "Running backend tests..."
     
-    cd backend
+    # Start backend container for testing
+    print_status "Starting backend container for testing..."
+    docker compose up -d backend
     
-    # Install dependencies
-    print_status "Installing Python dependencies..."
-    pip3 install -r requirements.txt
+    # Wait for backend to be ready
+    print_status "Waiting for backend to be ready..."
+    sleep 15
     
-    # Run linting
+    # Run linting in container
     print_status "Running backend linting..."
-    flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
-    black --check app/
-    isort --check-only app/
+    docker compose exec backend flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
+    docker compose exec backend black --check app/
+    docker compose exec backend isort --check-only app/
     
-    # Run tests
+    # Run tests in container
     print_status "Running backend tests..."
-    python -m pytest tests/ -v --cov=app --cov-report=html --cov-report=term
+    docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html --cov-report=term
     
-    cd ..
     print_success "Backend tests completed"
 }
 
@@ -114,30 +115,31 @@ test_backend() {
 test_frontend() {
     print_status "Running frontend tests..."
     
-    cd frontend
+    # Start frontend container for testing
+    print_status "Starting frontend container for testing..."
+    docker compose up -d frontend
     
-    # Install dependencies
-    print_status "Installing Node.js dependencies..."
-    npm install --legacy-peer-deps --no-audit --no-fund
+    # Wait for frontend to be ready
+    print_status "Waiting for frontend to be ready..."
+    sleep 15
     
-    # Run linting
+    # Run linting in container
     print_status "Running frontend linting..."
-    npm run lint
-    npm run format:check
+    docker compose exec frontend npm run lint
+    docker compose exec frontend npm run format:check
     
-    # Run type check
+    # Run type check in container
     print_status "Running TypeScript type check..."
-    npm run type-check
+    docker compose exec frontend npm run type-check
     
-    # Run tests
+    # Run tests in container
     print_status "Running frontend tests..."
-    npm run test -- --coverage --watchAll=false
+    docker compose exec frontend npm run test -- --coverage --watchAll=false
     
-    # Build frontend
+    # Build frontend in container
     print_status "Building frontend..."
-    npm run build
+    docker compose exec frontend npm run build
     
-    cd ..
     print_success "Frontend tests completed"
 }
 
@@ -145,17 +147,14 @@ test_frontend() {
 test_integration() {
     print_status "Running integration tests..."
     
-    cd backend
-    
-    # Run database migrations
+    # Run database migrations in container
     print_status "Running database migrations..."
-    alembic upgrade head
+    docker compose exec backend alembic upgrade head
     
-    # Run integration tests
+    # Run integration tests in container
     print_status "Running integration tests..."
-    python -m pytest tests/integration/ -v
+    docker compose exec backend python -m pytest tests/integration/ -v
     
-    cd ..
     print_success "Integration tests completed"
 }
 
@@ -163,19 +162,15 @@ test_integration() {
 security_scan() {
     print_status "Running security scans..."
     
-    # Backend security scan
-    cd backend
+    # Backend security scan in container
     print_status "Running Python security scan..."
-    pip3 install safety bandit
-    safety check -r requirements.txt
-    bandit -r app/ -f json -o bandit-report.json || true
-    cd ..
+    docker compose exec backend pip install safety bandit
+    docker compose exec backend safety check -r requirements.txt
+    docker compose exec backend bandit -r app/ -f json -o bandit-report.json || true
     
-    # Frontend security scan
-    cd frontend
+    # Frontend security scan in container
     print_status "Running Node.js security scan..."
-    npm audit --audit-level moderate
-    cd ..
+    docker compose exec frontend npm audit --audit-level moderate
     
     print_success "Security scans completed"
 }
