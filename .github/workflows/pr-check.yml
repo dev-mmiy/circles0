@@ -1,4 +1,4 @@
-name: Pull Request Check
+name: PR Check
 
 on:
   pull_request:
@@ -12,7 +12,7 @@ env:
   NODE_VERSION: '18'
 
 jobs:
-  # バックエンドテスト（軽量版）
+  # バックエンドテスト
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -35,69 +35,65 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
         cache-dependency-path: backend/requirements.txt
-    
+
     - name: Install Python dependencies
       run: |
         cd backend
         pip install -r requirements.txt
-    
-    - name: Run Python tests (unit only)
-      run: |
-        cd backend
-        python -m pytest tests/test_main.py -v
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-    
-    - name: Run linting
+
+    - name: Run backend linting
       run: |
         cd backend
         flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
         black --check app/
         isort --check-only app/
 
-  # フロントエンドテスト（軽量版）
+    - name: Run backend tests
+      run: |
+        cd backend
+        python -m pytest tests/ -v --cov=app --cov-report=xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
+  # フロントエンドテスト
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: frontend/package.json
-    
+
     - name: Install Node.js dependencies
       run: |
         cd frontend
         npm install --legacy-peer-deps --no-audit --no-fund
-    
+
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+        npm run format:check
+
     - name: Run TypeScript type check
       run: |
         cd frontend
         npm run type-check
-    
-    - name: Run linting
-      run: |
-        cd frontend
-        npm run lint
-    
-    - name: Run formatting check
-      run: |
-        cd frontend
-        npm run format:check
-    
+
     - name: Build frontend
       run: |
         cd frontend

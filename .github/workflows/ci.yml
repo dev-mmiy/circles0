@@ -18,7 +18,7 @@ env:
   REGION: asia-northeast1
 
 jobs:
-  # バックエンドテスト
+  # Stage 1: 基本テスト（全ブランチ）
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -41,164 +41,126 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         cache: 'pip'
         cache-dependency-path: backend/requirements.txt
-    
+
     - name: Install Python dependencies
       run: |
         cd backend
         pip install -r requirements.txt
-    
-    - name: Run Python tests
-      run: |
-        cd backend
-        python -m pytest tests/ -v --cov=app --cov-report=xml --cov-report=html --cov-report=term-missing
-      env:
-        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
-    
-    - name: Run linting
+
+    - name: Run backend linting
       run: |
         cd backend
         flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
         black --check app/
         isort --check-only app/
-    
+
+    - name: Run backend tests
+      run: |
+        cd backend
+        python -m pytest tests/ -v --cov=app --cov-report=xml
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
+
     - name: Upload coverage reports
       uses: actions/upload-artifact@v4
       with:
         name: backend-coverage
         path: backend/coverage.xml
 
-  # フロントエンドテスト
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
         cache-dependency-path: frontend/package.json
-    
+
     - name: Install Node.js dependencies
       run: |
         cd frontend
         npm install --legacy-peer-deps --no-audit --no-fund
-    
+
+    - name: Run frontend linting
+      run: |
+        cd frontend
+        npm run lint
+        npm run format:check
+
     - name: Run TypeScript type check
       run: |
         cd frontend
         npm run type-check
-    
-    - name: Run linting
-      run: |
-        cd frontend
-        npm run lint
-    
-    - name: Run formatting check
-      run: |
-        cd frontend
-        npm run format:check
-    
+
     - name: Build frontend
       run: |
         cd frontend
         npm run build
 
-  # 統合テスト - メインブランチのみ実行
+  # Stage 2: 統合テスト（developブランチのみ）
   integration-test:
     name: Integration Tests
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-test]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' && needs.backend-test.result == 'success' && needs.frontend-test.result == 'success'
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_db
+          POSTGRES_USER: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-    
+
     - name: Set up Python ${{ env.PYTHON_VERSION }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ env.PYTHON_VERSION }}
-    
+        cache: 'pip'
+        cache-dependency-path: backend/requirements.txt
+
     - name: Install Python dependencies
       run: |
         cd backend
         pip install -r requirements.txt
-    
-    - name: Start services
-      run: |
-        docker compose -f docker-compose.ci.yml up -d
-        sleep 30  # Wait for services to be ready
-    
+
     - name: Run integration tests
       run: |
         cd backend
         python -m pytest tests/integration/ -v
       env:
-        DATABASE_URL: postgresql://postgres:postgres@postgres:5432/test_db
-    
-    - name: Stop services
-      if: always()
-      run: |
-        docker compose -f docker-compose.ci.yml down
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_db
 
-  # セキュリティスキャン - 無効化
-  # security-scan:
-  #   name: Security Scan
-  #   runs-on: ubuntu-latest
-  #   if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-  #   
-  #   steps:
-  #   - name: Checkout code
-  #     uses: actions/checkout@v4
-  #   
-  #   - name: Set up Python ${{ env.PYTHON_VERSION }}
-  #     uses: actions/setup-python@v4
-  #     with:
-  #       python-version: ${{ env.PYTHON_VERSION }}
-  #   
-  #   - name: Set up Node.js ${{ env.NODE_VERSION }}
-  #     uses: actions/setup-node@v4
-  #     with:
-  #       node-version: ${{ env.NODE_VERSION }}
-  #   
-  #   - name: Install dependencies
-  #     run: |
-  #       cd backend && pip install -r requirements.txt
-  #       cd ../frontend && npm install --legacy-peer-deps --no-audit --no-fund
-  #   
-  #   - name: Run Trivy vulnerability scanner
-  #     uses: aquasecurity/trivy-action@master
-  #     with:
-  #       scan-type: 'fs'
-  #       scan-ref: '.'
-  #       format: 'sarif'
-  #       output: 'trivy-results.sarif'
-  #   
-  #   - name: Save Trivy scan results as artifacts
-  #     uses: actions/upload-artifact@v4
-  #     if: always() && hashFiles('trivy-results.sarif') != ''
-  #     with:
-  #       name: trivy-results
-  #       path: trivy-results.sarif
-
-  # Docker イメージのビルドとプッシュ
+  # Stage 3: ビルド・プッシュ（develop/mainブランチ）
   build-and-push:
     name: Build and Push Images
     runs-on: ubuntu-latest
     needs: [backend-test, frontend-test, integration-test]
-    if: always()
+    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && needs.backend-test.result == 'success' && needs.frontend-test.result == 'success' && (needs.integration-test.result == 'success' || needs.integration-test.result == 'skipped')
     
     steps:
     - name: Checkout code
@@ -225,42 +187,8 @@ jobs:
 
     - name: Configure Docker for GCR
       run: |
-        # 認証状態を確認
-        echo "Checking authentication status..."
-        gcloud auth list
-        
-        # アクティブなアカウントを確認
-        echo "Active account:"
-        gcloud config get-value account
-        
-        # プロジェクトを確認
-        echo "Active project:"
-        gcloud config get-value project
-        
-        # 環境変数を確認
-        echo "GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS"
-        
-        # GCR認証を設定
-        echo "Configuring Docker for GCR..."
         gcloud auth configure-docker asia.gcr.io --quiet
         gcloud auth configure-docker gcr.io --quiet
-        gcloud auth configure-docker us.gcr.io --quiet
-        gcloud auth configure-docker eu.gcr.io --quiet
-        
-        # Docker認証を確認
-        echo "Testing Docker authentication..."
-        gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://asia.gcr.io
-        
-        # レジストリの存在確認
-        echo "Checking if registry exists..."
-        gcloud container images list --repository=asia.gcr.io/${{ env.PROJECT_ID }} || echo "Repository may not exist yet"
-        
-        # レジストリが存在しない場合は作成
-        echo "Creating repository if it doesn't exist..."
-        gcloud artifacts repositories create disease-community-platform \
-          --repository-format=docker \
-          --location=asia-northeast1 \
-          --description="Docker repository for disease community platform" || echo "Repository may already exist"
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
@@ -268,16 +196,10 @@ jobs:
         context: ./backend
         push: true
         tags: |
-          asia.gcr.io/${{ env.PROJECT_ID }}/backend:latest
-          asia.gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }}
-        target: production
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }}
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        platforms: linux/amd64
-        build-args: |
-          BUILDKIT_INLINE_CACHE=1
-        outputs: type=registry
-        provenance: false
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
@@ -285,20 +207,17 @@ jobs:
         context: ./frontend
         push: true
         tags: |
-          asia.gcr.io/${{ env.PROJECT_ID }}/frontend:latest
-          asia.gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }}
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }}
+          asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:latest
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: type=registry
-        provenance: false
 
-  # 開発環境へのデプロイ
+  # Stage 4: デプロイ（developブランチ）
   deploy-dev:
-    name: Deploy to Development
+    name: Deploy to Dev Environment
     runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/develop'
-    environment: development
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/develop' && needs.build-and-push.result == 'success'
     
     steps:
     - name: Checkout code
@@ -316,57 +235,51 @@ jobs:
         install_components: 'beta'
         export_default_credentials: true
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker asia.gcr.io
-
-    - name: Deploy to Cloud Run (Development)
+    - name: Deploy backend to Cloud Run (Dev)
       run: |
         gcloud run deploy disease-community-api-dev \
-          --image asia.gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }} \
-          --region ${{ env.REGION }} \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
-          --set-env-vars ENVIRONMENT=development \
-          --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL_DEV }} \
-          --port=8000 \
-          --timeout=300 \
-          --memory=512Mi \
-          --cpu=1 \
-          --max-instances=10 \
-          --allow-unauthenticated
-        
-        # IAM権限を手動で設定
-        gcloud run services add-iam-policy-binding disease-community-api-dev \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker || echo "IAM policy binding failed, but deployment succeeded"
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10
 
-    - name: Deploy Frontend to Cloud Run (Development)
+    - name: Deploy frontend to Cloud Run (Dev)
       run: |
         gcloud run deploy disease-community-frontend-dev \
-          --image asia.gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} \
-          --region ${{ env.REGION }} \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
-          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-dev-508246122017.asia-northeast1.run.app \
-          --port=3000 \
-          --timeout=300 \
-          --memory=512Mi \
-          --cpu=1 \
-          --max-instances=10 \
-          --allow-unauthenticated
-        
-        # IAM権限を手動で設定
-        gcloud run services add-iam-policy-binding disease-community-frontend-dev \
-          --region=${{ env.REGION }} \
-          --member=allUsers \
-          --role=roles/run.invoker || echo "IAM policy binding failed, but deployment succeeded"
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 3000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10
 
-  # 本番環境へのデプロイ
+    - name: Health check (Dev)
+      run: |
+        sleep 30
+        BACKEND_URL="https://disease-community-api-dev-508246122017.asia-northeast1.run.app"
+        FRONTEND_URL="https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app"
+        
+        curl -f "$BACKEND_URL/health" || (echo "❌ Backend health check failed" && exit 1)
+        curl -f "$FRONTEND_URL" || (echo "❌ Frontend health check failed" && exit 1)
+        
+        echo "✅ Dev deployment successful!"
+        echo "🌐 Backend URL: $BACKEND_URL"
+        echo "🌐 Frontend URL: $FRONTEND_URL"
+
+  # Stage 5: デプロイ（mainブランチ）
   deploy-prod:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: build-and-push
-    if: github.ref == 'refs/heads/main'
-    environment: production
+    needs: [build-and-push]
+    if: github.ref == 'refs/heads/main' && needs.build-and-push.result == 'success'
     
     steps:
     - name: Checkout code
@@ -384,53 +297,41 @@ jobs:
         install_components: 'beta'
         export_default_credentials: true
 
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker asia.gcr.io
-
-    - name: Deploy to Cloud Run (Production)
+    - name: Deploy backend to Cloud Run (Prod)
       run: |
         gcloud run deploy disease-community-api \
-          --image asia.gcr.io/${{ env.PROJECT_ID }}/backend:${{ github.sha }} \
-          --region ${{ env.REGION }} \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
-          --set-env-vars ENVIRONMENT=production \
-          --set-env-vars DATABASE_URL=${{ secrets.DATABASE_URL_PROD }} \
-          --port=8000 \
-          --timeout=300 \
-          --memory=512Mi \
-          --cpu=1 \
-          --max-instances=10 \
-          --allow-unauthenticated
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 8000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10
 
-    - name: Deploy Frontend to Cloud Run (Production)
+    - name: Deploy frontend to Cloud Run (Prod)
       run: |
         gcloud run deploy disease-community-frontend \
-          --image asia.gcr.io/${{ env.PROJECT_ID }}/frontend:${{ github.sha }} \
-          --region ${{ env.REGION }} \
+          --image asia.gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
-          --set-env-vars NEXT_PUBLIC_API_URL=https://disease-community-api-${{ env.REGION }}-${{ env.PROJECT_ID }}.a.run.app \
-          --port=3000 \
-          --timeout=300 \
-          --memory=512Mi \
-          --cpu=1 \
-          --max-instances=10 \
-          --allow-unauthenticated
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --port 3000 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 10
 
-  # ヘルスチェック
-  health-check:
-    name: Health Check
-    runs-on: ubuntu-latest
-    needs: [deploy-dev, deploy-prod]
-    if: always() && (needs.deploy-dev.result == 'success' || needs.deploy-prod.result == 'success')
-    
-    steps:
-    - name: Health Check
+    - name: Health check (Prod)
       run: |
-        if [ "${{ github.ref }}" == "refs/heads/develop" ]; then
-          echo "Checking development environment health..."
-          curl -f https://disease-community-api-dev-508246122017.asia-northeast1.run.app/health || echo "Health check failed for dev environment"
-        elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
-          echo "Checking production environment health..."
-          curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/health || echo "Health check failed for prod environment"
-        fi
-      continue-on-error: true
+        sleep 30
+        BACKEND_URL="https://disease-community-api-508246122017.asia-northeast1.run.app"
+        FRONTEND_URL="https://disease-community-frontend-508246122017.asia-northeast1.run.app"
+        
+        curl -f "$BACKEND_URL/health" || (echo "❌ Backend health check failed" && exit 1)
+        curl -f "$FRONTEND_URL" || (echo "❌ Frontend health check failed" && exit 1)
+        
+        echo "✅ Production deployment successful!"
+        echo "🌐 Backend URL: $BACKEND_URL"
+        echo "🌐 Frontend URL: $FRONTEND_URL"
