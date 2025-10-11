@@ -71,14 +71,14 @@ start_services() {
     print_status "Starting local services..."
     
     # Start database
-    docker compose up -d db
+    docker compose up -d postgres
     
     # Wait for database to be ready
     print_status "Waiting for database to be ready..."
     sleep 10
     
     # Check if database is ready
-    if ! docker compose exec -T db pg_isready -U postgres; then
+    if ! docker compose exec -T postgres pg_isready -U postgres; then
         print_error "Database is not ready"
         exit 1
     fi
