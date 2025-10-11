@@ -2,15 +2,17 @@
 SQLAlchemy models for the application.
 """
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
-from sqlalchemy.orm import relationship
+
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
 
 Base = declarative_base()
 
 
 class User(Base):
     """User model."""
+
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -28,6 +30,7 @@ class User(Base):
 
 class Disease(Base):
     """Disease model."""
+
     __tablename__ = "diseases"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -42,6 +45,7 @@ class Disease(Base):
 
 class UserDisease(Base):
     """User-Disease relationship model."""
+
     __tablename__ = "user_diseases"
 
     id = Column(Integer, primary_key=True, index=True)
@@ -58,6 +62,7 @@ class UserDisease(Base):
 
 class Post(Base):
     """Post model."""
+
     __tablename__ = "posts"
 
     id = Column(Integer, primary_key=True, index=True)

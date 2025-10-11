@@ -5,7 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.types import ASGIApp
 
-from app.markets import MARKETS, DEFAULT_MARKET, SUPPORTED_MARKETS
+from app.markets import DEFAULT_MARKET, MARKETS, SUPPORTED_MARKETS
 
 
 class MarketMiddleware(BaseHTTPMiddleware):

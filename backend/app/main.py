@@ -3,6 +3,7 @@ from datetime import datetime
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+
 from app.middleware.market import MarketMiddleware
 
 # Environment variables
@@ -41,8 +42,8 @@ app.add_middleware(
 
 @app.get("/")
 async def root(request: Request):
-    market = getattr(request.state, 'market', 'en-us')
-    market_config = getattr(request.state, 'market_config', None)
+    market = getattr(request.state, "market", "en-us")
+    market_config = getattr(request.state, "market_config", None)
 
     return {
         "message": "Hello World!",
@@ -57,7 +58,7 @@ async def root(request: Request):
 
 @app.get("/health")
 async def health_check(request: Request):
-    market = getattr(request.state, 'market', 'en-us')
+    market = getattr(request.state, "market", "en-us")
     return {
         "status": "healthy",
         "environment": ENVIRONMENT,

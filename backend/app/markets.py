@@ -9,6 +9,7 @@ from dataclasses import dataclass
 @dataclass
 class Market:
     """Market configuration for internationalization."""
+
     locale: str
     language: str
     country: str
@@ -23,15 +24,15 @@ class Market:
 # Load market configuration from JSON file
 def load_market_config():
     """Load market configuration from JSON file."""
-    config_path = os.path.join(os.path.dirname(__file__), '../config/markets.json')
-    with open(config_path, 'r', encoding='utf-8') as f:
+    config_path = os.path.join(os.path.dirname(__file__), "../config/markets.json")
+    with open(config_path, "r", encoding="utf-8") as f:
         config = json.load(f)
 
     markets = {}
-    for locale, market_data in config['markets'].items():
+    for locale, market_data in config["markets"].items():
         markets[locale] = Market(**market_data)
 
-    return markets, config['default'], config['supported']
+    return markets, config["default"], config["supported"]
 
 
 # Load market configuration

@@ -24,3 +24,4 @@ export interface MarketDetectionResult {
   confidence: number;
   source: "url-param" | "header" | "accept-language" | "cookie" | "default";
 }
+
