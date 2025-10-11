@@ -154,9 +154,9 @@ init-db: ## データベースを初期化
 	psql -h localhost -U postgres -d disease_community -f database_schema.sql
 	@echo "✅ Database initialized!"
 
-# ローカルテスト
-test-local: ## ローカル環境でテストを実行
-	@echo "🧪 Running local tests..."
+# ローカルテスト（簡易版）
+test-local-simple: ## ローカル環境で簡易テストを実行
+	@echo "🧪 Running simple local tests..."
 	@echo "📋 Backend tests..."
 	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
 	@echo "📋 Frontend tests..."

@@ -71,14 +71,14 @@ start_services() {
     print_status "Starting local services..."
     
     # Start database
-    docker-compose up -d db
+    docker compose up -d db
     
     # Wait for database to be ready
     print_status "Waiting for database to be ready..."
     sleep 10
     
     # Check if database is ready
-    if ! docker-compose exec -T db pg_isready -U postgres; then
+    if ! docker compose exec -T db pg_isready -U postgres; then
         print_error "Database is not ready"
         exit 1
     fi
@@ -200,7 +200,7 @@ test_e2e() {
     print_status "Running end-to-end tests..."
     
     # Start all services
-    docker-compose up -d
+    docker compose up -d
     
     # Wait for services to be ready
     print_status "Waiting for services to be ready..."
@@ -231,7 +231,7 @@ test_e2e() {
 # Cleanup
 cleanup() {
     print_status "Cleaning up..."
-    docker-compose down
+    docker compose down
     print_success "Cleanup completed"
 }
 
