@@ -1,7 +1,7 @@
 """Initial migration - create users, diseases, user_diseases, posts tables
 
 Revision ID: a225f1ecff0c
-Revises: 
+Revises:
 Create Date: 2025-10-10 13:36:05.585083
 
 """
