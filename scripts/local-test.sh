@@ -94,7 +94,7 @@ test_backend() {
     
     # Install dependencies
     print_status "Installing Python dependencies..."
-    pip install -r requirements.txt
+    pip3 install -r requirements.txt
     
     # Run linting
     print_status "Running backend linting..."
@@ -166,7 +166,7 @@ security_scan() {
     # Backend security scan
     cd backend
     print_status "Running Python security scan..."
-    pip install safety bandit
+    pip3 install safety bandit
     safety check -r requirements.txt
     bandit -r app/ -f json -o bandit-report.json || true
     cd ..
