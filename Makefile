@@ -233,6 +233,22 @@ test-local: ## ローカルで包括的なテストを実行
 	@echo "🧪 Running comprehensive local tests..."
 	./scripts/local-test.sh
 
+# ローカルテスト（簡易版）
+test-local-simple: ## ローカル環境で簡易テストを実行
+	@echo "🧪 Running simple local tests..."
+	@echo "📋 Backend tests..."
+	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
+	@echo "📋 Frontend tests..."
+	docker compose exec frontend npm run type-check
+	docker compose exec frontend npm run lint
+	docker compose exec frontend npm run format:check
+	@echo "📋 Integration tests..."
+	docker compose -f docker-compose.ci.yml up --build -d
+	sleep 10
+	docker compose exec backend python -m pytest tests/integration/ -v
+	docker compose -f docker-compose.ci.yml down
+	@echo "✅ Local tests completed successfully!"
+
 # デプロイメント前のチェック
 pre-deploy: ## デプロイメント前のチェック
 	@echo "🔍 Running pre-deployment checks..."

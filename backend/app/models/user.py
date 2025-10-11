@@ -4,8 +4,16 @@ User-related SQLAlchemy models.
 # from datetime import datetime  # Unused import
 from typing import Optional
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Integer, String,
-                        Text, UniqueConstraint)
+from sqlalchemy import (
+    Boolean,
+    Column,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
@@ -107,7 +115,8 @@ class User(Base):
         "UserActivityLog", back_populates="user", cascade="all, delete-orphan"
     )
     # user_diseases = relationship(
-    #     "UserDisease", back_populates="user", cascade="all, delete-orphan"
+    #     "UserDisease", back_populates="user",
+    #     cascade="all, delete-orphan"
     # )  # To be implemented later
 
     def get_full_name(self, locale: Optional[str] = None) -> str:

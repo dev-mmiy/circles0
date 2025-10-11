@@ -3,8 +3,8 @@ Full stack integration tests for the Disease Community API
 """
 import time
 
-import pytest
-import requests
+# import pytest
+# import requests
 from fastapi.testclient import TestClient
 
 from app.main import app

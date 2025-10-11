@@ -1,8 +1,8 @@
 """
 Integration tests for the Disease Community API
 """
-import httpx
-import pytest
+# import httpx
+# import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
