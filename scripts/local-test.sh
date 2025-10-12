@@ -91,7 +91,18 @@ curl -f http://localhost:8000/health > /dev/null || {
 }
 log_success "Backend health check passed"
 
+# データベースの状態確認
+log_info "Checking database status..."
+DB_STATUS=$(curl -s http://localhost:8000/health | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
+if [ "$DB_STATUS" = "healthy" ]; then
+    log_success "Database is healthy"
+else
+    log_error "Database is not healthy: $DB_STATUS"
+    exit 1
+fi
+
 # 名前表示順序API
+log_info "Testing name display orders API..."
 NAME_DISPLAY_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/name-display-orders/)
 HTTP_CODE="${NAME_DISPLAY_RESPONSE: -3}"
 if [ "$HTTP_CODE" = "200" ]; then
@@ -99,6 +110,26 @@ if [ "$HTTP_CODE" = "200" ]; then
 else
     log_error "Name display orders API failed with HTTP $HTTP_CODE"
     log_info "Response: ${NAME_DISPLAY_RESPONSE%???}"
+    # データベースのテーブル状況を確認
+    log_info "Checking database tables..."
+    docker compose exec backend python -c "
+from app.database import get_db
+from app.models.user import NameDisplayOrder
+db = next(get_db())
+try:
+    count = db.query(NameDisplayOrder).count()
+    print(f'NameDisplayOrder records: {count}')
+    if count > 0:
+        orders = db.query(NameDisplayOrder).all()
+        for order in orders:
+            print(f'  - {order.order_code}: {order.display_name}')
+    else:
+        print('No NameDisplayOrder records found')
+except Exception as e:
+    print(f'Database error: {e}')
+finally:
+    db.close()
+"
     exit 1
 fi
 
