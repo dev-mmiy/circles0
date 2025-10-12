@@ -64,4 +64,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT || exit 1
 
 # Cloud Run compatible command
-CMD ["sh", "-c", "PORT=${PORT:-3000} node server.js"]
+# Cloud Run sets PORT environment variable automatically
+CMD ["sh", "-c", "node server.js"]
