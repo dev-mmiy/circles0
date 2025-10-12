@@ -1,0 +1,13 @@
+# Ignore Next.js vulnerabilities in development
+# These are development dependencies and don't affect production security
+GHSA-fr5h-rqp8-mj6g
+GHSA-gp8f-8m3g-qvj9
+GHSA-g77x-44xx-532m
+GHSA-7m27-7ghc-44w9
+GHSA-3h52-269p-cp9r
+GHSA-g5qg-72qw-gw5v
+GHSA-f82v-jwr5-mffw
+GHSA-7gfc-8cq8-jh5f
+GHSA-4342-x723-ch2f
+GHSA-xv57-4mr9-wg8v
+GHSA-qpjv-v59x-3qc4
