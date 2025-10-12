@@ -92,18 +92,26 @@ curl -f http://localhost:8000/health > /dev/null || {
 log_success "Backend health check passed"
 
 # 名前表示順序API
-curl -f http://localhost:8000/api/v1/users/name-display-orders/ > /dev/null || {
-    log_error "Name display orders API failed"
+NAME_DISPLAY_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/name-display-orders/)
+HTTP_CODE="${NAME_DISPLAY_RESPONSE: -3}"
+if [ "$HTTP_CODE" = "200" ]; then
+    log_success "Name display orders API working"
+else
+    log_error "Name display orders API failed with HTTP $HTTP_CODE"
+    log_info "Response: ${NAME_DISPLAY_RESPONSE%???}"
     exit 1
-}
-log_success "Name display orders API working"
+fi
 
 # ロケール形式API
-curl -f http://localhost:8000/api/v1/users/locale-formats/ > /dev/null || {
-    log_error "Locale formats API failed"
+LOCALE_FORMAT_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/locale-formats/)
+HTTP_CODE="${LOCALE_FORMAT_RESPONSE: -3}"
+if [ "$HTTP_CODE" = "200" ]; then
+    log_success "Locale formats API working"
+else
+    log_error "Locale formats API failed with HTTP $HTTP_CODE"
+    log_info "Response: ${LOCALE_FORMAT_RESPONSE%???}"
     exit 1
-}
-log_success "Locale formats API working"
+fi
 
 # ユーザー登録テスト
 log_info "Testing user registration..."
