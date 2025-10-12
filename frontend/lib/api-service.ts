@@ -134,6 +134,11 @@ export class ApiService {
     );
   }
 
+  // Get base URL
+  getBaseUrl(): string {
+    return this.config.baseUrl;
+  }
+
   // Method to update config (useful for testing)
   setConfig(config: ApiConfig): void {
     this.config = config;
