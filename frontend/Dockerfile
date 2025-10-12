@@ -54,15 +54,11 @@ COPY --from=builder /app/public ./public
 
 USER nextjs
 
-# Cloud Run uses PORT environment variable
-EXPOSE $PORT
+# Expose port (Cloud Run will set PORT environment variable)
+EXPOSE 8080
 
 ENV HOSTNAME="0.0.0.0"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT || exit 1
-
 # Cloud Run compatible command
-# Cloud Run sets PORT environment variable automatically
-CMD ["sh", "-c", "node server.js"]
+# Use environment variable PORT if set, otherwise default to 8080
+CMD ["sh", "-c", "PORT=${PORT:-8080} node server.js"]

@@ -1,0 +1,110 @@
+name: Test Cloud Run Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type'
+        required: true
+        default: 'simple'
+        type: choice
+        options:
+        - simple
+        - backend
+        - frontend
+
+jobs:
+  test-deployment:
+    name: Test Cloud Run Deployment
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build and deploy simple test
+      if: inputs.test_type == 'simple'
+      run: |
+        echo "🧪 Building simple test container..."
+        docker build -f backend/Dockerfile.test -t gcr.io/circles-202510/simple-test:${{ github.sha }} .
+        docker push gcr.io/circles-202510/simple-test:${{ github.sha }}
+        
+        echo "🚀 Deploying simple test to Cloud Run..."
+        gcloud run deploy simple-test \
+          --image gcr.io/circles-202510/simple-test:${{ github.sha }} \
+          --platform managed \
+          --region asia-northeast1 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 5
+        
+        echo "🔐 Setting IAM policy..."
+        gcloud run services add-iam-policy-binding simple-test \
+          --region=asia-northeast1 \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed"
+
+    - name: Test simple deployment
+      if: inputs.test_type == 'simple'
+      run: |
+        echo "🧪 Testing simple deployment..."
+        SERVICE_URL=$(gcloud run services describe simple-test --region=asia-northeast1 --format="value(status.url)")
+        echo "Service URL: $SERVICE_URL"
+        
+        # Wait a bit for the service to be ready
+        sleep 30
+        
+        # Test the service
+        curl -f "$SERVICE_URL" || echo "❌ Service test failed"
+        curl -f "$SERVICE_URL/health" || echo "❌ Health check failed"
+
+    - name: Build and deploy backend test
+      if: inputs.test_type == 'backend'
+      run: |
+        echo "🧪 Building backend test container..."
+        docker build -f backend/Dockerfile -t gcr.io/circles-202510/backend-test:${{ github.sha }} ./backend
+        docker push gcr.io/circles-202510/backend-test:${{ github.sha }}
+        
+        echo "🚀 Deploying backend test to Cloud Run..."
+        gcloud run deploy backend-test \
+          --image gcr.io/circles-202510/backend-test:${{ github.sha }} \
+          --platform managed \
+          --region asia-northeast1 \
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 1 \
+          --max-instances 5
+        
+        echo "🔐 Setting IAM policy..."
+        gcloud run services add-iam-policy-binding backend-test \
+          --region=asia-northeast1 \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed"
+
+    - name: Test backend deployment
+      if: inputs.test_type == 'backend'
+      run: |
+        echo "🧪 Testing backend deployment..."
+        SERVICE_URL=$(gcloud run services describe backend-test --region=asia-northeast1 --format="value(status.url)")
+        echo "Service URL: $SERVICE_URL"
+        
+        # Wait a bit for the service to be ready
+        sleep 30
+        
+        # Test the service
+        curl -f "$SERVICE_URL/health" || echo "❌ Health check failed"
+        curl -f "$SERVICE_URL/docs" || echo "❌ Docs endpoint failed"

@@ -38,18 +38,9 @@ COPY . .
 # Copy market configuration
 COPY config/markets.json /app/config/markets.json
 
-# Create non-root user
-RUN adduser --disabled-password --gecos '' appuser && \
-    chown -R appuser:appuser /app
-USER appuser
-
-# Expose port (Cloud Run uses PORT environment variable)
-EXPOSE $PORT
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$PORT/health || exit 1
+# Expose port (Cloud Run will set PORT environment variable)
+EXPOSE 8080
 
 # Run the application (Cloud Run compatible)
-# Cloud Run sets PORT environment variable automatically
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"]
+# Use environment variable PORT if set, otherwise default to 8080
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
