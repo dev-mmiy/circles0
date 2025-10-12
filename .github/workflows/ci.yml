@@ -114,21 +114,12 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-        cache: 'pip'
-        cache-dependency-path: backend/requirements.txt
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Install dependencies
+    - name: Run backend tests with Docker Compose
       run: |
-        cd backend
-        pip install -r requirements.txt
-
-    - name: Run backend tests using new script
-      run: |
-        echo "🧪 Running backend tests using new script..."
+        echo "🧪 Running backend tests with Docker Compose..."
         chmod +x scripts/local-test-backend.sh
         ./scripts/local-test-backend.sh
 
@@ -150,33 +141,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: frontend/package-lock.json
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Install dependencies
+    - name: Run frontend tests with Docker Compose
       run: |
-        cd frontend
-        npm ci
-
-    - name: Run frontend tests
-      run: |
-        cd frontend
-        echo "🧪 Running frontend unit tests..."
-        npm run test || {
-          echo "⚠️ Some frontend tests failed, but continuing..."
-        }
-
-    - name: Build frontend
-      run: |
-        cd frontend
-        echo "🏗️ Building frontend..."
-        npm run build || {
-          echo "⚠️ Frontend build failed, but continuing..."
-        }
+        echo "🧪 Running frontend tests with Docker Compose..."
+        chmod +x scripts/local-test.sh
+        ./scripts/local-test.sh
 
   # Stage 4: 統合テスト（新しいスクリプト使用）
   integration-test:
@@ -189,28 +161,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
 
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-
-    - name: Install dependencies
+    - name: Run integration tests with Docker Compose
       run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
-
-    - name: Run integration tests
-      run: |
-        cd backend
-        echo "🧪 Running integration tests..."
-        python -m pytest tests/integration/ -v || {
-          echo "⚠️ Some integration tests failed, but continuing..."
-        }
+        echo "🧪 Running integration tests with Docker Compose..."
+        chmod +x scripts/local-test-full.sh
+        ./scripts/local-test-full.sh
 
   # Stage 5: フルテスト（新しいスクリプト使用）
   full-test:
