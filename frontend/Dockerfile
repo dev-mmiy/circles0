@@ -54,13 +54,14 @@ COPY --from=builder /app/public ./public
 
 USER nextjs
 
-EXPOSE 3000
+# Cloud Run uses PORT environment variable
+EXPOSE $PORT
 
-ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000 || exit 1
+    CMD wget --no-verbose --tries=1 --spider http://localhost:$PORT || exit 1
 
-CMD ["node", "server.js"]
+# Cloud Run compatible command
+CMD ["sh", "-c", "PORT=${PORT:-3000} node server.js"]

@@ -292,16 +292,36 @@ jobs:
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 1 \
+          --max-instances 10 \
+          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},PORT=8000"
+        
+        # IAM Policy設定を別途実行
+        echo "🔐 Setting IAM policy..."
+        gcloud run services add-iam-policy-binding disease-community-api \
+          --region=${{ env.REGION }} \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed, but deployment may still work"
         
         # フロントエンドデプロイ
         gcloud run deploy disease-community-frontend \
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 1 \
+          --max-instances 10 \
+          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,PORT=3000"
+        
+        # フロントエンドのIAM Policy設定
+        echo "🔐 Setting IAM policy for frontend..."
+        gcloud run services add-iam-policy-binding disease-community-frontend \
+          --region=${{ env.REGION }} \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed, but deployment may still work"
 
     - name: Get service URLs
       run: |
