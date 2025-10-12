@@ -229,13 +229,26 @@ logs-db: ## データベースログを表示
 	docker compose logs -f postgres
 
 # ローカルテスト
-test-local: ## ローカルで包括的なテストを実行
-	@echo "🧪 Running comprehensive local tests..."
-	./scripts/local-test.sh
-
-# ローカルテスト（簡易版）
-test-local-simple: ## ローカル環境で簡易テストを実行
+test-local: ## シンプルなローカルテストを実行（バックエンドのみ）
 	@echo "🧪 Running simple local tests..."
+	@chmod +x scripts/local-test.sh
+	@./scripts/local-test.sh
+
+# フルローカルテスト
+test-local-full: ## フルローカルテストを実行（フロントエンド含む）
+	@echo "🧪 Running full local tests..."
+	@chmod +x scripts/local-test-full.sh
+	@./scripts/local-test-full.sh
+
+# バックエンドのみのテスト
+test-local-backend: ## バックエンドのみのローカルテストを実行
+	@echo "🧪 Running backend-only local tests..."
+	@chmod +x scripts/local-test-backend.sh
+	@./scripts/local-test-backend.sh
+
+# 旧式の簡易テスト（非推奨）
+test-local-simple-old: ## 旧式の簡易テストを実行（非推奨）
+	@echo "🧪 Running old simple local tests..."
 	@echo "📋 Backend tests..."
 	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
 	@echo "📋 Frontend tests..."

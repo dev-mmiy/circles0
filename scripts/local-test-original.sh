@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # シンプルなローカルテストスクリプト
-# バックエンドのみのテストを実行
+# フロントエンド待機問題を回避し、必要最小限のテストを実行
 
 set -e
 
@@ -41,20 +41,12 @@ if ! docker info > /dev/null 2>&1; then
 fi
 log_success "Docker is running"
 
-# 2. 依存関係チェック
-log_info "Checking dependencies..."
-if [ ! -f "docker-compose.yml" ]; then
-    log_error "docker-compose.yml not found. Please run from project root."
-    exit 1
-fi
-log_success "All dependencies are installed"
-
-# 3. サービス起動
+# 2. サービス起動
 log_info "Starting services..."
 docker compose up -d postgres backend
 sleep 10
 
-# 4. バックエンドテスト
+# 3. バックエンドテスト
 log_info "Testing backend..."
 
 # バックエンドの準備を待つ
@@ -81,7 +73,7 @@ timeout 120 docker compose exec backend python -m pytest tests/ -v || {
 }
 log_success "Backend tests completed"
 
-# 5. APIエンドポイントテスト
+# 4. APIエンドポイントテスト
 log_info "Testing API endpoints..."
 
 # ヘルスチェック
@@ -136,7 +128,7 @@ else
     exit 1
 fi
 
-# 6. 最終レポート
+# 5. 最終レポート
 log_success "🎉 Simple local tests completed successfully!"
 echo ""
 echo "📊 Test Summary:"
