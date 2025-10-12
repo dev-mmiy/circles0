@@ -271,8 +271,14 @@ jobs:
     - name: Verify authentication
       run: |
         echo "🔐 Verifying Google Cloud authentication..."
+        echo "=== Current authentication status ==="
         gcloud auth list
+        echo "=== Project configuration ==="
         gcloud config get-value project
+        echo "=== Service account info ==="
+        gcloud auth print-access-token > /dev/null && echo "✅ Access token obtained successfully" || echo "❌ Failed to get access token"
+        echo "=== Testing Cloud Run access ==="
+        gcloud run services list --region=asia-northeast1 --limit=1 || echo "❌ Cannot list Cloud Run services"
 
     - name: Deploy to Cloud Run
       run: |
