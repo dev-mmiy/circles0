@@ -1,26 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useApiService } from '../../contexts/ApiContext';
+import { NameDisplayOrder, LocaleNameFormat } from '../../lib/api-service';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
-interface NameDisplayOrder {
-  order_code: string;
-  display_name: string;
-  format_template: string;
-  description: string;
-}
-
-interface LocaleNameFormat {
-  locale: string;
-  default_order_code: string;
-}
+// Interfaces are now imported from api-service
 
 export default function RegisterPage() {
   const router = useRouter();
+  const apiService = useApiService();
 
   const [formData, setFormData] = useState({
     email: '',
@@ -46,30 +39,23 @@ export default function RegisterPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Load name display orders and locale formats on component mount
-  useState(() => {
+  useEffect(() => {
     const loadData = async () => {
       try {
-        const [ordersResponse, formatsResponse] = await Promise.all([
-          fetch('http://localhost:8000/api/v1/users/name-display-orders/'),
-          fetch('http://localhost:8000/api/v1/users/locale-formats/'),
+        const [orders, formats] = await Promise.all([
+          apiService.getNameDisplayOrders(),
+          apiService.getLocaleFormats(),
         ]);
 
-        if (ordersResponse.ok) {
-          const orders = await ordersResponse.json();
-          setNameDisplayOrders(orders);
-        }
-
-        if (formatsResponse.ok) {
-          const formats = await formatsResponse.json();
-          setLocaleFormats(formats);
-        }
+        setNameDisplayOrders(orders);
+        setLocaleFormats(formats);
       } catch (error) {
         console.error('Failed to load form data:', error);
       }
     };
 
     loadData();
-  });
+  }, [apiService]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -132,36 +118,16 @@ export default function RegisterPage() {
     try {
       console.log('Submitting form data:', formData);
 
-      const response = await fetch('http://localhost:8000/api/v1/users/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          idp_id: `auth0|${Date.now()}`, // Temporary ID for demo
-          idp_provider: 'auth0',
-        }),
-      });
+      const userData = {
+        ...formData,
+        idp_id: `auth0|${Date.now()}`, // Temporary ID for demo
+        idp_provider: 'auth0',
+      };
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
+      const user = await apiService.createUser(userData);
 
-      if (response.ok) {
-        const user = await response.json();
-        console.log('User created successfully:', user);
-        router.push(`/profile/${user.id}`);
-      } else {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-
-        try {
-          const errorData = JSON.parse(errorText);
-          setErrors({ submit: errorData.detail || 'Registration failed. Please try again.' });
-        } catch (parseError) {
-          setErrors({ submit: `Server error: ${response.status} - ${errorText}` });
-        }
-      }
+      console.log('User created successfully:', user);
+      router.push(`/profile/${user.id}`);
     } catch (error) {
       console.error('Network error:', error);
       setErrors({

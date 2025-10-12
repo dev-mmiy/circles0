@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useApiService } from '../contexts/ApiContext';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ interface ApiResponse {
 }
 
 export default function Home() {
+  const apiService = useApiService();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -24,27 +26,7 @@ export default function Home() {
   useEffect(() => {
     const fetchApiData = async () => {
       try {
-        // ランタイムで環境変数を動的に取得
-        const getApiUrl = () => {
-          // クライアントサイドで環境変数を取得
-          if (typeof window !== 'undefined') {
-            // ブラウザ環境では、現在のホストからAPI URLを推測
-            const hostname = window.location.hostname;
-            if (hostname.includes('disease-community-frontend-dev')) {
-              return 'https://disease-community-api-dev-508246122017.asia-northeast1.run.app';
-            }
-            if (hostname.includes('disease-community-frontend')) {
-              return 'https://disease-community-api-508246122017.asia-northeast1.run.app';
-            }
-            if (hostname === 'localhost' || hostname === '127.0.0.1') {
-              return 'http://localhost:8000';
-            }
-          }
-          // サーバーサイドまたはフォールバック
-          return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-        };
-
-        const apiUrl = getApiUrl();
+        const apiUrl = apiService.getBaseUrl();
         console.log('API URL:', apiUrl);
 
         const response = await fetch(`${apiUrl}/?market=ja-jp`);
@@ -61,7 +43,7 @@ export default function Home() {
     };
 
     fetchApiData();
-  }, []);
+  }, [apiService]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -80,14 +62,14 @@ export default function Home() {
             <p className="text-red-600">Error: {error}</p>
             <p className="text-sm text-gray-500 mt-2">
               Make sure the backend is running on{' '}
-              {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+              {apiService.getBaseUrl()}
             </p>
             <div className="mt-4 p-4 bg-yellow-100 rounded">
               <p className="text-sm text-gray-700">
                 <strong>Debug Info:</strong>
               </p>
               <p className="text-xs text-gray-600">
-                API URL: {process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}
+                API URL: {apiService.getBaseUrl()}
               </p>
               <p className="text-xs text-gray-600">
                 Environment: {process.env.NODE_ENV || 'unknown'}
@@ -146,7 +128,7 @@ export default function Home() {
                 Create Account
               </Link>
               <Link
-                href="http://localhost:8000/docs"
+                href={`${apiService.getBaseUrl()}/docs`}
                 className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
                 target="_blank"
               >
