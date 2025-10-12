@@ -296,7 +296,7 @@ jobs:
           --memory 1Gi \
           --cpu 1 \
           --max-instances 10 \
-          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},PORT=8000"
+          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
         
         # IAM Policy設定を別途実行
         echo "🔐 Setting IAM policy..."
@@ -314,7 +314,7 @@ jobs:
           --memory 1Gi \
           --cpu 1 \
           --max-instances 10 \
-          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,PORT=3000"
+          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
         
         # フロントエンドのIAM Policy設定
         echo "🔐 Setting IAM policy for frontend..."
