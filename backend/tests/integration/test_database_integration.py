@@ -1,6 +1,7 @@
 """
 Database integration tests for the Disease Community API
 """
+
 import os
 
 import pytest

@@ -1,6 +1,7 @@
 """
 Market configuration for internationalization.
 """
+
 import json
 import os
 from dataclasses import dataclass

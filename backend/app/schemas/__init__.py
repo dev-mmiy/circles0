@@ -1,6 +1,7 @@
 """
 Pydantic schemas package.
 """
+
 from .user import (
     LocaleNameFormatResponse,
     NameDisplayOrderResponse,

@@ -1,6 +1,7 @@
 """
 User-related SQLAlchemy models.
 """
+
 # from datetime import datetime  # Unused import
 from typing import Optional
 

@@ -1,6 +1,7 @@
 """
 SQLAlchemy models package.
 """
+
 from .user import (
     Base,
     LocaleNameFormat,

@@ -1,6 +1,7 @@
 """
 Member ID generation utilities.
 """
+
 import random
 
 from sqlalchemy.orm import Session

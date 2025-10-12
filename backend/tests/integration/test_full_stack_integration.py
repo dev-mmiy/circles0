@@ -1,6 +1,7 @@
 """
 Full stack integration tests for the Disease Community API
 """
+
 import time
 
 # import pytest

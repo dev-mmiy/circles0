@@ -1,6 +1,7 @@
 """
 User management API endpoints.
 """
+
 from typing import List
 from uuid import UUID
 

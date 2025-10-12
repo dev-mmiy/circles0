@@ -1,6 +1,7 @@
 """
 Configuration settings for different environments.
 """
+
 import os
 
 
