@@ -42,5 +42,5 @@ COPY config/markets.json /app/config/markets.json
 EXPOSE 8080
 
 # Run the application (Cloud Run compatible)
-# Use environment variable PORT if set, otherwise default to 8080
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Cloud Run sets PORT=8080, ensure we use it
+CMD ["sh", "-c", "echo 'Starting server on port $PORT' && uvicorn app.main:app --host 0.0.0.0 --port $PORT"]

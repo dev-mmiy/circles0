@@ -1,0 +1,110 @@
+name: Debug Cloud Run Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Service name to debug'
+        required: true
+        default: 'disease-community-api'
+      action:
+        description: 'Action to perform'
+        required: true
+        default: 'logs'
+        type: choice
+        options:
+        - logs
+        - status
+        - test
+        - redeploy
+
+jobs:
+  debug:
+    name: Debug Cloud Run Deployment
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Get service status
+      if: inputs.action == 'status'
+      run: |
+        echo "=== Service Status ==="
+        gcloud run services describe ${{ inputs.service_name }} \
+          --region=asia-northeast1 \
+          --format="table(status.url,status.conditions[0].type,status.conditions[0].status,status.conditions[0].message)"
+
+    - name: Get recent logs
+      if: inputs.action == 'logs'
+      run: |
+        echo "=== Recent Logs (last 50 entries) ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ inputs.service_name }}" \
+          --limit=50 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=1h
+
+    - name: Get error logs
+      if: inputs.action == 'logs'
+      run: |
+        echo "=== Error Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ inputs.service_name }} AND severity>=ERROR" \
+          --limit=20 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=1h
+
+    - name: Test service
+      if: inputs.action == 'test'
+      run: |
+        echo "=== Testing Service ==="
+        SERVICE_URL=$(gcloud run services describe ${{ inputs.service_name }} --region=asia-northeast1 --format="value(status.url)")
+        echo "Service URL: $SERVICE_URL"
+        
+        if [ -n "$SERVICE_URL" ]; then
+          echo "Testing health endpoint..."
+          curl -f "$SERVICE_URL/health" || echo "❌ Health check failed"
+          echo "Testing root endpoint..."
+          curl -f "$SERVICE_URL/" || echo "❌ Root endpoint failed"
+        else
+          echo "❌ Service URL not found"
+        fi
+
+    - name: Redeploy with debug
+      if: inputs.action == 'redeploy'
+      run: |
+        echo "=== Redeploying with Debug Info ==="
+        
+        # Build and push image
+        docker build -f backend/Dockerfile -t gcr.io/circles-202510/${{ inputs.service_name }}:${{ github.sha }} ./backend
+        docker push gcr.io/circles-202510/${{ inputs.service_name }}:${{ github.sha }}
+        
+        # Deploy with debug settings
+        gcloud run deploy ${{ inputs.service_name }} \
+          --image gcr.io/circles-202510/${{ inputs.service_name }}:${{ github.sha }} \
+          --platform managed \
+          --region asia-northeast1 \
+          --port 8080 \
+          --timeout 900 \
+          --memory 2Gi \
+          --cpu 2 \
+          --max-instances 5 \
+          --set-env-vars="ENVIRONMENT=production,DEBUG=true" \
+          --no-traffic
+        
+        echo "🔐 Setting IAM policy..."
+        gcloud run services add-iam-policy-binding ${{ inputs.service_name }} \
+          --region=asia-northeast1 \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed"
+        
+        echo "✅ Deployment completed. Check logs for details."

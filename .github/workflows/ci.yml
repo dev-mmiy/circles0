@@ -292,9 +292,10 @@ jobs:
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
-          --timeout 300 \
-          --memory 1Gi \
-          --cpu 1 \
+          --port 8080 \
+          --timeout 600 \
+          --memory 2Gi \
+          --cpu 2 \
           --max-instances 10 \
           --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
         
@@ -310,9 +311,10 @@ jobs:
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
-          --timeout 300 \
-          --memory 1Gi \
-          --cpu 1 \
+          --port 8080 \
+          --timeout 600 \
+          --memory 2Gi \
+          --cpu 2 \
           --max-instances 10 \
           --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
         

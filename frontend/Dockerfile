@@ -60,5 +60,5 @@ EXPOSE 8080
 ENV HOSTNAME="0.0.0.0"
 
 # Cloud Run compatible command
-# Use environment variable PORT if set, otherwise default to 8080
-CMD ["sh", "-c", "PORT=${PORT:-8080} node server.js"]
+# Cloud Run sets PORT=8080, ensure we use it
+CMD ["sh", "-c", "echo 'Starting Next.js server on port $PORT' && PORT=$PORT node server.js"]
