@@ -288,8 +288,6 @@ jobs:
         echo "🚀 Deploying to Cloud Run..."
         
         # バックエンドデプロイ
-        # Note: Cloud SQL接続設定が必要な場合は --add-cloudsql-instances を追加してください
-        # 例: --add-cloudsql-instances=circles-202510:asia-northeast1:YOUR_INSTANCE_NAME
         gcloud run deploy disease-community-api \
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
@@ -300,6 +298,7 @@ jobs:
           --cpu 2 \
           --max-instances 10 \
           --allow-unauthenticated \
+          --add-cloudsql-instances=circles-202510:asia-northeast1:disease-community-db \
           --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
         
         # IAM Policy設定を別途実行
