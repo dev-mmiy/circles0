@@ -299,6 +299,7 @@ jobs:
           --memory 2Gi \
           --cpu 2 \
           --max-instances 10 \
+          --allow-unauthenticated \
           --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
         
         # IAM Policy設定を別途実行
@@ -318,6 +319,7 @@ jobs:
           --memory 2Gi \
           --cpu 2 \
           --max-instances 10 \
+          --allow-unauthenticated \
           --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
         
         # フロントエンドのIAM Policy設定
