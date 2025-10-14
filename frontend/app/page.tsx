@@ -127,13 +127,19 @@ export default function Home() {
               >
                 Create Account
               </Link>
-              <Link
-                href={`${apiService.getBaseUrl()}/docs`}
-                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                target="_blank"
-              >
-                API Documentation
-              </Link>
+              {/* Only show API Documentation link in development/local environment */}
+              {(typeof window !== 'undefined' && 
+                (window.location.hostname === 'localhost' || 
+                 window.location.hostname === '127.0.0.1' ||
+                 window.location.hostname.includes('dev'))) && (
+                <Link
+                  href={`${apiService.getBaseUrl()}/docs`}
+                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                  target="_blank"
+                >
+                  API Documentation
+                </Link>
+              )}
             </div>
           </div>
         </div>
