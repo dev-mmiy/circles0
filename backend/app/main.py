@@ -27,8 +27,8 @@ allowed_origins = (
     ["*"]
     if ENVIRONMENT in ["development", "test"]
     else [
-        "https://disease-community-frontend-asia-northeast1-disease-community-platform.a.run.app",  # noqa: E501
-        "https://disease-community-frontend-dev-asia-northeast1-disease-community-platform.a.run.app",  # noqa: E501
+        "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
+        "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
     ]
 )
 
