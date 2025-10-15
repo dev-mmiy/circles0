@@ -1,0 +1,85 @@
+# English (US) translations
+# Copyright (C) 2024 Disease Community Platform
+# This file is distributed under the same license as the Disease Community Platform package.
+# FIRST AUTHOR <email@example.com>, 2024.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Disease Community Platform 1.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: app/api/users.py
+msgid "User not found"
+msgstr "User not found"
+
+#: app/api/users.py
+msgid "Username already exists"
+msgstr "Username already exists"
+
+#: app/api/users.py
+msgid "Email already exists"
+msgstr "Email already exists"
+
+#: app/api/users.py
+msgid "Invalid credentials"
+msgstr "Invalid credentials"
+
+#: app/api/users.py
+msgid "User created successfully"
+msgstr "User created successfully"
+
+#: app/api/users.py
+msgid "User updated successfully"
+msgstr "User updated successfully"
+
+#: app/api/users.py
+msgid "User deleted successfully"
+msgstr "User deleted successfully"
+
+#: app/api/diseases.py
+msgid "Disease not found"
+msgstr "Disease not found"
+
+#: app/api/diseases.py
+msgid "Disease name already exists"
+msgstr "Disease name already exists"
+
+#: app/api/diseases.py
+msgid "Disease created successfully"
+msgstr "Disease created successfully"
+
+#: app/api/diseases.py
+msgid "Disease updated successfully"
+msgstr "Disease updated successfully"
+
+#: app/api/diseases.py
+msgid "Disease deleted successfully"
+msgstr "Disease deleted successfully"
+
+#: app/schemas/users.py
+msgid "Username is required"
+msgstr "Username is required"
+
+#: app/schemas/users.py
+msgid "Email is required"
+msgstr "Email is required"
+
+#: app/schemas/users.py
+msgid "Please enter a valid email address"
+msgstr "Please enter a valid email address"
+
+#: app/schemas/users.py
+msgid "Password is required"
+msgstr "Password is required"
+
+#: app/schemas/users.py
+msgid "Password must be at least 8 characters long"
+msgstr "Password must be at least 8 characters long"

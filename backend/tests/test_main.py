@@ -1,8 +1,10 @@
-import pytest
+# import pytest
 from fastapi.testclient import TestClient
+
 from app.main import app
 
 client = TestClient(app)
+
 
 def test_root():
     response = client.get("/")
@@ -11,6 +13,7 @@ def test_root():
     assert data["message"] == "Hello World!"
     assert "environment" in data
     assert "version" in data
+
 
 def test_health():
     response = client.get("/health")

@@ -1,0 +1,79 @@
+name: Test Minimal Cloud Run
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-minimal:
+    name: Test Minimal Cloud Run
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Configure Docker for GCR
+      run: gcloud auth configure-docker
+
+    - name: Build minimal test container
+      run: |
+        echo "🧪 Building minimal test container..."
+        docker build -f backend/Dockerfile.minimal -t gcr.io/circles-202510/minimal-test:${{ github.sha }} ./backend
+        docker push gcr.io/circles-202510/minimal-test:${{ github.sha }}
+
+    - name: Deploy minimal test
+      run: |
+        echo "🚀 Deploying minimal test to Cloud Run..."
+        gcloud run deploy minimal-test \
+          --image gcr.io/circles-202510/minimal-test:${{ github.sha }} \
+          --platform managed \
+          --region asia-northeast1 \
+          --port 8080 \
+          --timeout 300 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 5
+        
+        echo "🔐 Setting IAM policy..."
+        gcloud run services add-iam-policy-binding minimal-test \
+          --region=asia-northeast1 \
+          --member="allUsers" \
+          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed"
+
+    - name: Test minimal deployment
+      run: |
+        echo "🧪 Testing minimal deployment..."
+        SERVICE_URL=$(gcloud run services describe minimal-test --region=asia-northeast1 --format="value(status.url)")
+        echo "Service URL: $SERVICE_URL"
+        
+        # Wait for service to be ready
+        echo "⏳ Waiting for service to be ready..."
+        sleep 30
+        
+        # Test the service
+        echo "🔍 Testing root endpoint..."
+        curl -f "$SERVICE_URL" || echo "❌ Root endpoint failed"
+        
+        echo "🔍 Testing health endpoint..."
+        curl -f "$SERVICE_URL/health" || echo "❌ Health endpoint failed"
+        
+        echo "✅ Minimal test completed"
+
+    - name: Get logs if test fails
+      if: failure()
+      run: |
+        echo "=== Minimal Test Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=minimal-test" \
+          --limit=20 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=10m

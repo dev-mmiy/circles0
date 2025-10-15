@@ -1,0 +1,63 @@
+name: Debug Cloud Run Logs
+
+on:
+  workflow_dispatch:
+    inputs:
+      service_name:
+        description: 'Cloud Run service name to debug'
+        required: true
+        default: 'disease-community-api'
+      region:
+        description: 'Cloud Run region'
+        required: true
+        default: 'asia-northeast1'
+
+jobs:
+  debug-logs:
+    name: Debug Cloud Run Logs
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Get Cloud Run service status
+      run: |
+        echo "=== Cloud Run Service Status ==="
+        gcloud run services describe ${{ inputs.service_name }} \
+          --region=${{ inputs.region }} \
+          --format="table(status.url,status.conditions[0].type,status.conditions[0].status)" || echo "Service not found"
+
+    - name: Get recent logs
+      run: |
+        echo "=== Recent Cloud Run Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ inputs.service_name }}" \
+          --limit=50 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=1h || echo "No recent logs found"
+
+    - name: Get error logs
+      run: |
+        echo "=== Error Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ inputs.service_name }} AND severity>=ERROR" \
+          --limit=20 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=1h || echo "No error logs found"
+
+    - name: Get container startup logs
+      run: |
+        echo "=== Container Startup Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=${{ inputs.service_name }} AND textPayload:\"uvicorn\"" \
+          --limit=20 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=1h || echo "No uvicorn logs found"

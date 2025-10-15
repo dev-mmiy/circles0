@@ -1,0 +1,62 @@
+name: Check Cloud Run Logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check-logs:
+    name: Check Cloud Run Logs
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Get service status
+      run: |
+        echo "=== Service Status ==="
+        gcloud run services describe disease-community-api \
+          --region=asia-northeast1 \
+          --format="table(status.url,status.conditions[0].type,status.conditions[0].status,status.conditions[0].message)"
+
+    - name: Get all recent logs
+      run: |
+        echo "=== All Recent Logs (last 100 entries) ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=disease-community-api" \
+          --limit=100 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=2h
+
+    - name: Get error logs only
+      run: |
+        echo "=== Error Logs Only ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=disease-community-api AND severity>=ERROR" \
+          --limit=50 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=2h
+
+    - name: Get startup logs
+      run: |
+        echo "=== Startup Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=disease-community-api AND (textPayload:\"Starting server\" OR textPayload:\"uvicorn\" OR textPayload:\"port\")" \
+          --limit=20 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=2h
+
+    - name: Get container logs
+      run: |
+        echo "=== Container Logs ==="
+        gcloud logging read "resource.type=cloud_run_revision AND resource.labels.service_name=disease-community-api AND resource.labels.revision_name=disease-community-api-00005-9pc" \
+          --limit=50 \
+          --format="table(timestamp,severity,textPayload)" \
+          --freshness=2h

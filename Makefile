@@ -1,7 +1,7 @@
 # Disease Community Platform - Makefile
 # 開発・ビルド・デプロイの自動化
 
-.PHONY: help install dev test lint format build clean deploy
+.PHONY: help install dev test lint format build clean deploy test-local test-production
 
 # デフォルトターゲット
 help: ## 利用可能なコマンドを表示
@@ -15,6 +15,56 @@ install: ## 全依存関係をインストール
 	cd backend && pip install -r requirements.txt
 	cd frontend && npm ci
 	@echo "✅ Dependencies installed successfully!"
+
+# データベース関連
+db-create: ## データベースを作成
+	@echo "🗄️ Creating databases..."
+	./scripts/create_databases.sh all
+	@echo "✅ Databases created successfully!"
+
+db-create-dev: ## 開発用データベースを作成
+	@echo "🗄️ Creating development database..."
+	./scripts/create_databases.sh dev
+	@echo "✅ Development database created successfully!"
+
+db-create-prod: ## 本番用データベースを作成
+	@echo "🗄️ Creating production database..."
+	./scripts/create_databases.sh prod
+	@echo "✅ Production database created successfully!"
+
+db-create-test: ## テスト用データベースを作成
+	@echo "🗄️ Creating test database..."
+	./scripts/create_databases.sh test
+	@echo "✅ Test database created successfully!"
+
+db-migrate: ## マイグレーションを実行
+	@echo "🔄 Running migrations..."
+	./scripts/migrate.sh dev upgrade
+	@echo "✅ Migrations completed successfully!"
+
+db-migrate-prod: ## 本番環境のマイグレーションを実行
+	@echo "🔄 Running production migrations..."
+	./scripts/migrate.sh prod upgrade
+	@echo "✅ Production migrations completed successfully!"
+
+db-migrate-test: ## テスト環境のマイグレーションを実行
+	@echo "🔄 Running test migrations..."
+	./scripts/migrate.sh test upgrade
+	@echo "✅ Test migrations completed successfully!"
+
+db-revision: ## 新しいマイグレーションを作成
+	@echo "📝 Creating new migration..."
+	@read -p "Enter migration message: " message; \
+	./scripts/migrate.sh dev revision "$$message"
+	@echo "✅ Migration created successfully!"
+
+db-history: ## マイグレーション履歴を表示
+	@echo "📋 Migration history:"
+	./scripts/migrate.sh dev history
+
+db-current: ## 現在のマイグレーション状態を表示
+	@echo "📍 Current migration status:"
+	./scripts/migrate.sh dev current
 
 # 開発環境の起動
 dev: ## 開発環境を起動
@@ -104,6 +154,37 @@ init-db: ## データベースを初期化
 	psql -h localhost -U postgres -d disease_community -f database_schema.sql
 	@echo "✅ Database initialized!"
 
+# ローカルテスト（簡易版）
+test-local-simple: ## ローカル環境で簡易テストを実行
+	@echo "🧪 Running simple local tests..."
+	@echo "📋 Backend tests..."
+	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
+	@echo "📋 Frontend tests..."
+	docker compose exec frontend npm run type-check
+	docker compose exec frontend npm run lint
+	docker compose exec frontend npm run format:check
+	@echo "📋 Integration tests..."
+	docker compose -f docker-compose.ci.yml up --build -d
+	sleep 10
+	docker compose exec backend python -m pytest tests/integration/ -v
+	docker compose -f docker-compose.ci.yml down
+	@echo "✅ Local tests completed successfully!"
+
+# プロダクションテスト
+test-production: ## プロダクション環境でテストを実行
+	@echo "🏭 Running production tests..."
+	@echo "📋 Building production images..."
+	docker compose build
+	@echo "📋 Testing production environment..."
+	ENVIRONMENT=production docker compose up -d
+	sleep 15
+	@echo "📋 Health check..."
+	curl -f http://localhost:8000/health || (echo "❌ Backend health check failed" && exit 1)
+	curl -f http://localhost:3000/ || (echo "❌ Frontend health check failed" && exit 1)
+	@echo "📋 Market detection test..."
+	curl -f "http://localhost:8000/?market=ja-jp" | grep -q "ja-jp" || (echo "❌ Market detection failed" && exit 1)
+	@echo "✅ Production tests completed successfully!"
+
 # ヘルスチェック
 health: ## アプリケーションのヘルスチェック
 	@echo "🏥 Checking application health..."
@@ -146,3 +227,82 @@ logs-frontend: ## フロントエンドログを表示
 logs-db: ## データベースログを表示
 	@echo "📋 Showing database logs..."
 	docker compose logs -f postgres
+
+# ローカルテスト
+test-local: ## シンプルなローカルテストを実行（バックエンドのみ）
+	@echo "🧪 Running simple local tests..."
+	@chmod +x scripts/local-test.sh
+	@./scripts/local-test.sh
+
+# フルローカルテスト
+test-local-full: ## フルローカルテストを実行（フロントエンド含む）
+	@echo "🧪 Running full local tests..."
+	@chmod +x scripts/local-test-full.sh
+	@./scripts/local-test-full.sh
+
+# バックエンドのみのテスト
+test-local-backend: ## バックエンドのみのローカルテストを実行
+	@echo "🧪 Running backend-only local tests..."
+	@chmod +x scripts/local-test-backend.sh
+	@./scripts/local-test-backend.sh
+
+# 旧式の簡易テスト（非推奨）
+test-local-simple-old: ## 旧式の簡易テストを実行（非推奨）
+	@echo "🧪 Running old simple local tests..."
+	@echo "📋 Backend tests..."
+	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
+	@echo "📋 Frontend tests..."
+	docker compose exec frontend npm run type-check
+	docker compose exec frontend npm run lint
+	docker compose exec frontend npm run format:check
+	@echo "📋 Integration tests..."
+	docker compose -f docker-compose.ci.yml up --build -d
+	sleep 10
+	docker compose exec backend python -m pytest tests/integration/ -v
+	docker compose -f docker-compose.ci.yml down
+	@echo "✅ Local tests completed successfully!"
+
+# デプロイメント前のチェック
+pre-deploy: ## デプロイメント前のチェック
+	@echo "🔍 Running pre-deployment checks..."
+	@echo "1. Code quality checks..."
+	make lint
+	@echo "2. Running tests..."
+	make test
+	@echo "3. Security scans..."
+	cd backend && safety check -r requirements.txt
+	cd frontend && npm audit --audit-level moderate
+	@echo "✅ Pre-deployment checks completed!"
+
+# デプロイメント用のブランチ作成
+create-release-branch: ## リリース用ブランチを作成
+	@echo "🌿 Creating release branch..."
+	git checkout -b release/$(shell date +%Y%m%d-%H%M%S)
+	@echo "✅ Release branch created!"
+
+# デプロイメント用のコミット
+commit-for-deploy: ## デプロイメント用のコミット
+	@echo "📝 Committing changes for deployment..."
+	git add .
+	git commit -m "feat: prepare for deployment $(shell date +%Y%m%d-%H%M%S)"
+	@echo "✅ Changes committed!"
+
+# デプロイメント用のプッシュ
+push-for-deploy: ## デプロイメント用のプッシュ
+	@echo "🚀 Pushing changes for deployment..."
+	git push origin develop
+	@echo "✅ Changes pushed!"
+
+# 完全なデプロイメントフロー
+deploy-flow: ## 完全なデプロイメントフローを実行
+	@echo "🚀 Starting complete deployment flow..."
+	@echo "1. Running pre-deployment checks..."
+	make pre-deploy
+	@echo "2. Creating release branch..."
+	make create-release-branch
+	@echo "3. Committing changes..."
+	make commit-for-deploy
+	@echo "4. Pushing to repository..."
+	make push-for-deploy
+	@echo "✅ Deployment flow completed!"
+	@echo "🌐 Check GitHub Actions for deployment status"

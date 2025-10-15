@@ -1,22 +1,23 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
-
-const inter = Inter({ subsets: ['latin'] });
+import { ApiProvider } from '../contexts/ApiContext';
+import Auth0ProviderWithConfig from '../contexts/Auth0ProviderWithConfig';
 
 export const metadata: Metadata = {
-  title: 'Disease Community',
-  description: 'Connect with others who understand your journey',
+  title: 'Disease Community Platform',
+  description: 'A platform for people with diseases to connect and share experiences',
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className="font-sans">
+        <Auth0ProviderWithConfig>
+          <ApiProvider>
+            {children}
+          </ApiProvider>
+        </Auth0ProviderWithConfig>
+      </body>
     </html>
   );
 }

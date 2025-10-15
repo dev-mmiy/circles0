@@ -1,0 +1,70 @@
+name: Debug Google Cloud Authentication
+
+on:
+  workflow_dispatch:
+    inputs:
+      debug_level:
+        description: 'Debug level'
+        required: true
+        default: 'basic'
+        type: choice
+        options:
+        - basic
+        - detailed
+        - full
+
+jobs:
+  debug-auth:
+    name: Debug GCP Authentication
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Google Cloud CLI
+      uses: google-github-actions/setup-gcloud@v2
+      with:
+        project_id: circles-202510
+
+    - name: Basic authentication check
+      if: inputs.debug_level == 'basic'
+      run: |
+        echo "=== Basic Authentication Check ==="
+        gcloud auth list
+        gcloud config get-value project
+
+    - name: Detailed authentication check
+      if: inputs.debug_level == 'detailed'
+      run: |
+        echo "=== Detailed Authentication Check ==="
+        echo "=== Service Account Info ==="
+        gcloud auth list --format="table(account,status)"
+        echo "=== Project Info ==="
+        gcloud config get-value project
+        echo "=== Access Token Test ==="
+        gcloud auth print-access-token > /dev/null && echo "✅ Access token OK" || echo "❌ Access token failed"
+        echo "=== Cloud Run Access Test ==="
+        gcloud run services list --region=asia-northeast1 --limit=1 || echo "❌ Cloud Run access failed"
+
+    - name: Full authentication check
+      if: inputs.debug_level == 'full'
+      run: |
+        echo "=== Full Authentication Check ==="
+        echo "=== All Auth Info ==="
+        gcloud auth list --format="table(account,status,active)"
+        echo "=== Project Details ==="
+        gcloud config list
+        echo "=== Service Account Details ==="
+        gcloud iam service-accounts describe github-actions-deploy@circles-202510.iam.gserviceaccount.com || echo "❌ Service account not found"
+        echo "=== Permissions Check ==="
+        gcloud projects get-iam-policy circles-202510 --flatten="bindings[].members" --format="table(bindings.role)" --filter="bindings.members:github-actions-deploy@circles-202510.iam.gserviceaccount.com" || echo "❌ Cannot check permissions"
+        echo "=== Cloud Run Services ==="
+        gcloud run services list --region=asia-northeast1 || echo "❌ Cannot list Cloud Run services"
+        echo "=== Artifact Registry ==="
+        gcloud artifacts repositories list || echo "❌ Cannot list Artifact Registry"
