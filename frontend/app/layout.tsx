@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ApiProvider } from '../contexts/ApiContext';
+import Auth0ProviderWithConfig from '../contexts/Auth0ProviderWithConfig';
 
 export const metadata: Metadata = {
   title: 'Disease Community Platform',
@@ -11,9 +12,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="font-sans">
-        <ApiProvider>
-          {children}
-        </ApiProvider>
+        <Auth0ProviderWithConfig>
+          <ApiProvider>
+            {children}
+          </ApiProvider>
+        </Auth0ProviderWithConfig>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import { useApiService } from '../contexts/ApiContext';
 
@@ -19,11 +20,15 @@ interface ApiResponse {
 
 export default function Home() {
   const apiService = useApiService();
+  const { isAuthenticated, loginWithRedirect, logout, user, isLoading } = useAuth0();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
     const fetchApiData = async () => {
       try {
         const apiUrl = apiService.getBaseUrl();
@@ -121,6 +126,25 @@ export default function Home() {
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              {/* Auth buttons */}
+              {!isAuthenticated ? (
+                <button
+                  onClick={() => loginWithRedirect()}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
+                >
+                  Login
+                </button>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                  <span className="text-gray-700">{user?.name || user?.email}</span>
+                  <button
+                    onClick={() => logout({ logoutParams: { returnTo: isClient ? window.location.origin : '/' } })}
+                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
               <Link
                 href="/register"
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
@@ -128,10 +152,10 @@ export default function Home() {
                 Create Account
               </Link>
               {/* Only show API Documentation link in development/local environment */}
-              {(typeof window !== 'undefined' && 
+              {isClient && 
                 (window.location.hostname === 'localhost' || 
                  window.location.hostname === '127.0.0.1' ||
-                 window.location.hostname.includes('dev'))) && (
+                 window.location.hostname.includes('dev')) && (
                 <Link
                   href={`${apiService.getBaseUrl()}/docs`}
                   className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"

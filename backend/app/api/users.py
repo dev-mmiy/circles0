@@ -2,7 +2,7 @@
 User management API endpoints.
 """
 
-from typing import List
+from typing import Dict, List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,6 +21,7 @@ from app.schemas.user import (
     UserResponse,
     UserUpdate,
 )
+from app.utils.auth import get_current_user, get_current_user_optional
 from app.utils.member_id import format_member_id, generate_unique_member_id
 
 router = APIRouter()
@@ -141,14 +142,30 @@ async def get_public_user(user_id: UUID, db: Session = Depends(get_db)):
 
 @router.put("/{user_id}", response_model=UserResponse)
 async def update_user(
-    user_id: UUID, user_data: UserUpdate, db: Session = Depends(get_db)
+    user_id: UUID,
+    user_data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: Dict = Depends(get_current_user),
 ):
-    """Update user information."""
+    """
+    Update user information.
+    
+    Requires authentication. Users can only update their own profile.
+    """
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    # Check if user is updating their own profile
+    # Auth0 user_id format: "auth0|..." or "google-oauth2|..."
+    # Match with user's idp_id
+    if user.idp_id != current_user["user_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only update your own profile",
         )
 
     # Update user fields
@@ -168,13 +185,28 @@ async def update_user(
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_user(user_id: UUID, db: Session = Depends(get_db)):
-    """Delete user."""
+async def delete_user(
+    user_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: Dict = Depends(get_current_user),
+):
+    """
+    Delete user.
+    
+    Requires authentication. Users can only delete their own account.
+    """
     user = db.query(User).filter(User.id == user_id).first()
 
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    # Check if user is deleting their own account
+    if user.idp_id != current_user["user_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You can only delete your own account",
         )
 
     db.delete(user)
