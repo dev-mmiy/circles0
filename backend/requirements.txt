@@ -5,13 +5,13 @@ uvicorn[standard]==0.24.0
 # Database
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
-alembic==1.12.1
+alembic==1.16.5
 
 # HTTP client
 httpx==0.25.2
 
 # Environment variables
-python-dotenv==1.0.0
+python-dotenv==1.1.1
 
 # Development
 pytest==8.4.2
