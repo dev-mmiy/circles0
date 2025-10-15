@@ -48,8 +48,6 @@ jobs:
 
 <<<<<<< HEAD
 =======
-<<<<<<< HEAD
-=======
   # フロントエンドテスト
   frontend-test:
     name: Frontend Tests
@@ -60,7 +58,6 @@ jobs:
       uses: actions/checkout@v5
     
 >>>>>>> origin/dependabot/pip/backend/alembic-1.16.5
->>>>>>> develop
     - name: Set up Node.js ${{ env.NODE_VERSION }}
       uses: actions/setup-node@v5
       with:
@@ -68,8 +65,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: frontend/package-lock.json
 
-<<<<<<< HEAD
-=======
 <<<<<<< HEAD
 =======
   # 統合テスト
@@ -88,7 +83,6 @@ jobs:
         python-version: ${{ env.PYTHON_VERSION }}
     
 >>>>>>> origin/dependabot/pip/backend/alembic-1.16.5
->>>>>>> develop
     - name: Install Python dependencies
       run: |
         cd backend
@@ -132,17 +126,12 @@ jobs:
         }
 
 <<<<<<< HEAD
-=======
-<<<<<<< HEAD
->>>>>>> develop
     - name: Security Scan
       continue-on-error: true
       run: |
         echo "🔍 Running security scans..."
         cd backend && safety check -r requirements.txt
         cd ../frontend && (npm audit --audit-level high || echo "⚠️  Next.js vulnerabilities detected but continuing build process")
-<<<<<<< HEAD
-=======
 =======
   # セキュリティスキャン - 無効化
   # security-scan:
@@ -184,7 +173,6 @@ jobs:
   #       name: trivy-results
   #       path: trivy-results.sarif
 >>>>>>> origin/dependabot/pip/backend/alembic-1.16.5
->>>>>>> develop
 
   # Stage 2: バックエンドテスト（新しいスクリプト使用）
   backend-test:
@@ -369,9 +357,6 @@ jobs:
 <<<<<<< HEAD
     - name: Deploy to Cloud Run
 =======
-<<<<<<< HEAD
-    - name: Deploy to Cloud Run
-=======
     - name: Build and push backend image
       uses: docker/build-push-action@v5
       with:
@@ -465,7 +450,6 @@ jobs:
 
     - name: Deploy to Cloud Run (Production)
 >>>>>>> origin/dependabot/pip/backend/alembic-1.16.5
->>>>>>> develop
       run: |
         echo "🚀 Deploying to Cloud Run..."
         
