@@ -26,7 +26,8 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: disease-community-backend-ci
-    # No ports exposed - service-to-service communication only
+    ports:
+      - "8000:8000"
     environment:
       - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/test_db
       - ENVIRONMENT=test
@@ -45,7 +46,8 @@ services:
       dockerfile: Dockerfile
       target: development
     container_name: disease-community-frontend-ci
-    # No ports exposed - service-to-service communication only
+    ports:
+      - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://backend:8000
       - NODE_ENV=test
