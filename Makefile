@@ -157,6 +157,10 @@ init-db: ## データベースを初期化
 # ローカルテスト（簡易版）
 test-local-simple: ## ローカル環境で簡易テストを実行
 	@echo "🧪 Running simple local tests..."
+	@echo "📋 Backend linting..."
+	docker compose exec backend flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
+	docker compose exec backend black --check app/
+	docker compose exec backend isort --check-only app/
 	@echo "📋 Backend tests..."
 	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html
 	@echo "📋 Frontend tests..."

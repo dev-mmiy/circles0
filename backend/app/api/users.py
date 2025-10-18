@@ -2,7 +2,7 @@
 User management API endpoints.
 """
 
-from typing import Dict, List, Optional
+from typing import Dict, List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -21,7 +21,7 @@ from app.schemas.user import (
     UserResponse,
     UserUpdate,
 )
-from app.utils.auth import get_current_user, get_current_user_optional
+from app.utils.auth import get_current_user
 from app.utils.member_id import format_member_id, generate_unique_member_id
 
 router = APIRouter()
@@ -149,7 +149,7 @@ async def update_user(
 ):
     """
     Update user information.
-    
+
     Requires authentication. Users can only update their own profile.
     """
     user = db.query(User).filter(User.id == user_id).first()
@@ -192,7 +192,7 @@ async def delete_user(
 ):
     """
     Delete user.
-    
+
     Requires authentication. Users can only delete their own account.
     """
     user = db.query(User).filter(User.id == user_id).first()

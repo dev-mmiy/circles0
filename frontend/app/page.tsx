@@ -28,7 +28,7 @@ export default function Home() {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     const fetchApiData = async () => {
       try {
         const apiUrl = apiService.getBaseUrl();
@@ -66,16 +66,13 @@ export default function Home() {
           <div className="text-center">
             <p className="text-red-600">Error: {error}</p>
             <p className="text-sm text-gray-500 mt-2">
-              Make sure the backend is running on{' '}
-              {apiService.getBaseUrl()}
+              Make sure the backend is running on {apiService.getBaseUrl()}
             </p>
             <div className="mt-4 p-4 bg-yellow-100 rounded">
               <p className="text-sm text-gray-700">
                 <strong>Debug Info:</strong>
               </p>
-              <p className="text-xs text-gray-600">
-                API URL: {apiService.getBaseUrl()}
-              </p>
+              <p className="text-xs text-gray-600">API URL: {apiService.getBaseUrl()}</p>
               <p className="text-xs text-gray-600">
                 Environment: {process.env.NODE_ENV || 'unknown'}
               </p>
@@ -138,7 +135,11 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                   <span className="text-gray-700">{user?.name || user?.email}</span>
                   <button
-                    onClick={() => logout({ logoutParams: { returnTo: isClient ? window.location.origin : '/' } })}
+                    onClick={() =>
+                      logout({
+                        logoutParams: { returnTo: isClient ? window.location.origin : '/' },
+                      })
+                    }
                     className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
                   >
                     Logout
@@ -152,18 +153,18 @@ export default function Home() {
                 Create Account
               </Link>
               {/* Only show API Documentation link in development/local environment */}
-              {isClient && 
-                (window.location.hostname === 'localhost' || 
-                 window.location.hostname === '127.0.0.1' ||
-                 window.location.hostname.includes('dev')) && (
-                <Link
-                  href={`${apiService.getBaseUrl()}/docs`}
-                  className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
-                  target="_blank"
-                >
-                  API Documentation
-                </Link>
-              )}
+              {isClient &&
+                (window.location.hostname === 'localhost' ||
+                  window.location.hostname === '127.0.0.1' ||
+                  window.location.hostname.includes('dev')) && (
+                  <Link
+                    href={`${apiService.getBaseUrl()}/docs`}
+                    className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                    target="_blank"
+                  >
+                    API Documentation
+                  </Link>
+                )}
             </div>
           </div>
         </div>

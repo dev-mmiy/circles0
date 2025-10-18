@@ -31,11 +31,7 @@ export function ApiProvider({ children, apiService: customApiService }: ApiProvi
     setApiService,
   };
 
-  return (
-    <ApiContext.Provider value={value}>
-      {children}
-    </ApiContext.Provider>
-  );
+  return <ApiContext.Provider value={value}>{children}</ApiContext.Provider>;
 }
 
 export function useApi(): ApiContextType {

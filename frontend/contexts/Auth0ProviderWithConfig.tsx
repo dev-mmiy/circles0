@@ -14,9 +14,7 @@ function InnerAuth0Provider({ children }: Props) {
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || undefined;
   const callbackUrl =
     process.env.NEXT_PUBLIC_AUTH0_CALLBACK_URL ||
-    (typeof window !== 'undefined'
-      ? `${window.location.origin}/api/auth/callback`
-      : '');
+    (typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback` : '');
 
   const onRedirectCallback = (appState?: { returnTo?: string }) => {
     router.push(appState?.returnTo || '/');
@@ -24,7 +22,7 @@ function InnerAuth0Provider({ children }: Props) {
 
   // If Auth0 is not configured, render children without provider (no-op)
   if (!domain || !clientId) {
-    return <>{children}</>; 
+    return <>{children}</>;
   }
 
   return (
@@ -47,5 +45,3 @@ function InnerAuth0Provider({ children }: Props) {
 export default function Auth0ProviderWithConfig({ children }: Props) {
   return <InnerAuth0Provider>{children}</InnerAuth0Provider>;
 }
-
-
