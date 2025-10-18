@@ -7,6 +7,15 @@ set -e
 
 echo "🚀 Starting refactored local testing process..."
 
+# 環境検出
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+    COMPOSE_FILE="docker-compose.ci.yml"
+    echo "🔧 Detected GitHub Actions environment, using CI Docker Compose"
+else
+    COMPOSE_FILE="docker-compose.yml"
+    echo "🔧 Using local Docker Compose"
+fi
+
 # 色付きログ関数
 log_info() {
     echo -e "\033[0;34m[INFO]\033[0m $1"
@@ -58,7 +67,7 @@ wait_for_service() {
 # エラーハンドリング
 cleanup() {
     log_info "Cleaning up..."
-    docker compose down > /dev/null 2>&1 || true
+    docker compose -f $COMPOSE_FILE down > /dev/null 2>&1 || true
     log_success "Cleanup completed"
 }
 
@@ -82,7 +91,7 @@ log_success "All dependencies are installed"
 
 # 3. サービス起動
 show_progress 3 8 "Starting local services..."
-docker compose up -d postgres
+docker compose -f $COMPOSE_FILE up -d postgres
 sleep 5
 
 # データベースの準備を待つ
@@ -106,7 +115,7 @@ fi
 
 # 4. バックエンドテスト
 show_progress 4 8 "Running backend tests..."
-docker compose up -d backend
+docker compose -f $COMPOSE_FILE up -d backend
 sleep 5
 
 # バックエンドの準備を待つ
@@ -165,7 +174,7 @@ log_success "Backend tests completed"
 
 # 5. フロントエンドテスト（改善された待機ロジック）
 show_progress 5 8 "Starting frontend container for testing..."
-docker compose up -d frontend
+docker compose -f $COMPOSE_FILE up -d frontend
 sleep 5
 
 # フロントエンドの準備を待つ（改善された待機ロジック）
