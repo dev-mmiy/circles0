@@ -41,16 +41,17 @@ export class ApiConfigService {
 
     let baseUrl: string;
 
-    if (isLocal) {
-      baseUrl = localApiUrl;
-    } else if (isDev) {
-      baseUrl = devApiUrl;
+    // Check for environment variable first
+    if (typeof window !== 'undefined' && window.location.hostname) {
+      if (isLocal) {
+        baseUrl = localApiUrl;
+      } else if (isDev) {
+        baseUrl = devApiUrl;
+      } else {
+        baseUrl = productionApiUrl;
+      }
     } else {
-      baseUrl = productionApiUrl;
-    }
-
-    // Fallback to local if no hostname (SSR)
-    if (!hostname) {
+      // Fallback to local for SSR or when hostname is not available
       baseUrl = localApiUrl;
     }
 

@@ -31,16 +31,29 @@ export default function Home() {
 
     const fetchApiData = async () => {
       try {
+        // Only fetch on client side
+        if (typeof window === 'undefined') {
+          return;
+        }
+
         const apiUrl = apiService.getBaseUrl();
         console.log('API URL:', apiUrl);
 
-        const response = await fetch(`${apiUrl}/?market=ja-jp`);
+        const response = await fetch(`${apiUrl}/?market=ja-jp`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
+        
         const data = await response.json();
         setApiData(data);
       } catch (err) {
+        console.error('API fetch error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
