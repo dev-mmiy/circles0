@@ -49,6 +49,11 @@ export class ApiConfigService {
       baseUrl = productionApiUrl;
     }
 
+    // Fallback to local if no hostname (SSR)
+    if (!hostname) {
+      baseUrl = localApiUrl;
+    }
+
     return {
       baseUrl,
       endpoints: {
