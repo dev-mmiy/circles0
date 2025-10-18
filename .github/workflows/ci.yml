@@ -63,7 +63,7 @@ jobs:
     - name: Install Node.js dependencies
       run: |
         cd frontend
-        npm ci
+        npm install --legacy-peer-deps --no-audit --no-fund
 
     - name: Backend Linting
       run: |
@@ -194,7 +194,7 @@ jobs:
     - name: Install dependencies
       run: |
         cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
+        cd ../frontend && npm install --legacy-peer-deps --no-audit --no-fund
 
     - name: Run full tests using new script
       run: |
