@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import { useApiService } from '../contexts/ApiContext';
 
@@ -24,24 +23,6 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  
-  // Auth0 hooks with error handling
-  let isAuthenticated = false;
-  let loginWithRedirect = () => {};
-  let logout = () => {};
-  let user = null;
-  let isLoading = false;
-  
-  try {
-    const auth0 = useAuth0();
-    isAuthenticated = auth0.isAuthenticated;
-    loginWithRedirect = auth0.loginWithRedirect;
-    logout = auth0.logout;
-    user = auth0.user;
-    isLoading = auth0.isLoading;
-  } catch (err) {
-    console.log('Auth0 not available, running without authentication');
-  }
 
   useEffect(() => {
     setIsClient(true);
@@ -151,28 +132,9 @@ export default function Home() {
           <div className="text-center">
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {!isAuthenticated && !isLoading ? (
-                <button
-                  onClick={() => loginWithRedirect()}
-                  className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                >
-                  Login
-                </button>
-              ) : (
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                  <span className="text-gray-700">{user?.name || user?.email}</span>
-                  <button
-                    onClick={() =>
-                      logout({
-                        logoutParams: { returnTo: isClient ? window.location.origin : '/' },
-                      })
-                    }
-                    className="bg-red-600 text-white px-6 py-3 rounded-lg hover:bg-red-700 transition-colors font-medium"
-                  >
-                    Logout
-                  </button>
-                </div>
-              )}
+              <button className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium">
+                Login
+              </button>
               <Link
                 href="/register"
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
