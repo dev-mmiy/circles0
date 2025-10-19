@@ -99,7 +99,7 @@ log_info "Waiting for database to be ready..."
 max_attempts=15
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
-    if docker compose exec postgres pg_isready -U postgres > /dev/null 2>&1; then
+    if docker compose -f $COMPOSE_FILE exec postgres pg_isready -U postgres > /dev/null 2>&1; then
         log_success "Database is ready"
         break
     fi
@@ -113,8 +113,8 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# 4. バックエンドテスト
-show_progress 4 8 "Running backend tests..."
+# 4. バックエンド起動とマイグレーション
+show_progress 4 8 "Starting backend and running migrations..."
 docker compose -f $COMPOSE_FILE up -d backend
 sleep 5
 
@@ -136,6 +136,14 @@ if [ $attempt -eq $max_attempts ]; then
     log_error "Backend failed to start"
     exit 1
 fi
+
+# データベースマイグレーションを実行
+log_info "Running database migrations..."
+docker compose -f $COMPOSE_FILE exec backend alembic upgrade head || {
+    log_error "Database migration failed"
+    exit 1
+}
+log_success "Database migrations completed"
 
 # バックエンドのリンターとフォーマットチェック
 log_info "Running backend linting..."
