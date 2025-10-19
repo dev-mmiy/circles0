@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useApiService } from '../contexts/ApiContext';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,7 @@ interface ApiResponse {
 }
 
 export default function Home() {
+  const apiService = useApiService();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,20 +34,7 @@ export default function Home() {
           return;
         }
 
-        // Determine API URL based on hostname
-        const hostname = window.location.hostname;
-        const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
-        const isDev = hostname.includes('dev') || hostname.includes('staging');
-
-        let apiUrl: string;
-        if (isLocal) {
-          apiUrl = 'http://localhost:8000';
-        } else if (isDev) {
-          apiUrl = 'https://disease-community-api-dev-508246122017.asia-northeast1.run.app';
-        } else {
-          apiUrl = 'https://disease-community-api-508246122017.asia-northeast1.run.app';
-        }
-
+        const apiUrl = apiService.getBaseUrl();
         console.log('API URL:', apiUrl);
 
         const response = await fetch(`${apiUrl}/?market=ja-jp`, {
@@ -54,11 +43,11 @@ export default function Home() {
             'Content-Type': 'application/json',
           },
         });
-
+        
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-
+        
         const data = await response.json();
         setApiData(data);
       } catch (err) {
@@ -70,7 +59,7 @@ export default function Home() {
     };
 
     fetchApiData();
-  }, []);
+  }, [apiService]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -152,6 +141,19 @@ export default function Home() {
               >
                 Create Account
               </Link>
+              {/* Only show API Documentation link in development/local environment */}
+              {isClient &&
+                (window.location.hostname === 'localhost' ||
+                  window.location.hostname === '127.0.0.1' ||
+                  window.location.hostname.includes('dev')) && (
+                  <Link
+                    href={`${apiService.getBaseUrl()}/docs`}
+                    className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
+                    target="_blank"
+                  >
+                    API Documentation
+                  </Link>
+                )}
             </div>
           </div>
         </div>

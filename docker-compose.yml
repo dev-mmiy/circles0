@@ -43,13 +43,19 @@ services:
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
+      target: development
     container_name: disease-community-frontend
     ports:
       - "3000:3000"
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000
       - NODE_ENV=development
+      - NEXT_PUBLIC_AUTH0_DOMAIN=your-tenant.us.auth0.com
+      - NEXT_PUBLIC_AUTH0_CLIENT_ID=your-client-id
+      - NEXT_PUBLIC_AUTH0_AUDIENCE=https://api.disease-community.com
+      - AUTH0_SECRET=use-openssl-rand-hex-32-to-generate
+      - NEXT_PUBLIC_AUTH0_CALLBACK_URL=http://localhost:3000/api/auth/callback
     depends_on:
       - backend
     volumes:
