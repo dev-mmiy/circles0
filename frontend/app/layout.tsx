@@ -13,9 +13,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body className="font-sans">
         <Auth0ProviderWithConfig>
-          <ApiProvider>
-            {children}
-          </ApiProvider>
+          <ApiProvider>{children}</ApiProvider>
         </Auth0ProviderWithConfig>
       </body>
     </html>

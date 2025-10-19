@@ -47,5 +47,3 @@ function InnerAuth0Provider({ children }: Props) {
 export default function Auth0ProviderWithConfig({ children }: Props) {
   return <InnerAuth0Provider>{children}</InnerAuth0Provider>;
 }
-
-
