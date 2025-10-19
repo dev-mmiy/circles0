@@ -344,26 +344,66 @@ fi
 # 8. フロントエンドページテスト
 show_progress 8 8 "Testing frontend pages..."
 
-# ホームページ
-curl -f http://localhost:3000 > /dev/null || {
-    log_error "Home page failed"
+# フロントエンドの詳細なヘルスチェック
+log_info "Checking frontend container health..."
+docker compose ps frontend
+log_info "Checking frontend container logs (last 20 lines)..."
+docker compose logs frontend --tail=20
+
+# フロントエンドのポート確認
+log_info "Checking if frontend port 3000 is accessible..."
+if curl -f http://localhost:3000 > /dev/null 2>&1; then
+    log_success "Frontend port 3000 is accessible"
+else
+    log_error "Frontend port 3000 is not accessible"
+    log_info "Checking all container status..."
+    docker compose ps
+    log_info "Checking network connectivity..."
+    docker compose exec backend curl -f http://frontend:3000 > /dev/null 2>&1 || {
+        log_error "Backend cannot reach frontend container"
+    }
     exit 1
-}
-log_success "Home page working"
+fi
+
+# ホームページ
+log_info "Testing home page..."
+HOME_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000)
+HTTP_CODE=$(echo "$HOME_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
+if [ "$HTTP_CODE" = "200" ]; then
+    log_success "Home page working"
+else
+    log_error "Home page failed with HTTP $HTTP_CODE"
+    log_info "Response body: ${HOME_RESPONSE%HTTP_CODE:*}"
+    log_info "Checking frontend container status..."
+    docker compose ps frontend
+    log_info "Checking frontend logs..."
+    docker compose logs frontend --tail=50
+    exit 1
+fi
 
 # 登録ページ
-curl -f http://localhost:3000/register > /dev/null || {
-    log_error "Register page failed"
+log_info "Testing register page..."
+REGISTER_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/register)
+HTTP_CODE=$(echo "$REGISTER_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
+if [ "$HTTP_CODE" = "200" ]; then
+    log_success "Register page working"
+else
+    log_error "Register page failed with HTTP $HTTP_CODE"
+    log_info "Response body: ${REGISTER_RESPONSE%HTTP_CODE:*}"
     exit 1
-}
-log_success "Register page working"
+fi
 
 # プロフィールページ（作成したユーザー）
-curl -f http://localhost:3000/profile/$USER_ID > /dev/null || {
-    log_error "Profile page failed"
+log_info "Testing profile page..."
+PROFILE_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/profile/$USER_ID)
+HTTP_CODE=$(echo "$PROFILE_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
+if [ "$HTTP_CODE" = "200" ]; then
+    log_success "Profile page working"
+else
+    log_error "Profile page failed with HTTP $HTTP_CODE"
+    log_info "Response body: ${PROFILE_RESPONSE%HTTP_CODE:*}"
     exit 1
-}
-log_success "Profile page working"
+fi
 
 # 9. 最終レポート
 log_success "🎉 All local tests completed successfully!"
