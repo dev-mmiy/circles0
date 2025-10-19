@@ -33,7 +33,7 @@ export class ApiConfigService {
     const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
     const isLocal = hostname === 'localhost' || hostname === '127.0.0.1';
     const isDev = hostname.includes('dev') || hostname.includes('staging');
-    
+
     // Production URLs
     const productionApiUrl = 'https://disease-community-api-508246122017.asia-northeast1.run.app';
     const devApiUrl = 'https://disease-community-api-dev-508246122017.asia-northeast1.run.app';

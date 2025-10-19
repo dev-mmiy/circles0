@@ -149,7 +149,7 @@ async def update_user(
 ):
     """
     Update user information.
-    
+
     Requires authentication. Users can only update their own profile.
     """
     user = db.query(User).filter(User.id == user_id).first()
@@ -192,7 +192,7 @@ async def delete_user(
 ):
     """
     Delete user.
-    
+
     Requires authentication. Users can only delete their own account.
     """
     user = db.query(User).filter(User.id == user_id).first()

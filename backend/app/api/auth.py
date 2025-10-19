@@ -17,9 +17,9 @@ router = APIRouter(prefix="/api/v1/auth", tags=["authentication"])
 async def get_authenticated_user(current_user: Dict = Depends(get_current_user)):
     """
     Get current authenticated user information.
-    
+
     Requires: Valid Auth0 access token
-    
+
     Returns:
         Dict: Current user information from token
     """
@@ -39,9 +39,9 @@ async def get_auth_status(
 ):
     """
     Check authentication status.
-    
+
     Works both with and without authentication.
-    
+
     Returns:
         Dict: Authentication status
     """
@@ -60,7 +60,7 @@ async def get_auth_status(
 async def public_endpoint():
     """
     Public endpoint (no authentication required).
-    
+
     Returns:
         Dict: Public message
     """
@@ -68,4 +68,3 @@ async def public_endpoint():
         "message": "This is a public endpoint",
         "authentication_required": False,
     }
-

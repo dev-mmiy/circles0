@@ -20,11 +20,28 @@ interface ApiResponse {
 
 export default function Home() {
   const apiService = useApiService();
-  const { isAuthenticated, loginWithRedirect, logout, user, isLoading } = useAuth0();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  
+  // Auth0 hooks with error handling
+  let isAuthenticated = false;
+  let loginWithRedirect = () => {};
+  let logout = () => {};
+  let user = null;
+  let isLoading = false;
+  
+  try {
+    const auth0 = useAuth0();
+    isAuthenticated = auth0.isAuthenticated;
+    loginWithRedirect = auth0.loginWithRedirect;
+    logout = auth0.logout;
+    user = auth0.user;
+    isLoading = auth0.isLoading;
+  } catch (err) {
+    console.log('Auth0 not available, running without authentication');
+  }
 
   useEffect(() => {
     setIsClient(true);
@@ -45,11 +62,11 @@ export default function Home() {
             'Content-Type': 'application/json',
           },
         });
-        
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        
+
         const data = await response.json();
         setApiData(data);
       } catch (err) {

@@ -98,33 +98,24 @@ export class ApiService {
 
   // Name Display Orders API
   async getNameDisplayOrders(): Promise<NameDisplayOrder[]> {
-    return this.fetchWithErrorHandling<NameDisplayOrder[]>(
-      this.config.endpoints.nameDisplayOrders
-    );
+    return this.fetchWithErrorHandling<NameDisplayOrder[]>(this.config.endpoints.nameDisplayOrders);
   }
 
   // Locale Formats API
   async getLocaleFormats(): Promise<LocaleNameFormat[]> {
-    return this.fetchWithErrorHandling<LocaleNameFormat[]>(
-      this.config.endpoints.localeFormats
-    );
+    return this.fetchWithErrorHandling<LocaleNameFormat[]>(this.config.endpoints.localeFormats);
   }
 
   // User Management API
   async createUser(userData: UserCreate): Promise<UserResponse> {
-    return this.fetchWithErrorHandling<UserResponse>(
-      this.config.endpoints.users,
-      {
-        method: 'POST',
-        body: JSON.stringify(userData),
-      }
-    );
+    return this.fetchWithErrorHandling<UserResponse>(this.config.endpoints.users, {
+      method: 'POST',
+      body: JSON.stringify(userData),
+    });
   }
 
   async getUser(userId: string): Promise<UserResponse> {
-    return this.fetchWithErrorHandling<UserResponse>(
-      `${this.config.endpoints.users}${userId}`
-    );
+    return this.fetchWithErrorHandling<UserResponse>(`${this.config.endpoints.users}${userId}`);
   }
 
   // Health Check API
