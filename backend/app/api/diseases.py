@@ -22,7 +22,7 @@ from app.schemas.disease import (
     UserDiseaseResponse,
     UserDiseaseUpdate,
 )
-from app.utils.auth import get_current_user
+from app.utils.auth import get_current_user, require_permission
 
 router = APIRouter()
 
@@ -32,7 +32,7 @@ router = APIRouter()
 async def create_disease(
     disease_data: DiseaseCreate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(check_permissions(["manage:diseases"]))
+    current_user: dict = Depends(require_permission("manage:diseases"))
 ):
     """Create a new disease (admin only)."""
     # Check if disease already exists
@@ -123,7 +123,7 @@ async def update_disease(
     disease_id: int,
     disease_data: DiseaseUpdate,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(check_permissions(["manage:diseases"]))
+    current_user: dict = Depends(require_permission("manage:diseases"))
 ):
     """Update disease (admin only)."""
     disease = db.query(Disease).filter(Disease.id == disease_id).first()
@@ -149,7 +149,7 @@ async def update_disease(
 async def delete_disease(
     disease_id: int,
     db: Session = Depends(get_db),
-    current_user: dict = Depends(check_permissions(["manage:diseases"]))
+    current_user: dict = Depends(require_permission("manage:diseases"))
 ):
     """Delete disease (admin only)."""
     disease = db.query(Disease).filter(Disease.id == disease_id).first()
