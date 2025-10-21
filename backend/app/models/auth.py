@@ -10,7 +10,7 @@ from typing import Optional
 from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 
 from app.database import Base
@@ -39,6 +39,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    user_diseases = relationship("UserDisease", back_populates="user")
     
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email})>"
