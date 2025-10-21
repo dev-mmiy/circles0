@@ -22,7 +22,7 @@ from app.schemas.disease import (
     UserDiseaseResponse,
     UserDiseaseUpdate,
 )
-from app.utils.auth import get_current_user, check_permissions
+from app.utils.auth import get_current_user
 
 router = APIRouter()
 
