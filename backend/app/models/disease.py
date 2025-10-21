@@ -1,186 +1,71 @@
 """
-Disease-related SQLAlchemy models.
+Simple Disease model for disease management.
 """
 
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
 
-from sqlalchemy import (
-    Boolean,
-    Column,
-    DateTime,
-    ForeignKey,
-    Integer,
-    String,
-    Text,
-    UniqueConstraint,
-)
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import relationship
+from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
-# from app.models.auth import User  # Temporarily disabled to avoid conflicts
+from app.models.user import User
 
 
 class Disease(Base):
-    """Disease master table."""
-
+    """Simple Disease model."""
+    
     __tablename__ = "diseases"
-
+    
     # Primary key
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     # Basic information
-    name = Column(String(100), nullable=False, unique=True, index=True)
-    description = Column(Text)
-    category = Column(String(50))  # e.g., "cardiovascular", "neurological", "autoimmune"
+    name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    category: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    # Internationalization
-    name_ja = Column(String(100))  # Japanese name
-    description_ja = Column(Text)  # Japanese description
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Status and metadata
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(
-        DateTime, 
-        default=func.current_timestamp(), 
-        onupdate=func.current_timestamp()
-    )
-
-    # Relationships
-    user_diseases = relationship("UserDisease", back_populates="disease")
-    posts = relationship("Post", back_populates="disease")
+    def __repr__(self) -> str:
+        return f"<Disease(id={self.id}, name={self.name})>"
 
 
 class UserDisease(Base):
-    """User-disease relationship table."""
-
+    """Simple User-Disease relationship model."""
+    
     __tablename__ = "user_diseases"
-
+    
     # Primary key
-    id = Column(Integer, primary_key=True, index=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     # Foreign keys
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    disease_id = Column(Integer, ForeignKey("diseases.id"), nullable=False)
+    user_id: Mapped[UUID] = mapped_column(String(36), nullable=False)
+    disease_id: Mapped[int] = mapped_column(Integer, nullable=False)
     
-    # Disease-specific information
-    diagnosis_date = Column(DateTime)
-    severity = Column(String(20))  # e.g., "mild", "moderate", "severe"
-    notes = Column(Text)
+    # Relationship information
+    diagnosis_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    severity: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     
-    # Status
-    is_active = Column(Boolean, default=True)
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=func.current_timestamp())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp())
     
-    # Metadata
-    created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(
-        DateTime, 
-        default=func.current_timestamp(), 
-        onupdate=func.current_timestamp()
-    )
-
-    # Constraints
-    __table_args__ = (UniqueConstraint("user_id", "disease_id"),)
-
     # Relationships
     user = relationship("User", back_populates="user_diseases")
     disease = relationship("Disease", back_populates="user_diseases")
-
-
-class Post(Base):
-    """Community posts table."""
-
-    __tablename__ = "posts"
-
-    # Primary key
-    id = Column(Integer, primary_key=True, index=True)
     
-    # Content
-    title = Column(String(200), nullable=False)
-    content = Column(Text, nullable=False)
-    
-    # Foreign keys
-    author_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    disease_id = Column(Integer, ForeignKey("diseases.id"), nullable=True)
-    
-    # Status and visibility
-    is_published = Column(Boolean, default=True)
-    is_featured = Column(Boolean, default=False)
-    
-    # Engagement metrics
-    likes_count = Column(Integer, default=0)
-    comments_count = Column(Integer, default=0)
-    views_count = Column(Integer, default=0)
-    
-    # Metadata
-    created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(
-        DateTime, 
-        default=func.current_timestamp(), 
-        onupdate=func.current_timestamp()
-    )
-
-    # Relationships
-    author = relationship("User", back_populates="posts")
-    disease = relationship("Disease", back_populates="posts")
+    def __repr__(self) -> str:
+        return f"<UserDisease(id={self.id}, user_id={self.user_id}, disease_id={self.disease_id})>"
 
 
-class PostLike(Base):
-    """Post likes table."""
-
-    __tablename__ = "post_likes"
-
-    # Primary key
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Foreign keys
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
-    
-    # Metadata
-    created_at = Column(DateTime, default=func.current_timestamp())
-
-    # Constraints
-    __table_args__ = (UniqueConstraint("user_id", "post_id"),)
-
-    # Relationships
-    user = relationship("User")
-    post = relationship("Post")
-
-
-class PostComment(Base):
-    """Post comments table."""
-
-    __tablename__ = "post_comments"
-
-    # Primary key
-    id = Column(Integer, primary_key=True, index=True)
-    
-    # Content
-    content = Column(Text, nullable=False)
-    
-    # Foreign keys
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    post_id = Column(Integer, ForeignKey("posts.id"), nullable=False)
-    parent_comment_id = Column(Integer, ForeignKey("post_comments.id"), nullable=True)
-    
-    # Status
-    is_active = Column(Boolean, default=True)
-    
-    # Metadata
-    created_at = Column(DateTime, default=func.current_timestamp())
-    updated_at = Column(
-        DateTime, 
-        default=func.current_timestamp(), 
-        onupdate=func.current_timestamp()
-    )
-
-    # Relationships
-    user = relationship("User")
-    post = relationship("Post")
-    parent_comment = relationship("PostComment", remote_side=[id])
-    replies = relationship("PostComment", back_populates="parent_comment")
-
+# Add relationships to existing models
+User.user_diseases = relationship("UserDisease", back_populates="user")
+Disease.user_diseases = relationship("UserDisease", back_populates="disease")
