@@ -18,6 +18,7 @@ from .disease import (
     PostLike,
     PostComment,
 )
+# Note: auth.py User model is temporarily disabled to avoid conflicts
 
 __all__ = [
     "Base",

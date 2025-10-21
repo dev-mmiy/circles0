@@ -20,7 +20,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.database import Base
-from app.models.auth import User
+# from app.models.auth import User  # Temporarily disabled to avoid conflicts
 
 
 class Disease(Base):
