@@ -3,16 +3,16 @@ Pydantic schemas package.
 """
 
 from .user import (
-    LocaleNameFormatResponse,
-    NameDisplayOrderResponse,
     UserBase,
     UserCreate,
-    UserPreferenceCreate,
-    UserPreferenceResponse,
-    UserPreferenceUpdate,
-    UserPublic,
     UserResponse,
     UserUpdate,
+)
+from .disease import (
+    DiseaseBase,
+    DiseaseCreate,
+    DiseaseResponse,
+    DiseaseUpdate,
 )
 
 __all__ = [
@@ -20,10 +20,8 @@ __all__ = [
     "UserCreate",
     "UserUpdate",
     "UserResponse",
-    "UserPublic",
-    "UserPreferenceCreate",
-    "UserPreferenceUpdate",
-    "UserPreferenceResponse",
-    "NameDisplayOrderResponse",
-    "LocaleNameFormatResponse",
+    "DiseaseBase",
+    "DiseaseCreate",
+    "DiseaseResponse",
+    "DiseaseUpdate",
 ]
