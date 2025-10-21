@@ -10,6 +10,8 @@ export interface ApiConfig {
     localeFormats: string;
     users: string;
     health: string;
+    diseases: string;
+    diseaseCategories: string;
   };
 }
 
@@ -62,6 +64,8 @@ export class ApiConfigService {
         localeFormats: `${baseUrl}/api/v1/users/locale-formats/`,
         users: `${baseUrl}/api/v1/users/`,
         health: `${baseUrl}/health`,
+        diseases: `${baseUrl}/api/v1/diseases/`,
+        diseaseCategories: `${baseUrl}/api/v1/diseases/categories/list`,
       },
     };
   }

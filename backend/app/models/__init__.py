@@ -11,6 +11,13 @@ from .user import (
     UserPreference,
     UserSession,
 )
+from .disease import (
+    Disease,
+    UserDisease,
+    Post,
+    PostLike,
+    PostComment,
+)
 
 __all__ = [
     "Base",
@@ -20,4 +27,9 @@ __all__ = [
     "UserPreference",
     "UserSession",
     "UserActivityLog",
+    "Disease",
+    "UserDisease",
+    "Post",
+    "PostLike",
+    "PostComment",
 ]
