@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.auth import router as auth_router
 from app.api.users import router as users_router
 from app.api.diseases import router as diseases_router
-from app.auth.router import router as session_auth_router
+# from app.auth.router import router as session_auth_router  # Temporarily disabled
 from app.middleware.market import MarketMiddleware
 
 # Load environment variables from .env if present
@@ -60,7 +60,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth_router)
-app.include_router(session_auth_router, prefix="/api/v1", tags=["session-auth"])
+# app.include_router(session_auth_router, prefix="/api/v1", tags=["session-auth"])  # Temporarily disabled
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"])
 

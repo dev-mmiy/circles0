@@ -24,20 +24,20 @@ DATABASE_URL = (
 # Create engine
 engine = create_engine(DATABASE_URL)
 
-# Create async engine for fastapi-users
-async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
-async_engine = create_async_engine(async_database_url)
+# Create async engine for fastapi-users (temporarily disabled)
+# async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+# async_engine = create_async_engine(async_database_url)
 
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Create async session factory
-AsyncSessionLocal = sessionmaker(
-    class_=AsyncSession,
-    autocommit=False,
-    autoflush=False,
-    bind=async_engine
-)
+# Create async session factory (temporarily disabled)
+# AsyncSessionLocal = sessionmaker(
+#     class_=AsyncSession,
+#     autocommit=False,
+#     autoflush=False,
+#     bind=async_engine
+# )
 
 
 def get_db():
@@ -49,7 +49,7 @@ def get_db():
         db.close()
 
 
-async def get_async_session():
-    """Get async database session for fastapi-users."""
-    async with AsyncSessionLocal() as session:
-        yield session
+# async def get_async_session():
+#     """Get async database session for fastapi-users."""
+#     async with AsyncSessionLocal() as session:
+#         yield session
