@@ -5,7 +5,12 @@ Database configuration and session management.
 import os
 
 from sqlalchemy import create_engine
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+
+# Create declarative base
+Base = declarative_base()
 
 # Database URL from environment variable
 # Handle empty string case (Cloud Run may set empty string instead of None)
@@ -19,8 +24,20 @@ DATABASE_URL = (
 # Create engine
 engine = create_engine(DATABASE_URL)
 
+# Create async engine for fastapi-users
+async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
+async_engine = create_async_engine(async_database_url)
+
 # Create session factory
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+# Create async session factory
+AsyncSessionLocal = sessionmaker(
+    class_=AsyncSession,
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine
+)
 
 
 def get_db():
@@ -30,3 +47,9 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+async def get_async_session():
+    """Get async database session for fastapi-users."""
+    async with AsyncSessionLocal() as session:
+        yield session
