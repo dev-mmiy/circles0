@@ -17,32 +17,10 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # Drop existing tables
+    # Drop existing tables (except users which is already created)
     op.drop_table('user_diseases')
     op.drop_table('posts')
     op.drop_table('diseases')
-    op.drop_table('users')
-    
-    # Create new simple users table
-    op.create_table('users',
-    sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('hashed_password', sa.String(length=255), nullable=False),
-    sa.Column('is_active', sa.Boolean(), nullable=False),
-    sa.Column('is_superuser', sa.Boolean(), nullable=False),
-    sa.Column('is_verified', sa.Boolean(), nullable=False),
-    sa.Column('first_name', sa.String(length=50), nullable=True),
-    sa.Column('last_name', sa.String(length=50), nullable=True),
-    sa.Column('phone', sa.String(length=20), nullable=True),
-    sa.Column('date_of_birth', sa.DateTime(), nullable=True),
-    sa.Column('bio', sa.Text(), nullable=True),
-    sa.Column('last_login', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_index(op.f('ix_users_email'), 'users', ['email'], unique=True)
-    op.create_index(op.f('ix_users_id'), 'users', ['id'], unique=False)
     
     # Create new simple diseases table
     op.create_table('diseases',
