@@ -170,17 +170,22 @@ else
     log_info "Checking database tables..."
     docker compose exec backend python -c "
 from app.database import get_db
-from app.models.user import NameDisplayOrder
+from app.models.user import User
+from app.models.disease import Disease
 db = next(get_db())
 try:
-    count = db.query(NameDisplayOrder).count()
-    print(f'NameDisplayOrder records: {count}')
-    if count > 0:
-        orders = db.query(NameDisplayOrder).all()
-        for order in orders:
-            print(f'  - {order.order_code}: {order.display_name}')
-    else:
-        print('No NameDisplayOrder records found')
+    user_count = db.query(User).count()
+    disease_count = db.query(Disease).count()
+    print(f'User records: {user_count}')
+    print(f'Disease records: {disease_count}')
+    if user_count > 0:
+        users = db.query(User).limit(3).all()
+        for user in users:
+            print(f'  - User: {user.email}')
+    if disease_count > 0:
+        diseases = db.query(Disease).limit(3).all()
+        for disease in diseases:
+            print(f'  - Disease: {disease.name}')
 except Exception as e:
     print(f'Database error: {e}')
 finally:
