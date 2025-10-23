@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Integer, String, Text
+from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -45,8 +45,8 @@ class UserDisease(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     
     # Foreign keys
-    user_id: Mapped[UUID] = mapped_column(String(36), nullable=False)
-    disease_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)
+    disease_id: Mapped[int] = mapped_column(Integer, ForeignKey("diseases.id"), nullable=False)
     
     # Relationship information
     diagnosis_date: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
