@@ -399,15 +399,15 @@ else
     exit 1
 fi
 
-# ログインページ
-log_info "Testing login page..."
-LOGIN_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/login)
-HTTP_CODE=$(echo "$LOGIN_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
+# プロフィールページ（動的ルート）
+log_info "Testing profile page..."
+PROFILE_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/profile/test-user)
+HTTP_CODE=$(echo "$PROFILE_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
 if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Login page working"
+    log_success "Profile page working"
 else
-    log_error "Login page failed with HTTP $HTTP_CODE"
-    log_info "Response body: ${LOGIN_RESPONSE%HTTP_CODE:*}"
+    log_error "Profile page failed with HTTP $HTTP_CODE"
+    log_info "Response body: ${PROFILE_RESPONSE%HTTP_CODE:*}"
     exit 1
 fi
 
