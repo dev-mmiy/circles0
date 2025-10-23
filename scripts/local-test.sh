@@ -138,14 +138,15 @@ finally:
     exit 1
 fi
 
-# ロケール形式API
-LOCALE_FORMAT_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/locale-formats/)
-HTTP_CODE="${LOCALE_FORMAT_RESPONSE: -3}"
+# 疾患API
+log_info "Testing diseases API..."
+DISEASES_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/diseases/)
+HTTP_CODE="${DISEASES_RESPONSE: -3}"
 if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Locale formats API working"
+    log_success "Diseases API working"
 else
-    log_error "Locale formats API failed with HTTP $HTTP_CODE"
-    log_info "Response: ${LOCALE_FORMAT_RESPONSE%???}"
+    log_error "Diseases API failed with HTTP $HTTP_CODE"
+    log_info "Response: ${DISEASES_RESPONSE%???}"
     exit 1
 fi
 
