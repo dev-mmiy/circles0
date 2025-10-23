@@ -44,4 +44,4 @@ EXPOSE 8080
 # Run the application (Cloud Run compatible)
 # Cloud Run sets PORT=8080, ensure we use it
 # Run migrations before starting the server
-CMD ["sh", "-c", "echo 'Running database migrations...' && alembic upgrade head && echo 'Starting server on port $PORT' && uvicorn app.main:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "echo 'Running database migrations...' && alembic upgrade head && echo 'Starting server on port ${PORT:-8080}' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

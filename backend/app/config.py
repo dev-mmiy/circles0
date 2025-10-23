@@ -23,22 +23,20 @@ class Settings:
         # Environment-specific database URLs
         if self.environment == "development":
             return (
-                "postgresql://circles_dev:circles_dev_password@"
-                "localhost:5432/circles_db_dev"
+                "postgresql://postgres:postgres@postgres:5432/disease_community"
             )
         elif self.environment == "production":
+            # Cloud Run production database
             return (
-                "postgresql://circles_prod:circles_prod_password@"
-                "localhost:5432/circles_db_prod"
+                "postgresql://postgres:postgres@postgres:5432/disease_community"
             )
         elif self.environment == "test":
             return (
-                "postgresql://circles_test:circles_test_password@"
-                "localhost:5432/circles_db_test"
+                "postgresql://postgres:postgres@postgres:5432/disease_community"
             )
         else:
             # Default to development
-            return "postgresql://postgres:postgres@localhost:5432/test_db"
+            return "postgresql://postgres:postgres@postgres:5432/disease_community"
 
 
 # Global settings instance
