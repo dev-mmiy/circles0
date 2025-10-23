@@ -101,15 +101,15 @@ else
     exit 1
 fi
 
-# 名前表示順序API
-log_info "Testing name display orders API..."
-NAME_DISPLAY_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/name-display-orders/)
-HTTP_CODE="${NAME_DISPLAY_RESPONSE: -3}"
+# ユーザーAPI
+log_info "Testing users API..."
+USERS_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/)
+HTTP_CODE="${USERS_RESPONSE: -3}"
 if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Name display orders API working"
+    log_success "Users API working"
 else
-    log_error "Name display orders API failed with HTTP $HTTP_CODE"
-    log_info "Response: ${NAME_DISPLAY_RESPONSE%???}"
+    log_error "Users API failed with HTTP $HTTP_CODE"
+    log_info "Response: ${USERS_RESPONSE%???}"
     # データベースのテーブル状況を確認
     log_info "Checking database tables..."
     docker compose exec backend python -c "
