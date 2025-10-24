@@ -26,10 +26,8 @@ class Settings:
                 "postgresql://postgres:postgres@postgres:5432/disease_community"
             )
         elif self.environment == "production":
-            # Cloud Run production database
-            return (
-                "postgresql://postgres:postgres@postgres:5432/disease_community"
-            )
+            # Cloud Run production database - use in-memory SQLite for now
+            return "sqlite:///./test.db"
         elif self.environment == "test":
             return (
                 "postgresql://postgres:postgres@postgres:5432/disease_community"
