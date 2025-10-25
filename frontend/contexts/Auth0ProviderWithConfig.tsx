@@ -25,7 +25,7 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
       clientId={clientId}
       authorizationParams={{
         redirect_uri: redirectUri,
-        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+        // audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE, // Temporarily disabled
         scope: 'openid profile email',
       }}
       useRefreshTokens={true}
