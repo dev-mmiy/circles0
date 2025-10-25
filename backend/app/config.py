@@ -22,16 +22,12 @@ class Settings:
 
         # Environment-specific database URLs
         if self.environment == "development":
-            return (
-                "postgresql://postgres:postgres@postgres:5432/disease_community"
-            )
+            return "postgresql://postgres:postgres@postgres:5432/disease_community"
         elif self.environment == "production":
             # Cloud Run production database - use in-memory SQLite for now
             return "sqlite:///./test.db"
         elif self.environment == "test":
-            return (
-                "postgresql://postgres:postgres@postgres:5432/disease_community"
-            )
+            return "postgresql://postgres:postgres@postgres:5432/disease_community"
         else:
             # Default to development
             return "postgresql://postgres:postgres@postgres:5432/disease_community"

@@ -6,9 +6,9 @@ from datetime import datetime
 from typing import Optional
 from uuid import UUID
 
+from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 from sqlalchemy import Boolean, DateTime, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from fastapi_users.db import SQLAlchemyBaseUserTableUUID
 
 from app.database import Base
 
@@ -16,7 +16,7 @@ from app.database import Base
 class User(SQLAlchemyBaseUserTableUUID, Base):
     """
     Simple User model for authentication and user management.
-    
+
     Extends SQLAlchemyBaseUserTableUUID to provide:
     - UUID primary key
     - Email field with unique constraint
@@ -24,9 +24,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     - Is active/superuser flags
     - Created/updated timestamps
     """
-    
+
     __tablename__ = "users"
-    
+
     # Additional fields beyond the base user table
     first_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     last_name: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -36,7 +36,9 @@ class User(SQLAlchemyBaseUserTableUUID, Base):
     is_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
-    
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email})>"

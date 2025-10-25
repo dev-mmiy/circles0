@@ -6,8 +6,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.auth import router as auth_router
-from app.api.users import router as users_router
 from app.api.diseases import router as diseases_router
+from app.api.users import router as users_router
+
 # from app.auth.router import router as session_auth_router  # Temporarily disabled
 from app.middleware.market import MarketMiddleware
 

@@ -3,14 +3,15 @@ Simple authentication system.
 """
 
 from typing import Optional
+
 from fastapi import Depends, HTTPException, status
 from fastapi_users import FastAPIUsers
 from fastapi_users.authentication import SessionAuthentication
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.database import get_db
 from app.models.user import User
-from app.core.config import settings
 
 # Create FastAPIUsers instance
 fastapi_users = FastAPIUsers[User, str](None, [])
@@ -45,6 +46,5 @@ def get_current_user(db: Session = Depends(get_db)) -> User:
     """
     # For now, raise exception (authentication required but not implemented)
     raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication required"
+        status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required"
     )

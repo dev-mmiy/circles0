@@ -2,18 +2,8 @@
 Pydantic schemas package.
 """
 
-from .user import (
-    UserBase,
-    UserCreate,
-    UserResponse,
-    UserUpdate,
-)
-from .disease import (
-    DiseaseBase,
-    DiseaseCreate,
-    DiseaseResponse,
-    DiseaseUpdate,
-)
+from .disease import DiseaseBase, DiseaseCreate, DiseaseResponse, DiseaseUpdate
+from .user import UserBase, UserCreate, UserResponse, UserUpdate
 
 __all__ = [
     "UserBase",
