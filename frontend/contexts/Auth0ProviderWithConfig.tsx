@@ -30,6 +30,10 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
       }}
       useRefreshTokens={true}
       cacheLocation="localstorage"
+      onRedirectCallback={(appState) => {
+        // Handle redirect after login
+        window.location.replace(appState?.returnTo || '/');
+      }}
     >
       {children}
     </Auth0Provider>
