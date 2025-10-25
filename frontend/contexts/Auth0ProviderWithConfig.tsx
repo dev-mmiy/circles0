@@ -1,27 +1,21 @@
 'use client';
 
-import React from 'react';
 import { Auth0Provider } from '@auth0/auth0-react';
-import { useRouter } from 'next/navigation';
+import { ReactNode } from 'react';
 
-type Props = { children: React.ReactNode };
+interface Auth0ProviderWithConfigProps {
+  children: ReactNode;
+}
 
-function InnerAuth0Provider({ children }: Props) {
-  const router = useRouter();
+export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithConfigProps) {
+  // Auth0設定値（環境変数から取得）
+  const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
+  const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
+  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI;
 
-  const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || '';
-  const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || '';
-  const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || undefined;
-  const callbackUrl =
-    process.env.NEXT_PUBLIC_AUTH0_CALLBACK_URL ||
-    (typeof window !== 'undefined' ? `${window.location.origin}/api/auth/callback` : '');
-
-  const onRedirectCallback = (appState?: { returnTo?: string }) => {
-    router.push(appState?.returnTo || '/');
-  };
-
-  // If Auth0 is not configured, render children without provider (no-op)
-  if (!domain || !clientId) {
+  // 設定値が不足している場合はAuth0を無効化
+  if (!domain || !clientId || !redirectUri) {
+    console.warn('Auth0 configuration missing. Authentication will be disabled.');
     return <>{children}</>;
   }
 
@@ -30,18 +24,14 @@ function InnerAuth0Provider({ children }: Props) {
       domain={domain}
       clientId={clientId}
       authorizationParams={{
-        redirect_uri: callbackUrl,
-        audience,
+        redirect_uri: redirectUri,
+        audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE,
+        scope: 'openid profile email',
       }}
-      onRedirectCallback={onRedirectCallback}
+      useRefreshTokens={true}
       cacheLocation="localstorage"
-      useRefreshTokens
     >
       {children}
     </Auth0Provider>
   );
-}
-
-export default function Auth0ProviderWithConfig({ children }: Props) {
-  return <InnerAuth0Provider>{children}</InnerAuth0Provider>;
 }
