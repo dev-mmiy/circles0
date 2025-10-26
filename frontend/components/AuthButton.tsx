@@ -66,14 +66,20 @@ export default function AuthButton() {
   }
 
   if (error) {
+    console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">
         <div className="text-red-600 text-sm">Auth Error: {error.message}</div>
+        <div className="text-xs text-gray-500">Error type: {error.name}</div>
         <button
-          onClick={() => window.location.reload()}
+          onClick={() => {
+            // Clear Auth0 cache and reload
+            localStorage.removeItem('@@auth0spajs@@::' + process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID);
+            window.location.reload();
+          }}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
         >
-          Retry
+          Clear Cache & Retry
         </button>
       </div>
     );
