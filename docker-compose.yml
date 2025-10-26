@@ -33,7 +33,7 @@ services:
       - ENVIRONMENT=development
       - LOG_LEVEL=DEBUG
       - AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com
-      - AUTH0_AUDIENCE=https://disease-community-api
+            - AUTH0_AUDIENCE=https://api.disease-community.com
     depends_on:
       postgres:
         condition: service_healthy
@@ -55,7 +55,7 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com
       - NEXT_PUBLIC_AUTH0_CLIENT_ID=YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD
-      - NEXT_PUBLIC_AUTH0_AUDIENCE=https://disease-community-api
+            - NEXT_PUBLIC_AUTH0_AUDIENCE=https://api.disease-community.com
       - NEXT_PUBLIC_AUTH0_REDIRECT_URI=http://localhost:3000/callback
     depends_on:
       - backend
