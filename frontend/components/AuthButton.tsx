@@ -4,8 +4,16 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
 
 export default function AuthButton() {
-  const { loginWithRedirect, logout, user, isAuthenticated, isLoading } = useAuth0();
+  const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  // デバッグ用ログ
+  console.log('AuthButton state:', {
+    isLoading,
+    isAuthenticated,
+    user,
+    error,
+  });
 
   const handleLogin = () => {
     loginWithRedirect({
@@ -35,6 +43,20 @@ export default function AuthButton() {
       <div className="flex items-center space-x-2">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
         <span className="text-sm text-gray-600">Loading...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center space-y-2">
+        <div className="text-red-600 text-sm">Auth Error: {error.message}</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
