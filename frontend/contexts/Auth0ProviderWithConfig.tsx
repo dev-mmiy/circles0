@@ -14,9 +14,17 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
   const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI;
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE;
 
+  console.log('Auth0 Environment Variables:', {
+    domain: domain ? 'SET' : 'MISSING',
+    clientId: clientId ? 'SET' : 'MISSING',
+    redirectUri: redirectUri ? 'SET' : 'MISSING',
+    audience: audience ? 'SET' : 'MISSING',
+  });
+
   // 設定値が不足している場合はAuth0を無効化
   if (!domain || !clientId || !redirectUri) {
     console.warn('Auth0 configuration missing. Authentication will be disabled.');
+    console.warn('Missing values:', { domain: !!domain, clientId: !!clientId, redirectUri: !!redirectUri });
     return <>{children}</>;
   }
 
@@ -27,23 +35,28 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
     audience,
   });
 
-  return (
-    <Auth0Provider
-      domain={domain}
-      clientId={clientId}
-      authorizationParams={{
-        redirect_uri: redirectUri,
-        audience: audience,
-        scope: 'openid profile email',
-      }}
-      useRefreshTokens={true}
-      cacheLocation="localstorage"
-      onRedirectCallback={(appState) => {
-        // Handle redirect after login
-        window.location.replace(appState?.returnTo || '/');
-      }}
-    >
-      {children}
-    </Auth0Provider>
-  );
+  try {
+    return (
+      <Auth0Provider
+        domain={domain}
+        clientId={clientId}
+        authorizationParams={{
+          redirect_uri: redirectUri,
+          audience: audience,
+          scope: 'openid profile email',
+        }}
+        useRefreshTokens={true}
+        cacheLocation="localstorage"
+        onRedirectCallback={(appState) => {
+          // Handle redirect after login
+          window.location.replace(appState?.returnTo || '/');
+        }}
+      >
+        {children}
+      </Auth0Provider>
+    );
+  } catch (error) {
+    console.error('Auth0Provider initialization error:', error);
+    return <>{children}</>;
+  }
 }

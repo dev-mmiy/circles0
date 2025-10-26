@@ -13,7 +13,25 @@ export default function AuthButton() {
     isAuthenticated,
     user,
     error,
+    loginWithRedirect: typeof loginWithRedirect,
+    logout: typeof logout,
   });
+
+  // Auth0Providerが正しく初期化されていない場合のフォールバック
+  if (typeof loginWithRedirect !== 'function') {
+    console.error('Auth0Provider not properly initialized');
+    return (
+      <div className="flex flex-col items-center space-y-2">
+        <div className="text-red-600 text-sm">Auth0 not initialized</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   const handleLogin = () => {
     loginWithRedirect({
