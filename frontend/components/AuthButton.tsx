@@ -2,10 +2,12 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
+import Image from 'next/image';
 
 export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   // デバッグ用ログ
   console.log('AuthButton state:', {
@@ -31,6 +33,28 @@ export default function AuthButton() {
         </button>
       </div>
     );
+  }
+
+  // エラーが発生した場合の処理
+  if (error && !hasError) {
+    console.error('Auth0 error detected, clearing cache...');
+    setHasError(true);
+    // 自動的にキャッシュをクリア
+    const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
+    if (clientId) {
+      localStorage.removeItem(`@@auth0spajs@@::${clientId}`);
+    }
+    // すべてのAuth0関連キーをクリア
+    Object.keys(localStorage).forEach(key => {
+      if (key.includes('auth0') || key.includes('@@auth0spajs@@')) {
+        localStorage.removeItem(key);
+      }
+    });
+    // 3秒後にエラー状態をリセット
+    setTimeout(() => {
+      setHasError(false);
+      window.location.reload();
+    }, 3000);
   }
 
   const handleLogin = () => {
@@ -74,6 +98,7 @@ export default function AuthButton() {
       <div className="flex flex-col items-center space-y-2">
         <div className="text-red-600 text-sm">Auth Error: {error.message}</div>
         <div className="text-xs text-gray-500">Error type: {error.name}</div>
+        <div className="text-xs text-blue-500">Auto-clearing cache and reloading...</div>
         <button
           onClick={() => {
             // Clear all Auth0 related cache and reload
@@ -102,9 +127,11 @@ export default function AuthButton() {
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           {user.picture && (
-            <img
+            <Image
               src={user.picture}
               alt={user.name || 'User'}
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full"
             />
           )}

@@ -45,18 +45,13 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
           audience: audience,
           scope: 'openid profile email',
         }}
-        useRefreshTokens={true}
-        cacheLocation="localstorage"
+        useRefreshTokens={false}
+        cacheLocation="memory"
         skipRedirectCallback={false}
         onRedirectCallback={(appState) => {
           console.log('Auth0 redirect callback:', appState);
           // Handle redirect after login
           window.location.replace(appState?.returnTo || '/');
-        }}
-        onError={(error) => {
-          console.error('Auth0 error:', error);
-          // Clear Auth0 cache on error to prevent state issues
-          localStorage.removeItem(`@@auth0spajs@@::${clientId}`);
         }}
       >
         {children}
