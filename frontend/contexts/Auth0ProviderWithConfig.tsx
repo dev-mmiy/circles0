@@ -8,11 +8,11 @@ interface Auth0ProviderWithConfigProps {
 }
 
 export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithConfigProps) {
-  // Auth0設定値（環境変数から取得）
-  const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN;
-  const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
-  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI;
-  const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE;
+  // Auth0設定値（環境変数から取得、フォールバックとしてハードコードされた値を使用）
+  const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || 'dev-2mqgvitlgxdwl5ea.us.auth0.com';
+  const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || 'YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD';
+  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI || 'https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback';
+  const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com';
 
   console.log('Auth0 Environment Variables:', {
     domain: domain ? 'SET' : 'MISSING',
