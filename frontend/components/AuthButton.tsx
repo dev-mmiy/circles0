@@ -34,6 +34,9 @@ export default function AuthButton() {
   }
 
   const handleLogin = () => {
+    // Clear any existing Auth0 cache before login to prevent state issues
+    localStorage.removeItem(`@@auth0spajs@@::${process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID}`);
+    
     loginWithRedirect({
       appState: {
         returnTo: window.location.pathname,
@@ -73,8 +76,17 @@ export default function AuthButton() {
         <div className="text-xs text-gray-500">Error type: {error.name}</div>
         <button
           onClick={() => {
-            // Clear Auth0 cache and reload
-            localStorage.removeItem('@@auth0spajs@@::' + process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID);
+            // Clear all Auth0 related cache and reload
+            const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
+            if (clientId) {
+              localStorage.removeItem(`@@auth0spajs@@::${clientId}`);
+            }
+            // Clear all Auth0 related keys
+            Object.keys(localStorage).forEach(key => {
+              if (key.includes('auth0') || key.includes('@@auth0spajs@@')) {
+                localStorage.removeItem(key);
+              }
+            });
             window.location.reload();
           }}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
