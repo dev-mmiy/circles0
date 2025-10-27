@@ -35,8 +35,14 @@ export default function AuthButton() {
     );
   }
 
-  // エラーが発生した場合の処理
-  if (error && !hasError) {
+  // エラーが発生した場合の処理（認証中は無視）
+  if (error && !hasError && !isLoading) {
+    // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
+    if (error.message && error.message.includes('Invalid state')) {
+      console.log('Auth0 temporary state error (ignoring):', error.message);
+      return null; // エラーを表示せずに何も表示しない
+    }
+    
     console.error('Auth0 error detected, clearing cache...');
     setHasError(true);
     // 自動的にキャッシュをクリア
@@ -93,6 +99,12 @@ export default function AuthButton() {
   }
 
   if (error) {
+    // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
+    if (error.message && error.message.includes('Invalid state')) {
+      console.log('Auth0 temporary state error (ignoring):', error.message);
+      return null; // エラーを表示せずに何も表示しない
+    }
+    
     console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">
