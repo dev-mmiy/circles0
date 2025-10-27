@@ -8,6 +8,7 @@ export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [errorCleared, setErrorCleared] = useState(false);
 
   // デバッグ用ログ
   console.log('AuthButton state:', {
@@ -33,6 +34,17 @@ export default function AuthButton() {
         </button>
       </div>
     );
+  }
+
+  // 認証成功時にエラー状態をリセット
+  if (isAuthenticated && user && error && !errorCleared) {
+    console.log('Authentication successful, clearing error state...');
+    setErrorCleared(true);
+    // エラー状態をクリアするためにAuth0キャッシュをクリア
+    const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
+    if (clientId) {
+      localStorage.removeItem(`@@auth0spajs@@::${clientId}`);
+    }
   }
 
   // エラーが発生した場合の処理（認証中は無視）
@@ -98,7 +110,8 @@ export default function AuthButton() {
     );
   }
 
-  if (error) {
+  // エラーが発生した場合の処理（認証成功時は優先）
+  if (error && !isAuthenticated) {
     // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
     if (error.message && error.message.includes('Invalid state')) {
       console.log('Auth0 temporary state error (ignoring):', error.message);
@@ -134,6 +147,7 @@ export default function AuthButton() {
     );
   }
 
+  // 認証成功時は、エラーがあってもユーザー情報を表示
   if (isAuthenticated && user) {
     return (
       <div className="flex items-center space-x-4">
