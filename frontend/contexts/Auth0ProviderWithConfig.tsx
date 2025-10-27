@@ -53,10 +53,6 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
           // Handle redirect after login - use push instead of replace to avoid state issues
           window.location.href = appState?.returnTo || '/';
         }}
-        advancedOptions={{
-          defaultScope: 'openid profile email',
-        }}
-        leeway={60}
       >
         {children}
       </Auth0Provider>
