@@ -15,6 +15,14 @@ export default function CallbackPage() {
         // Redirect to home page after successful authentication
         router.push('/');
       } catch (err) {
+        // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
+        if (err instanceof Error && err.message.includes('Invalid state')) {
+          console.log('Auth0 temporary state error (ignoring):', err.message);
+          // エラーを無視してホームページにリダイレクト
+          router.push('/');
+          return;
+        }
+        
         console.error('Callback error:', err);
         // Redirect to home page even on error
         router.push('/');

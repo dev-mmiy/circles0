@@ -50,8 +50,8 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
         skipRedirectCallback={false}
         onRedirectCallback={(appState) => {
           console.log('Auth0 redirect callback:', appState);
-          // Handle redirect after login
-          window.location.replace(appState?.returnTo || '/');
+          // Handle redirect after login - use push instead of replace to avoid state issues
+          window.location.href = appState?.returnTo || '/';
         }}
         advancedOptions={{
           defaultScope: 'openid profile email',
