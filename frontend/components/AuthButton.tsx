@@ -9,6 +9,19 @@ export default function AuthButton() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | 'error'>('loading');
 
+  // 認証状態の判定（Hooksは常に最初に呼び出す）
+  React.useEffect(() => {
+    if (isLoading) {
+      setAuthState('loading');
+    } else if (isAuthenticated && user) {
+      setAuthState('authenticated');
+    } else if (error && !isAuthenticated) {
+      setAuthState('error');
+    } else {
+      setAuthState('unauthenticated');
+    }
+  }, [isLoading, isAuthenticated, user, error]);
+
   // デバッグ用ログ
   console.log('AuthButton state:', {
     isLoading,
@@ -19,22 +32,6 @@ export default function AuthButton() {
     loginWithRedirect: typeof loginWithRedirect,
     logout: typeof logout,
   });
-
-  // Auth0Providerが正しく初期化されていない場合のフォールバック
-  if (typeof loginWithRedirect !== 'function') {
-    console.error('Auth0Provider not properly initialized');
-    return (
-      <div className="flex flex-col items-center space-y-2">
-        <div className="text-red-600 text-sm">Auth0 not initialized</div>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
 
   // 関数の定義
   const handleLogin = () => {
@@ -63,18 +60,21 @@ export default function AuthButton() {
     }
   };
 
-  // 認証状態の判定
-  React.useEffect(() => {
-    if (isLoading) {
-      setAuthState('loading');
-    } else if (isAuthenticated && user) {
-      setAuthState('authenticated');
-    } else if (error && !isAuthenticated) {
-      setAuthState('error');
-    } else {
-      setAuthState('unauthenticated');
-    }
-  }, [isLoading, isAuthenticated, user, error]);
+  // Auth0Providerが正しく初期化されていない場合のフォールバック
+  if (typeof loginWithRedirect !== 'function') {
+    console.error('Auth0Provider not properly initialized');
+    return (
+      <div className="flex flex-col items-center space-y-2">
+        <div className="text-red-600 text-sm">Auth0 not initialized</div>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   // 状態ベースの表示ロジック
   if (authState === 'loading') {
