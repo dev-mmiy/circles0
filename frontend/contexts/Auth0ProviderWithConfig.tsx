@@ -53,6 +53,10 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
           // Handle redirect after login
           window.location.replace(appState?.returnTo || '/');
         }}
+        advancedOptions={{
+          defaultScope: 'openid profile email',
+        }}
+        leeway={60}
       >
         {children}
       </Auth0Provider>
