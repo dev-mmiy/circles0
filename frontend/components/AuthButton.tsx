@@ -36,6 +36,33 @@ export default function AuthButton() {
     );
   }
 
+  // 関数の定義
+  const handleLogin = () => {
+    // Clear any existing Auth0 cache before login to prevent state issues
+    localStorage.removeItem(`@@auth0spajs@@::${process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID}`);
+    
+    loginWithRedirect({
+      appState: {
+        returnTo: window.location.pathname,
+      },
+    });
+  };
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      await logout({
+        logoutParams: {
+          returnTo: window.location.origin,
+        },
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
+  };
+
   // 認証状態の判定
   React.useEffect(() => {
     if (isLoading) {
@@ -122,32 +149,6 @@ export default function AuthButton() {
       </div>
     );
   }
-
-  const handleLogin = () => {
-    // Clear any existing Auth0 cache before login to prevent state issues
-    localStorage.removeItem(`@@auth0spajs@@::${process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID}`);
-    
-    loginWithRedirect({
-      appState: {
-        returnTo: window.location.pathname,
-      },
-    });
-  };
-
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    try {
-      await logout({
-        logoutParams: {
-          returnTo: window.location.origin,
-        },
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setIsLoggingOut(false);
-    }
-  };
 
   return (
     <button
