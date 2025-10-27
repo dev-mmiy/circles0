@@ -11,12 +11,19 @@ export default function AuthButton() {
 
   // 認証状態の判定（Hooksは常に最初に呼び出す）
   React.useEffect(() => {
-    if (isLoading) {
-      setAuthState('loading');
-    } else if (isAuthenticated && user) {
+    // 認証成功時は最優先
+    if (isAuthenticated && user) {
       setAuthState('authenticated');
+    } else if (isLoading) {
+      setAuthState('loading');
     } else if (error && !isAuthenticated) {
-      setAuthState('error');
+      // エラーが認証フロー中（isLoading中）の場合は無視
+      if (error.message && error.message.includes('Invalid state')) {
+        console.log('Auth0 temporary state error (ignoring):', error.message);
+        setAuthState('loading'); // 一時的なエラーはローディング状態として扱う
+      } else {
+        setAuthState('error');
+      }
     } else {
       setAuthState('unauthenticated');
     }
@@ -115,10 +122,15 @@ export default function AuthButton() {
   }
 
   if (authState === 'error') {
-    // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
-    if (error?.message && error.message.includes('Invalid state')) {
-      console.log('Auth0 temporary state error (ignoring):', error.message);
-      return null; // エラーを表示せずに何も表示しない
+    // 認証フロー中や一時的なエラーは表示しない
+    if (isLoading || (error?.message && error.message.includes('Invalid state'))) {
+      console.log('Auth0 temporary error during authentication flow (ignoring)');
+      return (
+        <div className="flex items-center space-x-2">
+          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <span className="text-sm text-gray-600">Loading...</span>
+        </div>
+      );
     }
     
     console.error('Auth0 error in AuthButton:', error);
