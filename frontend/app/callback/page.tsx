@@ -44,6 +44,21 @@ export default function CallbackPage() {
   }
 
   if (error) {
+    // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
+    if (error.message && error.message.includes('Invalid state')) {
+      console.log('Auth0 temporary state error in callback (ignoring):', error.message);
+      // エラーを無視してホームページにリダイレクト
+      router.push('/');
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Redirecting...</p>
+          </div>
+        </div>
+      );
+    }
+    
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
