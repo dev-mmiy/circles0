@@ -40,6 +40,16 @@ export default function AuthButton() {
     logout: typeof logout,
   });
 
+  // エラー状態の詳細ログ
+  if (error) {
+    console.log('Auth0 Error Details:', {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
   // 関数の定義
   const handleLogin = () => {
     // Clear any existing Auth0 cache before login to prevent state issues
@@ -136,8 +146,10 @@ export default function AuthButton() {
     console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">
+        <div className="text-red-600 text-sm font-bold">Login Error</div>
         <div className="text-red-600 text-sm">Auth Error: {error?.message || 'Unknown error'}</div>
         <div className="text-xs text-gray-500">Error type: {error?.name || 'Unknown'}</div>
+        <div className="text-xs text-gray-500">Timestamp: {new Date().toISOString()}</div>
         <div className="text-xs text-blue-500">Auto-clearing cache and reloading...</div>
         <button
           onClick={() => {
