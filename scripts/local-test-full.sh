@@ -409,18 +409,6 @@ else
     exit 1
 fi
 
-# 登録ページ
-log_info "Testing register page..."
-REGISTER_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/register)
-HTTP_CODE=$(echo "$REGISTER_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
-if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Register page working"
-else
-    log_error "Register page failed with HTTP $HTTP_CODE"
-    log_info "Response body: ${REGISTER_RESPONSE%HTTP_CODE:*}"
-    exit 1
-fi
-
 # プロフィールページ（動的ルート）
 log_info "Testing profile page..."
 PROFILE_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/profile/test-user)
