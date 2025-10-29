@@ -182,13 +182,22 @@ if echo "$USER_RESPONSE" | grep -q "id"; then
     USER_ID=$(echo "$USER_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     log_info "Created user ID: $USER_ID"
     
+    # Debug: Check user profile_visibility
+    PROFILE_VISIBILITY=$(echo "$USER_RESPONSE" | grep -o '"profile_visibility":"[^"]*"' | cut -d'"' -f4)
+    log_info "User profile_visibility: $PROFILE_VISIBILITY"
+    
     # 公開プロフィール取得テスト
     log_info "Testing public profile retrieval..."
-    curl -f http://localhost:8000/api/v1/users/$USER_ID > /dev/null || {
-        log_error "Public profile retrieval failed"
+    PROFILE_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8000/api/v1/users/$USER_ID)
+    PROFILE_HTTP_CODE=$(echo "$PROFILE_RESPONSE" | tail -1)
+    
+    if [ "$PROFILE_HTTP_CODE" = "200" ]; then
+        log_success "Public profile retrieval test passed"
+    else
+        log_error "Public profile retrieval failed with HTTP $PROFILE_HTTP_CODE"
+        log_info "Response: $(echo "$PROFILE_RESPONSE" | head -n -1)"
         exit 1
-    }
-    log_success "Public profile retrieval test passed"
+    fi
 else
     log_error "User creation failed: $USER_RESPONSE"
     exit 1
