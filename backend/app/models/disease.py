@@ -69,7 +69,7 @@ class UserDisease(Base):
     )
 
     # Relationships
-    user = relationship("User", back_populates="user_diseases")
+    user = relationship("User", back_populates="diseases", overlaps="user_diseases")
     disease = relationship("Disease", back_populates="user_diseases")
 
     def __repr__(self) -> str:
@@ -77,5 +77,5 @@ class UserDisease(Base):
 
 
 # Add relationships to existing models
-User.user_diseases = relationship("UserDisease", back_populates="user")
+User.diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")
 Disease.user_diseases = relationship("UserDisease", back_populates="disease")

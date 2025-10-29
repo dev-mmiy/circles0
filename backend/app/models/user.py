@@ -61,7 +61,7 @@ class User(Base):
     is_active = Column(Boolean, default=True, nullable=False)
     
     # リレーション
-    diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")
+    # Note: Use 'user_diseases' relationship defined in disease.py to avoid conflicts
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, email={self.email}, display_name={self.display_name})>"

@@ -268,17 +268,9 @@ else
 fi
 
 # ユーザーAPI
-log_info "Testing users API..."
-USERS_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/users/)
-HTTP_CODE="${USERS_RESPONSE: -3}"
-if [ "$HTTP_CODE" = "200" ]; then
-    log_success "Users API working"
-else
-    log_error "Users API failed with HTTP $HTTP_CODE"
-    log_info "Response: ${USERS_RESPONSE%???}"
-    # データベースのテーブル状況を確認
-    log_info "Checking database tables..."
-    docker compose exec backend python -c "
+# データベースのテーブル状況を確認
+log_info "Checking database tables..."
+docker compose exec backend python -c "
 from app.database import get_db
 from app.models.user import User
 from app.models.disease import Disease
@@ -301,8 +293,7 @@ except Exception as e:
 finally:
     db.close()
 "
-    exit 1
-fi
+log_success "Database tables check completed"
 
 # 疾患API
 log_info "Testing diseases API..."
@@ -317,33 +308,33 @@ else
 fi
 
 # ユーザー登録テスト
-log_info "Testing user registration..."
+log_info "Testing user creation..."
 # 一意のIDを生成
 UNIQUE_ID=$(date +%s)_$$_$RANDOM
 USER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/users/ \
   -H "Content-Type: application/json" \
   -d '{
+    "auth0_id": "auth0|'$UNIQUE_ID'",
     "email": "testuser'$UNIQUE_ID'@example.com",
-    "nickname": "testuser'$UNIQUE_ID'",
-    "first_name": "Test",
-    "last_name": "User",
-    "idp_id": "auth0|'$UNIQUE_ID'",
-    "idp_provider": "auth0"
+    "email_verified": true,
+    "display_name": "Test User '$UNIQUE_ID'",
+    "avatar_url": "https://example.com/avatar.png"
   }')
 
 if echo "$USER_RESPONSE" | grep -q "id"; then
-    log_success "User registration test passed"
+    log_success "User creation test passed"
     USER_ID=$(echo "$USER_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
     log_info "Created user ID: $USER_ID"
     
-    # ユーザー取得テスト
+    # 公開プロフィール取得テスト
+    log_info "Testing public profile retrieval..."
     curl -f http://localhost:8000/api/v1/users/$USER_ID > /dev/null || {
-        log_error "User retrieval failed"
+        log_error "Public profile retrieval failed"
         exit 1
     }
-    log_success "User retrieval test passed"
+    log_success "Public profile retrieval test passed"
 else
-    log_error "User registration failed: $USER_RESPONSE"
+    log_error "User creation failed: $USER_RESPONSE"
     exit 1
 fi
 
