@@ -28,6 +28,19 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     return diseases
 
 
+@router.get("/search", response_model=List[DiseaseResponse])
+async def search_diseases(q: str, limit: int = 10, db: Session = Depends(get_db)):
+    """Search diseases by name."""
+    diseases = (
+        db.query(Disease)
+        .filter(Disease.is_active == True)
+        .filter(Disease.name.ilike(f"%{q}%"))
+        .limit(limit)
+        .all()
+    )
+    return diseases
+
+
 @router.get("/{disease_id}", response_model=DiseaseResponse)
 async def get_disease(disease_id: int, db: Session = Depends(get_db)):
     """Get a specific disease by ID."""
@@ -81,19 +94,6 @@ async def update_disease(
     db.refresh(disease)
 
     return disease
-
-
-@router.get("/search", response_model=List[DiseaseResponse])
-async def search_diseases(q: str, limit: int = 10, db: Session = Depends(get_db)):
-    """Search diseases by name."""
-    diseases = (
-        db.query(Disease)
-        .filter(Disease.is_active == True)
-        .filter(Disease.name.ilike(f"%{q}%"))
-        .limit(limit)
-        .all()
-    )
-    return diseases
 
 
 @router.delete("/{disease_id}", status_code=status.HTTP_204_NO_CONTENT)
