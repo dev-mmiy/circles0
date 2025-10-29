@@ -11,7 +11,9 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.database import get_db
 from app.models.user import User
+from app.models.disease import Disease, UserDisease
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserPublicResponse
+from app.schemas.disease import DiseaseResponse
 from app.auth.dependencies import get_current_user, get_current_user_optional
 
 router = APIRouter()
@@ -184,6 +186,146 @@ async def delete_current_user(
     
     # Soft delete
     user.is_active = False
+    db.commit()
+    
+    return None
+
+
+# User Disease Management Endpoints
+
+@router.get("/me/diseases", response_model=List[DiseaseResponse])
+async def get_current_user_diseases(
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get current user's diseases."""
+    auth0_id = current_user.get("sub")
+    
+    if not auth0_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token"
+        )
+    
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Get user's diseases through UserDisease relationship
+    user_diseases = (
+        db.query(Disease)
+        .join(UserDisease, UserDisease.disease_id == Disease.id)
+        .filter(UserDisease.user_id == user.id)
+        .filter(UserDisease.is_active == True)
+        .filter(Disease.is_active == True)
+        .all()
+    )
+    
+    return user_diseases
+
+
+@router.post("/me/diseases/{disease_id}", status_code=status.HTTP_201_CREATED)
+async def add_disease_to_current_user(
+    disease_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Add a disease to current user's profile."""
+    auth0_id = current_user.get("sub")
+    
+    if not auth0_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token"
+        )
+    
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Check if disease exists
+    disease = db.query(Disease).filter(
+        Disease.id == disease_id,
+        Disease.is_active == True
+    ).first()
+    
+    if not disease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Disease not found"
+        )
+    
+    # Check if user already has this disease
+    existing = db.query(UserDisease).filter(
+        UserDisease.user_id == user.id,
+        UserDisease.disease_id == disease_id,
+        UserDisease.is_active == True
+    ).first()
+    
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Disease already added to your profile"
+        )
+    
+    # Add disease to user
+    user_disease = UserDisease(
+        user_id=user.id,
+        disease_id=disease_id,
+        is_active=True
+    )
+    db.add(user_disease)
+    db.commit()
+    
+    return {"message": "Disease added successfully", "disease": disease}
+
+
+@router.delete("/me/diseases/{disease_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_disease_from_current_user(
+    disease_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Remove a disease from current user's profile."""
+    auth0_id = current_user.get("sub")
+    
+    if not auth0_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authentication token"
+        )
+    
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Find the user_disease relationship
+    user_disease = db.query(UserDisease).filter(
+        UserDisease.user_id == user.id,
+        UserDisease.disease_id == disease_id,
+        UserDisease.is_active == True
+    ).first()
+    
+    if not user_disease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Disease not found in your profile"
+        )
+    
+    # Soft delete (set is_active to False)
+    user_disease.is_active = False
     db.commit()
     
     return None

@@ -83,6 +83,19 @@ async def update_disease(
     return disease
 
 
+@router.get("/search", response_model=List[DiseaseResponse])
+async def search_diseases(q: str, limit: int = 10, db: Session = Depends(get_db)):
+    """Search diseases by name."""
+    diseases = (
+        db.query(Disease)
+        .filter(Disease.is_active == True)
+        .filter(Disease.name.ilike(f"%{q}%"))
+        .limit(limit)
+        .all()
+    )
+    return diseases
+
+
 @router.delete("/{disease_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_disease(disease_id: int, db: Session = Depends(get_db)):
     """Delete a disease (soft delete)."""
