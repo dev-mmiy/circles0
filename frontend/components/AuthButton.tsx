@@ -3,11 +3,42 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import React, { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
+import { createOrGetUser } from '@/lib/api/users';
 
 export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | 'error'>('loading');
+  const [userCreated, setUserCreated] = useState(false);
+
+  // ユーザー作成（初回ログイン時）
+  React.useEffect(() => {
+    const createUser = async () => {
+      if (!isAuthenticated || !user || userCreated) {
+        return;
+      }
+
+      try {
+        await createOrGetUser({
+          auth0_id: user.sub || '',
+          email: user.email || '',
+          email_verified: user.email_verified || false,
+          display_name: user.name || user.email || 'User',
+          avatar_url: user.picture,
+        });
+
+        setUserCreated(true);
+        console.log('User profile created/retrieved successfully');
+      } catch (err) {
+        console.error('Failed to create user profile:', err);
+      }
+    };
+
+    if (isAuthenticated && user && !userCreated) {
+      createUser();
+    }
+  }, [isAuthenticated, user, userCreated]);
 
   // 認証状態の判定（Hooksは常に最初に呼び出す）
   React.useEffect(() => {
@@ -106,7 +137,7 @@ export default function AuthButton() {
   if (authState === 'authenticated' && user) {
     return (
       <div className="flex items-center space-x-4">
-        <div className="flex items-center space-x-2">
+        <Link href="/profile/me" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
           {user.picture && (
             <Image
               src={user.picture}
@@ -119,7 +150,7 @@ export default function AuthButton() {
           <span className="text-sm text-gray-700">
             {user.name || user.email}
           </span>
-        </div>
+        </Link>
         <button
           onClick={handleLogout}
           disabled={isLoggingOut}
