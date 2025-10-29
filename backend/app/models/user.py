@@ -2,7 +2,7 @@
 User model for authentication and profile management with Auth0 integration.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
 
@@ -55,10 +55,10 @@ class User(Base):
     show_online_status = Column(Boolean, default=False)
     
     # アカウント情報
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=func.now(), nullable=False)
     last_login_at = Column(DateTime(timezone=True), nullable=True)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=True, nullable=False)
     
     # リレーション
     diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")

@@ -63,7 +63,7 @@ export interface UserPublicProfile {
  * Get current user's profile
  */
 export async function getCurrentUserProfile(accessToken: string): Promise<UserProfile> {
-  const response = await fetch(`${getApiBaseUrl()}/users/me`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -86,7 +86,7 @@ export async function updateCurrentUserProfile(
   accessToken: string,
   data: UserProfileUpdate
 ): Promise<UserProfile> {
-  const response = await fetch(`${getApiBaseUrl()}/users/me`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
@@ -113,7 +113,7 @@ export async function createOrGetUser(data: {
   display_name: string;
   avatar_url?: string;
 }): Promise<UserProfile> {
-  const response = await fetch(`${getApiBaseUrl()}/users/`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -144,7 +144,7 @@ export async function getUserPublicProfile(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${getApiBaseUrl()}/users/${userId}`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/${userId}`, {
     method: 'GET',
     headers,
   });
@@ -161,7 +161,7 @@ export async function getUserPublicProfile(
  * Delete current user's account
  */
 export async function deleteCurrentUser(accessToken: string): Promise<void> {
-  const response = await fetch(`${getApiBaseUrl()}/users/me`, {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'DELETE',
     headers: {
       'Authorization': `Bearer ${accessToken}`,
