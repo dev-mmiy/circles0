@@ -139,13 +139,23 @@ async def get_user_public_profile(
         )
     
     # Check profile visibility
+    is_own_profile = current_user and current_user.get("sub") == user.auth0_id
+    
     if user.profile_visibility == 'private':
         # Only the user themselves can view their private profile
-        if not current_user or current_user.get("sub") != user.auth0_id:
+        if not is_own_profile:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="This profile is private"
             )
+    elif user.profile_visibility == 'limited':
+        # Only authenticated users can view limited profiles
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="This profile is only visible to authenticated users"
+            )
+    # 'public' profiles are visible to everyone
     
     return user
 

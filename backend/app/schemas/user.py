@@ -32,6 +32,7 @@ class UserCreate(BaseModel):
     email_verified: bool = False
     display_name: str = Field(..., min_length=1, max_length=100)
     avatar_url: Optional[str] = None
+    profile_visibility: Optional[str] = Field(None, pattern="^(public|limited|private)$")
 
 
 class UserUpdate(BaseModel):

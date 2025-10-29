@@ -152,7 +152,8 @@ USER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/users/ \
     "email": "testuser'$UNIQUE_ID'@example.com",
     "email_verified": true,
     "display_name": "Test User '$UNIQUE_ID'",
-    "avatar_url": "https://example.com/avatar.png"
+    "avatar_url": "https://example.com/avatar.png",
+    "profile_visibility": "public"
   }')
 
 if echo "$USER_RESPONSE" | grep -q "id"; then
