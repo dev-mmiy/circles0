@@ -134,12 +134,7 @@ export default function Home() {
             <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <AuthButton />
-              <Link
-                href="/register"
-                className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-medium"
-              >
-                Create Account
-              </Link>
+              {/* Auth0 handles account creation via AuthButton */}
               {/* Only show API Documentation link in development/local environment */}
               {isClient &&
                 (window.location.hostname === 'localhost' ||

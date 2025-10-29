@@ -6,12 +6,9 @@
 export interface ApiConfig {
   baseUrl: string;
   endpoints: {
-    nameDisplayOrders: string;
-    localeFormats: string;
-    users: string;
     health: string;
+    users: string;
     diseases: string;
-    diseaseCategories: string;
   };
 }
 
@@ -60,12 +57,9 @@ export class ApiConfigService {
     return {
       baseUrl,
       endpoints: {
-        nameDisplayOrders: `${baseUrl}/api/v1/users/name-display-orders/`,
-        localeFormats: `${baseUrl}/api/v1/users/locale-formats/`,
-        users: `${baseUrl}/api/v1/users/`,
         health: `${baseUrl}/health`,
+        users: `${baseUrl}/api/v1/users/`,
         diseases: `${baseUrl}/api/v1/diseases/`,
-        diseaseCategories: `${baseUrl}/api/v1/diseases/categories/list`,
       },
     };
   }
