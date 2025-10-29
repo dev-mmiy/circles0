@@ -33,7 +33,7 @@ services:
       - ENVIRONMENT=development
       - LOG_LEVEL=DEBUG
       - AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com
-            - AUTH0_AUDIENCE=https://api.disease-community.com
+      - AUTH0_AUDIENCE=https://api.disease-community.com
     depends_on:
       postgres:
         condition: service_healthy
