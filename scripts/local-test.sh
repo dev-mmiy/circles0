@@ -129,6 +129,27 @@ finally:
 "
 log_success "Database tables check completed"
 
+# Seed diseases if database is empty
+log_info "Checking if disease data needs to be seeded..."
+DISEASE_COUNT=$(docker compose exec backend python -c "
+from app.database import get_db
+from app.models.disease import Disease
+db = next(get_db())
+try:
+    count = db.query(Disease).count()
+    print(count)
+finally:
+    db.close()
+" 2>/dev/null | tail -1)
+
+if [ "$DISEASE_COUNT" -eq "0" ]; then
+    log_info "Seeding disease data..."
+    docker compose exec backend python scripts/seed_diseases.py > /dev/null 2>&1
+    log_success "Disease data seeded"
+else
+    log_info "Disease data already exists (count: $DISEASE_COUNT)"
+fi
+
 # 疾患API
 log_info "Testing diseases API..."
 DISEASES_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/diseases/)
