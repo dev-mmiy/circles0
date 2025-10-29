@@ -166,11 +166,11 @@ export default function MyProfilePage() {
             <div className="space-y-2">
               {profile.diseases.map((disease) => (
                 <div
-                  key={disease.disease_id}
+                  key={disease.id}
                   className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
                 >
                   <span className="text-blue-600">•</span>
-                  <span className="text-gray-800">{disease.disease_name}</span>
+                  <span className="text-gray-800">{disease.name}</span>
                 </div>
               ))}
             </div>

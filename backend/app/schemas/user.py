@@ -55,8 +55,10 @@ class UserUpdate(BaseModel):
 class UserDiseaseResponse(BaseModel):
     """Schema for user's disease information."""
     
-    disease_id: UUID
-    disease_name: str
+    id: int
+    name: str
+    description: Optional[str] = None
+    category: Optional[str] = None
     
     model_config = {"from_attributes": True}
 

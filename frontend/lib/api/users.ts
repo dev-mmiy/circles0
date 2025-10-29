@@ -29,8 +29,10 @@ export interface UserProfile {
 }
 
 export interface UserDisease {
-  disease_id: string;
-  disease_name: string;
+  id: number;
+  name: string;
+  description?: string;
+  category?: string;
 }
 
 export interface UserProfileUpdate {

@@ -7,7 +7,7 @@ from typing import List
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.user import User
@@ -33,7 +33,7 @@ async def get_current_user_profile(
             detail="Invalid authentication token"
         )
     
-    user = db.query(User).options(joinedload(User.diseases)).filter(
+    user = db.query(User).filter(
         User.auth0_id == auth0_id
     ).first()
     
@@ -46,8 +46,44 @@ async def get_current_user_profile(
     # Update last login timestamp
     user.last_login_at = datetime.utcnow()
     db.commit()
+    db.refresh(user)
     
-    return user
+    # Get user's diseases through the relationship
+    user_diseases = (
+        db.query(Disease)
+        .join(UserDisease, UserDisease.disease_id == Disease.id)
+        .filter(UserDisease.user_id == user.id)
+        .filter(UserDisease.is_active == True)
+        .filter(Disease.is_active == True)
+        .all()
+    )
+    
+    # Create response with diseases
+    user_dict = {
+        "id": user.id,
+        "auth0_id": user.auth0_id,
+        "email": user.email,
+        "email_verified": user.email_verified,
+        "display_name": user.display_name,
+        "username": user.username,
+        "bio": user.bio,
+        "avatar_url": user.avatar_url,
+        "date_of_birth": user.date_of_birth,
+        "gender": user.gender,
+        "country": user.country,
+        "language": user.language,
+        "timezone": user.timezone,
+        "profile_visibility": user.profile_visibility,
+        "show_email": user.show_email,
+        "show_online_status": user.show_online_status,
+        "created_at": user.created_at,
+        "updated_at": user.updated_at,
+        "last_login_at": user.last_login_at,
+        "is_active": user.is_active,
+        "diseases": user_diseases
+    }
+    
+    return user_dict
 
 
 @router.put("/me", response_model=UserResponse)
@@ -129,7 +165,7 @@ async def get_user_public_profile(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """Get a user's public profile."""
-    user = db.query(User).options(joinedload(User.diseases)).filter(
+    user = db.query(User).filter(
         User.id == user_id,
         User.is_active == True
     ).first()
@@ -159,7 +195,29 @@ async def get_user_public_profile(
             )
     # 'public' profiles are visible to everyone
     
-    return user
+    # Get user's diseases
+    user_diseases = (
+        db.query(Disease)
+        .join(UserDisease, UserDisease.disease_id == Disease.id)
+        .filter(UserDisease.user_id == user.id)
+        .filter(UserDisease.is_active == True)
+        .filter(Disease.is_active == True)
+        .all()
+    )
+    
+    # Create response with diseases
+    user_dict = {
+        "id": user.id,
+        "display_name": user.display_name,
+        "username": user.username,
+        "bio": user.bio,
+        "avatar_url": user.avatar_url,
+        "country": user.country,
+        "created_at": user.created_at,
+        "diseases": user_diseases
+    }
+    
+    return user_dict
 
 
 @router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
