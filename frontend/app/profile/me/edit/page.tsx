@@ -485,18 +485,23 @@ export default function EditProfilePage() {
               </div>
 
               {/* Show Email */}
-              <div className="flex items-center mb-4">
-                <input
-                  type="checkbox"
-                  id="show_email"
-                  name="show_email"
-                  checked={formData.show_email || false}
-                  onChange={handleChange}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded"
-                />
-                <label htmlFor="show_email" className="ml-2 block text-sm text-gray-700">
-                  メールアドレスを公開する
-                </label>
+              <div className="mb-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="show_email"
+                    name="show_email"
+                    checked={formData.show_email || false}
+                    onChange={handleChange}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-600 border-gray-300 rounded"
+                  />
+                  <label htmlFor="show_email" className="ml-2 block text-sm text-gray-700">
+                    メールアドレスを公開する
+                  </label>
+                </div>
+                <p className="ml-6 text-xs text-gray-500 mt-1">
+                  ※ セキュリティ上の理由により、現在メールアドレスは非公開です
+                </p>
               </div>
 
               {/* Show Online Status */}

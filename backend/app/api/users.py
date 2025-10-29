@@ -217,6 +217,10 @@ async def get_user_public_profile(
         "diseases": user_diseases
     }
     
+    # Include email only if user has chosen to show it
+    # Note: Email is never shown in public profiles for privacy
+    # Users can only see their own email in their full profile (/me)
+    
     return user_dict
 
 
