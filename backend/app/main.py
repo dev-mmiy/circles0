@@ -31,14 +31,18 @@ app = FastAPI(
 app.add_middleware(MarketMiddleware)
 
 # CORS middleware
-allowed_origins = (
-    ["*"]
-    if ENVIRONMENT in ["development", "test"]
-    else [
-        "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
-        "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
-    ]
-)
+# Temporarily allow all origins for debugging
+allowed_origins = ["*"]
+
+# Production origins (will be used after debugging is complete)
+# allowed_origins = (
+#     ["*"]
+#     if ENVIRONMENT in ["development", "test"]
+#     else [
+#         "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
+#         "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
+#     ]
+# )
 
 # Add localhost origins for development
 if ENVIRONMENT in ["development", "test"]:
