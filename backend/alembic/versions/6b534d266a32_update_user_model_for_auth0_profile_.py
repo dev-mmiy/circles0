@@ -27,8 +27,11 @@ def upgrade() -> None:
     visibility_enum = postgresql.ENUM('public', 'limited', 'private', name='visibility_enum')
     visibility_enum.create(op.get_bind(), checkfirst=True)
     
-    op.drop_index(op.f('ix_diseases_name'), table_name='diseases')
+    # Update diseases table constraints
+    op.drop_index(op.f('ix_diseases_name'), table_name='diseases', if_exists=True)
     op.create_unique_constraint(None, 'diseases', ['name'])
+    
+    # Add new columns to users table (all nullable or with defaults to handle existing data)
     op.add_column('users', sa.Column('auth0_id', sa.String(length=255), nullable=True))
     op.add_column('users', sa.Column('email_verified', sa.Boolean(), server_default='false', nullable=False))
     op.add_column('users', sa.Column('display_name', sa.String(length=100), nullable=True))
@@ -42,6 +45,8 @@ def upgrade() -> None:
     op.add_column('users', sa.Column('show_email', sa.Boolean(), server_default='false', nullable=False))
     op.add_column('users', sa.Column('show_online_status', sa.Boolean(), server_default='false', nullable=False))
     op.add_column('users', sa.Column('last_login_at', sa.DateTime(timezone=True), nullable=True))
+    
+    # Alter existing columns
     op.alter_column('users', 'email',
                existing_type=sa.VARCHAR(length=320),
                type_=sa.String(length=255),
@@ -53,24 +58,54 @@ def upgrade() -> None:
     op.alter_column('users', 'created_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
-               nullable=True)
+               nullable=False,
+               server_default=sa.text('CURRENT_TIMESTAMP'))
     op.alter_column('users', 'updated_at',
                existing_type=postgresql.TIMESTAMP(),
                type_=sa.DateTime(timezone=True),
-               nullable=True)
+               nullable=False,
+               server_default=sa.text('CURRENT_TIMESTAMP'))
     op.alter_column('users', 'is_active',
                existing_type=sa.BOOLEAN(),
-               nullable=True)
-    op.drop_index(op.f('ix_users_id'), table_name='users')
+               nullable=False,
+               server_default='true')
+    
+    # Drop old index and create new ones
+    op.drop_index(op.f('ix_users_id'), table_name='users', if_exists=True)
     op.create_index(op.f('ix_users_auth0_id'), 'users', ['auth0_id'], unique=True)
     op.create_index(op.f('ix_users_username'), 'users', ['username'], unique=True)
-    op.drop_column('users', 'phone')
-    op.drop_column('users', 'last_login')
-    op.drop_column('users', 'first_name')
-    op.drop_column('users', 'hashed_password')
-    op.drop_column('users', 'last_name')
-    op.drop_column('users', 'is_verified')
-    op.drop_column('users', 'is_superuser')
+    
+    # Drop old columns (only if they exist)
+    # Use batch_alter_table to safely drop columns
+    with op.batch_alter_table('users') as batch_op:
+        try:
+            batch_op.drop_column('phone')
+        except:
+            pass
+        try:
+            batch_op.drop_column('last_login')
+        except:
+            pass
+        try:
+            batch_op.drop_column('first_name')
+        except:
+            pass
+        try:
+            batch_op.drop_column('hashed_password')
+        except:
+            pass
+        try:
+            batch_op.drop_column('last_name')
+        except:
+            pass
+        try:
+            batch_op.drop_column('is_verified')
+        except:
+            pass
+        try:
+            batch_op.drop_column('is_superuser')
+        except:
+            pass
     # ### end Alembic commands ###
 
 

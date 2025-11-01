@@ -26,12 +26,12 @@ class User(Base):
 
     # 基本情報
     id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
-    auth0_id = Column(String(255), unique=True, nullable=False, index=True)
+    auth0_id = Column(String(255), unique=True, nullable=True, index=True)  # Nullable for migration compatibility
     email = Column(String(255), unique=True, nullable=False, index=True)
     email_verified = Column(Boolean, default=False)
     
     # プロフィール情報
-    display_name = Column(String(100), nullable=False)
+    display_name = Column(String(100), nullable=True)  # Nullable for migration compatibility
     username = Column(String(50), unique=True, nullable=True, index=True)
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
