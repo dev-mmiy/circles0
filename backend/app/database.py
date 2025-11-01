@@ -20,6 +20,11 @@ DATABASE_URL = (
     or "postgresql://postgres:postgres@postgres:5432/disease_community"
 )
 
+# Convert asyncpg URL to psycopg2 URL (for synchronous operations)
+# Cloud Run may provide postgresql+asyncpg:// but we need postgresql://
+if "+asyncpg" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+
 # Create engine
 engine = create_engine(DATABASE_URL)
 
