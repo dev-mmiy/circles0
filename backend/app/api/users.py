@@ -150,7 +150,9 @@ async def create_or_get_user(
         )
     
     # Create new user
-    user = User(**user_data.model_dump())
+    # Use exclude_unset=True to only include fields that were explicitly set
+    # This allows SQLAlchemy defaults to work properly
+    user = User(**user_data.model_dump(exclude_unset=True))
     db.add(user)
     db.commit()
     db.refresh(user)
