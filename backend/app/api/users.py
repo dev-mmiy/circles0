@@ -1,8 +1,10 @@
 """
 User API endpoints with Auth0 integration and profile management.
+
+This module has been refactored to use a service layer for business logic,
+improving maintainability and testability.
 """
 
-from datetime import datetime
 from typing import List
 from uuid import UUID
 
@@ -10,11 +12,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.models.user import User
-from app.models.disease import Disease, UserDisease
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserPublicResponse
 from app.schemas.disease import DiseaseResponse
 from app.auth.dependencies import get_current_user, get_current_user_optional
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter()
 
@@ -25,18 +27,9 @@ async def get_current_user_profile(
     current_user: dict = Depends(get_current_user)
 ):
     """Get current authenticated user's profile."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(
-        User.auth0_id == auth0_id
-    ).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -44,19 +37,10 @@ async def get_current_user_profile(
         )
     
     # Update last login timestamp
-    user.last_login_at = datetime.utcnow()
-    db.commit()
-    db.refresh(user)
+    user = UserService.update_last_login(db, user)
     
-    # Get user's diseases through the relationship
-    user_diseases = (
-        db.query(Disease)
-        .join(UserDisease, UserDisease.disease_id == Disease.id)
-        .filter(UserDisease.user_id == user.id)
-        .filter(UserDisease.is_active == True)
-        .filter(Disease.is_active == True)
-        .all()
-    )
+    # Get user's diseases
+    user_diseases = UserService.get_user_diseases(db, user.id)
     
     # Create response with diseases
     user_dict = {
@@ -93,28 +77,17 @@ async def update_current_user_profile(
     current_user: dict = Depends(get_current_user)
 ):
     """Update current authenticated user's profile."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(User.auth0_id == auth0_id).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User profile not found"
         )
     
-    # Update user fields
-    for field, value in user_data.model_dump(exclude_unset=True).items():
-        setattr(user, field, value)
-    
-    db.commit()
-    db.refresh(user)
+    # Update user profile
+    user = UserService.update_user(db, user, user_data)
     
     return user
 
@@ -127,9 +100,7 @@ async def create_or_get_user(
     """Create a new user from Auth0 data or return existing user."""
     try:
         # Check if user already exists by auth0_id
-        existing_user = db.query(User).filter(
-            User.auth0_id == user_data.auth0_id
-        ).first()
+        existing_user = UserService.get_user_by_auth0_id(db, user_data.auth0_id)
         
         if existing_user:
             # Update email_verified if changed
@@ -139,24 +110,8 @@ async def create_or_get_user(
                 db.refresh(existing_user)
             return existing_user
         
-        # Check if user already exists by email
-        existing_user_by_email = db.query(User).filter(
-            User.email == user_data.email
-        ).first()
-        
-        if existing_user_by_email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="User with this email already exists"
-            )
-        
         # Create new user
-        # Use exclude_unset=True to only include fields that were explicitly set
-        # This allows SQLAlchemy defaults to work properly
-        user = User(**user_data.model_dump(exclude_unset=True))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        user = UserService.create_user(db, user_data)
         
         return user
     except HTTPException:
@@ -179,10 +134,7 @@ async def get_user_public_profile(
     current_user: dict = Depends(get_current_user_optional)
 ):
     """Get a user's public profile."""
-    user = db.query(User).filter(
-        User.id == user_id,
-        User.is_active == True
-    ).first()
+    user = UserService.get_user_by_id(db, user_id, active_only=True)
     
     if not user:
         raise HTTPException(
@@ -191,33 +143,10 @@ async def get_user_public_profile(
         )
     
     # Check profile visibility
-    is_own_profile = current_user and current_user.get("sub") == user.auth0_id
-    
-    if user.profile_visibility == 'private':
-        # Only the user themselves can view their private profile
-        if not is_own_profile:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This profile is private"
-            )
-    elif user.profile_visibility == 'limited':
-        # Only authenticated users can view limited profiles
-        if not current_user:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="This profile is only visible to authenticated users"
-            )
-    # 'public' profiles are visible to everyone
+    UserService.check_profile_visibility(user, current_user)
     
     # Get user's diseases
-    user_diseases = (
-        db.query(Disease)
-        .join(UserDisease, UserDisease.disease_id == Disease.id)
-        .filter(UserDisease.user_id == user.id)
-        .filter(UserDisease.is_active == True)
-        .filter(Disease.is_active == True)
-        .all()
-    )
+    user_diseases = UserService.get_user_diseases(db, user.id)
     
     # Create response with diseases
     user_dict = {
@@ -231,10 +160,6 @@ async def get_user_public_profile(
         "diseases": user_diseases
     }
     
-    # Include email only if user has chosen to show it
-    # Note: Email is never shown in public profiles for privacy
-    # Users can only see their own email in their full profile (/me)
-    
     return user_dict
 
 
@@ -244,16 +169,9 @@ async def delete_current_user(
     current_user: dict = Depends(get_current_user)
 ):
     """Delete current user's account (soft delete)."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(User.auth0_id == auth0_id).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -261,8 +179,7 @@ async def delete_current_user(
         )
     
     # Soft delete
-    user.is_active = False
-    db.commit()
+    UserService.soft_delete_user(db, user)
     
     return None
 
@@ -275,31 +192,17 @@ async def get_current_user_diseases(
     current_user: dict = Depends(get_current_user)
 ):
     """Get current user's diseases."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(User.auth0_id == auth0_id).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
-    # Get user's diseases through UserDisease relationship
-    user_diseases = (
-        db.query(Disease)
-        .join(UserDisease, UserDisease.disease_id == Disease.id)
-        .filter(UserDisease.user_id == user.id)
-        .filter(UserDisease.is_active == True)
-        .filter(Disease.is_active == True)
-        .all()
-    )
+    # Get user's diseases
+    user_diseases = UserService.get_user_diseases(db, user.id)
     
     return user_diseases
 
@@ -311,55 +214,20 @@ async def add_disease_to_current_user(
     current_user: dict = Depends(get_current_user)
 ):
     """Add a disease to current user's profile."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(User.auth0_id == auth0_id).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
-    # Check if disease exists
-    disease = db.query(Disease).filter(
-        Disease.id == disease_id,
-        Disease.is_active == True
-    ).first()
-    
-    if not disease:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Disease not found"
-        )
-    
-    # Check if user already has this disease
-    existing = db.query(UserDisease).filter(
-        UserDisease.user_id == user.id,
-        UserDisease.disease_id == disease_id,
-        UserDisease.is_active == True
-    ).first()
-    
-    if existing:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Disease already added to your profile"
-        )
-    
     # Add disease to user
-    user_disease = UserDisease(
-        user_id=user.id,
-        disease_id=disease_id,
-        is_active=True
-    )
-    db.add(user_disease)
-    db.commit()
+    user_disease = UserService.add_disease_to_user(db, user.id, disease_id)
+    
+    # Get disease for response
+    disease = db.query(Disease).filter(Disease.id == disease_id).first()
     
     return {"message": "Disease added successfully", "disease": disease}
 
@@ -371,37 +239,16 @@ async def remove_disease_from_current_user(
     current_user: dict = Depends(get_current_user)
 ):
     """Remove a disease from current user's profile."""
-    auth0_id = current_user.get("sub")
+    auth0_id = extract_auth0_id(current_user)
     
-    if not auth0_id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token"
-        )
-    
-    user = db.query(User).filter(User.auth0_id == auth0_id).first()
-    
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
     
-    # Find the user_disease relationship
-    user_disease = db.query(UserDisease).filter(
-        UserDisease.user_id == user.id,
-        UserDisease.disease_id == disease_id,
-        UserDisease.is_active == True
-    ).first()
-    
-    if not user_disease:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Disease not found in your profile"
-        )
-    
-    # Soft delete (set is_active to False)
-    user_disease.is_active = False
-    db.commit()
+    # Remove disease from user
+    UserService.remove_disease_from_user(db, user.id, disease_id)
     
     return None
