@@ -67,21 +67,21 @@ class UserResponse(BaseModel):
     """Schema for user profile responses."""
     
     id: UUID
-    auth0_id: str
+    auth0_id: Optional[str]  # Nullable for migration compatibility
     email: EmailStr
     email_verified: bool
-    display_name: str
+    display_name: Optional[str]  # Nullable for migration compatibility
     username: Optional[str]
     bio: Optional[str]
     avatar_url: Optional[str]
     date_of_birth: Optional[date]
-    gender: str
-    country: str
-    language: str
-    timezone: str
-    profile_visibility: str
-    show_email: bool
-    show_online_status: bool
+    gender: Optional[str] = "prefer_not_to_say"
+    country: Optional[str] = "jp"
+    language: Optional[str] = "ja"
+    timezone: Optional[str] = "Asia/Tokyo"
+    profile_visibility: Optional[str] = "limited"
+    show_email: bool = False
+    show_online_status: bool = False
     created_at: datetime
     updated_at: datetime
     last_login_at: Optional[datetime]
@@ -95,11 +95,11 @@ class UserPublicResponse(BaseModel):
     """Schema for public user profile (limited information)."""
     
     id: UUID
-    display_name: str
+    display_name: Optional[str]  # Nullable for migration compatibility
     username: Optional[str]
     bio: Optional[str]
     avatar_url: Optional[str]
-    country: str
+    country: Optional[str] = "jp"
     created_at: datetime
     diseases: List[UserDiseaseResponse] = []
     
