@@ -27,9 +27,7 @@ def upgrade() -> None:
     visibility_enum = postgresql.ENUM('public', 'limited', 'private', name='visibility_enum')
     visibility_enum.create(op.get_bind(), checkfirst=True)
     
-    # Update diseases table constraints
-    op.drop_index(op.f('ix_diseases_name'), table_name='diseases', if_exists=True)
-    op.create_unique_constraint(None, 'diseases', ['name'])
+    # Note: diseases table already has unique index from base migration, no need to change it
     
     # Add new columns to users table (all nullable or with defaults to handle existing data)
     op.add_column('users', sa.Column('auth0_id', sa.String(length=255), nullable=True))
@@ -153,8 +151,8 @@ def downgrade() -> None:
     op.drop_column('users', 'display_name')
     op.drop_column('users', 'email_verified')
     op.drop_column('users', 'auth0_id')
-    op.drop_constraint(None, 'diseases', type_='unique')
-    op.create_index(op.f('ix_diseases_name'), 'diseases', ['name'], unique=True)
+    
+    # Note: diseases table index unchanged, no need to revert
     
     # Drop enum types
     visibility_enum = postgresql.ENUM('public', 'limited', 'private', name='visibility_enum')
