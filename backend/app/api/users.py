@@ -125,39 +125,51 @@ async def create_or_get_user(
     db: Session = Depends(get_db)
 ):
     """Create a new user from Auth0 data or return existing user."""
-    # Check if user already exists by auth0_id
-    existing_user = db.query(User).filter(
-        User.auth0_id == user_data.auth0_id
-    ).first()
-    
-    if existing_user:
-        # Update email_verified if changed
-        if existing_user.email_verified != user_data.email_verified:
-            existing_user.email_verified = user_data.email_verified
-            db.commit()
-            db.refresh(existing_user)
-        return existing_user
-    
-    # Check if user already exists by email
-    existing_user_by_email = db.query(User).filter(
-        User.email == user_data.email
-    ).first()
-    
-    if existing_user_by_email:
+    try:
+        # Check if user already exists by auth0_id
+        existing_user = db.query(User).filter(
+            User.auth0_id == user_data.auth0_id
+        ).first()
+        
+        if existing_user:
+            # Update email_verified if changed
+            if existing_user.email_verified != user_data.email_verified:
+                existing_user.email_verified = user_data.email_verified
+                db.commit()
+                db.refresh(existing_user)
+            return existing_user
+        
+        # Check if user already exists by email
+        existing_user_by_email = db.query(User).filter(
+            User.email == user_data.email
+        ).first()
+        
+        if existing_user_by_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="User with this email already exists"
+            )
+        
+        # Create new user
+        # Use exclude_unset=True to only include fields that were explicitly set
+        # This allows SQLAlchemy defaults to work properly
+        user = User(**user_data.model_dump(exclude_unset=True))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        print(f"Error creating user: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to create user: {str(e)}"
         )
-    
-    # Create new user
-    # Use exclude_unset=True to only include fields that were explicitly set
-    # This allows SQLAlchemy defaults to work properly
-    user = User(**user_data.model_dump(exclude_unset=True))
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    
-    return user
 
 
 @router.get("/{user_id}", response_model=UserPublicResponse)
