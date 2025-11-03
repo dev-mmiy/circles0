@@ -6,7 +6,7 @@ uvicorn[standard]==0.24.0
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
-alembic==1.16.5
+alembic==1.17.1
 
 # HTTP client
 httpx==0.25.2
