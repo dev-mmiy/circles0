@@ -100,26 +100,26 @@ export default function PublicProfilePage() {
               {profile.avatar_url ? (
                 <Image
                   src={profile.avatar_url}
-                  alt={profile.display_name}
+                  alt={profile.nickname}
                   width={96}
                   height={96}
                   className="w-24 h-24 rounded-full object-cover"
                 />
               ) : (
                 <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                  {profile.display_name.charAt(0).toUpperCase()}
+                  {profile.nickname.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
 
             {/* Basic Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{profile.display_name}</h1>
+              <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
               {profile.username && (
                 <p className="text-gray-600 mt-1">@{profile.username}</p>
               )}
               <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
-                <span>📍 {profile.country.toUpperCase()}</span>
+                {profile.country && <span>📍 {profile.country.toUpperCase()}</span>}
                 <span>📅 登録: {new Date(profile.created_at).toLocaleDateString('ja-JP')}</span>
               </div>
             </div>
