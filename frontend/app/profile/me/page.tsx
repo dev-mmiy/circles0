@@ -1,42 +1,29 @@
 'use client';
 
+import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
-import { getCurrentUserProfile, UserProfile } from '@/lib/api/users';
+import { useUser } from '@/contexts/UserContext';
+import { UserProfileCard } from '@/components/UserProfileCard';
+import { DiseaseList } from '@/components/DiseaseList';
+import { useDisease } from '@/contexts/DiseaseContext';
+import { useRouter } from 'next/navigation';
+import { EditDiseaseForm } from '@/components/EditDiseaseForm';
+import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 
 export default function MyProfilePage() {
-  const { user, isAuthenticated, isLoading, getAccessTokenSilently } = useAuth0();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { isAuthenticated, isLoading: authLoading } = useAuth0();
+  const { user, loading: userLoading } = useUser();
+  const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } = useDisease();
+  const router = useRouter();
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (!isAuthenticated || !user) {
-        setLoading(false);
-        return;
-      }
+  // Edit modal state
+  const [editingDisease, setEditingDisease] = useState<UserDiseaseDetailed | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
-      try {
-        const token = await getAccessTokenSilently();
-        const data = await getCurrentUserProfile(token);
-        setProfile(data);
-      } catch (err) {
-        console.error('Failed to fetch profile:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loading = authLoading || userLoading;
 
-    if (!isLoading) {
-      fetchProfile();
-    }
-  }, [isAuthenticated, isLoading, user, getAccessTokenSilently]);
-
-  if (isLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -47,7 +34,7 @@ export default function MyProfilePage() {
     );
   }
 
-  if (!isAuthenticated || !user) {
+  if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -64,12 +51,12 @@ export default function MyProfilePage() {
     );
   }
 
-  if (error) {
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
+          <p className="text-gray-600 mb-4">Your profile could not be loaded.</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -81,152 +68,94 @@ export default function MyProfilePage() {
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
-          <p className="text-gray-600 mb-4">Your profile could not be loaded.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const genderLabels = {
-    male: '男性',
-    female: '女性',
-    other: 'その他',
-    prefer_not_to_say: '回答しない',
+  const handleEdit = () => {
+    router.push('/profile/me/edit');
   };
 
-  const visibilityLabels = {
-    public: '公開',
-    limited: '限定公開',
-    private: '非公開',
+  const handleEditDisease = (disease: UserDiseaseDetailed) => {
+    // Toggle: if already editing this disease, close it; otherwise, open it
+    if (editingDisease?.id === disease.id) {
+      setEditingDisease(null);
+      setIsEditModalOpen(false);
+    } else {
+      setEditingDisease(disease);
+      setIsEditModalOpen(true);
+    }
+  };
+
+  const handleSaveDisease = async (userDiseaseId: number, data: UserDiseaseUpdate) => {
+    try {
+      await updateDisease(userDiseaseId, data);
+      setIsEditModalOpen(false);
+      setEditingDisease(null);
+    } catch (error) {
+      console.error('Failed to update disease:', error);
+      throw error; // Re-throw to let modal handle error display
+    }
+  };
+
+  const handleCloseEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingDisease(null);
+  };
+
+  const handleDeleteDisease = async (disease: UserDiseaseDetailed) => {
+    if (window.confirm(`「${disease.disease?.name || ''}」を削除しますか？`)) {
+      try {
+        await removeDisease(disease.id);
+      } catch (error) {
+        console.error('Failed to delete disease:', error);
+        alert('疾患の削除に失敗しました');
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Profile Card */}
+        <div className="mb-6">
+          <UserProfileCard
+            user={user}
+            showPrivateInfo={true}
+            onEdit={handleEdit}
+          />
+        </div>
+
+        {/* User Diseases */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-start justify-between">
-            <div className="flex items-center space-x-6">
-              {/* Avatar */}
-              <div className="relative">
-                {profile.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={profile.display_name}
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                    {profile.display_name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* Basic Info */}
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">{profile.display_name}</h1>
-                {profile.username && (
-                  <p className="text-gray-600 mt-1">@{profile.username}</p>
-                )}
-                {profile.show_email && (
-                  <p className="text-gray-500 text-sm mt-1">✉ {profile.email}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Edit Button */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-gray-900">登録疾患</h2>
             <Link
-              href="/profile/me/edit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              href="/diseases/add"
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
-              プロフィール編集
+              + 疾患を追加
             </Link>
           </div>
 
-          {/* Bio */}
-          {profile.bio && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">自己紹介</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+          {loadingUserDiseases ? (
+            <div className="text-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">読み込み中...</p>
             </div>
+          ) : (
+            <DiseaseList
+              diseases={userDiseases}
+              onEdit={handleEditDisease}
+              onDelete={handleDeleteDisease}
+              loading={loadingUserDiseases}
+              editingDiseaseId={editingDisease?.id || null}
+              editForm={editingDisease && isEditModalOpen && (
+                <EditDiseaseForm
+                  userDisease={editingDisease}
+                  statuses={statuses}
+                  onSave={handleSaveDisease}
+                  onCancel={handleCloseEditModal}
+                />
+              )}
+            />
           )}
-        </div>
-
-        {/* Diseases */}
-        {profile.diseases && profile.diseases.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">登録疾患</h2>
-            <div className="space-y-2">
-              {profile.diseases.map((disease) => (
-                <div
-                  key={disease.id}
-                  className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
-                >
-                  <span className="text-blue-600">•</span>
-                  <span className="text-gray-800">{disease.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Profile Details */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">基本情報</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">性別</p>
-              <p className="text-gray-900">{genderLabels[profile.gender]}</p>
-            </div>
-            {profile.date_of_birth && (
-              <div>
-                <p className="text-sm text-gray-500">生年月日</p>
-                <p className="text-gray-900">{new Date(profile.date_of_birth).toLocaleDateString('ja-JP')}</p>
-              </div>
-            )}
-            <div>
-              <p className="text-sm text-gray-500">国</p>
-              <p className="text-gray-900">📍 {profile.country.toUpperCase()}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">言語</p>
-              <p className="text-gray-900">🌐 {profile.language}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">タイムゾーン</p>
-              <p className="text-gray-900">⏰ {profile.timezone}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">登録日</p>
-              <p className="text-gray-900">📅 {new Date(profile.created_at).toLocaleDateString('ja-JP')}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Privacy Settings */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">プライバシー設定</h2>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">プロフィール公開設定</span>
-              <span className="text-gray-900 font-medium">{visibilityLabels[profile.profile_visibility]}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">メールアドレス公開</span>
-              <span className="text-gray-900 font-medium">{profile.show_email ? '公開' : '非公開'}</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-              <span className="text-gray-700">オンライン状態表示</span>
-              <span className="text-gray-900 font-medium">{profile.show_online_status ? '表示' : '非表示'}</span>
-            </div>
-          </div>
         </div>
 
         {/* Back to Home */}
@@ -242,4 +171,3 @@ export default function MyProfilePage() {
     </div>
   );
 }
-

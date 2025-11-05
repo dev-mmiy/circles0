@@ -2,6 +2,7 @@
 User model for authentication and profile management with Auth0 integration.
 """
 
+import random
 from datetime import date, datetime, timezone
 from typing import Optional
 from uuid import UUID, uuid4
@@ -14,25 +15,42 @@ from sqlalchemy.sql import func
 from app.database import Base
 
 
+def generate_member_id() -> str:
+    """Generate a unique 12-digit member ID."""
+    return ''.join([str(random.randint(0, 9)) for _ in range(12)])
+
+
 class User(Base):
     """
     User model for authentication and profile management.
-    
+
     Integrates with Auth0 for authentication and provides comprehensive
     user profile information including privacy settings.
     """
 
     __tablename__ = "users"
 
-    # 基本情報
+    # 基本識別情報
     id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    member_id = Column(String(12), unique=True, nullable=False, index=True, default=generate_member_id)  # 12桁の会員ID（ユーザーに表示される）
+
+    # IDP（Identity Provider）情報
     auth0_id = Column(String(255), unique=True, nullable=True, index=True)  # Nullable for migration compatibility
+    idp_id = Column(String(255), unique=True, nullable=True, index=True)  # Generic IDP ID for future flexibility
+    idp_provider = Column(String(50), default='auth0', nullable=False)  # 'auth0', 'okta', 'azure_ad', etc.
+
+    # 基本情報
     email = Column(String(255), unique=True, nullable=False, index=True)
     email_verified = Column(Boolean, default=False)
+
+    # 本名（プライベート情報 - プロフィールページとサポートページでのみ表示）
+    first_name = Column(String(100), nullable=True)
+    last_name = Column(String(100), nullable=True)
+    phone = Column(String(20), nullable=True)
     
-    # プロフィール情報
-    display_name = Column(String(100), nullable=True)  # Nullable for migration compatibility
-    username = Column(String(50), unique=True, nullable=True, index=True)
+    # プロフィール情報（公開情報）
+    nickname = Column(String(50), unique=True, nullable=False, index=True)  # 公開用ニックネーム（他ユーザーとのやり取りで使用）
+    username = Column(String(50), unique=True, nullable=True, index=True)  # システム用ユーザー名（オプション）
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
     date_of_birth = Column(Date, nullable=True)
@@ -40,6 +58,7 @@ class User(Base):
         Enum('male', 'female', 'other', 'prefer_not_to_say', name='gender_enum'),
         default='prefer_not_to_say'
     )
+    preferred_language = Column(String(5), default='ja', nullable=False)  # User's preferred language
     
     # 地域・言語設定
     country = Column(String(2), default='jp')
@@ -64,4 +83,4 @@ class User(Base):
     # Note: Use 'user_diseases' relationship defined in disease.py to avoid conflicts
 
     def __repr__(self) -> str:
-        return f"<User(id={self.id}, email={self.email}, display_name={self.display_name})>"
+        return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"

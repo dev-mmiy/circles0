@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.models.user import User
 from app.models.disease import Disease, UserDisease
 from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.disease import UserDiseaseCreate, UserDiseaseUpdate
 
 
 class UserService:
@@ -38,8 +39,18 @@ class UserService:
         return query.first()
 
     @staticmethod
+    def get_user_by_member_id(db: Session, member_id: str) -> Optional[User]:
+        """Get user by member ID."""
+        return db.query(User).filter(User.member_id == member_id).first()
+
+    @staticmethod
+    def get_user_by_nickname(db: Session, nickname: str) -> Optional[User]:
+        """Get user by nickname."""
+        return db.query(User).filter(User.nickname == nickname).first()
+
+    @staticmethod
     def get_user_diseases(db: Session, user_id: UUID) -> List[Disease]:
-        """Get all active diseases for a user."""
+        """Get all active diseases for a user (legacy method)."""
         return (
             db.query(Disease)
             .join(UserDisease, UserDisease.disease_id == Disease.id)
@@ -50,19 +61,36 @@ class UserService:
         )
 
     @staticmethod
+    def get_all_user_diseases(db: Session, user_id: UUID) -> List[UserDisease]:
+        """Get all active user diseases with detailed information."""
+        from sqlalchemy.orm import joinedload
+
+        return (
+            db.query(UserDisease)
+            .options(
+                joinedload(UserDisease.disease).joinedload(Disease.translations),
+                joinedload(UserDisease.status)
+            )
+            .filter(UserDisease.user_id == user_id)
+            .filter(UserDisease.is_active == True)
+            .order_by(UserDisease.created_at.desc())
+            .all()
+        )
+
+    @staticmethod
     def create_user(db: Session, user_data: UserCreate) -> User:
         """
         Create a new user.
-        
+
         Args:
             db: Database session
             user_data: User creation data
-            
+
         Returns:
             Created user instance
-            
+
         Raises:
-            HTTPException: If user with email already exists
+            HTTPException: If user with email or nickname already exists
         """
         # Check if user exists by email
         existing_user = UserService.get_user_by_email(db, user_data.email)
@@ -71,6 +99,15 @@ class UserService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with this email already exists",
             )
+
+        # Check if nickname already exists
+        if user_data.nickname:
+            existing_nickname = UserService.get_user_by_nickname(db, user_data.nickname)
+            if existing_nickname:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="User with this nickname already exists",
+                )
 
         # Create new user using exclude_unset to allow SQLAlchemy defaults
         user = User(**user_data.model_dump(exclude_unset=True))
@@ -123,16 +160,16 @@ class UserService:
         db: Session, user_id: UUID, disease_id: int
     ) -> UserDisease:
         """
-        Add a disease to user's profile.
-        
+        Add a disease to user's profile (basic version for backward compatibility).
+
         Args:
             db: Database session
             user_id: User UUID
             disease_id: Disease ID
-            
+
         Returns:
             UserDisease relationship instance
-            
+
         Raises:
             HTTPException: If disease not found or already added
         """
@@ -171,21 +208,119 @@ class UserService:
         db.add(user_disease)
         db.commit()
         db.refresh(user_disease)
-        
+
         return user_disease
 
     @staticmethod
-    def remove_disease_from_user(
-        db: Session, user_id: UUID, disease_id: int
-    ) -> None:
+    def add_disease_to_user_detailed(
+        db: Session, user_id: UUID, disease_data: UserDiseaseCreate
+    ) -> UserDisease:
         """
-        Remove a disease from user's profile (soft delete).
-        
+        Add a disease to user's profile with detailed information.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            disease_data: Detailed disease information
+
+        Returns:
+            UserDisease relationship instance
+
+        Raises:
+            HTTPException: If disease not found or already added
+        """
+        from sqlalchemy.orm import joinedload
+
+        # Check if disease exists
+        disease = (
+            db.query(Disease)
+            .filter(Disease.id == disease_data.disease_id, Disease.is_active == True)
+            .first()
+        )
+        if not disease:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Disease not found",
+            )
+
+        # Check if user already has this disease (including inactive)
+        existing = (
+            db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.disease_id == disease_data.disease_id,
+            )
+            .first()
+        )
+
+        if existing:
+            if existing.is_active:
+                # Already active
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Disease already added to your profile",
+                )
+            else:
+                # Reactivate the deleted disease
+                existing.is_active = True
+                # Update with new data
+                for field, value in disease_data.model_dump(exclude_unset=True).items():
+                    if field != 'disease_id':  # Don't update disease_id
+                        setattr(existing, field, value)
+                db.commit()
+
+                # Eager load relationships for response
+                db.refresh(existing)
+                user_disease = (
+                    db.query(UserDisease)
+                    .options(
+                        joinedload(UserDisease.disease).joinedload(Disease.translations),
+                        joinedload(UserDisease.status)
+                    )
+                    .filter(UserDisease.id == existing.id)
+                    .first()
+                )
+                return user_disease
+
+        # Create new relationship with detailed information
+        user_disease = UserDisease(
+            user_id=user_id,
+            **disease_data.model_dump(exclude_unset=True)
+        )
+        db.add(user_disease)
+        db.commit()
+        db.refresh(user_disease)
+
+        # Eager load relationships for response
+        db.refresh(user_disease)
+        user_disease = (
+            db.query(UserDisease)
+            .options(
+                joinedload(UserDisease.disease).joinedload(Disease.translations),
+                joinedload(UserDisease.status)
+            )
+            .filter(UserDisease.id == user_disease.id)
+            .first()
+        )
+
+        return user_disease
+
+    @staticmethod
+    def update_user_disease(
+        db: Session, user_id: UUID, disease_id: int, disease_data: UserDiseaseUpdate
+    ) -> UserDisease:
+        """
+        Update user's disease information.
+
         Args:
             db: Database session
             user_id: User UUID
             disease_id: Disease ID
-            
+            disease_data: Update data
+
+        Returns:
+            Updated UserDisease instance
+
         Raises:
             HTTPException: If disease not found in user's profile
         """
@@ -198,13 +333,201 @@ class UserService:
             )
             .first()
         )
-        
+
         if not user_disease:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Disease not found in your profile",
             )
-        
+
+        # Update fields
+        for field, value in disease_data.model_dump(exclude_unset=True).items():
+            setattr(user_disease, field, value)
+
+        db.commit()
+        db.refresh(user_disease)
+
+        return user_disease
+
+    @staticmethod
+    def get_user_disease(
+        db: Session, user_id: UUID, disease_id: int
+    ) -> Optional[UserDisease]:
+        """
+        Get specific user disease relationship by disease_id.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            disease_id: Disease ID
+
+        Returns:
+            UserDisease instance or None
+        """
+        return (
+            db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.disease_id == disease_id,
+                UserDisease.is_active == True,
+            )
+            .first()
+        )
+
+    @staticmethod
+    def get_user_disease_by_id(
+        db: Session, user_id: UUID, user_disease_id: int
+    ) -> Optional[UserDisease]:
+        """
+        Get specific user disease relationship by UserDisease ID.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            user_disease_id: UserDisease ID
+
+        Returns:
+            UserDisease instance or None
+        """
+        from sqlalchemy.orm import joinedload
+
+        return (
+            db.query(UserDisease)
+            .options(
+                joinedload(UserDisease.disease).joinedload(Disease.translations),
+                joinedload(UserDisease.status)
+            )
+            .filter(
+                UserDisease.id == user_disease_id,
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .first()
+        )
+
+    @staticmethod
+    def update_user_disease_by_id(
+        db: Session, user_id: UUID, user_disease_id: int, disease_data: UserDiseaseUpdate
+    ) -> UserDisease:
+        """
+        Update user's disease information by UserDisease ID.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            user_disease_id: UserDisease ID
+            disease_data: Update data
+
+        Returns:
+            Updated UserDisease instance
+
+        Raises:
+            HTTPException: If disease not found in user's profile
+        """
+        from sqlalchemy.orm import joinedload
+
+        user_disease = (
+            db.query(UserDisease)
+            .filter(
+                UserDisease.id == user_disease_id,
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .first()
+        )
+
+        if not user_disease:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Disease not found in your profile",
+            )
+
+        # Update fields
+        for field, value in disease_data.model_dump(exclude_unset=True).items():
+            setattr(user_disease, field, value)
+
+        db.commit()
+        db.refresh(user_disease)
+
+        # Eager load relationships for response
+        user_disease = (
+            db.query(UserDisease)
+            .options(
+                joinedload(UserDisease.disease).joinedload(Disease.translations),
+                joinedload(UserDisease.status)
+            )
+            .filter(UserDisease.id == user_disease_id)
+            .first()
+        )
+
+        return user_disease
+
+    @staticmethod
+    def remove_disease_from_user(
+        db: Session, user_id: UUID, disease_id: int
+    ) -> None:
+        """
+        Remove a disease from user's profile (soft delete) by Disease ID.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            disease_id: Disease ID
+
+        Raises:
+            HTTPException: If disease not found in user's profile
+        """
+        user_disease = (
+            db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.disease_id == disease_id,
+                UserDisease.is_active == True,
+            )
+            .first()
+        )
+
+        if not user_disease:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Disease not found in your profile",
+            )
+
+        # Soft delete
+        user_disease.is_active = False
+        db.commit()
+
+    @staticmethod
+    def remove_disease_from_user_by_id(
+        db: Session, user_id: UUID, user_disease_id: int
+    ) -> None:
+        """
+        Remove a disease from user's profile (soft delete) by UserDisease ID.
+
+        Args:
+            db: Database session
+            user_id: User UUID
+            user_disease_id: UserDisease relationship ID
+
+        Raises:
+            HTTPException: If disease not found in user's profile
+        """
+        user_disease = (
+            db.query(UserDisease)
+            .filter(
+                UserDisease.id == user_disease_id,
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .first()
+        )
+
+        if not user_disease:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Disease not found in your profile",
+            )
+
         # Soft delete
         user_disease.is_active = False
         db.commit()

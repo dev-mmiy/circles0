@@ -8,6 +8,7 @@ export default function CallbackPage() {
   const { handleRedirectCallback, isLoading, error } = useAuth0();
   const router = useRouter();
 
+  // Handle authentication callback
   useEffect(() => {
     const handleCallback = async () => {
       try {
@@ -22,7 +23,7 @@ export default function CallbackPage() {
           router.push('/');
           return;
         }
-        
+
         console.error('Callback error:', err);
         // Redirect to home page even on error
         router.push('/');
@@ -32,6 +33,15 @@ export default function CallbackPage() {
     handleCallback();
   }, [handleRedirectCallback, router]);
 
+  // Handle error state redirect - always call this hook
+  useEffect(() => {
+    if (error && error.message && error.message.includes('Invalid state')) {
+      console.log('Auth0 temporary state error in callback (ignoring):', error.message);
+      router.push('/');
+    }
+  }, [error, router]);
+
+  // Loading state
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -43,12 +53,10 @@ export default function CallbackPage() {
     );
   }
 
+  // Error state
   if (error) {
     // "Invalid state"エラーは認証フロー中に発生する一時的なエラーなので無視
     if (error.message && error.message.includes('Invalid state')) {
-      console.log('Auth0 temporary state error in callback (ignoring):', error.message);
-      // エラーを無視してホームページにリダイレクト
-      router.push('/');
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
@@ -58,7 +66,7 @@ export default function CallbackPage() {
         </div>
       );
     }
-    
+
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
@@ -75,6 +83,7 @@ export default function CallbackPage() {
     );
   }
 
+  // Success state
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">

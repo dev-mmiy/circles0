@@ -13,10 +13,16 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.schemas.user import UserCreate, UserResponse, UserUpdate, UserPublicResponse
-from app.schemas.disease import DiseaseResponse
+from app.schemas.disease import (
+    DiseaseResponse,
+    UserDiseaseCreate,
+    UserDiseaseUpdate,
+    UserDiseaseResponse,
+)
 from app.auth.dependencies import get_current_user, get_current_user_optional
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
+from app.models.disease import Disease
 
 router = APIRouter()
 
@@ -45,10 +51,16 @@ async def get_current_user_profile(
     # Create response with diseases
     user_dict = {
         "id": user.id,
+        "member_id": user.member_id,
         "auth0_id": user.auth0_id,
+        "idp_id": user.idp_id,
+        "idp_provider": user.idp_provider,
         "email": user.email,
         "email_verified": user.email_verified,
-        "display_name": user.display_name,
+        "first_name": user.first_name,
+        "last_name": user.last_name,
+        "phone": user.phone,
+        "nickname": user.nickname,
         "username": user.username,
         "bio": user.bio,
         "avatar_url": user.avatar_url,
@@ -56,6 +68,7 @@ async def get_current_user_profile(
         "gender": user.gender,
         "country": user.country,
         "language": user.language,
+        "preferred_language": user.preferred_language,
         "timezone": user.timezone,
         "profile_visibility": user.profile_visibility,
         "show_email": user.show_email,
@@ -151,7 +164,8 @@ async def get_user_public_profile(
     # Create response with diseases
     user_dict = {
         "id": user.id,
-        "display_name": user.display_name,
+        "member_id": user.member_id,
+        "nickname": user.nickname,
         "username": user.username,
         "bio": user.bio,
         "avatar_url": user.avatar_url,
@@ -186,24 +200,24 @@ async def delete_current_user(
 
 # User Disease Management Endpoints
 
-@router.get("/me/diseases", response_model=List[DiseaseResponse])
+@router.get("/me/diseases", response_model=List[UserDiseaseResponse])
 async def get_current_user_diseases(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Get current user's diseases."""
+    """Get current user's diseases with detailed information."""
     auth0_id = extract_auth0_id(current_user)
-    
+
     user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Get user's diseases
-    user_diseases = UserService.get_user_diseases(db, user.id)
-    
+
+    # Get user's diseases with detailed information
+    user_diseases = UserService.get_all_user_diseases(db, user.id)
+
     return user_diseases
 
 
@@ -232,23 +246,114 @@ async def add_disease_to_current_user(
     return {"message": "Disease added successfully", "disease": disease}
 
 
-@router.delete("/me/diseases/{disease_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/me/diseases/{user_disease_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def remove_disease_from_current_user(
-    disease_id: int,
+    user_disease_id: int,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user)
 ):
-    """Remove a disease from current user's profile."""
+    """Remove a disease from current user's profile by UserDisease ID."""
     auth0_id = extract_auth0_id(current_user)
-    
+
     user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # Remove disease from user
-    UserService.remove_disease_from_user(db, user.id, disease_id)
-    
+
+    # Remove disease from user by UserDisease ID
+    UserService.remove_disease_from_user_by_id(db, user.id, user_disease_id)
+
     return None
+
+
+# Extended User Disease Management Endpoints
+
+@router.post("/me/diseases", response_model=UserDiseaseResponse, status_code=status.HTTP_201_CREATED)
+async def add_disease_to_user_detailed(
+    disease_data: UserDiseaseCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Add a disease to current user's profile with detailed information.
+
+    This endpoint allows adding diseases with additional details such as:
+    - Diagnosis information (doctor, hospital, date)
+    - Symptoms and limitations
+    - Medications
+    - Disease status
+    - Visibility settings
+    """
+    auth0_id = extract_auth0_id(current_user)
+
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Add disease with detailed information
+    user_disease = UserService.add_disease_to_user_detailed(db, user.id, disease_data)
+
+    return user_disease
+
+
+@router.get("/me/diseases/{user_disease_id}", response_model=UserDiseaseResponse)
+async def get_user_disease_detail(
+    user_disease_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Get detailed information about a specific disease in user's profile."""
+    auth0_id = extract_auth0_id(current_user)
+
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    user_disease = UserService.get_user_disease_by_id(db, user.id, user_disease_id)
+    if not user_disease:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Disease not found in your profile"
+        )
+
+    return user_disease
+
+
+@router.put("/me/diseases/{user_disease_id}", response_model=UserDiseaseResponse)
+async def update_user_disease_detail(
+    user_disease_id: int,
+    disease_data: UserDiseaseUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update detailed information about a disease in user's profile.
+
+    Allows updating:
+    - Diagnosis information
+    - Symptoms and limitations
+    - Medications
+    - Disease status
+    - Visibility settings
+    """
+    auth0_id = extract_auth0_id(current_user)
+
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    # Update disease information
+    user_disease = UserService.update_user_disease_by_id(db, user.id, user_disease_id, disease_data)
+
+    return user_disease

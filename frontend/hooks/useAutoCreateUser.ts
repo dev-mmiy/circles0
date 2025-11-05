@@ -23,7 +23,7 @@ export function useAutoCreateUser() {
           auth0_id: user.sub || '',
           email: user.email || '',
           email_verified: user.email_verified || false,
-          display_name: user.name || user.email || 'User',
+          nickname: user.name || user.email || 'User',
           avatar_url: user.picture,
         });
 
