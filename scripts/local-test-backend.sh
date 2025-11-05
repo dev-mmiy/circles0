@@ -227,14 +227,19 @@ USER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/users/ \
     "auth0_id": "auth0|'$UNIQUE_ID'",
     "email": "testuser'$UNIQUE_ID'@example.com",
     "email_verified": true,
-    "display_name": "Test User '$UNIQUE_ID'",
+    "nickname": "TestUser'$UNIQUE_ID'",
     "avatar_url": "https://example.com/avatar.png",
     "profile_visibility": "public"
   }')
 
 if echo "$USER_RESPONSE" | grep -q "id"; then
     log_success "User creation test passed"
-    USER_ID=$(echo "$USER_RESPONSE" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
+    # Use jq if available, fallback to sed/grep
+    if command -v jq &> /dev/null; then
+        USER_ID=$(echo "$USER_RESPONSE" | jq -r '.id')
+    else
+        USER_ID=$(echo "$USER_RESPONSE" | sed 's/.*"id":"\([^"]*\)".*/\1/')
+    fi
     log_info "Created user ID: $USER_ID"
     
     # Debug: Check user profile_visibility
