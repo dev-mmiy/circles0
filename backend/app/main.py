@@ -23,8 +23,8 @@ app = FastAPI(
     title="Disease Community API",
     description="API for Disease Community Platform",
     version="1.0.0",
-    docs_url="/docs" if ENVIRONMENT in ["development", "test"] else None,
-    redoc_url="/redoc" if ENVIRONMENT in ["development", "test"] else None,
+    docs_url="/docs",  # Always enable docs for debugging
+    redoc_url="/redoc",
 )
 
 # Add market middleware
