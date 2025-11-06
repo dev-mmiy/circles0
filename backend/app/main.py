@@ -27,10 +27,7 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 
-# Add market middleware
-app.add_middleware(MarketMiddleware)
-
-# CORS middleware
+# CORS middleware - MUST be added FIRST (before other middlewares)
 # Temporarily allow all origins for debugging
 allowed_origins = ["*"]
 
@@ -61,7 +58,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
+
+# Add market middleware AFTER CORS
+app.add_middleware(MarketMiddleware)
 
 # Include routers
 app.include_router(auth_router)
