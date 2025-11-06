@@ -36,6 +36,7 @@ def upgrade() -> None:
     # Note: diseases table already has unique index from base migration, no need to change it
 
     # Add new columns to users table (all nullable or with defaults to handle existing data)
+    # Note: first_name, last_name, phone, bio, date_of_birth already exist from base migration
     op.add_column("users", sa.Column("member_id", sa.String(length=12), nullable=True))
     op.add_column("users", sa.Column("auth0_id", sa.String(length=255), nullable=True))
     op.add_column("users", sa.Column("idp_id", sa.String(length=255), nullable=True))
@@ -49,20 +50,37 @@ def upgrade() -> None:
             "email_verified", sa.Boolean(), server_default="false", nullable=False
         ),
     )
-    op.add_column("users", sa.Column("first_name", sa.String(length=100), nullable=True))
-    op.add_column("users", sa.Column("last_name", sa.String(length=100), nullable=True))
-    op.add_column("users", sa.Column("phone", sa.String(length=20), nullable=True))
+    # first_name, last_name, phone already exist - alter them if needed
+    op.alter_column(
+        "users",
+        "first_name",
+        existing_type=sa.String(length=50),
+        type_=sa.String(length=100),
+        existing_nullable=True,
+    )
+    op.alter_column(
+        "users",
+        "last_name",
+        existing_type=sa.String(length=50),
+        type_=sa.String(length=100),
+        existing_nullable=True,
+    )
+    # phone already exists - keep as is
     op.add_column(
         "users", sa.Column("nickname", sa.String(length=50), nullable=True)
     )
     op.add_column("users", sa.Column("username", sa.String(length=50), nullable=True))
-    op.add_column("users", sa.Column("bio", sa.Text(), nullable=True))
+    # bio already exists - keep as is
     op.add_column(
         "users", sa.Column("avatar_url", sa.String(length=500), nullable=True)
     )
-    op.add_column(
+    # date_of_birth already exists but as DateTime - alter to Date
+    op.alter_column(
         "users",
-        sa.Column("date_of_birth", sa.Date(), nullable=True),
+        "date_of_birth",
+        existing_type=sa.DateTime(),
+        type_=sa.Date(),
+        existing_nullable=True,
     )
     op.add_column(
         "users",
@@ -238,19 +256,39 @@ def downgrade() -> None:
     op.drop_column("users", "language")
     op.drop_column("users", "country")
     op.drop_column("users", "gender")
+    # Revert date_of_birth back to DateTime
+    op.alter_column(
+        "users",
+        "date_of_birth",
+        existing_type=sa.Date(),
+        type_=sa.DateTime(),
+        existing_nullable=True,
+    )
     op.drop_column("users", "avatar_url")
-    op.drop_column("users", "bio")
+    # bio already existed - don't drop
     op.drop_column("users", "username")
     op.drop_column("users", "nickname")
-    op.drop_column("users", "phone")
-    op.drop_column("users", "last_name")
-    op.drop_column("users", "first_name")
+    # phone already existed - don't drop
+    # Revert first_name and last_name back to VARCHAR(50)
+    op.alter_column(
+        "users",
+        "last_name",
+        existing_type=sa.String(length=100),
+        type_=sa.String(length=50),
+        existing_nullable=True,
+    )
+    op.alter_column(
+        "users",
+        "first_name",
+        existing_type=sa.String(length=100),
+        type_=sa.String(length=50),
+        existing_nullable=True,
+    )
     op.drop_column("users", "email_verified")
     op.drop_column("users", "idp_provider")
     op.drop_column("users", "idp_id")
     op.drop_column("users", "auth0_id")
     op.drop_column("users", "member_id")
-    op.drop_column("users", "date_of_birth")
     op.drop_column("users", "preferred_language")
 
     # Note: diseases table index unchanged, no need to revert
