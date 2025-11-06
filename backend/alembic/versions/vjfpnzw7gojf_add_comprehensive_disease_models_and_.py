@@ -26,6 +26,9 @@ def upgrade() -> None:
     # Add member_id (12-digit member ID)
     op.add_column("users", sa.Column("member_id", sa.String(length=12), nullable=True))
 
+    # Add Auth0 ID
+    op.add_column("users", sa.Column("auth0_id", sa.String(length=255), nullable=True))
+
     # Add IDP abstraction fields
     op.add_column("users", sa.Column("idp_id", sa.String(length=255), nullable=True))
     op.add_column(
@@ -53,8 +56,35 @@ def upgrade() -> None:
     )
     # phone already exists - keep as is (VARCHAR(20))
 
+    # Add email_verified
+    op.add_column(
+        "users",
+        sa.Column("email_verified", sa.Boolean(), server_default="false", nullable=False),
+    )
+
     # Add nickname (public name)
     op.add_column("users", sa.Column("nickname", sa.String(length=50), nullable=True))
+
+    # Add username
+    op.add_column("users", sa.Column("username", sa.String(length=50), nullable=True))
+
+    # Add avatar_url
+    op.add_column("users", sa.Column("avatar_url", sa.String(length=500), nullable=True))
+
+    # Add gender enum
+    gender_enum = postgresql.ENUM(
+        "male", "female", "other", "prefer_not_to_say", name="gender_enum"
+    )
+    gender_enum.create(op.get_bind(), checkfirst=True)
+    op.add_column(
+        "users",
+        sa.Column(
+            "gender",
+            sa.Enum("male", "female", "other", "prefer_not_to_say", name="gender_enum"),
+            server_default="prefer_not_to_say",
+            nullable=False,
+        ),
+    )
 
     # Add preferred_language
     op.add_column(
@@ -67,10 +97,57 @@ def upgrade() -> None:
         ),
     )
 
+    # Add country, language, timezone
+    op.add_column(
+        "users",
+        sa.Column("country", sa.String(length=2), server_default="jp", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("language", sa.String(length=5), server_default="ja", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("timezone", sa.String(length=50), server_default="Asia/Tokyo", nullable=False),
+    )
+
+    # Add profile visibility enum
+    visibility_enum = postgresql.ENUM(
+        "public", "limited", "private", name="visibility_enum"
+    )
+    visibility_enum.create(op.get_bind(), checkfirst=True)
+    op.add_column(
+        "users",
+        sa.Column(
+            "profile_visibility",
+            sa.Enum("public", "limited", "private", name="visibility_enum"),
+            server_default="limited",
+            nullable=False,
+        ),
+    )
+
+    # Add privacy settings
+    op.add_column(
+        "users",
+        sa.Column("show_email", sa.Boolean(), server_default="false", nullable=False),
+    )
+    op.add_column(
+        "users",
+        sa.Column("show_online_status", sa.Boolean(), server_default="false", nullable=False),
+    )
+
+    # Add last_login_at
+    op.add_column(
+        "users",
+        sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True),
+    )
+
     # Create indexes for new user fields
     op.create_index(op.f("ix_users_member_id"), "users", ["member_id"], unique=True)
+    op.create_index(op.f("ix_users_auth0_id"), "users", ["auth0_id"], unique=True)
     op.create_index(op.f("ix_users_idp_id"), "users", ["idp_id"], unique=True)
     op.create_index(op.f("ix_users_nickname"), "users", ["nickname"], unique=True)
+    op.create_index(op.f("ix_users_username"), "users", ["username"], unique=True)
 
     # ### Disease model updates ###
 
