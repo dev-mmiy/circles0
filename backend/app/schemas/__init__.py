@@ -27,13 +27,7 @@ from .disease import (
     UserDiseaseResponse,
     UserDiseaseUpdate,
 )
-from .user import (
-    UserBase,
-    UserCreate,
-    UserPublicResponse,
-    UserResponse,
-    UserUpdate,
-)
+from .user import UserBase, UserCreate, UserPublicResponse, UserResponse, UserUpdate
 
 __all__ = [
     # User schemas

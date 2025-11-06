@@ -3,17 +3,12 @@ Disease status service layer for handling status-related business logic.
 """
 
 from typing import List, Optional
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
 
-from app.models.disease import (
-    DiseaseStatus,
-    DiseaseStatusTranslation,
-)
-from app.schemas.disease import (
-    DiseaseStatusCreate,
-    DiseaseStatusUpdate,
-)
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.models.disease import DiseaseStatus, DiseaseStatusTranslation
+from app.schemas.disease import DiseaseStatusCreate, DiseaseStatusUpdate
 
 
 class DiseaseStatusService:
@@ -30,11 +25,7 @@ class DiseaseStatusService:
         Returns:
             List of DiseaseStatus objects ordered by display_order
         """
-        return (
-            db.query(DiseaseStatus)
-            .order_by(DiseaseStatus.display_order)
-            .all()
-        )
+        return db.query(DiseaseStatus).order_by(DiseaseStatus.display_order).all()
 
     @staticmethod
     def get_status_by_id(db: Session, status_id: int) -> Optional[DiseaseStatus]:
@@ -51,9 +42,7 @@ class DiseaseStatusService:
         return db.query(DiseaseStatus).filter(DiseaseStatus.id == status_id).first()
 
     @staticmethod
-    def get_status_by_code(
-        db: Session, status_code: str
-    ) -> Optional[DiseaseStatus]:
+    def get_status_by_code(db: Session, status_code: str) -> Optional[DiseaseStatus]:
         """
         Get status by code.
 

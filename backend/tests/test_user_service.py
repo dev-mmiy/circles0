@@ -2,16 +2,17 @@
 Unit tests for UserService.
 """
 
-import pytest
 from datetime import datetime
 from uuid import uuid4
-from sqlalchemy.orm import Session
-from fastapi import HTTPException
 
-from app.models.user import User
+import pytest
+from fastapi import HTTPException
+from sqlalchemy.orm import Session
+
 from app.models.disease import Disease, UserDisease
-from app.services.user_service import UserService
+from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
+from app.services.user_service import UserService
 
 
 class TestUserService:
@@ -61,7 +62,7 @@ class TestUserService:
             auth0_id="auth0|test123",
             email="test@example.com",
             email_verified=True,
-            display_name="Test User"
+            display_name="Test User",
         )
 
         user = UserService.create_user(db_session, user_data)
@@ -80,21 +81,19 @@ class TestUserService:
             auth0_id="auth0|different123",
             email=test_user.email,  # Duplicate email
             email_verified=True,
-            display_name="Another User"
+            display_name="Another User",
         )
 
         with pytest.raises(HTTPException) as exc_info:
             UserService.create_user(db_session, user_data)
-        
+
         assert exc_info.value.status_code == 400
         assert "email already exists" in exc_info.value.detail.lower()
 
     def test_update_user(self, db_session: Session, test_user: User):
         """Test updating user profile."""
         update_data = UserUpdate(
-            display_name="Updated Name",
-            bio="Updated bio",
-            country="us"
+            display_name="Updated Name", bio="Updated bio", country="us"
         )
 
         updated_user = UserService.update_user(db_session, test_user, update_data)
@@ -129,9 +128,7 @@ class TestUserService:
         """Test getting user's diseases."""
         # Add disease to user
         user_disease = UserDisease(
-            user_id=test_user.id,
-            disease_id=test_disease.id,
-            is_active=True
+            user_id=test_user.id, disease_id=test_disease.id, is_active=True
         )
         db_session.add(user_disease)
         db_session.commit()
@@ -163,7 +160,7 @@ class TestUserService:
         # Try to add again
         with pytest.raises(HTTPException) as exc_info:
             UserService.add_disease_to_user(db_session, test_user.id, test_disease.id)
-        
+
         assert exc_info.value.status_code == 400
         assert "already added" in exc_info.value.detail.lower()
 
@@ -182,7 +179,7 @@ class TestUserService:
             db_session.query(UserDisease)
             .filter(
                 UserDisease.user_id == test_user.id,
-                UserDisease.disease_id == test_disease.id
+                UserDisease.disease_id == test_disease.id,
             )
             .first()
         )
@@ -194,7 +191,7 @@ class TestUserService:
         """Test removing non-existent disease raises exception."""
         with pytest.raises(HTTPException) as exc_info:
             UserService.remove_disease_from_user(db_session, test_user.id, 99999)
-        
+
         assert exc_info.value.status_code == 404
 
     def test_check_profile_visibility_public(
@@ -218,7 +215,7 @@ class TestUserService:
         # Should not be visible to others
         with pytest.raises(HTTPException) as exc_info:
             UserService.check_profile_visibility(test_user, None)
-        
+
         assert exc_info.value.status_code == 403
 
         # Should be visible to owner
@@ -236,7 +233,7 @@ class TestUserService:
         # Should not be visible to unauthenticated users
         with pytest.raises(HTTPException) as exc_info:
             UserService.check_profile_visibility(test_user, None)
-        
+
         assert exc_info.value.status_code == 403
 
         # Should be visible to authenticated users
@@ -247,6 +244,7 @@ class TestUserService:
 
 # Pytest fixtures
 
+
 @pytest.fixture
 def test_user(db_session: Session) -> User:
     """Create a test user."""
@@ -256,7 +254,7 @@ def test_user(db_session: Session) -> User:
         email="testuser@example.com",
         email_verified=True,
         display_name="Test User",
-        is_active=True
+        is_active=True,
     )
     db_session.add(user)
     db_session.commit()
@@ -273,10 +271,9 @@ def test_disease(db_session: Session) -> Disease:
         category="test",
         is_active=True,
         created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        updated_at=datetime.utcnow(),
     )
     db_session.add(disease)
     db_session.commit()
     db_session.refresh(disease)
     return disease
-

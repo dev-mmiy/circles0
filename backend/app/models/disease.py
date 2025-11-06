@@ -2,11 +2,20 @@
 Disease models for disease management with internationalization support.
 """
 
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 
-from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, CheckConstraint
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Date,
+    DateTime,
+    ForeignKey,
+    Integer,
+    String,
+    Text,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
@@ -28,7 +37,9 @@ class Disease(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Disease code (e.g., ICD-10)
-    disease_code: Mapped[Optional[str]] = mapped_column(String(20), unique=True, nullable=True, index=True)
+    disease_code: Mapped[Optional[str]] = mapped_column(
+        String(20), unique=True, nullable=True, index=True
+    )
 
     # Disease name (English, for internal use)
     name: Mapped[str] = mapped_column(String(200), nullable=False, unique=True)
@@ -40,8 +51,8 @@ class Disease(Base):
     # Severity level (1: mild, 5: severe)
     severity_level: Mapped[Optional[int]] = mapped_column(
         Integer,
-        CheckConstraint('severity_level >= 1 AND severity_level <= 5'),
-        nullable=True
+        CheckConstraint("severity_level >= 1 AND severity_level <= 5"),
+        nullable=True,
     )
 
     # Status
@@ -52,7 +63,10 @@ class Disease(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     def __repr__(self) -> str:
@@ -73,7 +87,10 @@ class DiseaseTranslation(Base):
 
     # Foreign key
     disease_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("diseases.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("diseases.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Language code (e.g., 'ja', 'en', 'ko', 'zh')
@@ -90,7 +107,10 @@ class DiseaseTranslation(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     # Relationships
@@ -113,7 +133,9 @@ class DiseaseCategory(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Category code (internal system use)
-    category_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    category_code: Mapped[str] = mapped_column(
+        String(50), unique=True, nullable=False, index=True
+    )
 
     # Parent category ID (for hierarchical structure)
     parent_category_id: Mapped[Optional[int]] = mapped_column(
@@ -131,11 +153,16 @@ class DiseaseCategory(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     # Relationships
-    parent = relationship("DiseaseCategory", remote_side=[id], back_populates="children")
+    parent = relationship(
+        "DiseaseCategory", remote_side=[id], back_populates="children"
+    )
     children = relationship("DiseaseCategory", back_populates="parent")
 
     def __repr__(self) -> str:
@@ -154,7 +181,10 @@ class DiseaseCategoryTranslation(Base):
 
     # Foreign key
     category_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("disease_categories.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("disease_categories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Language code
@@ -171,7 +201,10 @@ class DiseaseCategoryTranslation(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     # Relationships
@@ -195,10 +228,16 @@ class DiseaseCategoryMapping(Base):
 
     # Foreign keys
     disease_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("diseases.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("diseases.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     category_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("disease_categories.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("disease_categories.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Timestamp
@@ -225,7 +264,9 @@ class DiseaseStatus(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Status code (internal system use)
-    status_code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    status_code: Mapped[str] = mapped_column(
+        String(50), unique=True, nullable=False, index=True
+    )
 
     # Display order
     display_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
@@ -238,7 +279,10 @@ class DiseaseStatus(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     def __repr__(self) -> str:
@@ -257,7 +301,10 @@ class DiseaseStatusTranslation(Base):
 
     # Foreign key
     status_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("disease_statuses.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("disease_statuses.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
 
     # Language code
@@ -274,7 +321,10 @@ class DiseaseStatusTranslation(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     # Relationships
@@ -295,9 +345,14 @@ class UserDisease(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
     disease_id: Mapped[int] = mapped_column(
-        Integer, ForeignKey("diseases.id", ondelete="CASCADE"), nullable=False, index=True
+        Integer,
+        ForeignKey("diseases.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     status_id: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("disease_statuses.id"), nullable=True, index=True
@@ -306,13 +361,15 @@ class UserDisease(Base):
     # Diagnosis information
     diagnosis_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
     diagnosis_doctor: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    diagnosis_hospital: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    diagnosis_hospital: Mapped[Optional[str]] = mapped_column(
+        String(200), nullable=True
+    )
 
     # Severity level (1: mild, 5: severe)
     severity_level: Mapped[Optional[int]] = mapped_column(
         Integer,
-        CheckConstraint('severity_level >= 1 AND severity_level <= 5'),
-        nullable=True
+        CheckConstraint("severity_level >= 1 AND severity_level <= 5"),
+        nullable=True,
     )
 
     # Symptom and limitation information
@@ -321,12 +378,18 @@ class UserDisease(Base):
     medications: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Legacy fields (for backward compatibility)
-    severity: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)  # Deprecated
+    severity: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True
+    )  # Deprecated
     notes: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Privacy settings
-    is_public: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False, index=True)  # Visible to other users
-    is_searchable: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)  # Searchable by disease
+    is_public: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False, index=True
+    )  # Visible to other users
+    is_searchable: Mapped[bool] = mapped_column(
+        Boolean, default=True, nullable=False, index=True
+    )  # Searchable by disease
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
@@ -336,7 +399,10 @@ class UserDisease(Base):
         DateTime, default=func.current_timestamp(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime, default=func.current_timestamp(), onupdate=func.current_timestamp(), nullable=False
+        DateTime,
+        default=func.current_timestamp(),
+        onupdate=func.current_timestamp(),
+        nullable=False,
     )
 
     # Relationships
@@ -349,14 +415,28 @@ class UserDisease(Base):
 
 
 # Add relationships to existing models
-User.diseases = relationship("UserDisease", back_populates="user", cascade="all, delete-orphan")
+User.diseases = relationship(
+    "UserDisease", back_populates="user", cascade="all, delete-orphan"
+)
 
-Disease.translations = relationship("DiseaseTranslation", back_populates="disease", cascade="all, delete-orphan")
+Disease.translations = relationship(
+    "DiseaseTranslation", back_populates="disease", cascade="all, delete-orphan"
+)
 Disease.user_diseases = relationship("UserDisease", back_populates="disease")
-Disease.category_mappings = relationship("DiseaseCategoryMapping", back_populates="disease", cascade="all, delete-orphan")
+Disease.category_mappings = relationship(
+    "DiseaseCategoryMapping", back_populates="disease", cascade="all, delete-orphan"
+)
 
-DiseaseCategory.translations = relationship("DiseaseCategoryTranslation", back_populates="category", cascade="all, delete-orphan")
-DiseaseCategory.disease_mappings = relationship("DiseaseCategoryMapping", back_populates="category", cascade="all, delete-orphan")
+DiseaseCategory.translations = relationship(
+    "DiseaseCategoryTranslation",
+    back_populates="category",
+    cascade="all, delete-orphan",
+)
+DiseaseCategory.disease_mappings = relationship(
+    "DiseaseCategoryMapping", back_populates="category", cascade="all, delete-orphan"
+)
 
-DiseaseStatus.translations = relationship("DiseaseStatusTranslation", back_populates="status", cascade="all, delete-orphan")
+DiseaseStatus.translations = relationship(
+    "DiseaseStatusTranslation", back_populates="status", cascade="all, delete-orphan"
+)
 DiseaseStatus.user_diseases = relationship("UserDisease", back_populates="status")

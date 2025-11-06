@@ -389,7 +389,9 @@ def seed_diseases(session):
     for disease_data in diseases:
         # Check if already exists
         existing = (
-            session.query(Disease).filter_by(disease_code=disease_data["disease_code"]).first()
+            session.query(Disease)
+            .filter_by(disease_code=disease_data["disease_code"])
+            .first()
         )
         if existing:
             disease_map[disease_data["disease_code"]] = existing.id
@@ -398,7 +400,9 @@ def seed_diseases(session):
             session.add(disease)
             session.flush()
             disease_map[disease_data["disease_code"]] = disease.id
-            print(f"  Added disease: {disease_data['name']} ({disease_data['disease_code']})")
+            print(
+                f"  Added disease: {disease_data['name']} ({disease_data['disease_code']})"
+            )
 
     session.commit()
     print("Sample diseases seeded successfully!")
@@ -503,11 +507,26 @@ def seed_disease_category_mappings(session, disease_map, category_map):
     print("\nSeeding disease-category mappings...")
 
     mappings = [
-        {"disease_id": disease_map["F32.9"], "category_id": category_map["MOOD_DISORDERS"]},
-        {"disease_id": disease_map["F41.9"], "category_id": category_map["ANXIETY_DISORDERS"]},
-        {"disease_id": disease_map["G40.9"], "category_id": category_map["NEUROLOGICAL"]},
-        {"disease_id": disease_map["I25.9"], "category_id": category_map["CARDIOVASCULAR"]},
-        {"disease_id": disease_map["J45.9"], "category_id": category_map["RESPIRATORY"]},
+        {
+            "disease_id": disease_map["F32.9"],
+            "category_id": category_map["MOOD_DISORDERS"],
+        },
+        {
+            "disease_id": disease_map["F41.9"],
+            "category_id": category_map["ANXIETY_DISORDERS"],
+        },
+        {
+            "disease_id": disease_map["G40.9"],
+            "category_id": category_map["NEUROLOGICAL"],
+        },
+        {
+            "disease_id": disease_map["I25.9"],
+            "category_id": category_map["CARDIOVASCULAR"],
+        },
+        {
+            "disease_id": disease_map["J45.9"],
+            "category_id": category_map["RESPIRATORY"],
+        },
     ]
 
     for mapping_data in mappings:
@@ -523,7 +542,9 @@ def seed_disease_category_mappings(session, disease_map, category_map):
         if not existing:
             mapping = DiseaseCategoryMapping(**mapping_data)
             session.add(mapping)
-            print(f"  Added mapping: disease {mapping_data['disease_id']} -> category {mapping_data['category_id']}")
+            print(
+                f"  Added mapping: disease {mapping_data['disease_id']} -> category {mapping_data['category_id']}"
+            )
 
     session.commit()
     print("Disease-category mappings seeded successfully!")

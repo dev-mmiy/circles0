@@ -13,15 +13,29 @@ class UserBase(BaseModel):
     """Base user schema with common fields."""
 
     email: EmailStr
-    nickname: str = Field(..., min_length=1, max_length=50, description="Public nickname used in community")
-    username: Optional[str] = Field(None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$")
+    nickname: str = Field(
+        ...,
+        min_length=1,
+        max_length=50,
+        description="Public nickname used in community",
+    )
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$"
+    )
     bio: Optional[str] = Field(None, max_length=500)
     avatar_url: Optional[str] = None
     date_of_birth: Optional[date] = None
-    gender: str = Field(default="prefer_not_to_say", pattern="^(male|female|other|prefer_not_to_say)$")
+    gender: str = Field(
+        default="prefer_not_to_say", pattern="^(male|female|other|prefer_not_to_say)$"
+    )
     country: str = Field(default="jp", min_length=2, max_length=2)
     language: str = Field(default="ja", min_length=2, max_length=5)
-    preferred_language: str = Field(default="ja", min_length=2, max_length=5, description="User's preferred language")
+    preferred_language: str = Field(
+        default="ja",
+        min_length=2,
+        max_length=5,
+        description="User's preferred language",
+    )
     timezone: str = Field(default="Asia/Tokyo", max_length=50)
 
 
@@ -31,12 +45,20 @@ class UserCreate(BaseModel):
     auth0_id: str = Field(..., min_length=1, max_length=255)
     email: EmailStr
     email_verified: bool = False
-    nickname: str = Field(..., min_length=1, max_length=50, description="Public nickname")
-    first_name: Optional[str] = Field(None, max_length=100, description="First name (private)")
-    last_name: Optional[str] = Field(None, max_length=100, description="Last name (private)")
+    nickname: str = Field(
+        ..., min_length=1, max_length=50, description="Public nickname"
+    )
+    first_name: Optional[str] = Field(
+        None, max_length=100, description="First name (private)"
+    )
+    last_name: Optional[str] = Field(
+        None, max_length=100, description="Last name (private)"
+    )
     phone: Optional[str] = Field(None, max_length=20)
     avatar_url: Optional[str] = None
-    profile_visibility: Optional[str] = Field(None, pattern="^(public|limited|private)$")
+    profile_visibility: Optional[str] = Field(
+        None, pattern="^(public|limited|private)$"
+    )
 
 
 class UserUpdate(BaseModel):
@@ -46,28 +68,34 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
-    username: Optional[str] = Field(None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$")
+    username: Optional[str] = Field(
+        None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$"
+    )
     bio: Optional[str] = Field(None, max_length=500)
     avatar_url: Optional[str] = None
     date_of_birth: Optional[date] = None
-    gender: Optional[str] = Field(None, pattern="^(male|female|other|prefer_not_to_say)$")
+    gender: Optional[str] = Field(
+        None, pattern="^(male|female|other|prefer_not_to_say)$"
+    )
     country: Optional[str] = Field(None, min_length=2, max_length=2)
     language: Optional[str] = Field(None, min_length=2, max_length=5)
     preferred_language: Optional[str] = Field(None, min_length=2, max_length=5)
     timezone: Optional[str] = Field(None, max_length=50)
-    profile_visibility: Optional[str] = Field(None, pattern="^(public|limited|private)$")
+    profile_visibility: Optional[str] = Field(
+        None, pattern="^(public|limited|private)$"
+    )
     show_email: Optional[bool] = None
     show_online_status: Optional[bool] = None
 
 
 class UserDiseaseResponse(BaseModel):
     """Schema for user's disease information."""
-    
+
     id: int
     name: str
     description: Optional[str] = None
     category: Optional[str] = None
-    
+
     model_config = {"from_attributes": True}
 
 

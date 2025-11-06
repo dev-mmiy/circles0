@@ -229,7 +229,7 @@ class UserDiseaseResponse(UserDiseaseBase):
     created_at: datetime
     updated_at: datetime
 
-    @field_serializer('user_id')
+    @field_serializer("user_id")
     def serialize_user_id(self, value: UUID) -> str:
         """Convert UUID to string."""
         return str(value)

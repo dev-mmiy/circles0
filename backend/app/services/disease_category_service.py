@@ -3,17 +3,12 @@ Disease category service layer for handling category-related business logic.
 """
 
 from typing import List, Optional
-from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
 
-from app.models.disease import (
-    DiseaseCategory,
-    DiseaseCategoryTranslation,
-)
-from app.schemas.disease import (
-    DiseaseCategoryCreate,
-    DiseaseCategoryUpdate,
-)
+from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
+
+from app.models.disease import DiseaseCategory, DiseaseCategoryTranslation
+from app.schemas.disease import DiseaseCategoryCreate, DiseaseCategoryUpdate
 
 
 class DiseaseCategoryService:
@@ -49,7 +44,9 @@ class DiseaseCategoryService:
         return query.all()
 
     @staticmethod
-    def get_root_categories(db: Session, active_only: bool = True) -> List[DiseaseCategory]:
+    def get_root_categories(
+        db: Session, active_only: bool = True
+    ) -> List[DiseaseCategory]:
         """
         Get root categories (categories without parent).
 
@@ -144,9 +141,7 @@ class DiseaseCategoryService:
         return query.all()
 
     @staticmethod
-    def get_category_hierarchy(
-        db: Session, category_id: int
-    ) -> List[DiseaseCategory]:
+    def get_category_hierarchy(db: Session, category_id: int) -> List[DiseaseCategory]:
         """
         Get category hierarchy from root to specified category.
 
@@ -158,7 +153,9 @@ class DiseaseCategoryService:
             List of DiseaseCategory objects from root to target
         """
         hierarchy = []
-        current = DiseaseCategoryService.get_category_by_id(db, category_id, active_only=False)
+        current = DiseaseCategoryService.get_category_by_id(
+            db, category_id, active_only=False
+        )
 
         while current:
             hierarchy.insert(0, current)

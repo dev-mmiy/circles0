@@ -17,7 +17,7 @@ from app.database import Base
 
 def generate_member_id() -> str:
     """Generate a unique 12-digit member ID."""
-    return ''.join([str(random.randint(0, 9)) for _ in range(12)])
+    return "".join([str(random.randint(0, 9)) for _ in range(12)])
 
 
 class User(Base):
@@ -32,12 +32,20 @@ class User(Base):
 
     # 基本識別情報
     id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
-    member_id = Column(String(12), unique=True, nullable=False, index=True, default=generate_member_id)  # 12桁の会員ID（ユーザーに表示される）
+    member_id = Column(
+        String(12), unique=True, nullable=False, index=True, default=generate_member_id
+    )  # 12桁の会員ID（ユーザーに表示される）
 
     # IDP（Identity Provider）情報
-    auth0_id = Column(String(255), unique=True, nullable=True, index=True)  # Nullable for migration compatibility
-    idp_id = Column(String(255), unique=True, nullable=True, index=True)  # Generic IDP ID for future flexibility
-    idp_provider = Column(String(50), default='auth0', nullable=False)  # 'auth0', 'okta', 'azure_ad', etc.
+    auth0_id = Column(
+        String(255), unique=True, nullable=True, index=True
+    )  # Nullable for migration compatibility
+    idp_id = Column(
+        String(255), unique=True, nullable=True, index=True
+    )  # Generic IDP ID for future flexibility
+    idp_provider = Column(
+        String(50), default="auth0", nullable=False
+    )  # 'auth0', 'okta', 'azure_ad', etc.
 
     # 基本情報
     email = Column(String(255), unique=True, nullable=False, index=True)
@@ -47,38 +55,54 @@ class User(Base):
     first_name = Column(String(100), nullable=True)
     last_name = Column(String(100), nullable=True)
     phone = Column(String(20), nullable=True)
-    
+
     # プロフィール情報（公開情報）
-    nickname = Column(String(50), unique=True, nullable=False, index=True)  # 公開用ニックネーム（他ユーザーとのやり取りで使用）
-    username = Column(String(50), unique=True, nullable=True, index=True)  # システム用ユーザー名（オプション）
+    nickname = Column(
+        String(50), unique=True, nullable=False, index=True
+    )  # 公開用ニックネーム（他ユーザーとのやり取りで使用）
+    username = Column(
+        String(50), unique=True, nullable=True, index=True
+    )  # システム用ユーザー名（オプション）
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
     date_of_birth = Column(Date, nullable=True)
     gender = Column(
-        Enum('male', 'female', 'other', 'prefer_not_to_say', name='gender_enum'),
-        default='prefer_not_to_say'
+        Enum("male", "female", "other", "prefer_not_to_say", name="gender_enum"),
+        default="prefer_not_to_say",
     )
-    preferred_language = Column(String(5), default='ja', nullable=False)  # User's preferred language
-    
+    preferred_language = Column(
+        String(5), default="ja", nullable=False
+    )  # User's preferred language
+
     # 地域・言語設定
-    country = Column(String(2), default='jp')
-    language = Column(String(5), default='ja')
-    timezone = Column(String(50), default='Asia/Tokyo')
-    
+    country = Column(String(2), default="jp")
+    language = Column(String(5), default="ja")
+    timezone = Column(String(50), default="Asia/Tokyo")
+
     # プライバシー設定
     profile_visibility = Column(
-        Enum('public', 'limited', 'private', name='visibility_enum'),
-        default='limited'
+        Enum("public", "limited", "private", name="visibility_enum"), default="limited"
     )
     show_email = Column(Boolean, default=False)
     show_online_status = Column(Boolean, default=False)
-    
+
     # アカウント情報
-    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), server_default=func.now(), onupdate=func.now(), nullable=False)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        nullable=False,
+    )
+    updated_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False,
+    )
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
-    
+
     # リレーション
     # Note: Use 'user_diseases' relationship defined in disease.py to avoid conflicts
 

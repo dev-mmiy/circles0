@@ -11,17 +11,17 @@ from app.database import get_db
 from app.models.disease import Disease, UserDisease
 from app.models.user import User
 from app.schemas.disease import (
-    DiseaseCreate,
-    DiseaseResponse,
-    DiseaseUpdate,
-    DiseaseTranslationResponse,
     DiseaseCategoryResponse,
     DiseaseCategoryTranslationResponse,
+    DiseaseCreate,
+    DiseaseResponse,
     DiseaseStatusResponse,
     DiseaseStatusTranslationResponse,
+    DiseaseTranslationResponse,
+    DiseaseUpdate,
 )
-from app.services.disease_service import DiseaseService
 from app.services.disease_category_service import DiseaseCategoryService
+from app.services.disease_service import DiseaseService
 from app.services.disease_status_service import DiseaseStatusService
 
 router = APIRouter()
@@ -30,8 +30,9 @@ router = APIRouter()
 @router.get("/", response_model=List[DiseaseResponse])
 async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """Get list of diseases with their primary category."""
-    from app.models.disease import DiseaseCategoryMapping
     from sqlalchemy.orm import joinedload
+
+    from app.models.disease import DiseaseCategoryMapping
 
     diseases = (
         db.query(Disease)
@@ -46,9 +47,11 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     result = []
     for disease in diseases:
         # Get the first category mapping as primary category
-        mapping = db.query(DiseaseCategoryMapping).filter(
-            DiseaseCategoryMapping.disease_id == disease.id
-        ).first()
+        mapping = (
+            db.query(DiseaseCategoryMapping)
+            .filter(DiseaseCategoryMapping.disease_id == disease.id)
+            .first()
+        )
 
         # Create a dict from the disease object
         disease_dict = {
@@ -56,12 +59,14 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
             "name": disease.name,
             "disease_code": disease.disease_code,
             "description": disease.description,
-            "category": str(mapping.category_id) if mapping else None,  # Use category field for category_id
+            "category": (
+                str(mapping.category_id) if mapping else None
+            ),  # Use category field for category_id
             "severity_level": disease.severity_level,
             "is_active": disease.is_active,
             "created_at": disease.created_at,
             "updated_at": disease.updated_at,
-            "translations": disease.translations
+            "translations": disease.translations,
         }
         result.append(disease_dict)
 
@@ -154,7 +159,10 @@ async def delete_disease(disease_id: int, db: Session = Depends(get_db)):
 
 # Disease Translation Endpoints
 
-@router.get("/{disease_id}/translations", response_model=List[DiseaseTranslationResponse])
+
+@router.get(
+    "/{disease_id}/translations", response_model=List[DiseaseTranslationResponse]
+)
 async def get_disease_translations(disease_id: int, db: Session = Depends(get_db)):
     """Get all translations for a disease."""
     disease = DiseaseService.get_disease_by_id(db, disease_id)
@@ -192,7 +200,9 @@ async def get_disease_translation(
 
 
 @router.get("/{disease_id}/categories", response_model=List[DiseaseCategoryResponse])
-async def get_disease_categories_for_disease(disease_id: int, db: Session = Depends(get_db)):
+async def get_disease_categories_for_disease(
+    disease_id: int, db: Session = Depends(get_db)
+):
     """Get all categories for a disease."""
     disease = DiseaseService.get_disease_by_id(db, disease_id)
     if not disease:
@@ -205,6 +215,7 @@ async def get_disease_categories_for_disease(disease_id: int, db: Session = Depe
 
 
 # Disease Category Endpoints
+
 
 @router.get("/categories/", response_model=List[DiseaseCategoryResponse])
 async def get_disease_categories_list(
@@ -252,7 +263,9 @@ async def get_category_children(category_id: int, db: Session = Depends(get_db))
 )
 async def get_category_hierarchy(category_id: int, db: Session = Depends(get_db)):
     """Get category hierarchy from root to specified category."""
-    category = DiseaseCategoryService.get_category_by_id(db, category_id, active_only=False)
+    category = DiseaseCategoryService.get_category_by_id(
+        db, category_id, active_only=False
+    )
     if not category:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Category not found"
@@ -304,9 +317,7 @@ async def get_category_translation(
     return translation
 
 
-@router.get(
-    "/categories/{category_id}/diseases", response_model=List[DiseaseResponse]
-)
+@router.get("/categories/{category_id}/diseases", response_model=List[DiseaseResponse])
 async def get_diseases_by_category(
     category_id: int,
     skip: int = Query(0, ge=0, description="Number of records to skip"),
@@ -327,6 +338,7 @@ async def get_diseases_by_category(
 
 
 # Disease Status Endpoints
+
 
 @router.get("/statuses/", response_model=List[DiseaseStatusResponse])
 async def get_disease_statuses(db: Session = Depends(get_db)):

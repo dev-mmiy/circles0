@@ -3,20 +3,17 @@ Disease service layer for handling disease-related business logic.
 """
 
 from typing import List, Optional
-from sqlalchemy.orm import Session
+
 from fastapi import HTTPException, status
+from sqlalchemy.orm import Session
 
 from app.models.disease import (
     Disease,
-    DiseaseTranslation,
     DiseaseCategory,
     DiseaseCategoryMapping,
+    DiseaseTranslation,
 )
-from app.schemas.disease import (
-    DiseaseCreate,
-    DiseaseUpdate,
-    DiseaseTranslationResponse,
-)
+from app.schemas.disease import DiseaseCreate, DiseaseTranslationResponse, DiseaseUpdate
 
 
 class DiseaseService:
@@ -178,9 +175,7 @@ class DiseaseService:
             List of Disease objects
         """
         # Search in disease name
-        query = db.query(Disease).filter(
-            Disease.name.ilike(f"%{search_term}%")
-        )
+        query = db.query(Disease).filter(Disease.name.ilike(f"%{search_term}%"))
 
         if active_only:
             query = query.filter(Disease.is_active == True)

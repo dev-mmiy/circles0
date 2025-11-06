@@ -9,10 +9,10 @@ from uuid import UUID
 from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.models.user import User
 from app.models.disease import Disease, UserDisease
-from app.schemas.user import UserCreate, UserUpdate
+from app.models.user import User
 from app.schemas.disease import UserDiseaseCreate, UserDiseaseUpdate
+from app.schemas.user import UserCreate, UserUpdate
 
 
 class UserService:
@@ -69,7 +69,7 @@ class UserService:
             db.query(UserDisease)
             .options(
                 joinedload(UserDisease.disease).joinedload(Disease.translations),
-                joinedload(UserDisease.status)
+                joinedload(UserDisease.status),
             )
             .filter(UserDisease.user_id == user_id)
             .filter(UserDisease.is_active == True)
@@ -114,31 +114,29 @@ class UserService:
         db.add(user)
         db.commit()
         db.refresh(user)
-        
+
         return user
 
     @staticmethod
-    def update_user(
-        db: Session, user: User, user_data: UserUpdate
-    ) -> User:
+    def update_user(db: Session, user: User, user_data: UserUpdate) -> User:
         """
         Update user profile.
-        
+
         Args:
             db: Database session
             user: User instance to update
             user_data: Update data
-            
+
         Returns:
             Updated user instance
         """
         # Update user fields
         for field, value in user_data.model_dump(exclude_unset=True).items():
             setattr(user, field, value)
-        
+
         db.commit()
         db.refresh(user)
-        
+
         return user
 
     @staticmethod
@@ -156,9 +154,7 @@ class UserService:
         db.commit()
 
     @staticmethod
-    def add_disease_to_user(
-        db: Session, user_id: UUID, disease_id: int
-    ) -> UserDisease:
+    def add_disease_to_user(db: Session, user_id: UUID, disease_id: int) -> UserDisease:
         """
         Add a disease to user's profile (basic version for backward compatibility).
 
@@ -265,7 +261,7 @@ class UserService:
                 existing.is_active = True
                 # Update with new data
                 for field, value in disease_data.model_dump(exclude_unset=True).items():
-                    if field != 'disease_id':  # Don't update disease_id
+                    if field != "disease_id":  # Don't update disease_id
                         setattr(existing, field, value)
                 db.commit()
 
@@ -274,8 +270,10 @@ class UserService:
                 user_disease = (
                     db.query(UserDisease)
                     .options(
-                        joinedload(UserDisease.disease).joinedload(Disease.translations),
-                        joinedload(UserDisease.status)
+                        joinedload(UserDisease.disease).joinedload(
+                            Disease.translations
+                        ),
+                        joinedload(UserDisease.status),
                     )
                     .filter(UserDisease.id == existing.id)
                     .first()
@@ -284,8 +282,7 @@ class UserService:
 
         # Create new relationship with detailed information
         user_disease = UserDisease(
-            user_id=user_id,
-            **disease_data.model_dump(exclude_unset=True)
+            user_id=user_id, **disease_data.model_dump(exclude_unset=True)
         )
         db.add(user_disease)
         db.commit()
@@ -297,7 +294,7 @@ class UserService:
             db.query(UserDisease)
             .options(
                 joinedload(UserDisease.disease).joinedload(Disease.translations),
-                joinedload(UserDisease.status)
+                joinedload(UserDisease.status),
             )
             .filter(UserDisease.id == user_disease.id)
             .first()
@@ -395,7 +392,7 @@ class UserService:
             db.query(UserDisease)
             .options(
                 joinedload(UserDisease.disease).joinedload(Disease.translations),
-                joinedload(UserDisease.status)
+                joinedload(UserDisease.status),
             )
             .filter(
                 UserDisease.id == user_disease_id,
@@ -407,7 +404,10 @@ class UserService:
 
     @staticmethod
     def update_user_disease_by_id(
-        db: Session, user_id: UUID, user_disease_id: int, disease_data: UserDiseaseUpdate
+        db: Session,
+        user_id: UUID,
+        user_disease_id: int,
+        disease_data: UserDiseaseUpdate,
     ) -> UserDisease:
         """
         Update user's disease information by UserDisease ID.
@@ -454,7 +454,7 @@ class UserService:
             db.query(UserDisease)
             .options(
                 joinedload(UserDisease.disease).joinedload(Disease.translations),
-                joinedload(UserDisease.status)
+                joinedload(UserDisease.status),
             )
             .filter(UserDisease.id == user_disease_id)
             .first()
@@ -463,9 +463,7 @@ class UserService:
         return user_disease
 
     @staticmethod
-    def remove_disease_from_user(
-        db: Session, user_id: UUID, disease_id: int
-    ) -> None:
+    def remove_disease_from_user(db: Session, user_id: UUID, disease_id: int) -> None:
         """
         Remove a disease from user's profile (soft delete) by Disease ID.
 
@@ -538,21 +536,19 @@ class UserService:
     ) -> bool:
         """
         Check if current user can view the profile.
-        
+
         Args:
             user: User whose profile is being accessed
             current_user: Current authenticated user (from Auth0)
-            
+
         Returns:
             True if profile is visible, False otherwise
-            
+
         Raises:
             HTTPException: If profile is not visible
         """
-        is_own_profile = (
-            current_user and current_user.get("sub") == user.auth0_id
-        )
-        
+        is_own_profile = current_user and current_user.get("sub") == user.auth0_id
+
         if user.profile_visibility == "private":
             if not is_own_profile:
                 raise HTTPException(
@@ -566,6 +562,5 @@ class UserService:
                     detail="This profile is only visible to authenticated users",
                 )
         # 'public' profiles are visible to everyone
-        
-        return True
 
+        return True
