@@ -142,6 +142,30 @@ def upgrade() -> None:
         sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True),
     )
 
+    # Alter existing columns to support Auth0 (drop old authentication fields)
+    # Make hashed_password nullable for Auth0 users
+    op.alter_column(
+        "users",
+        "hashed_password",
+        existing_type=sa.String(length=1024),
+        nullable=True,
+    )
+    # Make is_superuser and is_verified nullable and have defaults
+    op.alter_column(
+        "users",
+        "is_superuser",
+        existing_type=sa.Boolean(),
+        nullable=True,
+        server_default="false",
+    )
+    op.alter_column(
+        "users",
+        "is_verified",
+        existing_type=sa.Boolean(),
+        nullable=True,
+        server_default="false",
+    )
+
     # Create indexes for new user fields
     op.create_index(op.f("ix_users_member_id"), "users", ["member_id"], unique=True)
     op.create_index(op.f("ix_users_auth0_id"), "users", ["auth0_id"], unique=True)
