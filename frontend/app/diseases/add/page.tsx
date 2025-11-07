@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { DiseaseForm } from '@/components/DiseaseForm';
-import { UserDiseaseCreate } from '@/lib/api/users';
+import { UserDiseaseCreate, UserDiseaseUpdate } from '@/lib/api/users';
 
 export default function AddDiseasePage() {
   const router = useRouter();
@@ -14,18 +14,22 @@ export default function AddDiseasePage() {
     categories,
     statuses,
     addDisease,
-    searchDiseases,
-    loadingDiseases,
+    searchDiseasesByName,
+    loadingMasterData,
   } = useDisease();
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (data: UserDiseaseCreate) => {
+  const handleSubmit = async (data: UserDiseaseCreate | UserDiseaseUpdate) => {
     try {
       setError(null);
       setSubmitting(true);
-      await addDisease(data);
+      // Ensure disease_id is present for create mode
+      if (!('disease_id' in data) || !data.disease_id) {
+        throw new Error('疾患を選択してください');
+      }
+      await addDisease(data as UserDiseaseCreate);
       router.push('/profile/me');
     } catch (err) {
       console.error('Failed to add disease:', err);
@@ -38,7 +42,7 @@ export default function AddDiseasePage() {
     router.push('/profile/me');
   };
 
-  if (loadingDiseases) {
+  if (loadingMasterData) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -76,7 +80,7 @@ export default function AddDiseasePage() {
             statuses={statuses}
             onSubmit={handleSubmit}
             onCancel={handleCancel}
-            onSearchDiseases={searchDiseases}
+            onSearchDiseases={searchDiseasesByName}
           />
         </div>
 
