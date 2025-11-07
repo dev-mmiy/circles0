@@ -107,3 +107,23 @@ async def info():
         "environment": ENVIRONMENT,
         "log_level": LOG_LEVEL,
     }
+
+
+@app.get("/config-check")
+async def config_check():
+    """Check if required environment variables are configured (without exposing values)."""
+    auth0_domain = os.getenv("AUTH0_DOMAIN")
+    auth0_audience = os.getenv("AUTH0_AUDIENCE")
+    database_url = os.getenv("DATABASE_URL")
+
+    return {
+        "environment": ENVIRONMENT,
+        "config_status": {
+            "auth0_domain_configured": bool(auth0_domain),
+            "auth0_domain_value": auth0_domain[:20] + "..." if auth0_domain else None,
+            "auth0_audience_configured": bool(auth0_audience),
+            "auth0_audience_value": auth0_audience[:30] + "..." if auth0_audience else None,
+            "database_url_configured": bool(database_url),
+        },
+        "timestamp": datetime.utcnow().isoformat(),
+    }
