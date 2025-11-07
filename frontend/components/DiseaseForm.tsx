@@ -67,15 +67,15 @@ export function DiseaseForm({
 
   // Get disease name by ID
   const getDiseaseName = (diseaseId: number): string => {
-    const disease = diseases.find((d) => d.id === diseaseId);
-    const jaTranslation = disease?.translations?.find((t) => t.language_code === 'ja');
+    const disease = diseases.find(d => d.id === diseaseId);
+    const jaTranslation = disease?.translations?.find(t => t.language_code === 'ja');
     return jaTranslation?.translated_name || disease?.name || `疾患 ID: ${diseaseId}`;
   };
 
   // Get status name by ID
   const getStatusName = (status: DiseaseStatus): string => {
     if (status.translations && status.translations.length > 0) {
-      const jaTranslation = status.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = status.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -86,10 +86,10 @@ export function DiseaseForm({
 
   // Get category name
   const getCategoryName = (categoryId: number): string => {
-    const category = categories.find((c) => c.id === categoryId);
+    const category = categories.find(c => c.id === categoryId);
     if (!category) return '';
 
-    const jaTranslation = category.translations?.find((t) => t.language_code === 'ja');
+    const jaTranslation = category.translations?.find(t => t.language_code === 'ja');
     return jaTranslation?.translated_name || category.category_code;
   };
 
@@ -97,7 +97,7 @@ export function DiseaseForm({
   const getDiseasesByCategory = () => {
     const grouped: { [key: number]: Disease[] } = {};
 
-    diseases.forEach((disease) => {
+    diseases.forEach(disease => {
       // Disease.category can be either a number (category_id) or an object with id
       let categoryId: number | null = null;
 
@@ -125,18 +125,18 @@ export function DiseaseForm({
     if (categoryId === 'other') {
       setSelectedCategoryId(null);
       setIsOther(true);
-      setFormData((prev) => ({ ...prev, disease_id: undefined }));
+      setFormData(prev => ({ ...prev, disease_id: undefined }));
     } else {
       setSelectedCategoryId(categoryId);
       setIsOther(false);
       setOtherDiseaseName('');
-      setFormData((prev) => ({ ...prev, disease_id: undefined }));
+      setFormData(prev => ({ ...prev, disease_id: undefined }));
     }
   };
 
   // Select disease
   const selectDisease = (diseaseId: number) => {
-    setFormData((prev) => ({ ...prev, disease_id: diseaseId }));
+    setFormData(prev => ({ ...prev, disease_id: diseaseId }));
   };
 
   // Handle form field changes
@@ -147,12 +147,12 @@ export function DiseaseForm({
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (type === 'number') {
       const numValue = value ? parseInt(value, 10) : undefined;
-      setFormData((prev) => ({ ...prev, [name]: numValue }));
+      setFormData(prev => ({ ...prev, [name]: numValue }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value || undefined }));
+      setFormData(prev => ({ ...prev, [name]: value || undefined }));
     }
   };
 
@@ -178,7 +178,9 @@ export function DiseaseForm({
       // If "Other" is selected, add the other disease name to notes
       const submitData = { ...formData };
       if (isOther && otherDiseaseName) {
-        submitData.notes = `その他の疾患: ${otherDiseaseName}${submitData.notes ? '\n' + submitData.notes : ''}`;
+        submitData.notes = `その他の疾患: ${otherDiseaseName}${
+          submitData.notes ? '\n' + submitData.notes : ''
+        }`;
       }
 
       await onSubmit(submitData);
@@ -192,7 +194,7 @@ export function DiseaseForm({
 
   const diseasesByCategory = getDiseasesByCategory();
   const sortedCategories = [...categories]
-    .filter((cat) => !cat.parent_category_id) // Only top-level categories
+    .filter(cat => !cat.parent_category_id) // Only top-level categories
     .sort((a, b) => a.display_order - b.display_order);
 
   return (
@@ -236,14 +238,16 @@ export function DiseaseForm({
                         <span className="text-gray-400 mr-3 select-none">
                           {isLastCategory ? '└─' : '├─'}
                         </span>
-                        <span className="text-gray-900">
-                          {getCategoryName(category.id)}
-                        </span>
+                        <span className="text-gray-900">{getCategoryName(category.id)}</span>
                       </div>
                       {isSelected && (
                         <span className="text-blue-600">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            <path
+                              fillRule="evenodd"
+                              d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                              clipRule="evenodd"
+                            />
                           </svg>
                         </span>
                       )}
@@ -268,7 +272,11 @@ export function DiseaseForm({
                   {isOther && (
                     <span className="text-blue-600">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        <path
+                          fillRule="evenodd"
+                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
                       </svg>
                     </span>
                   )}
@@ -284,11 +292,9 @@ export function DiseaseForm({
                 2. 疾患を選択してください
               </label>
               <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
-                {(diseasesByCategory[selectedCategoryId] || []).map((disease) => {
+                {(diseasesByCategory[selectedCategoryId] || []).map(disease => {
                   const isSelected = (formData as UserDiseaseCreate).disease_id === disease.id;
-                  const jaTranslation = disease.translations?.find(
-                    (t) => t.language_code === 'ja'
-                  );
+                  const jaTranslation = disease.translations?.find(t => t.language_code === 'ja');
 
                   return (
                     <button
@@ -318,7 +324,11 @@ export function DiseaseForm({
                         {isSelected && (
                           <span className="ml-2 text-blue-600">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                              <path
+                                fillRule="evenodd"
+                                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
                             </svg>
                           </span>
                         )}
@@ -339,14 +349,12 @@ export function DiseaseForm({
               <input
                 type="text"
                 value={otherDiseaseName}
-                onChange={(e) => setOtherDiseaseName(e.target.value)}
+                onChange={e => setOtherDiseaseName(e.target.value)}
                 placeholder="疾患名を入力してください"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required={isOther}
               />
-              <p className="mt-2 text-sm text-gray-600">
-                ※ 入力された疾患名は備考欄に記録されます
-              </p>
+              <p className="mt-2 text-sm text-gray-600">※ 入力された疾患名は備考欄に記録されます</p>
             </div>
           )}
 
@@ -354,7 +362,10 @@ export function DiseaseForm({
           {!isOther && (formData as UserDiseaseCreate).disease_id && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-gray-700">
-                選択された疾患: <span className="font-semibold">{getDiseaseName((formData as UserDiseaseCreate).disease_id)}</span>
+                選択された疾患:{' '}
+                <span className="font-semibold">
+                  {getDiseaseName((formData as UserDiseaseCreate).disease_id)}
+                </span>
               </p>
             </div>
           )}
@@ -368,7 +379,10 @@ export function DiseaseForm({
         <div className="grid grid-cols-2 gap-4">
           {/* Diagnosis Date */}
           <div>
-            <label htmlFor="diagnosis_date" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="diagnosis_date"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               診断日
             </label>
             <input
@@ -383,7 +397,10 @@ export function DiseaseForm({
 
           {/* Severity Level */}
           <div>
-            <label htmlFor="severity_level" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="severity_level"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               重症度レベル (1-5)
             </label>
             <select
@@ -404,7 +421,10 @@ export function DiseaseForm({
 
           {/* Diagnosis Doctor */}
           <div>
-            <label htmlFor="diagnosis_doctor" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="diagnosis_doctor"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               担当医
             </label>
             <input
@@ -420,7 +440,10 @@ export function DiseaseForm({
 
           {/* Diagnosis Hospital */}
           <div>
-            <label htmlFor="diagnosis_hospital" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="diagnosis_hospital"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               医療機関
             </label>
             <input
@@ -447,7 +470,7 @@ export function DiseaseForm({
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="">選択してください</option>
-              {statuses.map((status) => (
+              {statuses.map(status => (
                 <option key={status.id} value={status.id}>
                   {getStatusName(status)}
                 </option>

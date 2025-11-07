@@ -10,10 +10,12 @@ export function getApiBaseUrl(): string {
   if (typeof window !== 'undefined') {
     return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:8000'
-      : `https://${process.env.NEXT_PUBLIC_API_URL || 'disease-community-api-508246122017.asia-northeast1.run.app'}`;
+      : `https://${
+          process.env.NEXT_PUBLIC_API_URL ||
+          'disease-community-api-508246122017.asia-northeast1.run.app'
+        }`;
   }
 
   // In server-side rendering, use environment variable or default
   return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 }
-

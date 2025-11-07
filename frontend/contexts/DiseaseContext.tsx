@@ -168,7 +168,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       const newDisease = await addUserDiseaseDetailed(accessToken, data);
 
       // Update local state
-      setUserDiseases((prev) => [...prev, newDisease]);
+      setUserDiseases(prev => [...prev, newDisease]);
 
       return newDisease;
     } catch (err) {
@@ -187,9 +187,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       const updatedDisease = await updateUserDisease(accessToken, userDiseaseId, data);
 
       // Update local state
-      setUserDiseases((prev) =>
-        prev.map((d) => (d.id === userDiseaseId ? updatedDisease : d))
-      );
+      setUserDiseases(prev => prev.map(d => (d.id === userDiseaseId ? updatedDisease : d)));
 
       return updatedDisease;
     } catch (err) {
@@ -205,7 +203,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       await removeUserDisease(accessToken, diseaseId);
 
       // Update local state
-      setUserDiseases((prev) => prev.filter((d) => d.id !== diseaseId));
+      setUserDiseases(prev => prev.filter(d => d.id !== diseaseId));
     } catch (err) {
       console.error('Error removing disease:', err);
       throw err;
@@ -214,17 +212,17 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
 
   // Get disease by ID
   const getDiseaseById = (diseaseId: number): Disease | undefined => {
-    return diseases.find((d) => d.id === diseaseId);
+    return diseases.find(d => d.id === diseaseId);
   };
 
   // Get category by ID
   const getCategoryById = (categoryId: number): DiseaseCategory | undefined => {
-    return categories.find((c) => c.id === categoryId);
+    return categories.find(c => c.id === categoryId);
   };
 
   // Get status by ID
   const getStatusById = (statusId: number): DiseaseStatus | undefined => {
-    return statuses.find((s) => s.id === statusId);
+    return statuses.find(s => s.id === statusId);
   };
 
   const value: DiseaseContextType = {

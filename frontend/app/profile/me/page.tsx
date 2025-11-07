@@ -14,7 +14,8 @@ import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user, loading: userLoading } = useUser();
-  const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } = useDisease();
+  const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } =
+    useDisease();
   const router = useRouter();
 
   // Edit modal state
@@ -115,11 +116,7 @@ export default function MyProfilePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Card */}
         <div className="mb-6">
-          <UserProfileCard
-            user={user}
-            showPrivateInfo={true}
-            onEdit={handleEdit}
-          />
+          <UserProfileCard user={user} showPrivateInfo={true} onEdit={handleEdit} />
         </div>
 
         {/* User Diseases */}
@@ -146,24 +143,24 @@ export default function MyProfilePage() {
               onDelete={handleDeleteDisease}
               loading={loadingUserDiseases}
               editingDiseaseId={editingDisease?.id || null}
-              editForm={editingDisease && isEditModalOpen && (
-                <EditDiseaseForm
-                  userDisease={editingDisease}
-                  statuses={statuses}
-                  onSave={handleSaveDisease}
-                  onCancel={handleCloseEditModal}
-                />
-              )}
+              editForm={
+                editingDisease &&
+                isEditModalOpen && (
+                  <EditDiseaseForm
+                    userDisease={editingDisease}
+                    statuses={statuses}
+                    onSave={handleSaveDisease}
+                    onCancel={handleCloseEditModal}
+                  />
+                )
+              }
             />
           )}
         </div>
 
         {/* Back to Home */}
         <div className="mt-8 text-center">
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-700 hover:underline"
-          >
+          <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
             ← ホームに戻る
           </Link>
         </div>

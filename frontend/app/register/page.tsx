@@ -115,7 +115,10 @@ export default function RegisterPage() {
 
             {/* Profile Visibility */}
             <div>
-              <label htmlFor="profile_visibility" className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                htmlFor="profile_visibility"
+                className="block text-sm font-medium text-gray-700 mb-1"
+              >
                 プロフィール公開設定 <span className="text-red-500">*</span>
               </label>
               <select
@@ -144,9 +147,7 @@ export default function RegisterPage() {
                     alt="Profile"
                     className="w-16 h-16 rounded-full object-cover"
                   />
-                  <p className="text-sm text-gray-500">
-                    Auth0から取得した画像を使用します
-                  </p>
+                  <p className="text-sm text-gray-500">Auth0から取得した画像を使用します</p>
                 </div>
               </div>
             )}

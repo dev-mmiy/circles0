@@ -53,9 +53,9 @@ export function EditDiseaseModal({
 
   // Get status name by ID
   const getStatusName = (statusId: number): string => {
-    const status = statuses.find((s) => s.id === statusId);
+    const status = statuses.find(s => s.id === statusId);
     if (!status) return 'Unknown';
-    const jaTranslation = status.translations?.find((t) => t.language_code === 'ja');
+    const jaTranslation = status.translations?.find(t => t.language_code === 'ja');
     return jaTranslation?.translated_name || status.status_code;
   };
 
@@ -67,13 +67,13 @@ export function EditDiseaseModal({
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (type === 'number') {
-      setFormData((prev) => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
+      setFormData(prev => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
     } else if (name === 'status_id') {
-      setFormData((prev) => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
+      setFormData(prev => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value || undefined }));
+      setFormData(prev => ({ ...prev, [name]: value || undefined }));
     }
   };
 
@@ -118,9 +118,7 @@ export function EditDiseaseModal({
               </svg>
             </button>
           </div>
-          <div className="text-lg font-semibold text-blue-600">
-            {getDiseaseName()}
-          </div>
+          <div className="text-lg font-semibold text-blue-600">{getDiseaseName()}</div>
         </div>
 
         {/* Modal Body */}
@@ -140,7 +138,7 @@ export function EditDiseaseModal({
               <option value="">選択してください</option>
               {statuses
                 .sort((a, b) => a.display_order - b.display_order)
-                .map((status) => (
+                .map(status => (
                   <option key={status.id} value={status.id}>
                     {getStatusName(status.id)}
                   </option>
@@ -150,7 +148,10 @@ export function EditDiseaseModal({
 
           {/* Diagnosis Date */}
           <div>
-            <label htmlFor="diagnosis_date" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="diagnosis_date"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               診断日
             </label>
             <input
@@ -205,7 +206,10 @@ export function EditDiseaseModal({
 
           {/* Severity Level */}
           <div>
-            <label htmlFor="severity_level" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="severity_level"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               重症度（1〜5）
             </label>
             <div className="flex items-center space-x-4">

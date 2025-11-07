@@ -11,7 +11,9 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
   // Auth0設定値（環境変数から取得、フォールバックとしてハードコードされた値を使用）
   const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || 'dev-2mqgvitlgxdwl5ea.us.auth0.com';
   const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || 'YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD';
-  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI || 'https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback';
+  const redirectUri =
+    process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI ||
+    'https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback';
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com';
 
   console.log('Auth0 Environment Variables:', {
@@ -24,7 +26,11 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
   // 設定値が不足している場合はAuth0を無効化
   if (!domain || !clientId || !redirectUri) {
     console.warn('Auth0 configuration missing. Authentication will be disabled.');
-    console.warn('Missing values:', { domain: !!domain, clientId: !!clientId, redirectUri: !!redirectUri });
+    console.warn('Missing values:', {
+      domain: !!domain,
+      clientId: !!clientId,
+      redirectUri: !!redirectUri,
+    });
     return <>{children}</>;
   }
 
@@ -48,7 +54,7 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
         useRefreshTokens={false}
         cacheLocation="memory"
         skipRedirectCallback={false}
-        onRedirectCallback={(appState) => {
+        onRedirectCallback={appState => {
           console.log('Auth0 redirect callback:', appState);
           // Handle redirect after login - use push instead of replace to avoid state issues
           window.location.href = appState?.returnTo || '/';

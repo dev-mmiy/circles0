@@ -16,12 +16,7 @@ interface EditDiseaseFormProps {
   onCancel: () => void;
 }
 
-export function EditDiseaseForm({
-  userDisease,
-  statuses,
-  onSave,
-  onCancel,
-}: EditDiseaseFormProps) {
+export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: EditDiseaseFormProps) {
   // Form state
   const [formData, setFormData] = useState<UserDiseaseUpdate>({
     status_id: userDisease.status_id,
@@ -51,9 +46,9 @@ export function EditDiseaseForm({
 
   // Get status name by ID
   const getStatusName = (statusId: number): string => {
-    const status = statuses.find((s) => s.id === statusId);
+    const status = statuses.find(s => s.id === statusId);
     if (!status) return 'Unknown';
-    const jaTranslation = status.translations?.find((t) => t.language_code === 'ja');
+    const jaTranslation = status.translations?.find(t => t.language_code === 'ja');
     return jaTranslation?.translated_name || status.status_code;
   };
 
@@ -65,13 +60,13 @@ export function EditDiseaseForm({
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else if (type === 'number') {
-      setFormData((prev) => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
+      setFormData(prev => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
     } else if (name === 'status_id') {
-      setFormData((prev) => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
+      setFormData(prev => ({ ...prev, [name]: value ? parseInt(value, 10) : undefined }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value || undefined }));
+      setFormData(prev => ({ ...prev, [name]: value || undefined }));
     }
   };
 
@@ -116,7 +111,7 @@ export function EditDiseaseForm({
             <option value="">選択してください</option>
             {statuses
               .sort((a, b) => a.display_order - b.display_order)
-              .map((status) => (
+              .map(status => (
                 <option key={status.id} value={status.id}>
                   {getStatusName(status.id)}
                 </option>
@@ -143,7 +138,10 @@ export function EditDiseaseForm({
         <div className="grid grid-cols-2 gap-4">
           {/* Diagnosis Doctor */}
           <div>
-            <label htmlFor="diagnosis_doctor" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="diagnosis_doctor"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               担当医
             </label>
             <input
@@ -160,7 +158,10 @@ export function EditDiseaseForm({
 
           {/* Diagnosis Hospital */}
           <div>
-            <label htmlFor="diagnosis_hospital" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="diagnosis_hospital"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               医療機関
             </label>
             <input

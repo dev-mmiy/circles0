@@ -44,9 +44,9 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
-      setFormData((prev) => ({ ...prev, [name]: checked }));
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData((prev) => ({ ...prev, [name]: value || undefined }));
+      setFormData(prev => ({ ...prev, [name]: value || undefined }));
     }
   };
 
@@ -243,7 +243,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
         <div className="space-y-4">
           {/* Preferred Language */}
           <div>
-            <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="preferred_language"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               優先言語
             </label>
             <select
@@ -263,7 +266,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Profile Visibility */}
           <div>
-            <label htmlFor="profile_visibility" className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="profile_visibility"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               プロフィール公開設定
             </label>
             <select

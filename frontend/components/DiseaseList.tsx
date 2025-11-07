@@ -75,7 +75,7 @@ export function DiseaseList({
 
   return (
     <div className="space-y-4">
-      {diseases.map((disease) => (
+      {diseases.map(disease => (
         <div
           key={disease.id}
           className="bg-white shadow rounded-lg hover:shadow-md transition-shadow"
@@ -220,9 +220,7 @@ export function DiseaseList({
 
           {/* Inline Edit Form */}
           {editingDiseaseId === disease.id && editForm && (
-            <div className="border-t bg-gray-50">
-              {editForm}
-            </div>
+            <div className="border-t bg-gray-50">{editForm}</div>
           )}
         </div>
       ))}

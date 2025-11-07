@@ -9,7 +9,9 @@ import { createOrGetUser } from '@/lib/api/users';
 export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [authState, setAuthState] = useState<'loading' | 'authenticated' | 'unauthenticated' | 'error'>('loading');
+  const [authState, setAuthState] = useState<
+    'loading' | 'authenticated' | 'unauthenticated' | 'error'
+  >('loading');
   const [userCreated, setUserCreated] = useState(false);
 
   // ユーザー作成（初回ログイン時）
@@ -85,7 +87,7 @@ export default function AuthButton() {
   const handleLogin = () => {
     // Clear any existing Auth0 cache before login to prevent state issues
     localStorage.removeItem(`@@auth0spajs@@::${process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID}`);
-    
+
     loginWithRedirect({
       appState: {
         returnTo: window.location.pathname,
@@ -137,7 +139,10 @@ export default function AuthButton() {
   if (authState === 'authenticated' && user) {
     return (
       <div className="flex items-center space-x-4">
-        <Link href="/profile/me" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+        <Link
+          href="/profile/me"
+          className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+        >
           {user.picture && (
             <Image
               src={user.picture}
@@ -147,9 +152,7 @@ export default function AuthButton() {
               className="w-8 h-8 rounded-full"
             />
           )}
-          <span className="text-sm text-gray-700">
-            {user.name || user.email}
-          </span>
+          <span className="text-sm text-gray-700">{user.name || user.email}</span>
         </Link>
         <button
           onClick={handleLogout}
@@ -173,7 +176,7 @@ export default function AuthButton() {
         </div>
       );
     }
-    
+
     console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">

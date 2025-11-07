@@ -35,7 +35,7 @@ export function CategorySelector({
   // Get category name (with translation if available)
   const getCategoryName = (category: DiseaseCategory): string => {
     if (category.translations && category.translations.length > 0) {
-      const jaTranslation = category.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = category.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -46,14 +46,14 @@ export function CategorySelector({
 
   // Build hierarchical category tree
   const buildCategoryTree = (): DiseaseCategory[] => {
-    const rootCategories = categories.filter((c) => !c.parent_category_id);
+    const rootCategories = categories.filter(c => !c.parent_category_id);
     return rootCategories.sort((a, b) => a.display_order - b.display_order);
   };
 
   // Get child categories
   const getChildCategories = (parentId: number): DiseaseCategory[] => {
     return categories
-      .filter((c) => c.parent_category_id === parentId)
+      .filter(c => c.parent_category_id === parentId)
       .sort((a, b) => a.display_order - b.display_order);
   };
 
@@ -70,7 +70,7 @@ export function CategorySelector({
 
     // Add child categories
     const children = getChildCategories(category.id);
-    children.forEach((child) => {
+    children.forEach(child => {
       options.push(...renderCategoryOption(child, level + 1));
     });
 
@@ -102,7 +102,7 @@ export function CategorySelector({
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
         <option value="">{placeholder}</option>
-        {rootCategories.map((category) => renderCategoryOption(category))}
+        {rootCategories.map(category => renderCategoryOption(category))}
       </select>
     </div>
   );
@@ -122,7 +122,7 @@ export function CategoryBreadcrumb({ categories, categoryId }: CategoryBreadcrum
   // Get category name
   const getCategoryName = (category: DiseaseCategory): string => {
     if (category.translations && category.translations.length > 0) {
-      const jaTranslation = category.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = category.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -133,7 +133,7 @@ export function CategoryBreadcrumb({ categories, categoryId }: CategoryBreadcrum
 
   // Build breadcrumb path
   const buildBreadcrumb = (id: number): DiseaseCategory[] => {
-    const category = categories.find((c) => c.id === id);
+    const category = categories.find(c => c.id === id);
     if (!category) return [];
 
     if (category.parent_category_id) {
@@ -171,9 +171,7 @@ export function CategoryBreadcrumb({ categories, categoryId }: CategoryBreadcrum
             )}
             <span
               className={`text-sm ${
-                index === breadcrumb.length - 1
-                  ? 'font-medium text-gray-700'
-                  : 'text-gray-500'
+                index === breadcrumb.length - 1 ? 'font-medium text-gray-700' : 'text-gray-500'
               }`}
             >
               {getCategoryName(category)}

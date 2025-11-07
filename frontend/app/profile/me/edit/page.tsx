@@ -79,11 +79,7 @@ export default function EditProfilePage() {
           </div>
 
           {/* Edit Form */}
-          <UserProfileEditForm
-            user={user}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
+          <UserProfileEditForm user={user} onSave={handleSave} onCancel={handleCancel} />
         </div>
       </div>
     </div>

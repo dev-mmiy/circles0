@@ -161,7 +161,7 @@ export async function getCurrentUserProfile(accessToken: string): Promise<UserPr
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -184,7 +184,7 @@ export async function updateCurrentUserProfile(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
@@ -245,7 +245,7 @@ export async function createUserProfile(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
@@ -294,7 +294,7 @@ export async function deleteCurrentUser(accessToken: string): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -308,13 +308,11 @@ export async function deleteCurrentUser(accessToken: string): Promise<void> {
 /**
  * Get all diseases for current user with detailed information
  */
-export async function getUserDiseasesDetailed(
-  accessToken: string
-): Promise<UserDiseaseDetailed[]> {
+export async function getUserDiseasesDetailed(accessToken: string): Promise<UserDiseaseDetailed[]> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -337,7 +335,7 @@ export async function addUserDiseaseDetailed(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
@@ -361,7 +359,7 @@ export async function getUserDiseaseDetail(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases/${userDiseaseId}`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -385,7 +383,7 @@ export async function updateUserDisease(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases/${userDiseaseId}`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(data),
@@ -402,14 +400,11 @@ export async function updateUserDisease(
 /**
  * Remove disease from user's profile
  */
-export async function removeUserDisease(
-  accessToken: string,
-  diseaseId: number
-): Promise<void> {
+export async function removeUserDisease(accessToken: string, diseaseId: number): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases/${diseaseId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -419,4 +414,3 @@ export async function removeUserDisease(
     throw new Error(error.detail || 'Failed to remove disease');
   }
 }
-

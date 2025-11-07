@@ -109,12 +109,8 @@ export default function ComponentTestPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-gray-800 mb-4">
-            コンポーネントテストページ
-          </h1>
-          <p className="text-gray-600 mb-6">
-            このページを表示するにはログインが必要です
-          </p>
+          <h1 className="text-3xl font-bold text-gray-800 mb-4">コンポーネントテストページ</h1>
+          <p className="text-gray-600 mb-6">このページを表示するにはログインが必要です</p>
           <button
             onClick={() => loginWithRedirect()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -129,9 +125,7 @@ export default function ComponentTestPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-8 px-4">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">
-          コンポーネントテストページ
-        </h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-8">コンポーネントテストページ</h1>
 
         {/* Master Data Info */}
         <div className="bg-white shadow rounded-lg p-6 mb-8">
@@ -159,7 +153,7 @@ export default function ComponentTestPage() {
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-700 mb-3">疾患ステータスバッジ</h3>
             <div className="flex flex-wrap gap-2">
-              {statuses.map((status) => (
+              {statuses.map(status => (
                 <DiseaseStatusBadge key={status.id} status={status} size="md" />
               ))}
             </div>
@@ -168,7 +162,7 @@ export default function ComponentTestPage() {
           <div>
             <h3 className="text-lg font-semibold text-gray-700 mb-3">重症度バッジ</h3>
             <div className="flex flex-wrap gap-2">
-              {[1, 2, 3, 4, 5].map((level) => (
+              {[1, 2, 3, 4, 5].map(level => (
                 <SeverityBadge key={level} level={level} size="md" />
               ))}
             </div>

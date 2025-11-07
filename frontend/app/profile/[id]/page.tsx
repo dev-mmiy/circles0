@@ -19,7 +19,7 @@ export default function PublicProfilePage() {
     const fetchProfile = async () => {
       try {
         let token: string | undefined;
-        
+
         // Try to get access token if authenticated
         if (isAuthenticated) {
           try {
@@ -115,9 +115,7 @@ export default function PublicProfilePage() {
             {/* Basic Info */}
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
-              {profile.username && (
-                <p className="text-gray-600 mt-1">@{profile.username}</p>
-              )}
+              {profile.username && <p className="text-gray-600 mt-1">@{profile.username}</p>}
               <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
                 {profile.country && <span>📍 {profile.country.toUpperCase()}</span>}
                 <span>📅 登録: {new Date(profile.created_at).toLocaleDateString('ja-JP')}</span>
@@ -139,7 +137,7 @@ export default function PublicProfilePage() {
           <div className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">登録疾患</h2>
             <div className="space-y-2">
-              {profile.diseases.map((disease) => (
+              {profile.diseases.map(disease => (
                 <div
                   key={disease.id}
                   className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
@@ -154,10 +152,7 @@ export default function PublicProfilePage() {
 
         {/* Back to Home */}
         <div className="mt-8 text-center">
-          <Link
-            href="/"
-            className="text-blue-600 hover:text-blue-700 hover:underline"
-          >
+          <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
             ← ホームに戻る
           </Link>
         </div>

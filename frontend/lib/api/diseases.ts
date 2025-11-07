@@ -112,7 +112,7 @@ export async function getCurrentUserDiseases(accessToken: string): Promise<Disea
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases`, {
     method: 'GET',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -135,7 +135,7 @@ export async function addDiseaseToUser(
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases/${diseaseId}`, {
     method: 'POST',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -151,14 +151,11 @@ export async function addDiseaseToUser(
 /**
  * Remove a disease from current user's profile
  */
-export async function removeDiseaseFromUser(
-  diseaseId: number,
-  accessToken: string
-): Promise<void> {
+export async function removeDiseaseFromUser(diseaseId: number, accessToken: string): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/diseases/${diseaseId}`, {
     method: 'DELETE',
     headers: {
-      'Authorization': `Bearer ${accessToken}`,
+      Authorization: `Bearer ${accessToken}`,
       'Content-Type': 'application/json',
     },
   });
@@ -280,4 +277,3 @@ export async function getDiseaseTranslation(
 
   return response.json();
 }
-

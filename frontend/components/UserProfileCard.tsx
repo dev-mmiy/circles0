@@ -56,9 +56,7 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
           )}
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-white">{user.nickname}</h2>
-            {user.username && (
-              <p className="text-blue-100">@{user.username}</p>
-            )}
+            {user.username && <p className="text-blue-100">@{user.username}</p>}
             <p className="text-sm text-blue-200 mt-1">会員ID: {user.member_id}</p>
           </div>
           {onEdit && (

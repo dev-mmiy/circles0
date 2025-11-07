@@ -75,7 +75,7 @@ export function DiseaseStatusBadge({ status, statusCode, size = 'md' }: DiseaseS
   let label = statusLabels[code] || code;
   if (status?.translations && status.translations.length > 0) {
     // Try to find Japanese translation first
-    const jaTranslation = status.translations.find((t) => t.language_code === 'ja');
+    const jaTranslation = status.translations.find(t => t.language_code === 'ja');
     if (jaTranslation) {
       label = jaTranslation.translated_name;
     } else {
