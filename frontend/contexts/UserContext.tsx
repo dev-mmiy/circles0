@@ -7,6 +7,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useRouter } from 'next/navigation';
 import { UserProfile } from '@/lib/api/users';
 import { getCurrentUserProfile } from '@/lib/api/users';
 
@@ -26,6 +27,7 @@ interface UserProviderProps {
 
 export function UserProvider({ children }: UserProviderProps) {
   const { isAuthenticated, getAccessTokenSilently, isLoading: auth0Loading } = useAuth0();
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,7 +48,17 @@ export function UserProvider({ children }: UserProviderProps) {
       setUser(userProfile);
     } catch (err) {
       console.error('Error fetching user profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to fetch user profile');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch user profile';
+
+      // If user doesn't exist (404), redirect to registration
+      if (errorMessage.includes('not found') || errorMessage.includes('404')) {
+        console.log('User profile not found, redirecting to registration...');
+        router.push('/register');
+        setLoading(false);
+        return;
+      }
+
+      setError(errorMessage);
       setUser(null);
     } finally {
       setLoading(false);

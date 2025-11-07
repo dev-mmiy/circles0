@@ -229,6 +229,37 @@ export async function createOrGetUser(data: {
 }
 
 /**
+ * Create user profile (authenticated)
+ */
+export async function createUserProfile(
+  accessToken: string,
+  data: {
+    auth0_id: string;
+    email: string;
+    email_verified: boolean;
+    nickname: string;
+    avatar_url?: string;
+    profile_visibility?: 'public' | 'limited' | 'private';
+  }
+): Promise<UserProfile> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to create user profile');
+  }
+
+  return response.json();
+}
+
+/**
  * Get public profile of a user
  */
 export async function getUserPublicProfile(

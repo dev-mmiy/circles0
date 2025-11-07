@@ -59,7 +59,9 @@ def upgrade() -> None:
     # Add email_verified
     op.add_column(
         "users",
-        sa.Column("email_verified", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
+            "email_verified", sa.Boolean(), server_default="false", nullable=False
+        ),
     )
 
     # Add nickname (public name)
@@ -69,7 +71,9 @@ def upgrade() -> None:
     op.add_column("users", sa.Column("username", sa.String(length=50), nullable=True))
 
     # Add avatar_url
-    op.add_column("users", sa.Column("avatar_url", sa.String(length=500), nullable=True))
+    op.add_column(
+        "users", sa.Column("avatar_url", sa.String(length=500), nullable=True)
+    )
 
     # Add gender enum
     gender_enum = postgresql.ENUM(
@@ -108,7 +112,12 @@ def upgrade() -> None:
     )
     op.add_column(
         "users",
-        sa.Column("timezone", sa.String(length=50), server_default="Asia/Tokyo", nullable=False),
+        sa.Column(
+            "timezone",
+            sa.String(length=50),
+            server_default="Asia/Tokyo",
+            nullable=False,
+        ),
     )
 
     # Add profile visibility enum
@@ -133,7 +142,9 @@ def upgrade() -> None:
     )
     op.add_column(
         "users",
-        sa.Column("show_online_status", sa.Boolean(), server_default="false", nullable=False),
+        sa.Column(
+            "show_online_status", sa.Boolean(), server_default="false", nullable=False
+        ),
     )
 
     # Add last_login_at
