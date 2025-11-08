@@ -43,8 +43,19 @@ async def get_current_user_profile(
     # Update last login timestamp
     user = UserService.update_last_login(db, user)
 
-    # Get user's diseases
-    user_diseases = UserService.get_user_diseases(db, user.id)
+    # Get user's diseases (returns Disease objects)
+    diseases = UserService.get_user_diseases(db, user.id)
+
+    # Convert Disease objects to UserDiseaseResponse format
+    user_diseases = [
+        {
+            "id": disease.id,
+            "name": disease.name,
+            "description": disease.description,
+            "category": disease.category,
+        }
+        for disease in diseases
+    ]
 
     # Create response with diseases
     user_dict = {
