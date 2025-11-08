@@ -8,7 +8,8 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.dependencies import get_current_user, get_current_user_optional, get_db
+from app.auth.dependencies import get_current_user, get_current_user_optional
+from app.database import get_db
 from app.schemas.post import (
     PostCommentCreate,
     PostCommentResponse,
