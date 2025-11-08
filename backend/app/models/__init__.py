@@ -14,6 +14,7 @@ from .disease import (
     DiseaseTranslation,
     UserDisease,
 )
+from .post import Post, PostComment, PostLike
 from .user import User
 
 __all__ = [
@@ -27,4 +28,7 @@ __all__ = [
     "DiseaseStatus",
     "DiseaseStatusTranslation",
     "UserDisease",
+    "Post",
+    "PostLike",
+    "PostComment",
 ]

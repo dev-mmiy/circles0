@@ -105,6 +105,13 @@ class User(Base):
 
     # リレーション
     # Note: Use 'user_diseases' relationship defined in disease.py to avoid conflicts
+    posts = relationship("Post", back_populates="user", cascade="all, delete-orphan")
+    post_likes = relationship(
+        "PostLike", back_populates="user", cascade="all, delete-orphan"
+    )
+    post_comments = relationship(
+        "PostComment", back_populates="user", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"
