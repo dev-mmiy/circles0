@@ -19,9 +19,7 @@ class UserBase(BaseModel):
         max_length=50,
         description="Public nickname used in community",
     )
-    username: Optional[str] = Field(
-        None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$"
-    )
+    username: Optional[str] = Field(None, min_length=1, max_length=50)
     bio: Optional[str] = Field(None, max_length=500)
     avatar_url: Optional[str] = None
     date_of_birth: Optional[date] = None
@@ -68,9 +66,7 @@ class UserUpdate(BaseModel):
     first_name: Optional[str] = Field(None, max_length=100)
     last_name: Optional[str] = Field(None, max_length=100)
     phone: Optional[str] = Field(None, max_length=20)
-    username: Optional[str] = Field(
-        None, min_length=3, max_length=50, pattern="^[a-z0-9_]+$"
-    )
+    username: Optional[str] = Field(None, min_length=1, max_length=50)
     bio: Optional[str] = Field(None, max_length=500)
     avatar_url: Optional[str] = None
     date_of_birth: Optional[date] = None
