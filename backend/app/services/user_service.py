@@ -50,9 +50,12 @@ class UserService:
 
     @staticmethod
     def get_user_diseases(db: Session, user_id: UUID) -> List[Disease]:
-        """Get all active diseases for a user (legacy method)."""
+        """Get all active diseases for a user with translations."""
+        from sqlalchemy.orm import joinedload
+
         return (
             db.query(Disease)
+            .options(joinedload(Disease.translations))
             .join(UserDisease, UserDisease.disease_id == Disease.id)
             .filter(UserDisease.user_id == user_id)
             .filter(UserDisease.is_active == True)

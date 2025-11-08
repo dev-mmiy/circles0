@@ -42,13 +42,21 @@ def format_user_response(user: User, db: Session) -> dict:
     # Get user's diseases (returns Disease objects)
     diseases = UserService.get_user_diseases(db, user.id)
 
-    # Convert Disease objects to UserDiseaseResponse format
+    # Convert Disease objects to UserDiseaseResponse format with translations
     user_diseases = [
         {
             "id": disease.id,
             "name": disease.name,
             "description": disease.description,
             "category": disease.category,
+            "translations": [
+                {
+                    "language_code": trans.language_code,
+                    "translated_name": trans.translated_name,
+                    "details": trans.details,
+                }
+                for trans in disease.translations
+            ],
         }
         for disease in diseases
     ]

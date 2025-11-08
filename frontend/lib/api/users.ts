@@ -4,6 +4,31 @@
 
 import { getApiBaseUrl } from '../config';
 
+/**
+ * Get localized disease name based on user's preferred language
+ */
+export function getLocalizedDiseaseName(
+  disease: UserDisease,
+  preferredLanguage: string = 'ja'
+): string {
+  if (!disease.translations || disease.translations.length === 0) {
+    return disease.name; // Fallback to English name
+  }
+
+  // Try to find exact language match
+  const translation = disease.translations.find(
+    (t) => t.language_code === preferredLanguage
+  );
+
+  if (translation) {
+    return translation.translated_name;
+  }
+
+  // Fallback: try Japanese, then English name
+  const jaTranslation = disease.translations.find((t) => t.language_code === 'ja');
+  return jaTranslation?.translated_name || disease.name;
+}
+
 export interface UserProfile {
   id: string;
   member_id: string; // 12-digit member ID
@@ -43,11 +68,18 @@ export interface UserProfile {
   diseases: UserDisease[];
 }
 
+export interface DiseaseTranslation {
+  language_code: string;
+  translated_name: string;
+  details?: string;
+}
+
 export interface UserDisease {
   id: number;
   name: string;
   description?: string;
   category?: string;
+  translations?: DiseaseTranslation[];
 }
 
 export interface UserDiseaseDetailed {
@@ -73,12 +105,7 @@ export interface UserDiseaseDetailed {
     name: string;
     disease_code?: string;
     description?: string;
-    translations?: Array<{
-      id: number;
-      language_code: string;
-      translated_name: string;
-      details?: string;
-    }>;
+    translations?: DiseaseTranslation[];
   };
   status?: {
     id: number;

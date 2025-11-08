@@ -17,6 +17,7 @@ interface DiseaseListProps {
   loading?: boolean;
   editingDiseaseId?: number | null;
   editForm?: React.ReactNode;
+  preferredLanguage?: string; // User's preferred language for translation
 }
 
 export function DiseaseList({
@@ -27,7 +28,36 @@ export function DiseaseList({
   loading = false,
   editingDiseaseId,
   editForm,
+  preferredLanguage = 'ja',
 }: DiseaseListProps) {
+  // Get localized disease name
+  const getDiseaseName = (disease: UserDiseaseDetailed): string => {
+    if (!disease.disease) {
+      return `疾患 ID: ${disease.disease_id}`;
+    }
+
+    // Check if translations exist
+    if (disease.disease.translations && disease.disease.translations.length > 0) {
+      // Try to find exact language match
+      const translation = disease.disease.translations.find(
+        (t) => t.language_code === preferredLanguage
+      );
+
+      if (translation) {
+        return translation.translated_name;
+      }
+
+      // Fallback to Japanese
+      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      if (jaTranslation) {
+        return jaTranslation.translated_name;
+      }
+    }
+
+    // Final fallback to English name
+    return disease.disease.name;
+  };
+
   // Format date for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
@@ -85,7 +115,7 @@ export function DiseaseList({
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-900">
-                  {disease.disease?.name || `疾患 ID: ${disease.disease_id}`}
+                  {getDiseaseName(disease)}
                 </h3>
                 {disease.disease?.disease_code && (
                   <p className="text-sm text-gray-500 mt-1">

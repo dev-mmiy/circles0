@@ -84,6 +84,16 @@ class UserUpdate(BaseModel):
     show_online_status: Optional[bool] = None
 
 
+class DiseaseTranslationResponse(BaseModel):
+    """Schema for disease translation."""
+
+    language_code: str
+    translated_name: str
+    details: Optional[str] = None
+
+    model_config = {"from_attributes": True}
+
+
 class UserDiseaseResponse(BaseModel):
     """Schema for user's disease information."""
 
@@ -91,6 +101,7 @@ class UserDiseaseResponse(BaseModel):
     name: str
     description: Optional[str] = None
     category: Optional[str] = None
+    translations: List["DiseaseTranslationResponse"] = []
 
     model_config = {"from_attributes": True}
 

@@ -101,7 +101,23 @@ export default function MyProfilePage() {
   };
 
   const handleDeleteDisease = async (disease: UserDiseaseDetailed) => {
-    if (window.confirm(`「${disease.disease?.name || ''}」を削除しますか？`)) {
+    // Get localized disease name
+    let diseaseName = disease.disease?.name || '';
+    if (disease.disease?.translations && disease.disease.translations.length > 0) {
+      const translation = disease.disease.translations.find(
+        (t) => t.language_code === user.preferred_language
+      );
+      if (translation) {
+        diseaseName = translation.translated_name;
+      } else {
+        const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+        if (jaTranslation) {
+          diseaseName = jaTranslation.translated_name;
+        }
+      }
+    }
+
+    if (window.confirm(`「${diseaseName}」を削除しますか？`)) {
       try {
         await removeDisease(disease.id);
       } catch (error) {
@@ -143,6 +159,7 @@ export default function MyProfilePage() {
               onDelete={handleDeleteDisease}
               loading={loadingUserDiseases}
               editingDiseaseId={editingDisease?.id || null}
+              preferredLanguage={user.preferred_language}
               editForm={
                 editingDisease &&
                 isEditModalOpen && (
