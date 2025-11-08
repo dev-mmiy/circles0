@@ -74,16 +74,93 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
 
 
 @router.get("/search", response_model=List[DiseaseResponse])
-async def search_diseases(q: str, limit: int = 10, db: Session = Depends(get_db)):
-    """Search diseases by name."""
-    diseases = (
-        db.query(Disease)
-        .filter(Disease.is_active == True)
-        .filter(Disease.name.ilike(f"%{q}%"))
-        .limit(limit)
-        .all()
-    )
-    return diseases
+async def search_diseases(
+    q: Optional[str] = Query(None, description="Search query (name, code, or translation)"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
+    icd_code: Optional[str] = Query(None, description="ICD-10 code (exact or partial match)"),
+    language: str = Query("en", description="Preferred language for search"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
+    db: Session = Depends(get_db)
+):
+    """
+    Advanced disease search with multiple filters.
+
+    - Search by name (English or translated names)
+    - Filter by category IDs
+    - Search by ICD-10 code
+    - Returns diseases with translations eager-loaded
+    """
+    from sqlalchemy import or_
+    from sqlalchemy.orm import joinedload
+    from app.models.disease import DiseaseTranslation, DiseaseCategoryMapping
+
+    # Start with base query
+    query = db.query(Disease).options(
+        joinedload(Disease.translations),
+        joinedload(Disease.category_mappings)
+    ).filter(Disease.is_active == True)
+
+    # Search by query string (name, code, or translation)
+    if q:
+        # Create subquery for translation search
+        translation_subquery = db.query(DiseaseTranslation.disease_id).filter(
+            DiseaseTranslation.translated_name.ilike(f"%{q}%")
+        )
+
+        query = query.filter(
+            or_(
+                Disease.name.ilike(f"%{q}%"),
+                Disease.disease_code.ilike(f"%{q}%"),
+                Disease.id.in_(translation_subquery)
+            )
+        )
+
+    # Filter by ICD-10 code
+    if icd_code:
+        query = query.filter(Disease.disease_code.ilike(f"%{icd_code}%"))
+
+    # Filter by category IDs
+    if category_ids:
+        try:
+            cat_id_list = [int(cid.strip()) for cid in category_ids.split(",")]
+            category_disease_ids = db.query(DiseaseCategoryMapping.disease_id).filter(
+                DiseaseCategoryMapping.category_id.in_(cat_id_list)
+            )
+            query = query.filter(Disease.id.in_(category_disease_ids))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid category_ids format"
+            )
+
+    # Execute query with limit
+    diseases = query.limit(limit).all()
+
+    # Format response with category information
+    result = []
+    for disease in diseases:
+        # Get the first category mapping as primary category
+        mapping = (
+            db.query(DiseaseCategoryMapping)
+            .filter(DiseaseCategoryMapping.disease_id == disease.id)
+            .first()
+        )
+
+        disease_dict = {
+            "id": disease.id,
+            "name": disease.name,
+            "disease_code": disease.disease_code,
+            "description": disease.description,
+            "category": str(mapping.category_id) if mapping else None,
+            "severity_level": disease.severity_level,
+            "is_active": disease.is_active,
+            "created_at": disease.created_at,
+            "updated_at": disease.updated_at,
+            "translations": disease.translations,
+        }
+        result.append(disease_dict)
+
+    return result
 
 
 @router.get("/{disease_id}", response_model=DiseaseResponse)

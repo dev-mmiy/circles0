@@ -383,3 +383,150 @@ async def update_user_disease_detail(
     )
 
     return user_disease
+
+
+@router.delete("/me/diseases/{user_disease_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_user_disease(
+    user_disease_id: int,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """Remove a disease from user's profile."""
+    auth0_id = extract_auth0_id(current_user)
+
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    # Delete the disease
+    UserService.remove_disease_from_user(db, user.id, user_disease_id)
+
+    return None
+
+
+# User Search Endpoints
+
+
+@router.get("/search", response_model=List[UserPublicResponse])
+async def search_users(
+    q: str | None = None,
+    disease_ids: str | None = None,
+    country: str | None = None,
+    language: str | None = None,
+    member_id: str | None = None,
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    current_user: dict | None = Depends(get_current_user_optional),
+):
+    """
+    Search users by various criteria.
+
+    - q: Search by nickname or username
+    - disease_ids: Comma-separated disease IDs
+    - country: Filter by country code
+    - language: Filter by preferred language
+    - member_id: Search by exact member ID
+    - limit: Maximum number of results (default: 20, max: 100)
+
+    Only returns public profiles or limited profiles (if authenticated).
+    """
+    from sqlalchemy import or_, and_
+    from app.models.disease import UserDisease
+
+    # Validate limit
+    if limit > 100:
+        limit = 100
+
+    # Start with base query for active users with public or limited visibility
+    query = db.query(User).filter(
+        User.is_active == True,
+        or_(
+            User.profile_visibility == "public",
+            and_(
+                User.profile_visibility == "limited",
+                current_user is not None  # Limited profiles only visible when authenticated
+            )
+        )
+    )
+
+    # Search by member ID (exact match)
+    if member_id:
+        query = query.filter(User.member_id == member_id)
+
+    # Search by nickname or username
+    if q:
+        query = query.filter(
+            or_(
+                User.nickname.ilike(f"%{q}%"),
+                User.username.ilike(f"%{q}%")
+            )
+        )
+
+    # Filter by country
+    if country:
+        query = query.filter(User.country == country)
+
+    # Filter by language
+    if language:
+        query = query.filter(User.preferred_language == language)
+
+    # Filter by diseases
+    if disease_ids:
+        try:
+            disease_id_list = [int(did.strip()) for did in disease_ids.split(",")]
+            # Find users who have ANY of the specified diseases
+            user_ids_with_diseases = db.query(UserDisease.user_id).filter(
+                UserDisease.disease_id.in_(disease_id_list),
+                UserDisease.is_active == True,
+                UserDisease.is_searchable == True  # Only include searchable diseases
+            ).distinct()
+
+            query = query.filter(User.id.in_(user_ids_with_diseases))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid disease_ids format"
+            )
+
+    # Execute query
+    users = query.limit(limit).all()
+
+    # Format response with public disease information
+    result = []
+    for user in users:
+        # Get only public and searchable diseases
+        public_diseases = UserService.get_user_public_diseases(db, user.id)
+
+        user_diseases = [
+            {
+                "id": disease.id,
+                "name": disease.name,
+                "description": disease.description,
+                "category": disease.category,
+                "translations": [
+                    {
+                        "language_code": trans.language_code,
+                        "translated_name": trans.translated_name,
+                        "details": trans.details,
+                    }
+                    for trans in disease.translations
+                ],
+            }
+            for disease in public_diseases
+        ]
+
+        result.append({
+            "id": user.id,
+            "member_id": user.member_id,
+            "nickname": user.nickname,
+            "username": user.username,
+            "bio": user.bio,
+            "avatar_url": user.avatar_url,
+            "country": user.country,
+            "created_at": user.created_at,
+            "diseases": user_diseases,
+        })
+
+    return result

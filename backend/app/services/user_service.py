@@ -64,6 +64,26 @@ class UserService:
         )
 
     @staticmethod
+    def get_user_public_diseases(db: Session, user_id: UUID) -> List[Disease]:
+        """
+        Get all public and searchable diseases for a user with translations.
+        Used for displaying user diseases in search results.
+        """
+        from sqlalchemy.orm import joinedload
+
+        return (
+            db.query(Disease)
+            .options(joinedload(Disease.translations))
+            .join(UserDisease, UserDisease.disease_id == Disease.id)
+            .filter(UserDisease.user_id == user_id)
+            .filter(UserDisease.is_active == True)
+            .filter(UserDisease.is_public == True)
+            .filter(UserDisease.is_searchable == True)
+            .filter(Disease.is_active == True)
+            .all()
+        )
+
+    @staticmethod
     def get_all_user_diseases(db: Session, user_id: UUID) -> List[UserDisease]:
         """Get all active user diseases with detailed information."""
         from sqlalchemy.orm import joinedload
