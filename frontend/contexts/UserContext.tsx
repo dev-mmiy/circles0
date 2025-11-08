@@ -8,15 +8,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useRouter } from 'next/navigation';
-import { UserProfile } from '@/lib/api/users';
-import { getCurrentUserProfile } from '@/lib/api/users';
+import { UserProfile, UserProfileUpdate } from '@/lib/api/users';
+import { getCurrentUserProfile, updateCurrentUserProfile } from '@/lib/api/users';
 
 interface UserContextType {
   user: UserProfile | null;
   loading: boolean;
   error: string | null;
   refreshUser: () => Promise<void>;
-  updateUserProfile: (updates: Partial<UserProfile>) => void;
+  updateUserProfile: (updates: UserProfileUpdate) => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -77,10 +77,27 @@ export function UserProvider({ children }: UserProviderProps) {
     await fetchUserProfile();
   };
 
-  // Optimistic update for user profile
-  const updateUserProfile = (updates: Partial<UserProfile>) => {
-    if (user) {
+  // Update user profile with API call
+  const updateUserProfile = async (updates: UserProfileUpdate) => {
+    if (!user) {
+      throw new Error('No user logged in');
+    }
+
+    try {
+      // Optimistic update
       setUser({ ...user, ...updates });
+
+      // Call API to update profile
+      const accessToken = await getAccessTokenSilently();
+      const updatedUser = await updateCurrentUserProfile(accessToken, updates);
+
+      // Update with actual response from server
+      setUser(updatedUser);
+    } catch (err) {
+      console.error('Error updating user profile:', err);
+      // Revert optimistic update on error
+      await fetchUserProfile();
+      throw err;
     }
   };
 
