@@ -84,6 +84,8 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     try {
+      console.log('Updating user profile with data:', updates);
+
       // Optimistic update
       setUser({ ...user, ...updates });
 

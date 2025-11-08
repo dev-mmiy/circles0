@@ -192,7 +192,11 @@ export async function updateCurrentUserProfile(
 
   if (!response.ok) {
     const error = await response.json();
-    throw new Error(error.detail || 'Failed to update user profile');
+    console.error('Update profile error response:', error);
+    const errorMessage = typeof error.detail === 'string'
+      ? error.detail
+      : JSON.stringify(error.detail || error);
+    throw new Error(errorMessage || 'Failed to update user profile');
   }
 
   return response.json();

@@ -57,7 +57,16 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
     setSaving(true);
 
     try {
-      await onSave(formData);
+      // Clean up form data: remove empty strings and convert to undefined
+      const cleanedData: UserProfileUpdate = {};
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value !== '' && value !== null && value !== undefined) {
+          cleanedData[key as keyof UserProfileUpdate] = value as any;
+        }
+      });
+
+      console.log('Submitting cleaned profile data:', cleanedData);
+      await onSave(cleanedData);
     } catch (err) {
       console.error('Error saving profile:', err);
       setError(err instanceof Error ? err.message : 'Failed to save profile');
