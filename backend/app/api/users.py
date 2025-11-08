@@ -23,26 +23,22 @@ from app.schemas.disease import (
 from app.schemas.user import UserCreate, UserPublicResponse, UserResponse, UserUpdate
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
+from app.models.user import User
 
 router = APIRouter()
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_profile(
-    db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)
-):
-    """Get current authenticated user's profile."""
-    auth0_id = extract_auth0_id(current_user)
+def format_user_response(user: User, db: Session) -> dict:
+    """
+    Format User object to UserResponse dict with properly formatted diseases.
 
-    user = UserService.get_user_by_auth0_id(db, auth0_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User profile not found"
-        )
+    Args:
+        user: User object to format
+        db: Database session for querying diseases
 
-    # Update last login timestamp
-    user = UserService.update_last_login(db, user)
-
+    Returns:
+        Dictionary compatible with UserResponse schema
+    """
     # Get user's diseases (returns Disease objects)
     diseases = UserService.get_user_diseases(db, user.id)
 
@@ -58,7 +54,7 @@ async def get_current_user_profile(
     ]
 
     # Create response with diseases
-    user_dict = {
+    return {
         "id": user.id,
         "member_id": user.member_id,
         "auth0_id": user.auth0_id,
@@ -89,7 +85,24 @@ async def get_current_user_profile(
         "diseases": user_diseases,
     }
 
-    return user_dict
+
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_profile(
+    db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)
+):
+    """Get current authenticated user's profile."""
+    auth0_id = extract_auth0_id(current_user)
+
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User profile not found"
+        )
+
+    # Update last login timestamp
+    user = UserService.update_last_login(db, user)
+
+    return format_user_response(user, db)
 
 
 @router.put("/me", response_model=UserResponse)
@@ -110,7 +123,7 @@ async def update_current_user_profile(
     # Update user profile
     user = UserService.update_user(db, user, user_data)
 
-    return user
+    return format_user_response(user, db)
 
 
 @router.post("/", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -126,12 +139,13 @@ async def create_or_get_user(user_data: UserCreate, db: Session = Depends(get_db
                 existing_user.email_verified = user_data.email_verified
                 db.commit()
                 db.refresh(existing_user)
-            return existing_user
+
+            return format_user_response(existing_user, db)
 
         # Create new user
         user = UserService.create_user(db, user_data)
 
-        return user
+        return format_user_response(user, db)
     except HTTPException:
         raise
     except Exception as e:
