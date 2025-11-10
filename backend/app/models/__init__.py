@@ -14,6 +14,7 @@ from .disease import (
     DiseaseTranslation,
     UserDisease,
 )
+from .follow import Follow
 from .post import Post, PostComment, PostLike
 from .user import User
 
@@ -31,4 +32,5 @@ __all__ = [
     "Post",
     "PostLike",
     "PostComment",
+    "Follow",
 ]

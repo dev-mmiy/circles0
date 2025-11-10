@@ -113,5 +113,21 @@ class User(Base):
         "PostComment", back_populates="user", cascade="all, delete-orphan"
     )
 
+    # Follow relationships
+    # Users that this user is following
+    following_relationships = relationship(
+        "Follow",
+        foreign_keys="Follow.follower_id",
+        back_populates="follower",
+        cascade="all, delete-orphan",
+    )
+    # Users that follow this user
+    follower_relationships = relationship(
+        "Follow",
+        foreign_keys="Follow.following_id",
+        back_populates="following",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"

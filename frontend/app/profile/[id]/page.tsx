@@ -6,14 +6,22 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
+import { getFollowStats, type FollowStats } from '@/lib/api/follows';
+import FollowButton from '@/components/FollowButton';
+import FollowersList from '@/components/FollowersList';
+import FollowingList from '@/components/FollowingList';
 
 export default function PublicProfilePage() {
   const params = useParams();
   const userId = params.id as string;
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
   const [profile, setProfile] = useState<UserPublicProfile | null>(null);
+  const [followStats, setFollowStats] = useState<FollowStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'posts' | 'followers' | 'following'>('posts');
+
+  const isOwnProfile = user?.sub === profile?.id;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -31,6 +39,14 @@ export default function PublicProfilePage() {
 
         const data = await getUserPublicProfile(userId, token);
         setProfile(data);
+
+        // Fetch follow stats
+        try {
+          const stats = await getFollowStats(data.id, token);
+          setFollowStats(stats);
+        } catch (err) {
+          console.error('Failed to fetch follow stats:', err);
+        }
       } catch (err) {
         console.error('Failed to fetch profile:', err);
         setError(err instanceof Error ? err.message : 'Failed to load profile');
@@ -43,6 +59,17 @@ export default function PublicProfilePage() {
       fetchProfile();
     }
   }, [userId, isAuthenticated, getAccessTokenSilently]);
+
+  const handleFollowChange = async (isFollowing: boolean) => {
+    if (!followStats) return;
+
+    // Update follower count optimistically
+    setFollowStats({
+      ...followStats,
+      follower_count: followStats.follower_count + (isFollowing ? 1 : -1),
+      is_following: isFollowing,
+    });
+  };
 
   if (loading) {
     return (
@@ -114,8 +141,41 @@ export default function PublicProfilePage() {
 
             {/* Basic Info */}
             <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
-              {profile.username && <p className="text-gray-600 mt-1">@{profile.username}</p>}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
+                  {profile.username && <p className="text-gray-600 mt-1">@{profile.username}</p>}
+                </div>
+                {/* Follow Button */}
+                {!isOwnProfile && profile && followStats && (
+                  <FollowButton
+                    userId={profile.id}
+                    initialIsFollowing={followStats.is_following}
+                    onFollowChange={handleFollowChange}
+                  />
+                )}
+              </div>
+
+              {/* Follow Stats */}
+              {followStats && (
+                <div className="mt-4 flex items-center space-x-6 text-sm">
+                  <button
+                    onClick={() => setActiveTab('followers')}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    <span className="font-bold">{followStats.follower_count}</span>{' '}
+                    <span className="text-gray-500">フォロワー</span>
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('following')}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    <span className="font-bold">{followStats.following_count}</span>{' '}
+                    <span className="text-gray-500">フォロー中</span>
+                  </button>
+                </div>
+              )}
+
               <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
                 {profile.country && <span>📍 {profile.country.toUpperCase()}</span>}
                 <span>📅 登録: {new Date(profile.created_at).toLocaleDateString('ja-JP')}</span>
@@ -132,23 +192,79 @@ export default function PublicProfilePage() {
           )}
         </div>
 
-        {/* Diseases */}
-        {profile.diseases && profile.diseases.length > 0 && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">登録疾患</h2>
-            <div className="space-y-2">
-              {profile.diseases.map(disease => (
-                <div
-                  key={disease.id}
-                  className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
-                >
-                  <span className="text-blue-600">•</span>
-                  <span className="text-gray-800">{disease.name}</span>
-                </div>
-              ))}
-            </div>
+        {/* Tabs */}
+        <div className="bg-white rounded-lg shadow-md mb-6">
+          <div className="border-b border-gray-200">
+            <nav className="flex -mb-px">
+              <button
+                onClick={() => setActiveTab('posts')}
+                className={`py-4 px-6 text-sm font-medium transition-colors ${
+                  activeTab === 'posts'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                投稿
+              </button>
+              <button
+                onClick={() => setActiveTab('followers')}
+                className={`py-4 px-6 text-sm font-medium transition-colors ${
+                  activeTab === 'followers'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                フォロワー
+              </button>
+              <button
+                onClick={() => setActiveTab('following')}
+                className={`py-4 px-6 text-sm font-medium transition-colors ${
+                  activeTab === 'following'
+                    ? 'border-b-2 border-blue-600 text-blue-600'
+                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                フォロー中
+              </button>
+            </nav>
           </div>
-        )}
+
+          <div className="p-6">
+            {activeTab === 'posts' && (
+              <div>
+                {/* Diseases */}
+                {profile.diseases && profile.diseases.length > 0 && (
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">登録疾患</h2>
+                    <div className="space-y-2">
+                      {profile.diseases.map(disease => (
+                        <div
+                          key={disease.id}
+                          className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
+                        >
+                          <span className="text-blue-600">•</span>
+                          <span className="text-gray-800">{disease.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {/* TODO: Add user posts here in the future */}
+                <div className="mt-6 text-center text-gray-500">
+                  <p>ユーザーの投稿一覧は今後実装予定です</p>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'followers' && (
+              <FollowersList userId={profile.id} />
+            )}
+
+            {activeTab === 'following' && (
+              <FollowingList userId={profile.id} />
+            )}
+          </div>
+        </div>
 
         {/* Back to Home */}
         <div className="mt-8 text-center">
