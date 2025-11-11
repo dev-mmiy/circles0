@@ -15,6 +15,7 @@ from .disease import (
     UserDisease,
 )
 from .follow import Follow
+from .notification import Notification, NotificationType
 from .post import Post, PostComment, PostLike
 from .user import User
 
@@ -33,4 +34,6 @@ __all__ = [
     "PostLike",
     "PostComment",
     "Follow",
+    "Notification",
+    "NotificationType",
 ]
