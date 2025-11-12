@@ -19,31 +19,28 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Create notification_type enum
-    notification_type = postgresql.ENUM(
-        'follow', 'comment', 'reply', 'like', 'comment_like',
-        name='notificationtype',
-        create_type=True
-    )
-    notification_type.create(op.get_bind(), checkfirst=True)
+    # Create notification_type enum (using raw SQL for IF NOT EXISTS support)
+    op.execute("""
+        DO $$ BEGIN
+            CREATE TYPE notificationtype AS ENUM ('follow', 'comment', 'reply', 'like', 'comment_like');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+    """)
 
-    # Create notifications table
-    op.create_table(
-        'notifications',
-        sa.Column('id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('recipient_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('actor_id', postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column('type', sa.Enum('follow', 'comment', 'reply', 'like', 'comment_like', name='notificationtype'), nullable=False),
-        sa.Column('post_id', postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column('comment_id', postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column('is_read', sa.Boolean(), nullable=False, server_default='false'),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.ForeignKeyConstraint(['recipient_id'], ['users.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['actor_id'], ['users.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['post_id'], ['posts.id'], ondelete='CASCADE'),
-        sa.ForeignKeyConstraint(['comment_id'], ['post_comments.id'], ondelete='CASCADE'),
-    )
+    # Create notifications table using raw SQL to avoid SQLAlchemy ENUM issues
+    op.execute("""
+        CREATE TABLE notifications (
+            id UUID PRIMARY KEY,
+            recipient_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            actor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            type notificationtype NOT NULL,
+            post_id UUID REFERENCES posts(id) ON DELETE CASCADE,
+            comment_id UUID REFERENCES post_comments(id) ON DELETE CASCADE,
+            is_read BOOLEAN NOT NULL DEFAULT false,
+            created_at TIMESTAMP NOT NULL
+        )
+    """)
 
     # Create indexes for efficient queries
     op.create_index('ix_notifications_id', 'notifications', ['id'])
@@ -61,12 +58,8 @@ def downgrade() -> None:
     op.drop_index('ix_notifications_recipient_id', table_name='notifications')
     op.drop_index('ix_notifications_id', table_name='notifications')
 
-    # Drop table
-    op.drop_table('notifications')
+    # Drop table (using raw SQL to match upgrade)
+    op.execute("DROP TABLE IF EXISTS notifications CASCADE;")
 
     # Drop enum type
-    notification_type = postgresql.ENUM(
-        'follow', 'comment', 'reply', 'like', 'comment_like',
-        name='notificationtype'
-    )
-    notification_type.drop(op.get_bind(), checkfirst=True)
+    op.execute("DROP TYPE IF EXISTS notificationtype;")
