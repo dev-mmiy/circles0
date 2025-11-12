@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { getUnreadCount } from '@/lib/api/notifications';
-import { useAuth } from '@auth0/auth0-react';
+import { useAuth0 } from '@auth0/auth0-react';
 
 interface NotificationBellProps {
   onClick: () => void;
@@ -14,7 +14,7 @@ interface NotificationBellProps {
  * 通知ベルアイコンコンポーネント（未読バッジ付き）
  */
 export default function NotificationBell({ onClick, isOpen }: NotificationBellProps) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth0();
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
