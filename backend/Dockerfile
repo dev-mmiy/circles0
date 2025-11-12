@@ -29,7 +29,8 @@ COPY . .
 # Copy market configuration
 COPY config/markets.json /app/config/markets.json
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run migrations before starting the development server
+CMD ["sh", "-c", "echo 'Running database migrations...' && alembic upgrade head && echo 'Starting development server on port 8000' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
 
 # Production stage
 FROM base AS production

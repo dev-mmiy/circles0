@@ -54,10 +54,29 @@ log_info "Starting services..."
 docker compose up -d postgres backend
 sleep 10
 
-# 4. バックエンドテスト
+# データベースの準備を待つ
+log_info "Waiting for database to be ready..."
+max_attempts=15
+attempt=0
+while [ $attempt -lt $max_attempts ]; do
+    if docker compose exec postgres pg_isready -U postgres > /dev/null 2>&1; then
+        log_success "Database is ready"
+        break
+    fi
+    attempt=$((attempt + 1))
+    echo -n "."
+    sleep 2
+done
+
+if [ $attempt -eq $max_attempts ]; then
+    log_error "Database failed to start"
+    exit 1
+fi
+
+# 4. バックエンドテスト（マイグレーションは起動時に自動実行）
 log_info "Testing backend..."
 
-# バックエンドの準備を待つ
+# バックエンドの準備を待つ（マイグレーションは起動時に自動実行）
 max_attempts=15
 attempt=0
 while [ $attempt -lt $max_attempts ]; do

@@ -73,8 +73,8 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# バックエンドの準備を待つ
-log_info "Waiting for backend to be ready..."
+# バックエンドの準備を待つ（マイグレーションは起動時に自動実行）
+log_info "Waiting for backend to be ready (migrations will run automatically)..."
 max_attempts=20
 attempt=0
 while [ $attempt -lt $max_attempts ]; do

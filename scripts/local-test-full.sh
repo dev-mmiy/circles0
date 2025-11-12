@@ -113,13 +113,13 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# 4. バックエンド起動とマイグレーション
-show_progress 4 8 "Starting backend and running migrations..."
+# 4. バックエンド起動（マイグレーションは起動時に自動実行）
+show_progress 4 8 "Starting backend (migrations will run automatically)..."
 docker compose -f $COMPOSE_FILE up -d backend
 sleep 5
 
-# バックエンドの準備を待つ
-log_info "Waiting for backend to be ready..."
+# バックエンドの準備を待つ（マイグレーション完了を待つ）
+log_info "Waiting for backend to be ready (including migrations)..."
 max_attempts=20
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
@@ -136,14 +136,6 @@ if [ $attempt -eq $max_attempts ]; then
     log_error "Backend failed to start"
     exit 1
 fi
-
-# データベースマイグレーションを実行
-log_info "Running database migrations..."
-docker compose -f $COMPOSE_FILE exec backend alembic upgrade head || {
-    log_error "Database migration failed"
-    exit 1
-}
-log_success "Database migrations completed"
 
 # バックエンドのリンターとフォーマットチェック
 log_info "Running backend linting..."
