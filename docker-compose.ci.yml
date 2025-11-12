@@ -37,7 +37,7 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
-    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    command: sh -c "alembic upgrade head && python scripts/seed_final_master_data.py && uvicorn app.main:app --host 0.0.0.0 --port 8000"
 
   # Next.js Frontend for CI
   frontend:
