@@ -11,6 +11,7 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.models.follow import Follow
 from app.models.user import User
+from app.services.notification_service import NotificationService
 
 
 class FollowService:
@@ -52,6 +53,14 @@ class FollowService:
                 existing_follow.created_at = datetime.utcnow()
                 db.commit()
                 db.refresh(existing_follow)
+
+                # Create notification for reactivated follow
+                NotificationService.create_follow_notification(
+                    db=db,
+                    follower_id=follower_id,
+                    following_id=following_id,
+                )
+
                 return existing_follow
             # Already following
             return existing_follow
@@ -66,6 +75,14 @@ class FollowService:
         db.add(follow)
         db.commit()
         db.refresh(follow)
+
+        # Create notification for new follow
+        NotificationService.create_follow_notification(
+            db=db,
+            follower_id=follower_id,
+            following_id=following_id,
+        )
+
         return follow
 
     @staticmethod

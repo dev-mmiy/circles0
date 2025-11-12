@@ -18,6 +18,7 @@ from app.schemas.post import (
     PostLikeCreate,
     PostUpdate,
 )
+from app.services.notification_service import NotificationService
 
 
 class PostService:
@@ -231,6 +232,14 @@ class PostService:
         db.add(like)
         db.commit()
         db.refresh(like)
+
+        # Create notification for the post author
+        NotificationService.create_like_notification(
+            db=db,
+            liker_id=user_id,
+            post_id=post_id,
+        )
+
         return like
 
     @staticmethod
@@ -307,6 +316,25 @@ class PostService:
         db.add(comment)
         db.commit()
         db.refresh(comment)
+
+        # Create notification
+        if comment_data.parent_comment_id:
+            # This is a reply to a comment - notify the parent comment author
+            NotificationService.create_reply_notification(
+                db=db,
+                replier_id=user_id,
+                parent_comment_id=comment_data.parent_comment_id,
+                reply_comment_id=comment.id,
+            )
+        else:
+            # This is a top-level comment - notify the post author
+            NotificationService.create_comment_notification(
+                db=db,
+                commenter_id=user_id,
+                post_id=post_id,
+                comment_id=comment.id,
+            )
+
         return comment
 
     @staticmethod
