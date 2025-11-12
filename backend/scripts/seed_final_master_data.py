@@ -25,20 +25,6 @@ from app.models.disease import (
 )
 
 
-def clear_existing_data(db: Session):
-    """Clear existing disease data"""
-    print("Clearing existing data...")
-    db.query(DiseaseCategoryMapping).delete()
-    db.query(DiseaseTranslation).delete()
-    db.query(Disease).delete()
-    db.query(DiseaseCategoryTranslation).delete()
-    db.query(DiseaseCategory).delete()
-    db.query(DiseaseStatusTranslation).delete()
-    db.query(DiseaseStatus).delete()
-    db.commit()
-    print("Existing data cleared.")
-
-
 def create_disease_statuses(db: Session):
     """Create disease status master data"""
     print("\nCreating disease statuses...")
@@ -531,8 +517,17 @@ def main():
     db = SessionLocal()
 
     try:
-        # Clear existing data
-        clear_existing_data(db)
+        # Check if data already exists
+        existing_diseases = db.query(Disease).count()
+        existing_categories = db.query(DiseaseCategory).count()
+
+        if existing_diseases > 0 or existing_categories > 0:
+            print(f"\nMaster data already exists:")
+            print(f"  - Disease Categories: {existing_categories}")
+            print(f"  - Diseases: {existing_diseases}")
+            print("\nSkipping seeding to preserve existing data.")
+            print("=" * 60)
+            return
 
         # Create disease statuses
         create_disease_statuses(db)
