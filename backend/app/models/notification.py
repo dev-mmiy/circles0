@@ -10,7 +10,7 @@ from sqlalchemy import Boolean, Column, DateTime, Enum as SQLEnum, ForeignKey, S
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
-from app.models.base import Base
+from app.database import Base
 
 
 class NotificationType(str, Enum):
@@ -40,7 +40,7 @@ class Notification(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    type = Column(SQLEnum(NotificationType), nullable=False, index=True)
+    type = Column(SQLEnum(NotificationType, create_type=False, native_enum=False), nullable=False, index=True)
 
     # Target references (nullable, depends on notification type)
     post_id = Column(
