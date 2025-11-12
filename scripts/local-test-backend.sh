@@ -7,6 +7,15 @@ set -e
 
 echo "🚀 Starting backend-only local testing process..."
 
+# 環境検出
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+    COMPOSE_FILE="docker-compose.ci.yml"
+    echo "🔧 Detected GitHub Actions environment, using CI Docker Compose"
+else
+    COMPOSE_FILE="docker-compose.yml"
+    echo "🔧 Using local Docker Compose"
+fi
+
 # 色付きログ関数
 log_info() {
     echo -e "\033[0;34m[INFO]\033[0m $1"
@@ -27,7 +36,7 @@ log_warn() {
 # エラーハンドリング
 cleanup() {
     log_info "Cleaning up..."
-    docker compose down > /dev/null 2>&1 || true
+    docker compose -f $COMPOSE_FILE down > /dev/null 2>&1 || true
     log_success "Cleanup completed"
 }
 
@@ -51,7 +60,7 @@ log_success "All dependencies are installed"
 
 # 3. サービス起動（バックエンドのみ）
 log_info "Starting backend services..."
-docker compose up -d postgres backend
+docker compose -f $COMPOSE_FILE up -d postgres backend
 sleep 10
 
 # データベースの準備を待つ
@@ -59,7 +68,7 @@ log_info "Waiting for database to be ready..."
 max_attempts=15
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
-    if docker compose exec postgres pg_isready -U postgres > /dev/null 2>&1; then
+    if docker compose -f $COMPOSE_FILE exec postgres pg_isready -U postgres > /dev/null 2>&1; then
         log_success "Database is ready"
         break
     fi
@@ -75,7 +84,7 @@ fi
 
 # バックエンドの準備を待つ（マイグレーションは起動時に自動実行）
 log_info "Waiting for backend to be ready (migrations will run automatically)..."
-max_attempts=20
+max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
     if curl -f http://localhost:8000/health > /dev/null 2>&1; then
@@ -84,11 +93,15 @@ while [ $attempt -lt $max_attempts ]; do
     fi
     attempt=$((attempt + 1))
     echo -n "."
-    sleep 2
+    sleep 3
 done
 
 if [ $attempt -eq $max_attempts ]; then
-    log_error "Backend failed to start"
+    log_error "Backend failed to start after $((max_attempts * 3)) seconds"
+    log_info "Checking backend logs..."
+    docker compose -f $COMPOSE_FILE logs backend --tail=50
+    log_info "Checking backend container status..."
+    docker compose -f $COMPOSE_FILE ps backend
     exit 1
 fi
 
@@ -100,39 +113,39 @@ log_info "Running backend linting..."
 
 # Black フォーマットチェック（タイムアウト付き）
 log_info "Checking Black formatting..."
-timeout 30 docker compose exec backend black --check . > /dev/null 2>&1 || {
+timeout 30 docker compose -f $COMPOSE_FILE exec backend black --check . > /dev/null 2>&1 || {
     log_warn "Black formatting issues found. Auto-fixing..."
-    timeout 30 docker compose exec backend black . > /dev/null 2>&1
+    timeout 30 docker compose -f $COMPOSE_FILE exec backend black . > /dev/null 2>&1
     log_success "Black formatting fixed"
 }
 log_success "Black formatting check completed"
 
 # isort チェック（タイムアウト付き）
 log_info "Checking import sorting..."
-timeout 30 docker compose exec backend isort --check-only . > /dev/null 2>&1 || {
+timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . > /dev/null 2>&1 || {
     log_warn "Import sorting issues found. Auto-fixing..."
-    timeout 30 docker compose exec backend isort . > /dev/null 2>&1
+    timeout 30 docker compose -f $COMPOSE_FILE exec backend isort . > /dev/null 2>&1
     log_success "Import sorting fixed"
 }
 log_success "Import sorting check completed"
 
 # flake8 チェック（タイムアウト付き）
 log_info "Running flake8 linting..."
-timeout 30 docker compose exec backend flake8 app/ || {
+timeout 30 docker compose -f $COMPOSE_FILE exec backend flake8 app/ || {
     log_warn "Flake8 found some issues, but continuing..."
 }
 log_success "Backend linting completed"
 
 # バックエンドテスト実行
 log_info "Running backend unit tests..."
-timeout 180 docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html || {
+timeout 180 docker compose -f $COMPOSE_FILE exec backend python -m pytest tests/ -v --cov=app --cov-report=html || {
     log_warn "Some backend tests failed, but continuing..."
 }
 log_success "Backend tests completed"
 
 # 5. 統合テスト
 log_info "Running integration tests..."
-timeout 120 docker compose exec backend python -m pytest tests/integration/ -v || {
+timeout 120 docker compose -f $COMPOSE_FILE exec backend python -m pytest tests/integration/ -v || {
     log_warn "Some integration tests failed, but continuing..."
 }
 log_success "Integration tests completed"
@@ -159,7 +172,7 @@ fi
 
 # データベースのテーブル状況を確認
 log_info "Checking database tables..."
-docker compose exec backend python -c "
+docker compose -f $COMPOSE_FILE exec backend python -c "
 from app.database import get_db
 from app.models.user import User
 from app.models.disease import Disease
@@ -186,7 +199,7 @@ log_success "Database tables check completed"
 
 # Seed diseases if database is empty
 log_info "Checking if disease data needs to be seeded..."
-DISEASE_COUNT=$(docker compose exec backend python -c "
+DISEASE_COUNT=$(docker compose -f $COMPOSE_FILE exec backend python -c "
 from app.database import get_db
 from app.models.disease import Disease
 db = next(get_db())
@@ -199,7 +212,7 @@ finally:
 
 if [ "$DISEASE_COUNT" -eq "0" ]; then
     log_info "Seeding disease data..."
-    docker compose exec backend python scripts/seed_diseases.py > /dev/null 2>&1
+    docker compose -f $COMPOSE_FILE exec backend python scripts/seed_diseases.py > /dev/null 2>&1
     log_success "Disease data seeded"
 else
     log_info "Disease data already exists (count: $DISEASE_COUNT)"

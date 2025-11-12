@@ -120,7 +120,7 @@ sleep 5
 
 # バックエンドの準備を待つ（マイグレーション完了を待つ）
 log_info "Waiting for backend to be ready (including migrations)..."
-max_attempts=20
+max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
     if curl -f http://localhost:8000/health > /dev/null 2>&1; then
@@ -129,11 +129,15 @@ while [ $attempt -lt $max_attempts ]; do
     fi
     attempt=$((attempt + 1))
     echo -n "."
-    sleep 2
+    sleep 3
 done
 
 if [ $attempt -eq $max_attempts ]; then
-    log_error "Backend failed to start"
+    log_error "Backend failed to start after $((max_attempts * 3)) seconds"
+    log_info "Checking backend logs..."
+    docker compose -f $COMPOSE_FILE logs backend --tail=50
+    log_info "Checking backend container status..."
+    docker compose -f $COMPOSE_FILE ps backend
     exit 1
 fi
 

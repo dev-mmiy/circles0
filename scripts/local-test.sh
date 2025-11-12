@@ -7,6 +7,15 @@ set -e
 
 echo "🚀 Starting simple local testing process..."
 
+# 環境検出
+if [ "$GITHUB_ACTIONS" = "true" ]; then
+    COMPOSE_FILE="docker-compose.ci.yml"
+    echo "🔧 Detected GitHub Actions environment, using CI Docker Compose"
+else
+    COMPOSE_FILE="docker-compose.yml"
+    echo "🔧 Using local Docker Compose"
+fi
+
 # 色付きログ関数
 log_info() {
     echo -e "\033[0;34m[INFO]\033[0m $1"
@@ -27,7 +36,7 @@ log_warn() {
 # エラーハンドリング
 cleanup() {
     log_info "Cleaning up..."
-    docker compose down > /dev/null 2>&1 || true
+    docker compose -f $COMPOSE_FILE down > /dev/null 2>&1 || true
     log_success "Cleanup completed"
 }
 
@@ -51,7 +60,7 @@ log_success "All dependencies are installed"
 
 # 3. サービス起動
 log_info "Starting services..."
-docker compose up -d postgres backend
+docker compose -f $COMPOSE_FILE up -d postgres backend
 sleep 10
 
 # データベースの準備を待つ
@@ -59,7 +68,7 @@ log_info "Waiting for database to be ready..."
 max_attempts=15
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
-    if docker compose exec postgres pg_isready -U postgres > /dev/null 2>&1; then
+    if docker compose -f $COMPOSE_FILE exec postgres pg_isready -U postgres > /dev/null 2>&1; then
         log_success "Database is ready"
         break
     fi
@@ -77,7 +86,7 @@ fi
 log_info "Testing backend..."
 
 # バックエンドの準備を待つ（マイグレーションは起動時に自動実行）
-max_attempts=15
+max_attempts=30
 attempt=0
 while [ $attempt -lt $max_attempts ]; do
     if curl -f http://localhost:8000/health > /dev/null 2>&1; then
@@ -85,17 +94,22 @@ while [ $attempt -lt $max_attempts ]; do
         break
     fi
     attempt=$((attempt + 1))
-    sleep 2
+    echo -n "."
+    sleep 3
 done
 
 if [ $attempt -eq $max_attempts ]; then
-    log_error "Backend failed to start"
+    log_error "Backend failed to start after $((max_attempts * 3)) seconds"
+    log_info "Checking backend logs..."
+    docker compose -f $COMPOSE_FILE logs backend --tail=50
+    log_info "Checking backend container status..."
+    docker compose -f $COMPOSE_FILE ps backend
     exit 1
 fi
 
 # バックエンドテスト実行
 log_info "Running backend tests..."
-timeout 120 docker compose exec backend python -m pytest tests/ -v || {
+timeout 120 docker compose -f $COMPOSE_FILE exec backend python -m pytest tests/ -v || {
     log_warn "Some backend tests failed, but continuing..."
 }
 log_success "Backend tests completed"
@@ -123,7 +137,7 @@ fi
 # ユーザーAPI
 # データベースのテーブル状況を確認
 log_info "Checking database tables..."
-docker compose exec backend python -c "
+docker compose -f $COMPOSE_FILE exec backend python -c "
 from app.database import get_db
 from app.models.user import User
 from app.models.disease import Disease
@@ -150,7 +164,7 @@ log_success "Database tables check completed"
 
 # Seed diseases if database is empty
 log_info "Checking if disease data needs to be seeded..."
-DISEASE_COUNT=$(docker compose exec backend python -c "
+DISEASE_COUNT=$(docker compose -f $COMPOSE_FILE exec backend python -c "
 from app.database import get_db
 from app.models.disease import Disease
 db = next(get_db())
@@ -163,7 +177,7 @@ finally:
 
 if [ "$DISEASE_COUNT" -eq "0" ]; then
     log_info "Seeding disease data..."
-    docker compose exec backend python scripts/seed_diseases.py > /dev/null 2>&1
+    docker compose -f $COMPOSE_FILE exec backend python scripts/seed_diseases.py > /dev/null 2>&1
     log_success "Disease data seeded"
 else
     log_info "Disease data already exists (count: $DISEASE_COUNT)"
