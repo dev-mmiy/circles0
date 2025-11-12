@@ -4,6 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
 import PostCard from '@/components/PostCard';
 import PostForm from '@/components/PostForm';
+import Header from '@/components/Header';
 import { getFeed, type Post } from '@/lib/api/posts';
 
 export default function FeedPage() {
@@ -87,8 +88,10 @@ export default function FeedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">コミュニティフィード</h1>
@@ -217,5 +220,6 @@ export default function FeedPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }
