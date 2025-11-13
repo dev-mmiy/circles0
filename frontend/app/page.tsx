@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useApiService } from '../contexts/ApiContext';
 import AuthButton from '../components/AuthButton';
+import Header from '../components/Header';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -63,10 +64,12 @@ export default function Home() {
   }, [apiService]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
-        <h1 className="text-4xl font-bold text-center mb-8">Hello World!</h1>
-        <p className="text-center text-gray-600 mb-8">Disease Community Platform</p>
+    <>
+      <Header />
+      <main className="flex min-h-screen flex-col items-center justify-center p-24">
+        <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
+          <h1 className="text-4xl font-bold text-center mb-8">Hello World!</h1>
+          <p className="text-center text-gray-600 mb-8">Disease Community Platform</p>
 
         {loading && (
           <div className="text-center">
@@ -152,6 +155,7 @@ export default function Home() {
           </div>
         </div>
       </div>
-    </main>
+      </main>
+    </>
   );
 }
