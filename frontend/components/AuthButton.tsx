@@ -5,9 +5,11 @@ import React, { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createOrGetUser } from '@/lib/api/users';
+import { useUser } from '@/contexts/UserContext';
 
 export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
+  const { user: currentUser } = useUser();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authState, setAuthState] = useState<
     'loading' | 'authenticated' | 'unauthenticated' | 'error'
@@ -137,22 +139,26 @@ export default function AuthButton() {
   }
 
   if (authState === 'authenticated' && user) {
+    // Display nickname from UserContext if available, fallback to Auth0 user data
+    const displayName = currentUser?.nickname || user.name || user.email || 'User';
+    const avatarUrl = currentUser?.avatar_url || user.picture;
+
     return (
       <div className="flex items-center space-x-4">
         <Link
           href="/profile/me"
           className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
         >
-          {user.picture && (
+          {avatarUrl && (
             <Image
-              src={user.picture}
-              alt={user.name || 'User'}
+              src={avatarUrl}
+              alt={displayName}
               width={32}
               height={32}
               className="w-8 h-8 rounded-full"
             />
           )}
-          <span className="text-sm text-gray-700">{user.name || user.email}</span>
+          <span className="text-sm text-gray-700">{displayName}</span>
         </Link>
         <button
           onClick={handleLogout}
