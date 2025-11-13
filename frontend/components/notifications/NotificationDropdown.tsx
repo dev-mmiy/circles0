@@ -7,6 +7,7 @@ import {
   markAllNotificationsAsRead,
   Notification,
 } from '@/lib/api/notifications';
+import { useNotificationContext } from '@/contexts/NotificationContext';
 import NotificationItem from './NotificationItem';
 
 interface NotificationDropdownProps {
@@ -16,13 +17,16 @@ interface NotificationDropdownProps {
 
 /**
  * 通知ドロップダウンコンポーネント
+ * リアルタイム通知に対応
  */
 export default function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Contextから未読数とリアルタイム通知を取得
+  const { unreadCount, setUnreadCount, lastNotification } = useNotificationContext();
 
   // 通知を取得
   const fetchNotifications = async () => {
@@ -30,6 +34,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
       setIsLoading(true);
       const response = await getNotifications(0, 20, false);
       setNotifications(response.notifications);
+      // Contextの未読数を更新
       setUnreadCount(response.unread_count);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
@@ -44,6 +49,14 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
       fetchNotifications();
     }
   }, [isOpen]);
+
+  // リアルタイム通知を受信したらリストを更新
+  useEffect(() => {
+    if (lastNotification && isOpen) {
+      // 新しい通知をリストの先頭に追加
+      fetchNotifications();
+    }
+  }, [lastNotification, isOpen]);
 
   // 外部クリックでドロップダウンを閉じる
   useEffect(() => {

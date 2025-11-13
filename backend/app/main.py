@@ -11,6 +11,7 @@ from app.api.auth import router as auth_router
 from app.api.diseases import router as diseases_router
 from app.api.follows import router as follows_router
 from app.api.notifications import router as notifications_router
+from app.api.notifications_sse import router as notifications_sse_router
 from app.api.posts import router as posts_router
 from app.api.users import router as users_router
 
@@ -109,6 +110,7 @@ app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"]
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(notifications_router, prefix="/api/v1", tags=["notifications"])
+app.include_router(notifications_sse_router, prefix="/api/v1", tags=["notifications", "sse"])
 
 
 @app.get("/")

@@ -4,6 +4,7 @@ import { ApiProvider } from '../contexts/ApiContext';
 import Auth0ProviderWithConfig from '../contexts/Auth0ProviderWithConfig';
 import { UserProvider } from '../contexts/UserContext';
 import { DiseaseProvider } from '../contexts/DiseaseContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
 
 export const metadata: Metadata = {
   title: 'Disease Community Platform',
@@ -17,7 +18,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Auth0ProviderWithConfig>
           <UserProvider>
             <DiseaseProvider>
-              <ApiProvider>{children}</ApiProvider>
+              <NotificationProvider>
+                <ApiProvider>{children}</ApiProvider>
+              </NotificationProvider>
             </DiseaseProvider>
           </UserProvider>
         </Auth0ProviderWithConfig>

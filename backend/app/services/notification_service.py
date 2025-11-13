@@ -2,6 +2,7 @@
 Notification service for managing user notifications.
 """
 
+import asyncio
 from typing import Optional
 from uuid import UUID
 
@@ -11,6 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.notification import Notification, NotificationType
 from app.models.post import Post, PostComment
 from app.models.user import User
+from app.services.notification_broadcaster import broadcaster
 
 
 class NotificationService:
@@ -85,7 +87,40 @@ class NotificationService:
         db.commit()
         db.refresh(notification)
 
+        # Broadcast notification to SSE connections
+        # Run in background to not block the response
+        asyncio.create_task(
+            NotificationService._broadcast_notification(notification)
+        )
+
         return notification
+
+    @staticmethod
+    async def _broadcast_notification(notification: Notification):
+        """
+        Broadcast a notification to real-time SSE connections.
+
+        Args:
+            notification: The notification object to broadcast
+        """
+        # Format notification data for SSE
+        notification_data = {
+            "id": str(notification.id),
+            "type": notification.type.value,
+            "recipient_id": str(notification.recipient_id),
+            "actor_id": str(notification.actor_id),
+            "post_id": str(notification.post_id) if notification.post_id else None,
+            "comment_id": str(notification.comment_id) if notification.comment_id else None,
+            "is_read": notification.is_read,
+            "created_at": notification.created_at.isoformat(),
+        }
+
+        # Broadcast to the recipient
+        await broadcaster.broadcast_to_user(
+            notification.recipient_id,
+            "notification",
+            notification_data
+        )
 
     @staticmethod
     def get_notifications(
