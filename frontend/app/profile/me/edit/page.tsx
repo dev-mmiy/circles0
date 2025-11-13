@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/contexts/UserContext';
 import { UserProfileEditForm } from '@/components/UserProfileEditForm';
+import Header from '@/components/Header';
 
 export default function EditProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -69,8 +70,9 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="bg-white rounded-lg shadow-md p-6">
           {/* Header */}
           <div className="mb-6">

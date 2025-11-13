@@ -10,6 +10,7 @@ import { useDisease } from '@/contexts/DiseaseContext';
 import { useRouter } from 'next/navigation';
 import { EditDiseaseForm } from '@/components/EditDiseaseForm';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
+import Header from '@/components/Header';
 
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -128,8 +129,9 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Profile Card */}
         <div className="mb-6">
           <UserProfileCard user={user} showPrivateInfo={true} onEdit={handleEdit} />
