@@ -16,6 +16,7 @@ import { DiseaseStatusBadge, SeverityBadge } from '@/components/DiseaseStatusBad
 import { CategorySelector } from '@/components/CategorySelector';
 import { updateCurrentUserProfile } from '@/lib/api/users';
 import { useAuth0 } from '@auth0/auth0-react';
+import Header from '@/components/Header';
 
 export default function ComponentTestPage() {
   const { user, loading: userLoading, refreshUser } = useUser();
@@ -124,8 +125,20 @@ export default function ComponentTestPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       <div className="container mx-auto py-8 px-4">
         <h1 className="text-4xl font-bold text-gray-800 mb-8">コンポーネントテストページ</h1>
+
+        {/* Notification Bell Info */}
+        <div className="bg-white shadow rounded-lg p-6 mb-8">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">リアルタイム通知</h2>
+          <p className="text-gray-600 mb-2">
+            通知ベルはヘッダー右上に表示されています。ベルアイコンをクリックすると通知一覧が表示されます。
+          </p>
+          <p className="text-gray-600">
+            緑色のインジケーターが表示されている場合、リアルタイム通知に接続されています。
+          </p>
+        </div>
 
         {/* Master Data Info */}
         <div className="bg-white shadow rounded-lg p-6 mb-8">
