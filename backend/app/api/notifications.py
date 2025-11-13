@@ -19,8 +19,36 @@ from app.schemas.notification import (
     CommentSummary,
 )
 from app.services.notification_service import NotificationService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
+
+
+def get_user_id_from_token(db: Session, current_user: dict) -> UUID:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database
+
+    Raises:
+        HTTPException: If user not found
+    """
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User profile not found. Please complete registration first."
+        )
+
+    return user.id
 
 
 def _format_notification_response(notification) -> NotificationResponse:
@@ -94,7 +122,7 @@ async def get_notifications(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     notifications = NotificationService.get_notifications(
         db, current_user_id, skip, limit, unread_only
@@ -128,7 +156,7 @@ async def get_unread_count(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     unread_count = NotificationService.get_unread_count(db, current_user_id)
 
@@ -153,7 +181,7 @@ async def mark_notification_as_read(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     success = NotificationService.mark_as_read(db, notification_id, current_user_id)
 
@@ -180,7 +208,7 @@ async def mark_all_notifications_as_read(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     NotificationService.mark_all_as_read(db, current_user_id)
 
@@ -205,7 +233,7 @@ async def delete_notification(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     success = NotificationService.delete_notification(db, notification_id, current_user_id)
 

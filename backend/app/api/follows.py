@@ -18,8 +18,40 @@ from app.schemas.follow import (
     UserFollowSummary,
 )
 from app.services.follow_service import FollowService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
+from typing import Optional
 
 router = APIRouter(prefix="/follows", tags=["follows"])
+
+
+def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optional[UUID]:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database, or None if not authenticated
+
+    Raises:
+        HTTPException: If user is authenticated but not found
+    """
+    if not current_user:
+        return None
+
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User profile not found. Please complete registration first."
+        )
+
+    return user.id
 
 
 # ========== Follow/Unfollow Actions ==========
@@ -42,7 +74,7 @@ async def follow_user(
     Requires authentication.
     Cannot follow yourself.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     follow = FollowService.follow_user(db, current_user_id, user_id)
 
@@ -70,7 +102,7 @@ async def unfollow_user(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     success = FollowService.unfollow_user(db, current_user_id, user_id)
 
@@ -180,7 +212,7 @@ async def get_follow_stats(
     - is_following: Whether current user follows this user (if authenticated)
     - is_followed_by: Whether this user follows current user (if authenticated)
     """
-    current_user_id = UUID(current_user["sub"]) if current_user else None
+    current_user_id = get_user_id_from_token(db, current_user)
 
     stats = FollowService.get_follow_stats(db, user_id, current_user_id)
 
@@ -205,7 +237,7 @@ async def check_is_following(
 
     Requires authentication.
     """
-    current_user_id = UUID(current_user["sub"])
+    current_user_id = get_user_id_from_token(db, current_user)
 
     is_following = FollowService.is_following(db, current_user_id, user_id)
 

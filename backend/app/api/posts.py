@@ -22,8 +22,36 @@ from app.schemas.post import (
     PostUpdate,
 )
 from app.services.post_service import PostService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter(prefix="/posts", tags=["posts"])
+
+
+def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optional[UUID]:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database, or None if user not found or not authenticated
+    """
+    if not current_user:
+        return None
+
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User profile not found. Please complete registration first."
+        )
+
+    return user.id
 
 
 # ========== Post Endpoints ==========
@@ -45,7 +73,7 @@ async def create_post(
 
     Requires authentication.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     post = PostService.create_post(db, user_id, post_data)
 
@@ -73,7 +101,7 @@ async def get_feed(
     - Followers-only posts are visible to authenticated users (TODO: filter by following)
     - Private posts are not included in feed
     """
-    user_id = UUID(current_user["sub"]) if current_user else None
+    user_id = get_user_id_from_token(db, current_user)
 
     posts = PostService.get_feed(db, user_id, skip, limit)
 
@@ -98,7 +126,7 @@ async def get_post(
     - Followers only: visible to followers (TODO: implement follow check)
     - Private: visible only to author
     """
-    user_id = UUID(current_user["sub"]) if current_user else None
+    user_id = get_user_id_from_token(db, current_user) if current_user else None
 
     post = PostService.get_post_by_id(db, post_id, user_id)
 
@@ -131,7 +159,7 @@ async def get_user_posts(
     - Authenticated user: public and followers-only posts
     - Unauthenticated user: only public posts
     """
-    current_user_id = UUID(current_user["sub"]) if current_user else None
+    current_user_id = get_user_id_from_token(db, current_user) if current_user else None
 
     posts = PostService.get_user_posts(db, user_id, current_user_id, skip, limit)
 
@@ -154,7 +182,7 @@ async def update_post(
 
     Only the author can update their post.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     post = PostService.update_post(db, post_id, user_id, post_data)
 
@@ -185,7 +213,7 @@ async def delete_post(
 
     Only the author can delete their post.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     success = PostService.delete_post(db, post_id, user_id)
 
@@ -218,7 +246,7 @@ async def like_post(
 
     If the user has already liked the post, the reaction type will be updated.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     like = PostService.like_post(db, post_id, user_id, like_data)
 
@@ -261,7 +289,7 @@ async def unlike_post(
     """
     Remove like from a post.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     success = PostService.unlike_post(db, post_id, user_id)
 
@@ -332,7 +360,7 @@ async def create_comment(
 
     Can be a top-level comment or a reply to another comment (nested).
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     comment = PostService.create_comment(db, post_id, user_id, comment_data)
 
@@ -401,7 +429,7 @@ async def update_comment(
 
     Only the author can update their comment.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     comment = PostService.update_comment(db, comment_id, user_id, comment_data)
 
@@ -429,7 +457,7 @@ async def delete_comment(
 
     Only the author can delete their comment.
     """
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
 
     success = PostService.delete_comment(db, comment_id, user_id)
 
