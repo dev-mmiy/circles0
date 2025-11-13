@@ -29,6 +29,12 @@ export default function Header() {
           {isAuthenticated && (
             <nav className="hidden md:flex items-center space-x-6">
               <Link
+                href="/"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              >
+                ホーム
+              </Link>
+              <Link
                 href="/feed"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
