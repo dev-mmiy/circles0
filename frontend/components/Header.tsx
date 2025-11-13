@@ -3,15 +3,19 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useUser } from '@/contexts/UserContext';
+import { useTranslations } from '@/lib/i18n/translations';
 import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
 
 /**
- * アプリケーション共通ヘッダーコンポーネント
+ * Application Header Component with i18n support
  */
 export default function Header() {
-  const { isAuthenticated, user } = useAuth0();
+  const { isAuthenticated } = useAuth0();
+  const { user } = useUser();
+  const { t } = useTranslations(user?.preferred_language);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   return (
@@ -25,32 +29,32 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* ナビゲーション */}
+          {/* Navigation */}
           {isAuthenticated && (
             <nav className="hidden md:flex items-center space-x-6">
               <Link
                 href="/"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                ホーム
+                {t('navigation.home')}
               </Link>
               <Link
                 href="/feed"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                フィード
+                {t('navigation.feed')}
               </Link>
               <Link
                 href="/users/search"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                ユーザー検索
+                {t('navigation.userSearch')}
               </Link>
               <Link
                 href="/profile/me"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                マイページ
+                {t('navigation.myPage')}
               </Link>
             </nav>
           )}
