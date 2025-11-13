@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗と今後の機能
 
-**最終更新日**: 2025-11-11 (通知機能完全実装完了・本番デプロイ済み)
+**最終更新日**: 2025-11-13 (環境一貫性改善・マスターデータ自動シード完了)
 **現在のステータス**: Phase 2 コミュニティ機能実装中、本番環境稼働中
 
 ---
@@ -51,9 +51,13 @@
 
 ### ✅ マスターデータ
 - [x] 疾患カテゴリー（11種類）
-- [x] 疾患（53種類、ICD-10コード付き）
+- [x] 疾患（43種類、ICD-10コード付き）
 - [x] 疾患ステータス（5種類）
 - [x] 日本語・英語翻訳（計98翻訳）
+- [x] **自動シーディング機能**（✨ NEW - 2025-11-13）
+  - [x] 起動時の自動マスターデータシード
+  - [x] 冪等性対応（既存データ保護）
+  - [x] 外部キー制約違反の回避
 
 ### ✅ インフラ・デプロイ
 - [x] Google Cloud Platform (GCP) セットアップ
@@ -63,7 +67,11 @@
 - [x] Docker コンテナ化
 - [x] CORS設定（全エラーレスポンスへのヘッダー付与）
 - [x] データベースマイグレーション（Alembic）
-- [x] Cloud Run Jobs によるマスターデータシード
+- [x] **環境一貫性の確保**（✨ NEW - 2025-11-13）
+  - [x] 起動時の自動マイグレーション実行（全環境）
+  - [x] 起動時の自動マスターデータシード（全環境）
+  - [x] ローカル・CI・本番環境の完全一致
+  - [x] PostgreSQL ENUM型の冪等性対応（raw SQL使用）
 
 ### ✅ コミュニティ機能
 - [x] **投稿機能**（✨ NEW - 2025-11-09）
@@ -370,6 +378,9 @@
 - ✅ プロフィール更新が永続化されない → API呼び出し実装完了
 - ✅ ユーザー名バリデーションが厳しすぎる → 制約緩和完了
 - ✅ 疾患名が英語表示される → 多言語対応完了
+- ✅ マスターデータシーディングの外部キー制約違反 → 冪等性対応完了（2025-11-13）
+- ✅ PostgreSQL ENUM型の重複作成エラー → raw SQL + DO block対応完了（2025-11-13）
+- ✅ 環境間のデータ不整合 → 自動マイグレーション・シード導入完了（2025-11-13）
 
 ### 未解決
 - [ ] `.next` ディレクトリの権限問題（ローカル環境のみ）
@@ -380,26 +391,25 @@
 ## 🎯 次回セッションの推奨タスク
 
 ### 最優先（すぐに着手）
-1. **通知機能の完成** 🔨 実装中（2025-11-11）
+1. ~~**通知機能の完成**~~ ✅ 完了（2025-11-13）
    - [x] バックエンド実装完了（モデル、サービス、API）
-   - [ ] 既存サービスへの統合
-     - [ ] FollowService にフォロー通知追加
-     - [ ] PostService にコメント通知追加
-     - [ ] LikeService にいいね通知追加
-   - [ ] データベースマイグレーション実行
-   - [ ] フロントエンド実装
-     - [ ] 通知API クライアント
-     - [ ] 通知UI コンポーネント
-     - [ ] ヘッダーに通知ベル統合
-   - [ ] ローカル環境でのテスト
-   - [ ] 本番環境デプロイ
+   - [x] 既存サービスへの統合完了
+   - [x] データベースマイグレーション実行
+   - [x] フロントエンド実装完了
+   - [x] ローカル環境でのテスト完了
+   - [x] 本番環境デプロイ完了
 
-2. **フォロワー限定投稿フィルター**
+2. **リアルタイム通知機能**
+   - WebSocket または Server-Sent Events (SSE) 実装
+   - 通知のリアルタイム配信
+   - ブラウザ通知（Web Push API）
+
+3. **フォロワー限定投稿フィルター**
    - バックエンド: フォロー関係に基づく投稿フィルタリング
    - フロントエンド: フォローしているユーザーの投稿のみ表示
 
 ### 優先度高（短期目標）
-3. **投稿機能の拡張**
+4. **投稿機能の拡張**
    - 画像添付機能（Cloud Storage連携）
    - ハッシュタグ対応
    - メンション機能
@@ -444,16 +454,16 @@
 
 ### コミット履歴（最近10件）
 ```
-d43dd79 - feat: implement notification system backend (2025-11-11)
-0f97794 - feat: implement complete follow/follower feature (2025-11-11)
-4843cfa - feat: implement complete community posts/feed feature with comments and likes (2025-11-09)
-ae44bbc - docs: update PROGRESS.md with completed posts/feed feature
-3db1afc - fix: correct import paths for dependencies in posts API
-94f9649 - docs: add production database migration guide
-327ab80 - feat: add multi-language support for disease names
-392be17 - fix: allow spaces and any characters in username field
-c9ab1f5 - fix: clean empty strings from profile update data
-a90a906 - fix: implement actual API call in updateUserProfile
+9f68044 - fix: make master data seeding idempotent to preserve user data (2025-11-13)
+6e039d3 - feat: add automatic master data seeding on startup (2025-11-13)
+acabe54 - fix: use raw SQL for notification enum type creation to handle duplicates (2025-11-13)
+3eb567a - fix: improve CI test scripts with better error handling and environment detection (2025-11-13)
+afa18c0 - fix: enable automatic database migrations in all environments (2025-11-13)
+4e04e92 - docs: update PROGRESS.md with completed notification feature (2025-11-12)
+b2d0d10 - fix: add missing dependencies and API client for notifications (2025-11-13)
+e64a53b - feat: implement notification frontend with UI components (2025-11-13)
+4a0ad0c - fix: correct notification model imports and add migration file (2025-11-13)
+011d233 - feat: integrate notification creation into follow/comment/like services (2025-11-11)
 ```
 
 ---
