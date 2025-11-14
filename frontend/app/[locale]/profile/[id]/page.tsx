@@ -3,7 +3,8 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Link from 'next/link';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
 import { getFollowStats, type FollowStats } from '@/lib/api/follows';
@@ -12,6 +13,8 @@ import FollowersList from '@/components/FollowersList';
 import FollowingList from '@/components/FollowingList';
 
 export default function PublicProfilePage() {
+  const t = useTranslations('publicProfilePage');
+  const locale = useLocale();
   const params = useParams();
   const userId = params.id as string;
   const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
@@ -49,7 +52,7 @@ export default function PublicProfilePage() {
         }
       } catch (err) {
         console.error('Failed to fetch profile:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load profile');
+        setError(err instanceof Error ? err.message : t('error'));
       } finally {
         setLoading(false);
       }
@@ -76,7 +79,7 @@ export default function PublicProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -86,13 +89,13 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Error</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">{t('error')}</h1>
           <p className="text-gray-600 mb-4">{error}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
           >
-            Go to Home
+            {t('goToHome')}
           </Link>
         </div>
       </div>
@@ -103,13 +106,13 @@ export default function PublicProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
-          <p className="text-gray-600 mb-4">The profile you are looking for could not be found.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
+          <p className="text-gray-600 mb-4">{t('profileNotFoundMessage')}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
           >
-            Go to Home
+            {t('goToHome')}
           </Link>
         </div>
       </div>
@@ -164,21 +167,21 @@ export default function PublicProfilePage() {
                     className="hover:text-blue-600 transition-colors"
                   >
                     <span className="font-bold">{followStats.follower_count}</span>{' '}
-                    <span className="text-gray-500">フォロワー</span>
+                    <span className="text-gray-500">{t('followers')}</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('following')}
                     className="hover:text-blue-600 transition-colors"
                   >
                     <span className="font-bold">{followStats.following_count}</span>{' '}
-                    <span className="text-gray-500">フォロー中</span>
+                    <span className="text-gray-500">{t('following')}</span>
                   </button>
                 </div>
               )}
 
               <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
                 {profile.country && <span>📍 {profile.country.toUpperCase()}</span>}
-                <span>📅 登録: {new Date(profile.created_at).toLocaleDateString('ja-JP')}</span>
+                <span>📅 {t('registered')} {new Date(profile.created_at).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US')}</span>
               </div>
             </div>
           </div>
@@ -186,7 +189,7 @@ export default function PublicProfilePage() {
           {/* Bio */}
           {profile.bio && (
             <div className="mt-6 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">自己紹介</h2>
+              <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('bio')}</h2>
               <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
             </div>
           )}
@@ -204,7 +207,7 @@ export default function PublicProfilePage() {
                     : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                投稿
+                {t('tabs.posts')}
               </button>
               <button
                 onClick={() => setActiveTab('followers')}
@@ -214,7 +217,7 @@ export default function PublicProfilePage() {
                     : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                フォロワー
+                {t('tabs.followers')}
               </button>
               <button
                 onClick={() => setActiveTab('following')}
@@ -224,7 +227,7 @@ export default function PublicProfilePage() {
                     : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                フォロー中
+                {t('tabs.following')}
               </button>
             </nav>
           </div>
@@ -235,7 +238,7 @@ export default function PublicProfilePage() {
                 {/* Diseases */}
                 {profile.diseases && profile.diseases.length > 0 && (
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">登録疾患</h2>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('registeredDiseases')}</h2>
                     <div className="space-y-2">
                       {profile.diseases.map(disease => (
                         <div
@@ -251,7 +254,7 @@ export default function PublicProfilePage() {
                 )}
                 {/* TODO: Add user posts here in the future */}
                 <div className="mt-6 text-center text-gray-500">
-                  <p>ユーザーの投稿一覧は今後実装予定です</p>
+                  <p>{t('postsComingSoon')}</p>
                 </div>
               </div>
             )}
@@ -269,7 +272,7 @@ export default function PublicProfilePage() {
         {/* Back to Home */}
         <div className="mt-8 text-center">
           <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
-            ← ホームに戻る
+            {t('backToHome')}
           </Link>
         </div>
       </div>

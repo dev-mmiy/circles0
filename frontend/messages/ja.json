@@ -427,5 +427,193 @@
     "errors": {
       "searchFailed": "検索に失敗しました"
     }
+  },
+  "diseaseForm": {
+    "title": {
+      "add": "疾患を追加",
+      "edit": "疾患情報を編集"
+    },
+    "sections": {
+      "diseaseSelection": "疾患選択",
+      "diagnosisInfo": "診断情報",
+      "clinicalInfo": "症状・治療情報",
+      "privacySettings": "プライバシー設定"
+    },
+    "steps": {
+      "selectCategory": "1. カテゴリを選択してください",
+      "selectDisease": "2. 疾患を選択してください"
+    },
+    "fields": {
+      "diseaseName": "疾患名を入力",
+      "selectedDisease": "選択された疾患:",
+      "diagnosisDate": "診断日",
+      "severityLevel": "重症度レベル (1-5)",
+      "severityRange": "重症度（1〜5）",
+      "severityMild": "軽度",
+      "severitySevere": "重度",
+      "doctor": "担当医",
+      "hospital": "医療機関",
+      "diagnosisDoctor": "診断医師",
+      "diagnosisHospital": "診断病院",
+      "status": "ステータス",
+      "symptoms": "症状",
+      "limitations": "制限事項",
+      "medications": "服薬情報",
+      "medicationsShort": "服用薬",
+      "notes": "備考",
+      "notesShort": "メモ",
+      "public": "公開設定",
+      "makePublic": "この疾患を公開する",
+      "searchable": "検索可能",
+      "makeSearchable": "検索可能にする",
+      "active": "アクティブ"
+    },
+    "placeholders": {
+      "diseaseName": "疾患名を入力してください",
+      "doctor": "例: 山田太郎医師",
+      "doctorShort": "例: 山田太郎",
+      "hospital": "例: 東京医療センター",
+      "hospitalShort": "例: 東京大学病院",
+      "symptoms": "現在の症状を記入してください",
+      "symptomsDetail": "症状を詳しく記載してください",
+      "limitations": "日常生活での制限や注意事項",
+      "limitationsDetail": "日常生活での制限事項を記載してください",
+      "medications": "現在服用中の薬やサプリメント",
+      "medicationsDetail": "服用中の薬を記載してください",
+      "notes": "その他の情報",
+      "notesOther": "その他のメモ",
+      "select": "選択してください"
+    },
+    "options": {
+      "other": "その他",
+      "severity": {
+        "1": "1 - 軽度",
+        "2": "2 - やや軽度",
+        "3": "3 - 中程度",
+        "4": "4 - やや重度",
+        "5": "5 - 重度"
+      }
+    },
+    "descriptions": {
+      "otherDiseaseNote": "※ 入力された疾患名は備考欄に記録されます",
+      "code": "コード:",
+      "publicDescription": "他のユーザーがこの疾患情報を閲覧できます",
+      "searchableDescription": "検索結果にこの疾患情報を表示します",
+      "activeDescription": "この疾患情報を有効にします"
+    },
+    "buttons": {
+      "cancel": "キャンセル",
+      "saving": "保存中...",
+      "add": "追加",
+      "update": "更新"
+    },
+    "errors": {
+      "selectDisease": "疾患を選択してください",
+      "enterDiseaseName": "疾患名を入力してください",
+      "saveFailed": "保存に失敗しました",
+      "updateFailed": "更新に失敗しました"
+    },
+    "otherDiseasePrefix": "その他の疾患:",
+    "diseaseIdPrefix": "疾患 ID:",
+    "unknownDisease": "不明な疾患"
+  },
+  "diseaseStatusBadge": {
+    "status": {
+      "ACTIVE": "活動期",
+      "REMISSION": "寛解期",
+      "CURED": "完治",
+      "SUSPECTED": "疑い",
+      "UNDER_TREATMENT": "治療中"
+    },
+    "severity": {
+      "1": "軽度",
+      "2": "やや軽度",
+      "3": "中程度",
+      "4": "やや重度",
+      "5": "重度"
+    },
+    "levelPrefix": "Lv."
+  },
+  "categorySelector": {
+    "label": "カテゴリ",
+    "placeholder": "カテゴリを選択してください"
+  },
+  "homePage": {
+    "title": "Hello World!",
+    "subtitle": "疾患コミュニティプラットフォーム",
+    "loading": "読み込み中...",
+    "error": "エラー: {error}",
+    "errorMessage": "バックエンドが実行中でアクセス可能であることを確認してください。",
+    "debugInfo": "デバッグ情報:",
+    "environment": "環境:",
+    "buildTime": "ビルド時刻:",
+    "apiResponse": "API レスポンス:",
+    "message": "メッセージ:",
+    "environmentLabel": "環境:",
+    "version": "バージョン:",
+    "market": "マーケット:",
+    "timestamp": "タイムスタンプ:",
+    "timezone": "タイムゾーン:",
+    "currency": "通貨:",
+    "getStarted": "始める",
+    "apiDocumentation": "API ドキュメント"
+  },
+  "addDiseasePage": {
+    "title": "疾患を追加",
+    "description": "登録する疾患の情報を入力してください",
+    "loading": "読み込み中...",
+    "errors": {
+      "selectDisease": "疾患を選択してください",
+      "addFailed": "疾患の追加に失敗しました"
+    },
+    "backToProfile": "← プロフィールに戻る"
+  },
+  "editProfilePage": {
+    "title": "プロフィール編集",
+    "description": "あなたの情報を編集してください",
+    "loading": "読み込み中...",
+    "pleaseLogIn": "ログインしてください",
+    "loginRequired": "プロフィールを編集するにはログインが必要です。",
+    "goToHome": "ホームへ",
+    "profileNotFound": "プロフィールが見つかりません",
+    "profileLoadFailed": "プロフィールを読み込めませんでした。",
+    "retry": "再試行"
+  },
+  "publicProfilePage": {
+    "loading": "プロフィールを読み込み中...",
+    "error": "エラー",
+    "goToHome": "ホームへ",
+    "profileNotFound": "プロフィールが見つかりません",
+    "profileNotFoundMessage": "お探しのプロフィールが見つかりませんでした。",
+    "followers": "フォロワー",
+    "following": "フォロー中",
+    "registered": "登録:",
+    "bio": "自己紹介",
+    "tabs": {
+      "posts": "投稿",
+      "followers": "フォロワー",
+      "following": "フォロー中"
+    },
+    "registeredDiseases": "登録疾患",
+    "postsComingSoon": "ユーザーの投稿一覧は今後実装予定です",
+    "backToHome": "← ホームに戻る"
+  },
+  "postDetailPage": {
+    "back": "戻る",
+    "loadFailed": "投稿の読み込みに失敗しました",
+    "postNotFound": "投稿が見つかりません",
+    "postNotFoundMessage": "投稿が削除されたか、アクセス権限がありません",
+    "backToFeed": "フィードに戻る"
+  },
+  "errors": {
+    "network": "ネットワークエラーが発生しました。インターネット接続を確認してください。",
+    "unauthorized": "認証が必要です。ログインしてください。",
+    "forbidden": "この操作を実行する権限がありません。",
+    "notFound": "リソースが見つかりませんでした。",
+    "validation": "入力内容に問題があります。確認してください。",
+    "server": "サーバーエラーが発生しました。しばらくしてから再度お試しください。",
+    "general": "エラーが発生しました。",
+    "statusCode": "ステータスコード",
+    "retry": "再試行"
   }
 }

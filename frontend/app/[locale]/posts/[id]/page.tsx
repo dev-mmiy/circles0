@@ -1,14 +1,17 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
+import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import CommentSection from '@/components/CommentSection';
 import PostCard from '@/components/PostCard';
 import { getPost, type PostDetail } from '@/lib/api/posts';
 
 export default function PostDetailPage() {
+  const t = useTranslations('postDetailPage');
   const params = useParams();
   const router = useRouter();
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -30,7 +33,7 @@ export default function PostDetailPage() {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load post:', err);
-      setError(err.message || '投稿の読み込みに失敗しました');
+      setError(err.message || t('loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +84,7 @@ export default function PostDetailPage() {
                 d="M15 19l-7-7 7-7"
               />
             </svg>
-            戻る
+            {t('back')}
           </button>
 
           <div className="bg-white rounded-lg shadow p-12 text-center">
@@ -99,17 +102,17 @@ export default function PostDetailPage() {
               />
             </svg>
             <h3 className="mt-4 text-lg font-medium text-gray-900">
-              投稿が見つかりません
+              {t('postNotFound')}
             </h3>
             <p className="mt-2 text-gray-500">
-              {error || '投稿が削除されたか、アクセス権限がありません'}
+              {error || t('postNotFoundMessage')}
             </p>
             <div className="mt-6">
               <Link
                 href="/feed"
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
-                フィードに戻る
+                {t('backToFeed')}
               </Link>
             </div>
           </div>
@@ -139,7 +142,7 @@ export default function PostDetailPage() {
               d="M15 19l-7-7 7-7"
             />
           </svg>
-          戻る
+          {t('back')}
         </button>
 
         {/* Post */}

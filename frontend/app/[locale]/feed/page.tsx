@@ -7,6 +7,8 @@ import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
 import PostForm from '@/components/PostForm';
 import Header from '@/components/Header';
+import { ErrorDisplay } from '@/components/ErrorDisplay';
+import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { getFeed, type Post } from '@/lib/api/posts';
 
 export default function FeedPage() {
@@ -14,7 +16,7 @@ export default function FeedPage() {
   const t = useTranslations('feed');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<any>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -46,7 +48,8 @@ export default function FeedPage() {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load posts:', err);
-      setError(err.message || t('errorLoadingPosts'));
+      const errorInfo = extractErrorInfo(err);
+      setError(errorInfo);
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -121,14 +124,12 @@ export default function FeedPage() {
 
         {/* Error message */}
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-600">{error}</p>
-            <button
-              onClick={() => loadPosts(true)}
-              className="mt-2 text-sm text-red-700 hover:underline"
-            >
-              {t('retry')}
-            </button>
+          <div className="mb-6">
+            <ErrorDisplay
+              error={error}
+              onRetry={() => loadPosts(true)}
+              showDetails={false}
+            />
           </div>
         )}
 

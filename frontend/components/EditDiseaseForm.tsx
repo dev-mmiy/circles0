@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import { DiseaseStatus } from '@/lib/api/diseases';
 
@@ -17,6 +18,8 @@ interface EditDiseaseFormProps {
 }
 
 export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: EditDiseaseFormProps) {
+  const t = useTranslations('diseaseForm');
+  
   // Form state
   const [formData, setFormData] = useState<UserDiseaseUpdate>({
     status_id: userDisease.status_id,
@@ -37,9 +40,9 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
 
   // Get disease name
   const getDiseaseName = (): string => {
-    if (!userDisease.disease) return 'Unknown Disease';
+    if (!userDisease.disease) return t('unknownDisease');
     const jaTranslation = userDisease.disease.translations?.find(
-      (t: any) => t.language_code === 'ja'
+      (trans: any) => trans.language_code === 'ja'
     );
     return jaTranslation?.translated_name || userDisease.disease.name;
   };
@@ -47,8 +50,8 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
   // Get status name by ID
   const getStatusName = (statusId: number): string => {
     const status = statuses.find(s => s.id === statusId);
-    if (!status) return 'Unknown';
-    const jaTranslation = status.translations?.find(t => t.language_code === 'ja');
+    if (!status) return t('fields.status');
+    const jaTranslation = status.translations?.find(trans => trans.language_code === 'ja');
     return jaTranslation?.translated_name || status.status_code;
   };
 
@@ -80,7 +83,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
       await onSave(userDisease.id, formData);
     } catch (err) {
       console.error('Failed to update disease:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update disease');
+      setError(err instanceof Error ? err.message : t('errors.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -91,7 +94,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
       {/* Header */}
       <div className="mb-4">
         <h3 className="text-lg font-bold text-gray-900">
-          疾患情報を編集: <span className="text-blue-600">{getDiseaseName()}</span>
+          {t('title.edit')}: <span className="text-blue-600">{getDiseaseName()}</span>
         </h3>
       </div>
 
@@ -99,7 +102,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Status Selection */}
         <div>
           <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 mb-1">
-            ステータス
+            {t('fields.status')}
           </label>
           <select
             id="status_id"
@@ -108,7 +111,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
             onChange={handleChange}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
           >
-            <option value="">選択してください</option>
+            <option value="">{t('placeholders.select')}</option>
             {statuses
               .sort((a, b) => a.display_order - b.display_order)
               .map(status => (
@@ -122,7 +125,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Diagnosis Date */}
         <div>
           <label htmlFor="diagnosis_date" className="block text-sm font-medium text-gray-700 mb-1">
-            診断日
+            {t('fields.diagnosisDate')}
           </label>
           <input
             type="date"
@@ -142,7 +145,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               htmlFor="diagnosis_doctor"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              担当医
+              {t('fields.doctor')}
             </label>
             <input
               type="text"
@@ -150,7 +153,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               name="diagnosis_doctor"
               value={formData.diagnosis_doctor || ''}
               onChange={handleChange}
-              placeholder="例: 山田太郎"
+              placeholder={t('placeholders.doctorShort')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               maxLength={200}
             />
@@ -162,7 +165,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               htmlFor="diagnosis_hospital"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              医療機関
+              {t('fields.hospital')}
             </label>
             <input
               type="text"
@@ -170,7 +173,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               name="diagnosis_hospital"
               value={formData.diagnosis_hospital || ''}
               onChange={handleChange}
-              placeholder="例: 東京大学病院"
+              placeholder={t('placeholders.hospitalShort')}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
               maxLength={200}
             />
@@ -180,7 +183,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Severity Level */}
         <div>
           <label htmlFor="severity_level" className="block text-sm font-medium text-gray-700 mb-1">
-            重症度（1〜5）
+            {t('fields.severityRange')}
           </label>
           <div className="flex items-center space-x-3">
             <input
@@ -198,22 +201,22 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
             </span>
           </div>
           <div className="flex justify-between text-xs text-gray-500 mt-1">
-            <span>軽度</span>
-            <span>重度</span>
+            <span>{t('fields.severityMild')}</span>
+            <span>{t('fields.severitySevere')}</span>
           </div>
         </div>
 
         {/* Symptoms */}
         <div>
           <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 mb-1">
-            症状
+            {t('fields.symptoms')}
           </label>
           <textarea
             id="symptoms"
             name="symptoms"
             value={formData.symptoms || ''}
             onChange={handleChange}
-            placeholder="症状を詳しく記載してください"
+            placeholder={t('placeholders.symptomsDetail')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />
@@ -222,14 +225,14 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Limitations */}
         <div>
           <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 mb-1">
-            制限事項
+            {t('fields.limitations')}
           </label>
           <textarea
             id="limitations"
             name="limitations"
             value={formData.limitations || ''}
             onChange={handleChange}
-            placeholder="日常生活での制限事項を記載してください"
+            placeholder={t('placeholders.limitationsDetail')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />
@@ -238,14 +241,14 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Medications */}
         <div>
           <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-1">
-            服用薬
+            {t('fields.medicationsShort')}
           </label>
           <textarea
             id="medications"
             name="medications"
             value={formData.medications || ''}
             onChange={handleChange}
-            placeholder="服用中の薬を記載してください"
+            placeholder={t('placeholders.medicationsDetail')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />
@@ -254,14 +257,14 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
         {/* Notes */}
         <div>
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-            メモ
+            {t('fields.notesShort')}
           </label>
           <textarea
             id="notes"
             name="notes"
             value={formData.notes || ''}
             onChange={handleChange}
-            placeholder="その他のメモ"
+            placeholder={t('placeholders.notesOther')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />
@@ -269,7 +272,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
 
         {/* Privacy Settings */}
         <div className="space-y-2 p-3 bg-white rounded-lg border border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-700">公開設定</h4>
+          <h4 className="text-sm font-semibold text-gray-700">{t('sections.privacySettings')}</h4>
 
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
@@ -279,7 +282,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">この疾患を公開する</span>
+            <span className="text-sm text-gray-700">{t('fields.makePublic')}</span>
           </label>
 
           <label className="flex items-center space-x-2 cursor-pointer">
@@ -290,7 +293,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">検索可能にする</span>
+            <span className="text-sm text-gray-700">{t('fields.makeSearchable')}</span>
           </label>
         </div>
 
@@ -309,14 +312,14 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
             disabled={submitting}
             className="px-5 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
-            キャンセル
+            {t('buttons.cancel')}
           </button>
           <button
             type="submit"
             disabled={submitting}
             className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
           >
-            {submitting ? '保存中...' : '更新'}
+            {submitting ? t('buttons.saving') : t('buttons.update')}
           </button>
         </div>
       </form>

@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import { DiseaseStatus } from '@/lib/api/diseases';
 
@@ -24,6 +25,8 @@ export function EditDiseaseModal({
   onClose,
   onSave,
 }: EditDiseaseModalProps) {
+  const t = useTranslations('diseaseForm');
+  
   // Form state
   const [formData, setFormData] = useState<UserDiseaseUpdate>({
     status_id: userDisease.status_id,
@@ -44,9 +47,9 @@ export function EditDiseaseModal({
 
   // Get disease name
   const getDiseaseName = (): string => {
-    if (!userDisease.disease) return 'Unknown Disease';
+    if (!userDisease.disease) return t('unknownDisease');
     const jaTranslation = userDisease.disease.translations?.find(
-      (t: any) => t.language_code === 'ja'
+      (trans: any) => trans.language_code === 'ja'
     );
     return jaTranslation?.translated_name || userDisease.disease.name;
   };
@@ -54,8 +57,8 @@ export function EditDiseaseModal({
   // Get status name by ID
   const getStatusName = (statusId: number): string => {
     const status = statuses.find(s => s.id === statusId);
-    if (!status) return 'Unknown';
-    const jaTranslation = status.translations?.find(t => t.language_code === 'ja');
+    if (!status) return t('fields.status');
+    const jaTranslation = status.translations?.find(trans => trans.language_code === 'ja');
     return jaTranslation?.translated_name || status.status_code;
   };
 
@@ -88,7 +91,7 @@ export function EditDiseaseModal({
       onClose();
     } catch (err) {
       console.error('Failed to update disease:', err);
-      setError(err instanceof Error ? err.message : 'Failed to update disease');
+      setError(err instanceof Error ? err.message : t('errors.updateFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -102,7 +105,7 @@ export function EditDiseaseModal({
         {/* Modal Header */}
         <div className="sticky top-0 bg-white border-b px-6 py-4">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-xl font-bold text-gray-900">疾患情報の編集</h2>
+            <h2 className="text-xl font-bold text-gray-900">{t('title.edit')}</h2>
             <button
               onClick={onClose}
               className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -126,7 +129,7 @@ export function EditDiseaseModal({
           {/* Status Selection */}
           <div>
             <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 mb-2">
-              ステータス
+              {t('fields.status')}
             </label>
             <select
               id="status_id"
@@ -135,7 +138,7 @@ export function EditDiseaseModal({
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">選択してください</option>
+              <option value="">{t('placeholders.select')}</option>
               {statuses
                 .sort((a, b) => a.display_order - b.display_order)
                 .map(status => (
@@ -152,7 +155,7 @@ export function EditDiseaseModal({
               htmlFor="diagnosis_date"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              診断日
+              {t('fields.diagnosisDate')}
             </label>
             <input
               type="date"
@@ -170,7 +173,7 @@ export function EditDiseaseModal({
               htmlFor="diagnosis_doctor"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              診断医師
+              {t('fields.diagnosisDoctor')}
             </label>
             <input
               type="text"
@@ -178,7 +181,7 @@ export function EditDiseaseModal({
               name="diagnosis_doctor"
               value={formData.diagnosis_doctor || ''}
               onChange={handleChange}
-              placeholder="例: 山田太郎"
+              placeholder={t('placeholders.doctorShort')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               maxLength={200}
             />
@@ -190,7 +193,7 @@ export function EditDiseaseModal({
               htmlFor="diagnosis_hospital"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              診断病院
+              {t('fields.diagnosisHospital')}
             </label>
             <input
               type="text"
@@ -198,7 +201,7 @@ export function EditDiseaseModal({
               name="diagnosis_hospital"
               value={formData.diagnosis_hospital || ''}
               onChange={handleChange}
-              placeholder="例: 東京大学病院"
+              placeholder={t('placeholders.hospitalShort')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               maxLength={200}
             />
@@ -210,7 +213,7 @@ export function EditDiseaseModal({
               htmlFor="severity_level"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              重症度（1〜5）
+              {t('fields.severityRange')}
             </label>
             <div className="flex items-center space-x-4">
               <input
@@ -228,22 +231,22 @@ export function EditDiseaseModal({
               </span>
             </div>
             <div className="flex justify-between text-xs text-gray-500 mt-1">
-              <span>軽度</span>
-              <span>重度</span>
+              <span>{t('fields.severityMild')}</span>
+              <span>{t('fields.severitySevere')}</span>
             </div>
           </div>
 
           {/* Symptoms */}
           <div>
             <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 mb-2">
-              症状
+              {t('fields.symptoms')}
             </label>
             <textarea
               id="symptoms"
               name="symptoms"
               value={formData.symptoms || ''}
               onChange={handleChange}
-              placeholder="症状を詳しく記載してください"
+              placeholder={t('placeholders.symptomsDetail')}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -252,14 +255,14 @@ export function EditDiseaseModal({
           {/* Limitations */}
           <div>
             <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 mb-2">
-              制限事項
+              {t('fields.limitations')}
             </label>
             <textarea
               id="limitations"
               name="limitations"
               value={formData.limitations || ''}
               onChange={handleChange}
-              placeholder="日常生活での制限事項を記載してください"
+              placeholder={t('placeholders.limitationsDetail')}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -268,14 +271,14 @@ export function EditDiseaseModal({
           {/* Medications */}
           <div>
             <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-2">
-              服用薬
+              {t('fields.medicationsShort')}
             </label>
             <textarea
               id="medications"
               name="medications"
               value={formData.medications || ''}
               onChange={handleChange}
-              placeholder="服用中の薬を記載してください"
+              placeholder={t('placeholders.medicationsDetail')}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -284,14 +287,14 @@ export function EditDiseaseModal({
           {/* Notes */}
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-2">
-              メモ
+              {t('fields.notesShort')}
             </label>
             <textarea
               id="notes"
               name="notes"
               value={formData.notes || ''}
               onChange={handleChange}
-              placeholder="その他のメモ"
+              placeholder={t('placeholders.notesOther')}
               rows={3}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
             />
@@ -299,7 +302,7 @@ export function EditDiseaseModal({
 
           {/* Privacy Settings */}
           <div className="space-y-3 p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-semibold text-gray-700">公開設定</h4>
+            <h4 className="text-sm font-semibold text-gray-700">{t('sections.privacySettings')}</h4>
 
             <label className="flex items-center space-x-3 cursor-pointer">
               <input
@@ -309,7 +312,7 @@ export function EditDiseaseModal({
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700">この疾患を公開する</span>
+              <span className="text-sm text-gray-700">{t('fields.makePublic')}</span>
             </label>
 
             <label className="flex items-center space-x-3 cursor-pointer">
@@ -320,7 +323,7 @@ export function EditDiseaseModal({
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <span className="text-sm text-gray-700">検索可能にする</span>
+              <span className="text-sm text-gray-700">{t('fields.makeSearchable')}</span>
             </label>
           </div>
 
@@ -339,14 +342,14 @@ export function EditDiseaseModal({
               disabled={submitting}
               className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              キャンセル
+              {t('buttons.cancel')}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? '保存中...' : '更新'}
+              {submitting ? t('buttons.saving') : t('buttons.update')}
             </button>
           </div>
         </form>

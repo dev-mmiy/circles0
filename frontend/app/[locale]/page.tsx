@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { useApiService } from '@/contexts/ApiContext';
 import AuthButton from '@/components/AuthButton';
 import Header from '@/components/Header';
@@ -20,6 +21,7 @@ interface ApiResponse {
 }
 
 export default function Home() {
+  const t = useTranslations('homePage');
   const apiService = useApiService();
   const [apiData, setApiData] = useState<ApiResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -68,64 +70,64 @@ export default function Home() {
       <Header />
       <main className="flex min-h-screen flex-col items-center justify-center p-24">
         <div className="z-10 max-w-5xl w-full items-center justify-center font-mono text-sm">
-          <h1 className="text-4xl font-bold text-center mb-8">Hello World!</h1>
-          <p className="text-center text-gray-600 mb-8">Disease Community Platform</p>
+          <h1 className="text-4xl font-bold text-center mb-8">{t('title')}</h1>
+          <p className="text-center text-gray-600 mb-8">{t('subtitle')}</p>
 
         {loading && (
           <div className="text-center">
-            <p className="text-blue-600">Loading...</p>
+            <p className="text-blue-600">{t('loading')}</p>
           </div>
         )}
 
         {error && (
           <div className="text-center">
-            <p className="text-red-600">Error: {error}</p>
+            <p className="text-red-600">{t('error', { error })}</p>
             <p className="text-sm text-gray-500 mt-2">
-              Make sure the backend is running and accessible.
+              {t('errorMessage')}
             </p>
             <div className="mt-4 p-4 bg-yellow-100 rounded">
               <p className="text-sm text-gray-700">
-                <strong>Debug Info:</strong>
+                <strong>{t('debugInfo')}</strong>
               </p>
               <p className="text-xs text-gray-600">
-                Environment: {process.env.NODE_ENV || 'unknown'}
+                {t('environment')} {process.env.NODE_ENV || 'unknown'}
               </p>
-              <p className="text-xs text-gray-600">Build Time: {new Date().toISOString()}</p>
+              <p className="text-xs text-gray-600">{t('buildTime')} {new Date().toISOString()}</p>
             </div>
           </div>
         )}
 
         {apiData && (
           <div className="bg-gray-100 p-6 rounded-lg">
-            <h2 className="text-xl font-semibold mb-4">API Response:</h2>
+            <h2 className="text-xl font-semibold mb-4">{t('apiResponse')}</h2>
             <div className="space-y-2">
               <p>
-                <strong>Message:</strong> {apiData.message}
+                <strong>{t('message')}</strong> {apiData.message}
               </p>
               <p>
-                <strong>Environment:</strong> {apiData.environment}
+                <strong>{t('environmentLabel')}</strong> {apiData.environment}
               </p>
               <p>
-                <strong>Version:</strong> {apiData.version}
+                <strong>{t('version')}</strong> {apiData.version}
               </p>
               {apiData.market && (
                 <p>
-                  <strong>Market:</strong> {apiData.market}
+                  <strong>{t('market')}</strong> {apiData.market}
                 </p>
               )}
               {apiData.timestamp && (
                 <p>
-                  <strong>Timestamp:</strong> {apiData.timestamp}
+                  <strong>{t('timestamp')}</strong> {apiData.timestamp}
                 </p>
               )}
               {apiData.timezone && (
                 <p>
-                  <strong>Timezone:</strong> {apiData.timezone}
+                  <strong>{t('timezone')}</strong> {apiData.timezone}
                 </p>
               )}
               {apiData.currency && (
                 <p>
-                  <strong>Currency:</strong> {apiData.currency}
+                  <strong>{t('currency')}</strong> {apiData.currency}
                 </p>
               )}
             </div>
@@ -134,7 +136,7 @@ export default function Home() {
 
         <div className="mt-8 space-y-4">
           <div className="text-center">
-            <h2 className="text-2xl font-semibold text-gray-900 mb-4">Get Started</h2>
+            <h2 className="text-2xl font-semibold text-gray-900 mb-4">{t('getStarted')}</h2>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <AuthButton />
               {/* Auth0 handles account creation via AuthButton */}
@@ -148,7 +150,7 @@ export default function Home() {
                     className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors font-medium"
                     target="_blank"
                   >
-                    API Documentation
+                    {t('apiDocumentation')}
                   </Link>
                 )}
             </div>

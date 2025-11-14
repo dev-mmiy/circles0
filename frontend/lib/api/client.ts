@@ -2,7 +2,8 @@
  * API Client Configuration
  */
 
-import axios from 'axios';
+import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { extractErrorInfo, requiresAuthRedirect, ErrorType } from '../utils/errorHandler';
 
 // API base URL from environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -48,17 +49,41 @@ apiClient.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
+  async (error: AxiosError) => {
     if (error.response) {
       // Server responded with error status
+      const errorInfo = extractErrorInfo(error);
+      
+      // Handle 401/403 errors - redirect to login
+      if (requiresAuthRedirect(errorInfo)) {
+        // Only redirect if we're in the browser
+        if (typeof window !== 'undefined') {
+          // Clear any stored auth tokens
+          setAuthToken(null);
+          
+          // Store the current URL to redirect back after login
+          const currentPath = window.location.pathname;
+          if (currentPath !== '/') {
+            sessionStorage.setItem('redirectAfterLogin', currentPath);
+          }
+          
+          // Redirect to home page (which will show login button)
+          // In a real app, you might want to redirect to a dedicated login page
+          if (currentPath !== '/') {
+            window.location.href = '/';
+          }
+        }
+      }
+      
       console.error('API Error:', error.response.status, error.response.data);
     } else if (error.request) {
-      // Request made but no response received
+      // Request made but no response received (network error)
       console.error('Network Error:', error.message);
     } else {
       // Error in request setup
       console.error('Request Error:', error.message);
     }
+    
     return Promise.reject(error);
   }
 );

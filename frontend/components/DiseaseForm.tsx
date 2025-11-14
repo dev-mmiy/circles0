@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { UserDiseaseCreate, UserDiseaseUpdate, UserDiseaseDetailed } from '@/lib/api/users';
 import { Disease, DiseaseCategory, DiseaseStatus } from '@/lib/api/diseases';
 
@@ -37,6 +38,8 @@ export function DiseaseForm({
   onCancel,
   onSearchDiseases,
 }: DiseaseFormProps) {
+  const t = useTranslations('diseaseForm');
+  
   // Form state
   const [formData, setFormData] = useState<UserDiseaseCreate | UserDiseaseUpdate>({
     disease_id: initialData?.disease_id,
@@ -69,7 +72,7 @@ export function DiseaseForm({
   const getDiseaseName = (diseaseId: number): string => {
     const disease = diseases.find(d => d.id === diseaseId);
     const jaTranslation = disease?.translations?.find(t => t.language_code === 'ja');
-    return jaTranslation?.translated_name || disease?.name || `疾患 ID: ${diseaseId}`;
+    return jaTranslation?.translated_name || disease?.name || `${t('diseaseIdPrefix')} ${diseaseId}`;
   };
 
   // Get status name by ID
@@ -164,11 +167,11 @@ export function DiseaseForm({
     // Validation
     if (mode === 'add') {
       if (!isOther && !(formData as UserDiseaseCreate).disease_id) {
-        setError('疾患を選択してください');
+        setError(t('errors.selectDisease'));
         return;
       }
       if (isOther && !otherDiseaseName.trim()) {
-        setError('疾患名を入力してください');
+        setError(t('errors.enterDiseaseName'));
         return;
       }
     }
@@ -178,7 +181,7 @@ export function DiseaseForm({
       // If "Other" is selected, add the other disease name to notes
       const submitData = { ...formData };
       if (isOther && otherDiseaseName) {
-        submitData.notes = `その他の疾患: ${otherDiseaseName}${
+        submitData.notes = `${t('otherDiseasePrefix')} ${otherDiseaseName}${
           submitData.notes ? '\n' + submitData.notes : ''
         }`;
       }
@@ -186,7 +189,7 @@ export function DiseaseForm({
       await onSubmit(submitData);
     } catch (err) {
       console.error('Error submitting form:', err);
-      setError(err instanceof Error ? err.message : '保存に失敗しました');
+      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -200,7 +203,7 @@ export function DiseaseForm({
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">
-        {mode === 'add' ? '疾患を追加' : '疾患情報を編集'}
+        {mode === 'add' ? t('title.add') : t('title.edit')}
       </h2>
 
       {error && (
@@ -212,12 +215,12 @@ export function DiseaseForm({
       {/* Disease Selection (Add mode only) */}
       {mode === 'add' && (
         <div className="mb-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">疾患選択</h3>
+          <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.diseaseSelection')}</h3>
 
           {/* Step 1: Category Selection */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              1. カテゴリを選択してください
+              {t('steps.selectCategory')}
             </label>
             <div className="border border-gray-300 rounded-lg overflow-hidden">
               {sortedCategories.map((category, categoryIndex) => {
@@ -267,7 +270,7 @@ export function DiseaseForm({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
                     <span className="text-gray-400 mr-3 select-none">⑫</span>
-                    <span className="text-gray-900">その他</span>
+                    <span className="text-gray-900">{t('options.other')}</span>
                   </div>
                   {isOther && (
                     <span className="text-blue-600">
@@ -289,7 +292,7 @@ export function DiseaseForm({
           {selectedCategoryId && !isOther && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                2. 疾患を選択してください
+                {t('steps.selectDisease')}
               </label>
               <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
                 {(diseasesByCategory[selectedCategoryId] || []).map(disease => {
@@ -312,7 +315,7 @@ export function DiseaseForm({
                           </div>
                           {disease.disease_code && (
                             <div className="text-xs text-gray-500 mt-1">
-                              コード: {disease.disease_code}
+                              {t('descriptions.code')} {disease.disease_code}
                             </div>
                           )}
                           {jaTranslation?.details && (
@@ -344,17 +347,17 @@ export function DiseaseForm({
           {isOther && (
             <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                疾患名を入力 <span className="text-red-500">*</span>
+                {t('fields.diseaseName')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 value={otherDiseaseName}
                 onChange={e => setOtherDiseaseName(e.target.value)}
-                placeholder="疾患名を入力してください"
+                placeholder={t('placeholders.diseaseName')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required={isOther}
               />
-              <p className="mt-2 text-sm text-gray-600">※ 入力された疾患名は備考欄に記録されます</p>
+              <p className="mt-2 text-sm text-gray-600">{t('descriptions.otherDiseaseNote')}</p>
             </div>
           )}
 
@@ -362,7 +365,7 @@ export function DiseaseForm({
           {!isOther && (formData as UserDiseaseCreate).disease_id && (
             <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
               <p className="text-sm text-gray-700">
-                選択された疾患:{' '}
+                {t('fields.selectedDisease')}{' '}
                 <span className="font-semibold">
                   {getDiseaseName((formData as UserDiseaseCreate).disease_id)}
                 </span>
@@ -374,7 +377,7 @@ export function DiseaseForm({
 
       {/* Diagnosis Information */}
       <div className="mb-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">診断情報</h3>
+        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.diagnosisInfo')}</h3>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Diagnosis Date */}
@@ -383,7 +386,7 @@ export function DiseaseForm({
               htmlFor="diagnosis_date"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              診断日
+              {t('fields.diagnosisDate')}
             </label>
             <input
               type="date"
@@ -401,7 +404,7 @@ export function DiseaseForm({
               htmlFor="severity_level"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              重症度レベル (1-5)
+              {t('fields.severityLevel')}
             </label>
             <select
               id="severity_level"
@@ -410,12 +413,12 @@ export function DiseaseForm({
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">選択してください</option>
-              <option value="1">1 - 軽度</option>
-              <option value="2">2 - やや軽度</option>
-              <option value="3">3 - 中程度</option>
-              <option value="4">4 - やや重度</option>
-              <option value="5">5 - 重度</option>
+              <option value="">{t('placeholders.select')}</option>
+              <option value="1">{t('options.severity.1')}</option>
+              <option value="2">{t('options.severity.2')}</option>
+              <option value="3">{t('options.severity.3')}</option>
+              <option value="4">{t('options.severity.4')}</option>
+              <option value="5">{t('options.severity.5')}</option>
             </select>
           </div>
 
@@ -425,7 +428,7 @@ export function DiseaseForm({
               htmlFor="diagnosis_doctor"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              担当医
+              {t('fields.doctor')}
             </label>
             <input
               type="text"
@@ -434,7 +437,7 @@ export function DiseaseForm({
               value={formData.diagnosis_doctor || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="例: 山田太郎医師"
+              placeholder={t('placeholders.doctor')}
             />
           </div>
 
@@ -444,7 +447,7 @@ export function DiseaseForm({
               htmlFor="diagnosis_hospital"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              医療機関
+              {t('fields.hospital')}
             </label>
             <input
               type="text"
@@ -453,14 +456,14 @@ export function DiseaseForm({
               value={formData.diagnosis_hospital || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="例: 東京医療センター"
+              placeholder={t('placeholders.hospital')}
             />
           </div>
 
           {/* Disease Status */}
           <div className="col-span-2">
             <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 mb-1">
-              疾患ステータス
+              {t('fields.status')}
             </label>
             <select
               id="status_id"
@@ -469,7 +472,7 @@ export function DiseaseForm({
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">選択してください</option>
+              <option value="">{t('placeholders.select')}</option>
               {statuses.map(status => (
                 <option key={status.id} value={status.id}>
                   {getStatusName(status)}
@@ -482,12 +485,12 @@ export function DiseaseForm({
 
       {/* Clinical Information */}
       <div className="mb-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">症状・治療情報</h3>
+        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.clinicalInfo')}</h3>
 
         {/* Symptoms */}
         <div>
           <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 mb-1">
-            症状
+            {t('fields.symptoms')}
           </label>
           <textarea
             id="symptoms"
@@ -496,14 +499,14 @@ export function DiseaseForm({
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="現在の症状を記入してください"
+            placeholder={t('placeholders.symptoms')}
           />
         </div>
 
         {/* Limitations */}
         <div>
           <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 mb-1">
-            制限事項
+            {t('fields.limitations')}
           </label>
           <textarea
             id="limitations"
@@ -512,14 +515,14 @@ export function DiseaseForm({
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="日常生活での制限や注意事項"
+            placeholder={t('placeholders.limitations')}
           />
         </div>
 
         {/* Medications */}
         <div>
           <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-1">
-            服薬情報
+            {t('fields.medications')}
           </label>
           <textarea
             id="medications"
@@ -528,14 +531,14 @@ export function DiseaseForm({
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="現在服用中の薬やサプリメント"
+            placeholder={t('placeholders.medications')}
           />
         </div>
 
         {/* Notes */}
         <div>
           <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
-            備考
+            {t('fields.notes')}
           </label>
           <textarea
             id="notes"
@@ -544,14 +547,14 @@ export function DiseaseForm({
             onChange={handleChange}
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="その他の情報"
+            placeholder={t('placeholders.notes')}
           />
         </div>
       </div>
 
       {/* Privacy Settings */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">プライバシー設定</h3>
+        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">{t('sections.privacySettings')}</h3>
 
         <div className="space-y-3">
           <label className="flex items-center">
@@ -563,8 +566,8 @@ export function DiseaseForm({
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700">公開設定</span>
-              <p className="text-sm text-gray-500">他のユーザーがこの疾患情報を閲覧できます</p>
+              <span className="font-medium text-gray-700">{t('fields.public')}</span>
+              <p className="text-sm text-gray-500">{t('descriptions.publicDescription')}</p>
             </span>
           </label>
 
@@ -577,8 +580,8 @@ export function DiseaseForm({
               className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700">検索可能</span>
-              <p className="text-sm text-gray-500">検索結果にこの疾患情報を表示します</p>
+              <span className="font-medium text-gray-700">{t('fields.searchable')}</span>
+              <p className="text-sm text-gray-500">{t('descriptions.searchableDescription')}</p>
             </span>
           </label>
 
@@ -592,8 +595,8 @@ export function DiseaseForm({
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="ml-3">
-                <span className="font-medium text-gray-700">アクティブ</span>
-                <p className="text-sm text-gray-500">この疾患情報を有効にします</p>
+                <span className="font-medium text-gray-700">{t('fields.active')}</span>
+                <p className="text-sm text-gray-500">{t('descriptions.activeDescription')}</p>
               </span>
             </label>
           )}
@@ -608,14 +611,14 @@ export function DiseaseForm({
           disabled={submitting}
           className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
         >
-          キャンセル
+          {t('buttons.cancel')}
         </button>
         <button
           type="submit"
           disabled={submitting}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? '保存中...' : mode === 'add' ? '追加' : '更新'}
+          {submitting ? t('buttons.saving') : mode === 'add' ? t('buttons.add') : t('buttons.update')}
         </button>
       </div>
     </form>

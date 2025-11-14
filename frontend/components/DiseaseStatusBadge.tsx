@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { DiseaseStatus } from '@/lib/api/diseases';
 
 interface DiseaseStatusBadgeProps {
@@ -48,7 +49,7 @@ const statusColors: Record<string, { bg: string; text: string; border: string }>
   },
 };
 
-// Status code to Japanese label mapping
+// Status code to Japanese label mapping (fallback, will be replaced by translations)
 const statusLabels: Record<string, string> = {
   ACTIVE: '活動期',
   REMISSION: '寛解期',
@@ -65,6 +66,9 @@ const sizeClasses = {
 };
 
 export function DiseaseStatusBadge({ status, statusCode, size = 'md' }: DiseaseStatusBadgeProps) {
+  const t = useTranslations('diseaseStatusBadge');
+  const locale = useLocale();
+  
   // Determine the status code to use
   const code = status?.status_code || statusCode || 'DEFAULT';
 
@@ -74,13 +78,27 @@ export function DiseaseStatusBadge({ status, statusCode, size = 'md' }: DiseaseS
   // Get label (prioritize translation if available)
   let label = statusLabels[code] || code;
   if (status?.translations && status.translations.length > 0) {
-    // Try to find Japanese translation first
-    const jaTranslation = status.translations.find(t => t.language_code === 'ja');
-    if (jaTranslation) {
-      label = jaTranslation.translated_name;
+    // Try to find translation matching current locale
+    const localeTranslation = status.translations.find(t => t.language_code === locale);
+    if (localeTranslation) {
+      label = localeTranslation.translated_name;
     } else {
-      // Fallback to first available translation
-      label = status.translations[0].translated_name;
+      // Fallback to Japanese translation
+      const jaTranslation = status.translations.find(t => t.language_code === 'ja');
+      if (jaTranslation) {
+        label = jaTranslation.translated_name;
+      } else {
+        // Fallback to first available translation
+        label = status.translations[0].translated_name;
+      }
+    }
+  } else {
+    // If no translations available, use translation key
+    try {
+      label = t(`status.${code}`) || label;
+    } catch {
+      // If translation key doesn't exist, use fallback
+      label = statusLabels[code] || code;
     }
   }
 
@@ -124,10 +142,12 @@ const severityLabels: Record<number, string> = {
 };
 
 export function SeverityBadge({ level, size = 'md' }: SeverityBadgeProps) {
+  const t = useTranslations('diseaseStatusBadge');
+  
   // Ensure level is within valid range
   const validLevel = Math.max(1, Math.min(5, level));
   const colors = severityColors[validLevel];
-  const label = severityLabels[validLevel];
+  const label = t(`severity.${validLevel}`);
 
   return (
     <span
@@ -137,7 +157,7 @@ export function SeverityBadge({ level, size = 'md' }: SeverityBadgeProps) {
         ${sizeClasses[size]}
       `}
     >
-      {label} (Lv.{validLevel})
+      {label} ({t('levelPrefix')}{validLevel})
     </span>
   );
 }

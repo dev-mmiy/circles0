@@ -427,5 +427,193 @@
     "errors": {
       "searchFailed": "Search failed"
     }
+  },
+  "diseaseForm": {
+    "title": {
+      "add": "Add Disease",
+      "edit": "Edit Disease Information"
+    },
+    "sections": {
+      "diseaseSelection": "Disease Selection",
+      "diagnosisInfo": "Diagnosis Information",
+      "clinicalInfo": "Symptoms & Treatment Information",
+      "privacySettings": "Privacy Settings"
+    },
+    "steps": {
+      "selectCategory": "1. Select a category",
+      "selectDisease": "2. Select a disease"
+    },
+    "fields": {
+      "diseaseName": "Enter Disease Name",
+      "selectedDisease": "Selected Disease:",
+      "diagnosisDate": "Diagnosis Date",
+      "severityLevel": "Severity Level (1-5)",
+      "severityRange": "Severity (1-5)",
+      "severityMild": "Mild",
+      "severitySevere": "Severe",
+      "doctor": "Doctor",
+      "hospital": "Hospital",
+      "diagnosisDoctor": "Diagnosing Doctor",
+      "diagnosisHospital": "Diagnosing Hospital",
+      "status": "Status",
+      "symptoms": "Symptoms",
+      "limitations": "Limitations",
+      "medications": "Medications",
+      "medicationsShort": "Medications",
+      "notes": "Notes",
+      "notesShort": "Memo",
+      "public": "Public Setting",
+      "makePublic": "Make this disease public",
+      "searchable": "Searchable",
+      "makeSearchable": "Make searchable",
+      "active": "Active"
+    },
+    "placeholders": {
+      "diseaseName": "Enter disease name",
+      "doctor": "e.g., Dr. Yamada",
+      "doctorShort": "e.g., Yamada",
+      "hospital": "e.g., Tokyo Medical Center",
+      "hospitalShort": "e.g., Tokyo University Hospital",
+      "symptoms": "Enter current symptoms",
+      "symptomsDetail": "Please describe symptoms in detail",
+      "limitations": "Daily life restrictions and precautions",
+      "limitationsDetail": "Please describe daily life restrictions",
+      "medications": "Current medications and supplements",
+      "medicationsDetail": "Please list medications being taken",
+      "notes": "Other information",
+      "notesOther": "Other notes",
+      "select": "Please select"
+    },
+    "options": {
+      "other": "Other",
+      "severity": {
+        "1": "1 - Mild",
+        "2": "2 - Mild-Moderate",
+        "3": "3 - Moderate",
+        "4": "4 - Moderate-Severe",
+        "5": "5 - Severe"
+      }
+    },
+    "descriptions": {
+      "otherDiseaseNote": "※ The entered disease name will be recorded in the notes field",
+      "code": "Code:",
+      "publicDescription": "Other users can view this disease information",
+      "searchableDescription": "Display this disease information in search results",
+      "activeDescription": "Enable this disease information"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "saving": "Saving...",
+      "add": "Add",
+      "update": "Update"
+    },
+    "errors": {
+      "selectDisease": "Please select a disease",
+      "enterDiseaseName": "Please enter a disease name",
+      "saveFailed": "Failed to save",
+      "updateFailed": "Failed to update"
+    },
+    "otherDiseasePrefix": "Other Disease:",
+    "diseaseIdPrefix": "Disease ID:",
+    "unknownDisease": "Unknown Disease"
+  },
+  "diseaseStatusBadge": {
+    "status": {
+      "ACTIVE": "Active",
+      "REMISSION": "Remission",
+      "CURED": "Cured",
+      "SUSPECTED": "Suspected",
+      "UNDER_TREATMENT": "Under Treatment"
+    },
+    "severity": {
+      "1": "Mild",
+      "2": "Mild-Moderate",
+      "3": "Moderate",
+      "4": "Moderate-Severe",
+      "5": "Severe"
+    },
+    "levelPrefix": "Lv."
+  },
+  "categorySelector": {
+    "label": "Category",
+    "placeholder": "Please select a category"
+  },
+  "homePage": {
+    "title": "Hello World!",
+    "subtitle": "Disease Community Platform",
+    "loading": "Loading...",
+    "error": "Error: {error}",
+    "errorMessage": "Make sure the backend is running and accessible.",
+    "debugInfo": "Debug Info:",
+    "environment": "Environment:",
+    "buildTime": "Build Time:",
+    "apiResponse": "API Response:",
+    "message": "Message:",
+    "environmentLabel": "Environment:",
+    "version": "Version:",
+    "market": "Market:",
+    "timestamp": "Timestamp:",
+    "timezone": "Timezone:",
+    "currency": "Currency:",
+    "getStarted": "Get Started",
+    "apiDocumentation": "API Documentation"
+  },
+  "addDiseasePage": {
+    "title": "Add Disease",
+    "description": "Please enter the information for the disease you want to register",
+    "loading": "Loading...",
+    "errors": {
+      "selectDisease": "Please select a disease",
+      "addFailed": "Failed to add disease"
+    },
+    "backToProfile": "← Back to Profile"
+  },
+  "editProfilePage": {
+    "title": "Edit Profile",
+    "description": "Please edit your information",
+    "loading": "Loading...",
+    "pleaseLogIn": "Please Log In",
+    "loginRequired": "You need to be logged in to edit your profile.",
+    "goToHome": "Go to Home",
+    "profileNotFound": "Profile Not Found",
+    "profileLoadFailed": "Your profile could not be loaded.",
+    "retry": "Retry"
+  },
+  "publicProfilePage": {
+    "loading": "Loading profile...",
+    "error": "Error",
+    "goToHome": "Go to Home",
+    "profileNotFound": "Profile Not Found",
+    "profileNotFoundMessage": "The profile you are looking for could not be found.",
+    "followers": "Followers",
+    "following": "Following",
+    "registered": "Registered:",
+    "bio": "Bio",
+    "tabs": {
+      "posts": "Posts",
+      "followers": "Followers",
+      "following": "Following"
+    },
+    "registeredDiseases": "Registered Diseases",
+    "postsComingSoon": "User posts list will be implemented in the future",
+    "backToHome": "← Back to Home"
+  },
+  "postDetailPage": {
+    "back": "Back",
+    "loadFailed": "Failed to load post",
+    "postNotFound": "Post Not Found",
+    "postNotFoundMessage": "The post may have been deleted or you don't have access permission",
+    "backToFeed": "Back to Feed"
+  },
+  "errors": {
+    "network": "A network error occurred. Please check your internet connection.",
+    "unauthorized": "Authentication required. Please log in.",
+    "forbidden": "You don't have permission to perform this action.",
+    "notFound": "The requested resource was not found.",
+    "validation": "There are issues with your input. Please check and try again.",
+    "server": "A server error occurred. Please try again later.",
+    "general": "An error occurred.",
+    "statusCode": "Status Code",
+    "retry": "Retry"
   }
 }

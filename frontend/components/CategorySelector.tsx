@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations, useLocale } from 'next-intl';
 import { DiseaseCategory } from '@/lib/api/diseases';
 
 interface CategorySelectorProps {
@@ -21,11 +22,17 @@ export function CategorySelector({
   categories,
   selectedCategoryId,
   onSelect,
-  label = 'カテゴリ',
-  placeholder = 'カテゴリを選択してください',
+  label,
+  placeholder,
   required = false,
 }: CategorySelectorProps) {
+  const t = useTranslations('categorySelector');
+  const locale = useLocale();
   const [selectedId, setSelectedId] = useState<number | undefined>(selectedCategoryId);
+  
+  // Use provided label/placeholder or fallback to translations
+  const displayLabel = label ?? t('label');
+  const displayPlaceholder = placeholder ?? t('placeholder');
 
   // Update local state when prop changes
   useEffect(() => {
@@ -35,10 +42,17 @@ export function CategorySelector({
   // Get category name (with translation if available)
   const getCategoryName = (category: DiseaseCategory): string => {
     if (category.translations && category.translations.length > 0) {
-      const jaTranslation = category.translations.find(t => t.language_code === 'ja');
+      // Try to find translation matching current locale
+      const localeTranslation = category.translations.find(trans => trans.language_code === locale);
+      if (localeTranslation) {
+        return localeTranslation.translated_name;
+      }
+      // Fallback to Japanese translation
+      const jaTranslation = category.translations.find(trans => trans.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
+      // Fallback to first available translation
       return category.translations[0].translated_name;
     }
     return category.category_code;
@@ -59,7 +73,8 @@ export function CategorySelector({
 
   // Render category option with indentation for hierarchy
   const renderCategoryOption = (category: DiseaseCategory, level: number = 0): JSX.Element[] => {
-    const indent = '　'.repeat(level); // Japanese full-width space for indentation
+    // Use regular space for English, full-width space for Japanese
+    const indent = locale === 'ja' ? '　'.repeat(level) : '  '.repeat(level);
     const options: JSX.Element[] = [
       <option key={category.id} value={category.id}>
         {indent}
@@ -89,9 +104,9 @@ export function CategorySelector({
 
   return (
     <div>
-      {label && (
+      {displayLabel && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          {label}
+          {displayLabel}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
@@ -101,7 +116,7 @@ export function CategorySelector({
         required={required}
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       >
-        <option value="">{placeholder}</option>
+        <option value="">{displayPlaceholder}</option>
         {rootCategories.map(category => renderCategoryOption(category))}
       </select>
     </div>
@@ -119,13 +134,22 @@ interface CategoryBreadcrumbProps {
 }
 
 export function CategoryBreadcrumb({ categories, categoryId }: CategoryBreadcrumbProps) {
+  const locale = useLocale();
+  
   // Get category name
   const getCategoryName = (category: DiseaseCategory): string => {
     if (category.translations && category.translations.length > 0) {
-      const jaTranslation = category.translations.find(t => t.language_code === 'ja');
+      // Try to find translation matching current locale
+      const localeTranslation = category.translations.find(trans => trans.language_code === locale);
+      if (localeTranslation) {
+        return localeTranslation.translated_name;
+      }
+      // Fallback to Japanese translation
+      const jaTranslation = category.translations.find(trans => trans.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
+      // Fallback to first available translation
       return category.translations[0].translated_name;
     }
     return category.category_code;

@@ -1,13 +1,15 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
+import { useRouter } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
 import { UserProfileEditForm } from '@/components/UserProfileEditForm';
 import Header from '@/components/Header';
 
 export default function EditProfilePage() {
+  const t = useTranslations('editProfilePage');
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user, loading: userLoading, updateUserProfile } = useUser();
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function EditProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -29,13 +31,13 @@ export default function EditProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Log In</h1>
-          <p className="text-gray-600 mb-4">You need to be logged in to edit your profile.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pleaseLogIn')}</h1>
+          <p className="text-gray-600 mb-4">{t('loginRequired')}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go to Home
+            {t('goToHome')}
           </Link>
         </div>
       </div>
@@ -46,13 +48,13 @@ export default function EditProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
-          <p className="text-gray-600 mb-4">Your profile could not be loaded.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
+          <p className="text-gray-600 mb-4">{t('profileLoadFailed')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Retry
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -76,8 +78,8 @@ export default function EditProfilePage() {
         <div className="bg-white rounded-lg shadow-md p-6">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">プロフィール編集</h1>
-            <p className="text-gray-600 mt-2">あなたの情報を編集してください</p>
+            <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+            <p className="text-gray-600 mt-2">{t('description')}</p>
           </div>
 
           {/* Edit Form */}

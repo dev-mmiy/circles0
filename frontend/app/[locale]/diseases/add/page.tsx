@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { DiseaseForm } from '@/components/DiseaseForm';
 import { UserDiseaseCreate, UserDiseaseUpdate } from '@/lib/api/users';
 
 export default function AddDiseasePage() {
+  const t = useTranslations('addDiseasePage');
   const router = useRouter();
   const {
     diseases,
@@ -27,13 +29,13 @@ export default function AddDiseasePage() {
       setSubmitting(true);
       // Ensure disease_id is present for create mode
       if (!('disease_id' in data) || !data.disease_id) {
-        throw new Error('疾患を選択してください');
+        throw new Error(t('errors.selectDisease'));
       }
       await addDisease(data as UserDiseaseCreate);
       router.push('/profile/me');
     } catch (err) {
       console.error('Failed to add disease:', err);
-      setError(err instanceof Error ? err.message : 'Failed to add disease');
+      setError(err instanceof Error ? err.message : t('errors.addFailed'));
       setSubmitting(false);
     }
   };
@@ -47,7 +49,7 @@ export default function AddDiseasePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -58,9 +60,9 @@ export default function AddDiseasePage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">疾患を追加</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="mt-2 text-gray-600">
-            登録する疾患の情報を入力してください
+            {t('description')}
           </p>
         </div>
 
@@ -90,7 +92,7 @@ export default function AddDiseasePage() {
             href="/profile/me"
             className="text-blue-600 hover:text-blue-700 hover:underline"
           >
-            ← プロフィールに戻る
+            {t('backToProfile')}
           </Link>
         </div>
       </div>
