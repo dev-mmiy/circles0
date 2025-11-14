@@ -1,0 +1,431 @@
+{
+  "app": {
+    "name": "Disease Community Platform",
+    "description": "A platform for people with diseases to connect and share experiences"
+  },
+  "navigation": {
+    "home": "Home",
+    "feed": "Feed",
+    "users": "Users",
+    "userSearch": "User Search",
+    "diseases": "Diseases",
+    "posts": "Posts",
+    "profile": "Profile",
+    "myPage": "My Page",
+    "settings": "Settings",
+    "logout": "Logout"
+  },
+  "buttons": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "update": "Update",
+    "search": "Search",
+    "filter": "Filter",
+    "clear": "Clear",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous"
+  },
+  "messages": {
+    "success": {
+      "saved": "Successfully saved",
+      "updated": "Successfully updated",
+      "deleted": "Successfully deleted",
+      "created": "Successfully created"
+    },
+    "error": {
+      "general": "An error occurred",
+      "network": "Network error",
+      "validation": "Validation error",
+      "notFound": "Not found",
+      "unauthorized": "Unauthorized",
+      "forbidden": "Forbidden"
+    },
+    "loading": "Loading...",
+    "noData": "No data available",
+    "confirmDelete": "Are you sure you want to delete this item?"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Please enter a valid email address",
+    "minLength": "Minimum length is {min} characters",
+    "maxLength": "Maximum length is {max} characters",
+    "password": "Password must be at least 8 characters long",
+    "confirmPassword": "Passwords do not match",
+    "email_required": "Email address is required",
+    "email_invalid": "Please enter a valid email address",
+    "nickname_required": "Nickname is required",
+    "nickname_too_short": "Nickname must be at least 3 characters",
+    "first_name_required": "First name is required",
+    "last_name_required": "Last name is required",
+    "phone_invalid": "Please enter a valid phone number"
+  },
+  "dateTime": {
+    "format": "MM/DD/YYYY",
+    "timeFormat": "h:mm A",
+    "dateTimeFormat": "MM/DD/YYYY h:mm A"
+  },
+  "currency": {
+    "symbol": "$",
+    "format": "{amount}"
+  },
+  "register": {
+    "title": "Create Your Account",
+    "subtitle": "Join our community and connect with others",
+    "basic_info": "Basic Information",
+    "name_info": "Name Information",
+    "additional_info": "Additional Information",
+    "preferences": "Preferences",
+    "email": "Email Address",
+    "email_placeholder": "Enter your email address",
+    "nickname": "Nickname",
+    "nickname_placeholder": "Choose a unique nickname",
+    "first_name": "First Name",
+    "first_name_placeholder": "Enter your first name",
+    "middle_name": "Middle Name",
+    "middle_name_placeholder": "Enter your middle name (optional)",
+    "last_name": "Last Name",
+    "last_name_placeholder": "Enter your last name",
+    "name_display_order": "Name Display Order",
+    "custom_name_format": "Custom Name Format",
+    "custom_format_help": "Use {first}, {middle}, {last} to format your name",
+    "name_preview": "Name Preview",
+    "name_preview_empty": "Your name will appear here",
+    "phone": "Phone Number",
+    "phone_placeholder": "Enter your phone number",
+    "birth_date": "Birth Date",
+    "country": "Country",
+    "select_country": "Select your country",
+    "timezone": "Timezone",
+    "bio": "Bio",
+    "bio_placeholder": "Tell us about yourself",
+    "preferred_language": "Preferred Language",
+    "preferred_locale": "Preferred Locale",
+    "back_to_home": "Back to Home",
+    "create_account": "Create Account",
+    "creating": "Creating Account..."
+  },
+  "errors": {
+    "registration_failed": "Registration failed. Please try again.",
+    "network_error": "Network error. Please check your connection."
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "loggingOut": "Logging out...",
+    "loading": "Loading...",
+    "notInitialized": "Auth0 not initialized",
+    "retry": "Retry",
+    "loginError": "Login Error",
+    "authError": "Auth Error",
+    "unknownError": "Unknown error",
+    "unknown": "Unknown",
+    "errorType": "Error type",
+    "timestamp": "Timestamp",
+    "autoClearingCache": "Auto-clearing cache and reloading...",
+    "clearCacheRetry": "Clear Cache & Retry"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "noNotifications": "No notifications",
+    "viewAll": "View all notifications",
+    "types": {
+      "follow": "{actorName} followed you",
+      "comment": "{actorName} commented on your post",
+      "reply": "{actorName} replied to your comment",
+      "like": "{actorName} liked your post",
+      "comment_like": "{actorName} liked your comment",
+      "default": "You have a new notification"
+    },
+    "actions": {
+      "markAsRead": "Mark as read",
+      "delete": "Delete"
+    }
+  },
+  "feed": {
+    "title": "Community Feed",
+    "subtitle": "Share your experiences and feelings with everyone",
+    "loginPrompt": "Please log in to create a post",
+    "errorLoadingPosts": "Failed to load posts",
+    "retry": "Retry",
+    "noPosts": "No posts yet",
+    "noPostsMessage": "Create the first post and connect with the community!",
+    "loading": "Loading...",
+    "loadMore": "Load more",
+    "allPostsShown": "All posts have been shown"
+  },
+  "post": {
+    "unknownUser": "Unknown User",
+    "readMore": "Read more",
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{minutes}m ago",
+      "hoursAgo": "{hours}h ago",
+      "daysAgo": "{days}d ago",
+      "locale": "en-US"
+    },
+    "visibility": {
+      "public": "Public",
+      "followersOnly": "Followers only",
+      "private": "Private"
+    },
+    "errors": {
+      "loginRequired": "Please log in to like this post",
+      "likeFailed": "Failed to like the post"
+    }
+  },
+  "postForm": {
+    "placeholder": "Share your feelings and experiences...",
+    "visibilityLabel": "Visibility:",
+    "visibility": {
+      "public": "Public",
+      "followersOnly": "Followers only",
+      "private": "Private"
+    },
+    "submit": "Post",
+    "submitting": "Posting...",
+    "errors": {
+      "contentRequired": "Please enter post content",
+      "contentTooLong": "Post content must be 5000 characters or less",
+      "createFailed": "Failed to create post"
+    }
+  },
+  "notificationItem": {
+    "delete": "Delete"
+  },
+  "languageSwitcher": {
+    "ariaLabel": "Switch language",
+    "languages": {
+      "ja": "日本語",
+      "en": "English"
+    }
+  },
+  "myProfile": {
+    "loading": "Loading...",
+    "loadingProfile": "Loading profile...",
+    "pleaseLogIn": "Please Log In",
+    "loginRequired": "You need to be logged in to view your profile.",
+    "goToHome": "Go to Home",
+    "profileNotFound": "Profile Not Found",
+    "profileLoadFailed": "Your profile could not be loaded.",
+    "retry": "Retry",
+    "myDiseases": "My Diseases",
+    "addDisease": "Add Disease",
+    "addDiseaseButton": "+ Add Disease",
+    "backToHome": "← Back to Home",
+    "deleteConfirm": "Are you sure you want to delete \"{diseaseName}\"?",
+    "deleteFailed": "Failed to delete disease"
+  },
+  "userProfileEdit": {
+    "title": "Edit Profile",
+    "sections": {
+      "publicInfo": "Public Information",
+      "privateInfo": "Private Information",
+      "preferences": "Preferences"
+    },
+    "fields": {
+      "nickname": "Nickname",
+      "username": "Username",
+      "bio": "Bio",
+      "country": "Country",
+      "firstName": "First Name",
+      "lastName": "Last Name",
+      "phone": "Phone Number",
+      "dateOfBirth": "Date of Birth",
+      "gender": "Gender",
+      "preferredLanguage": "Preferred Language",
+      "profileVisibility": "Profile Visibility"
+    },
+    "placeholders": {
+      "nickname": "Public nickname",
+      "username": "@username",
+      "bio": "Tell us about yourself",
+      "country": "e.g. Japan",
+      "phone": "+1-555-1234"
+    },
+    "gender": {
+      "select": "Please select",
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "visibility": {
+      "public": "Public",
+      "limited": "Limited",
+      "private": "Private"
+    },
+    "privacy": {
+      "showEmail": "Show email address publicly",
+      "showOnlineStatus": "Show online status"
+    },
+    "actions": {
+      "save": "Save",
+      "saving": "Saving...",
+      "cancel": "Cancel"
+    },
+    "errors": {
+      "saveFailed": "Failed to save profile"
+    }
+  },
+  "followButton": {
+    "follow": "Follow",
+    "following": "Following",
+    "processing": "Processing...",
+    "errors": {
+      "updateFailed": "Failed to update follow status"
+    }
+  },
+  "userSearch": {
+    "placeholder": "Search by nickname, username...",
+    "search": "Search",
+    "searching": "Searching...",
+    "advancedSearch": "Advanced Search",
+    "hideAdvanced": "Hide Advanced",
+    "memberIdLabel": "Member ID (exact match)",
+    "memberIdPlaceholder": "12-digit member ID",
+    "diseaseFilterLabel": "Filter by disease",
+    "resultsTitle": "Search Results ({count} items)",
+    "noResults": "No search results",
+    "memberId": "Member ID",
+    "errors": {
+      "searchFailed": "Search failed"
+    }
+  },
+  "commentSection": {
+    "title": "Comments ({count})",
+    "placeholder": "Add a comment...",
+    "submit": "Comment",
+    "submitting": "Commenting...",
+    "noComments": "No comments yet",
+    "reply": "Reply",
+    "replyPlaceholder": "Enter reply...",
+    "replySubmit": "Reply",
+    "replySubmitting": "Sending...",
+    "cancel": "Cancel",
+    "showReplies": "Show replies ({count})",
+    "hideReplies": "Hide replies",
+    "loadingReplies": "Loading...",
+    "unknownUser": "Unknown User",
+    "time": {
+      "justNow": "Just now",
+      "minutesAgo": "{minutes}m ago",
+      "hoursAgo": "{hours}h ago"
+    },
+    "errors": {
+      "loginRequired": "Please log in to comment",
+      "contentRequired": "Please enter comment content",
+      "contentTooLong": "Comments must be 2000 characters or less",
+      "createFailed": "Failed to post comment",
+      "replyLoginRequired": "Please log in to reply",
+      "loadRepliesFailed": "Failed to load replies",
+      "replyFailed": "Failed to post reply"
+    },
+    "loginPrompt": "Please <login>log in</login> to comment"
+  },
+  "followersList": {
+    "loading": "Loading...",
+    "noFollowers": "No followers yet",
+    "errors": {
+      "loadFailed": "Failed to load followers"
+    }
+  },
+  "followingList": {
+    "loading": "Loading...",
+    "noFollowing": "Not following anyone",
+    "errors": {
+      "loadFailed": "Failed to load following users"
+    }
+  },
+  "userProfileCard": {
+    "memberId": "Member ID",
+    "editProfile": "Edit Profile",
+    "bio": "Bio",
+    "country": "Country",
+    "language": "Language",
+    "privateInfo": "Private Information",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email",
+    "emailVerified": "Verified",
+    "phone": "Phone Number",
+    "dateOfBirth": "Date of Birth",
+    "gender": "Gender",
+    "accountCreated": "Account Created",
+    "lastLogin": "Last Login",
+    "diseaseCount": "Registered Diseases",
+    "genderValues": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "prefer_not_to_say": "Prefer not to say"
+    },
+    "notAvailable": "N/A"
+  },
+  "diseaseList": {
+    "loading": "Loading...",
+    "noDiseases": "No diseases registered",
+    "noDiseasesMessage": "Add a disease to connect with the community.",
+    "diseaseId": "Disease ID",
+    "code": "Code",
+    "diagnosisInfo": "Diagnosis Information",
+    "diagnosisDate": "Diagnosis Date",
+    "doctor": "Doctor",
+    "hospital": "Hospital",
+    "symptoms": "Symptoms",
+    "limitations": "Limitations",
+    "medications": "Medications",
+    "notes": "Notes",
+    "public": "Public",
+    "private": "Private",
+    "searchable": "Searchable",
+    "notSearchable": "Not Searchable",
+    "inactive": "Inactive",
+    "detail": "Detail",
+    "edit": "Edit",
+    "cancel": "Cancel",
+    "delete": "Delete"
+  },
+  "searchPage": {
+    "title": "Search",
+    "subtitle": "Search for diseases and users",
+    "tabDiseases": "Search Diseases",
+    "tabUsers": "Search Users",
+    "hintsTitle": "Search Tips",
+    "hintsDiseases": {
+      "hint1": "You can search by partial disease name (e.g., \"diabetes\")",
+      "hint2": "You can search by ICD-10 code (e.g., \"E11\")",
+      "hint3": "You can filter by selecting categories",
+      "hint4": "Search is available in both Japanese and English"
+    },
+    "hintsUsers": {
+      "hint1": "You can search by nickname or username",
+      "hint2": "You can search exactly by member ID",
+      "hint3": "Select a disease to find users with the same disease",
+      "hint4": "Only public profiles are displayed"
+    },
+    "backToHome": "← Back to Home"
+  },
+  "diseaseSearch": {
+    "placeholder": "Search by disease name, ICD-10 code...",
+    "search": "Search",
+    "searching": "Searching...",
+    "advancedSearch": "Advanced Search",
+    "hideAdvanced": "Hide Advanced",
+    "icdCodeLabel": "ICD-10 Code",
+    "icdCodePlaceholder": "e.g., E11",
+    "categoryLabel": "Category",
+    "resultsTitle": "Search Results ({count} items)",
+    "code": "Code",
+    "select": "Select",
+    "noResults": "No search results",
+    "errors": {
+      "searchFailed": "Search failed"
+    }
+  }
+}

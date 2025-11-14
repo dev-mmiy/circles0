@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState, FormEvent } from 'react';
+import { useTranslations } from 'next-intl';
 import { UserProfile, UserProfileUpdate } from '@/lib/api/users';
 
 interface UserProfileEditFormProps {
@@ -15,6 +16,7 @@ interface UserProfileEditFormProps {
 }
 
 export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditFormProps) {
+  const t = useTranslations('userProfileEdit');
   const [formData, setFormData] = useState<UserProfileUpdate>({
     nickname: user.nickname,
     first_name: user.first_name,
@@ -69,7 +71,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       await onSave(cleanedData);
     } catch (err) {
       console.error('Error saving profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to save profile');
+      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
     }
@@ -77,7 +79,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
   return (
     <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">プロフィール編集</h2>
+      <h2 className="text-2xl font-bold text-gray-800 mb-6">{t('title')}</h2>
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -87,13 +89,13 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Public Information */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">公開情報</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{t('sections.publicInfo')}</h3>
 
         <div className="space-y-4">
           {/* Nickname (required) */}
           <div>
             <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
-              ニックネーム <span className="text-red-500">*</span>
+              {t('fields.nickname')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -103,14 +105,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="公開用ニックネーム"
+              placeholder={t('placeholders.nickname')}
             />
           </div>
 
           {/* Username (optional) */}
           <div>
             <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
-              ユーザー名
+              {t('fields.username')}
             </label>
             <input
               type="text"
@@ -119,14 +121,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               value={formData.username || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="@username"
+              placeholder={t('placeholders.username')}
             />
           </div>
 
           {/* Bio */}
           <div>
             <label htmlFor="bio" className="block text-sm font-medium text-gray-700 mb-1">
-              自己紹介
+              {t('fields.bio')}
             </label>
             <textarea
               id="bio"
@@ -135,14 +137,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               rows={4}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="あなたについて教えてください"
+              placeholder={t('placeholders.bio')}
             />
           </div>
 
           {/* Country */}
           <div>
             <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
-              国
+              {t('fields.country')}
             </label>
             <input
               type="text"
@@ -151,7 +153,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               value={formData.country || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="例: 日本"
+              placeholder={t('placeholders.country')}
             />
           </div>
         </div>
@@ -159,13 +161,13 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Private Information */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">個人情報</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{t('sections.privateInfo')}</h3>
 
         <div className="grid grid-cols-2 gap-4">
           {/* First Name */}
           <div>
             <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 mb-1">
-              名
+              {t('fields.firstName')}
             </label>
             <input
               type="text"
@@ -180,7 +182,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
           {/* Last Name */}
           <div>
             <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 mb-1">
-              姓
+              {t('fields.lastName')}
             </label>
             <input
               type="text"
@@ -195,7 +197,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
           {/* Phone */}
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-              電話番号
+              {t('fields.phone')}
             </label>
             <input
               type="tel"
@@ -204,14 +206,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               value={formData.phone || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="+81-90-1234-5678"
+              placeholder={t('placeholders.phone')}
             />
           </div>
 
           {/* Date of Birth */}
           <div>
             <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 mb-1">
-              生年月日
+              {t('fields.dateOfBirth')}
             </label>
             <input
               type="date"
@@ -226,7 +228,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
           {/* Gender */}
           <div className="col-span-2">
             <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
-              性別
+              {t('fields.gender')}
             </label>
             <select
               id="gender"
@@ -235,11 +237,11 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">選択してください</option>
-              <option value="male">男性</option>
-              <option value="female">女性</option>
-              <option value="other">その他</option>
-              <option value="prefer_not_to_say">回答しない</option>
+              <option value="">{t('gender.select')}</option>
+              <option value="male">{t('gender.male')}</option>
+              <option value="female">{t('gender.female')}</option>
+              <option value="other">{t('gender.other')}</option>
+              <option value="prefer_not_to_say">{t('gender.preferNotToSay')}</option>
             </select>
           </div>
         </div>
@@ -247,7 +249,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Preferences */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">設定</h3>
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{t('sections.preferences')}</h3>
 
         <div className="space-y-4">
           {/* Preferred Language */}
@@ -256,7 +258,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               htmlFor="preferred_language"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              優先言語
+              {t('fields.preferredLanguage')}
             </label>
             <select
               id="preferred_language"
@@ -279,7 +281,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               htmlFor="profile_visibility"
               className="block text-sm font-medium text-gray-700 mb-1"
             >
-              プロフィール公開設定
+              {t('fields.profileVisibility')}
             </label>
             <select
               id="profile_visibility"
@@ -288,9 +290,9 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="public">公開</option>
-              <option value="limited">制限公開</option>
-              <option value="private">非公開</option>
+              <option value="public">{t('visibility.public')}</option>
+              <option value="limited">{t('visibility.limited')}</option>
+              <option value="private">{t('visibility.private')}</option>
             </select>
           </div>
 
@@ -304,7 +306,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <span className="ml-2 text-sm text-gray-700">メールアドレスを公開する</span>
+              <span className="ml-2 text-sm text-gray-700">{t('privacy.showEmail')}</span>
             </label>
 
             <label className="flex items-center">
@@ -315,7 +317,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
                 onChange={handleChange}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
-              <span className="ml-2 text-sm text-gray-700">オンライン状態を表示する</span>
+              <span className="ml-2 text-sm text-gray-700">{t('privacy.showOnlineStatus')}</span>
             </label>
           </div>
         </div>
@@ -329,14 +331,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
           disabled={saving}
           className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
         >
-          キャンセル
+          {t('actions.cancel')}
         </button>
         <button
           type="submit"
           disabled={saving}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {saving ? '保存中...' : '保存'}
+          {saving ? t('actions.saving') : t('actions.save')}
         </button>
       </div>
     </form>

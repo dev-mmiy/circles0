@@ -2,18 +2,20 @@
 
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
 import { UserProfileCard } from '@/components/UserProfileCard';
 import { DiseaseList } from '@/components/DiseaseList';
 import { useDisease } from '@/contexts/DiseaseContext';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { EditDiseaseForm } from '@/components/EditDiseaseForm';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import Header from '@/components/Header';
 
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
+  const t = useTranslations('myProfile');
   const { user, loading: userLoading } = useUser();
   const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } =
     useDisease();
@@ -30,7 +32,7 @@ export default function MyProfilePage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading profile...</p>
+          <p className="text-gray-600">{t('loadingProfile')}</p>
         </div>
       </div>
     );
@@ -40,13 +42,13 @@ export default function MyProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Please Log In</h1>
-          <p className="text-gray-600 mb-4">You need to be logged in to view your profile.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pleaseLogIn')}</h1>
+          <p className="text-gray-600 mb-4">{t('loginRequired')}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Go to Home
+            {t('goToHome')}
           </Link>
         </div>
       </div>
@@ -57,13 +59,13 @@ export default function MyProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Profile Not Found</h1>
-          <p className="text-gray-600 mb-4">Your profile could not be loaded.</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
+          <p className="text-gray-600 mb-4">{t('profileLoadFailed')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Retry
+            {t('retry')}
           </button>
         </div>
       </div>
@@ -118,12 +120,12 @@ export default function MyProfilePage() {
       }
     }
 
-    if (window.confirm(`「${diseaseName}」を削除しますか？`)) {
+    if (window.confirm(t('deleteConfirm', { diseaseName }))) {
       try {
         await removeDisease(disease.id);
       } catch (error) {
         console.error('Failed to delete disease:', error);
-        alert('疾患の削除に失敗しました');
+        alert(t('deleteFailed'));
       }
     }
   };
@@ -140,19 +142,19 @@ export default function MyProfilePage() {
         {/* User Diseases */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">登録疾患</h2>
+            <h2 className="text-xl font-semibold text-gray-900">{t('myDiseases')}</h2>
             <Link
               href="/diseases/add"
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
             >
-              + 疾患を追加
+              {t('addDiseaseButton')}
             </Link>
           </div>
 
           {loadingUserDiseases ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">読み込み中...</p>
+              <p className="text-gray-600">{t('loading')}</p>
             </div>
           ) : (
             <DiseaseList
@@ -180,7 +182,7 @@ export default function MyProfilePage() {
         {/* Back to Home */}
         <div className="mt-8 text-center">
           <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
-            ← ホームに戻る
+            {t('backToHome')}
           </Link>
         </div>
       </div>

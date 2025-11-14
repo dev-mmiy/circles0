@@ -6,6 +6,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { DiseaseSearchParams, DiseaseSearchResult } from '@/lib/api/search';
 import { getLocalizedDiseaseName } from '@/lib/api/users';
 
@@ -22,6 +23,7 @@ export function DiseaseSearch({
   categories = [],
   preferredLanguage = 'ja',
 }: DiseaseSearchProps) {
+  const t = useTranslations('diseaseSearch');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [icdCode, setIcdCode] = useState('');
@@ -50,7 +52,7 @@ export function DiseaseSearch({
       setResults(searchResults);
     } catch (err) {
       console.error('Search error:', err);
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(err instanceof Error ? err.message : t('errors.searchFailed'));
     } finally {
       setLoading(false);
     }
@@ -90,7 +92,7 @@ export function DiseaseSearch({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="疾患名、ICD-10コードで検索..."
+          placeholder={t('placeholder')}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
@@ -98,13 +100,13 @@ export function DiseaseSearch({
           disabled={loading}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? '検索中...' : '検索'}
+          {loading ? t('searching') : t('search')}
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          {showAdvanced ? '詳細を隠す' : '詳細検索'}
+          {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
       </div>
 
@@ -114,13 +116,13 @@ export function DiseaseSearch({
           {/* ICD-10 Code Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              ICD-10 コード
+              {t('icdCodeLabel')}
             </label>
             <input
               type="text"
               value={icdCode}
               onChange={(e) => setIcdCode(e.target.value)}
-              placeholder="例: E11"
+              placeholder={t('icdCodePlaceholder')}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -129,7 +131,7 @@ export function DiseaseSearch({
           {categories.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                カテゴリー
+                {t('categoryLabel')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {categories.map((category) => (
@@ -163,7 +165,7 @@ export function DiseaseSearch({
       {results.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-gray-900">
-            検索結果 ({results.length}件)
+            {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-2">
             {results.map((disease) => (
@@ -181,7 +183,7 @@ export function DiseaseSearch({
                     </h4>
                     {disease.disease_code && (
                       <p className="text-sm text-gray-500 mt-1">
-                        コード: {disease.disease_code}
+                        {t('code')}: {disease.disease_code}
                       </p>
                     )}
                     {disease.description && (
@@ -190,7 +192,7 @@ export function DiseaseSearch({
                   </div>
                   {onSelect && (
                     <button className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
-                      選択
+                      {t('select')}
                     </button>
                   )}
                 </div>
@@ -203,7 +205,7 @@ export function DiseaseSearch({
       {/* No Results */}
       {!loading && results.length === 0 && searchQuery && (
         <div className="text-center py-8 text-gray-500">
-          検索結果がありません
+          {t('noResults')}
         </div>
       )}
     </div>

@@ -2,6 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { followUser, unfollowUser } from '@/lib/api/follows';
 
 interface FollowButtonProps {
@@ -18,6 +19,7 @@ export default function FollowButton({
   className = '',
 }: FollowButtonProps) {
   const { getAccessTokenSilently, isAuthenticated, loginWithRedirect } = useAuth0();
+  const t = useTranslations('followButton');
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,7 +46,7 @@ export default function FollowButton({
     } catch (error: any) {
       console.error('Failed to toggle follow:', error);
       // Show error to user
-      alert(error.message || 'フォローの更新に失敗しました');
+      alert(error.message || t('errors.updateFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -82,12 +84,12 @@ export default function FollowButton({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          処理中...
+          {t('processing')}
         </span>
       ) : isFollowing ? (
-        'フォロー中'
+        t('following')
       ) : (
-        'フォロー'
+        t('follow')
       )}
     </button>
   );

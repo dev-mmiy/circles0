@@ -109,8 +109,8 @@ app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"])
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
-app.include_router(notifications_router, prefix="/api/v1", tags=["notifications"])
-app.include_router(notifications_sse_router, prefix="/api/v1", tags=["notifications", "sse"])
+app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
+app.include_router(notifications_sse_router, prefix="/api/v1/notifications", tags=["notifications", "sse"])
 
 
 @app.get("/")

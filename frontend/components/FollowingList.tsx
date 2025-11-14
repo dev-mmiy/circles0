@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
 import { getFollowing, type FollowingResponse } from '@/lib/api/follows';
 
@@ -12,6 +13,7 @@ interface FollowingListProps {
 
 export default function FollowingList({ userId }: FollowingListProps) {
   const { user } = useAuth0();
+  const t = useTranslations('followingList');
   const [following, setFollowing] = useState<FollowingResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +28,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load following:', err);
-      setError(err.message || 'フォロー中のユーザーの読み込みに失敗しました');
+      setError(err.message || t('errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +62,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
   if (following.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">フォロー中のユーザーはいません</p>
+        <p className="text-gray-500">{t('noFollowing')}</p>
       </div>
     );
   }

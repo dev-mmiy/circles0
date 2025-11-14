@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useApiService } from '../contexts/ApiContext';
-import AuthButton from '../components/AuthButton';
-import Header from '../components/Header';
+import { useApiService } from '@/contexts/ApiContext';
+import AuthButton from '@/components/AuthButton';
+import Header from '@/components/Header';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';

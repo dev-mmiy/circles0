@@ -7,6 +7,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile, getLocalizedDiseaseName } from '@/lib/api/users';
 
@@ -21,6 +22,7 @@ export function UserSearch({
   diseases = [],
   preferredLanguage = 'ja',
 }: UserSearchProps) {
+  const t = useTranslations('userSearch');
   const [searchQuery, setSearchQuery] = useState('');
   const [memberId, setMemberId] = useState('');
   const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
@@ -48,7 +50,7 @@ export function UserSearch({
       setResults(searchResults);
     } catch (err) {
       console.error('Search error:', err);
-      setError(err instanceof Error ? err.message : 'Search failed');
+      setError(err instanceof Error ? err.message : t('errors.searchFailed'));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ export function UserSearch({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="ニックネーム、ユーザー名で検索..."
+          placeholder={t('placeholder')}
           className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
         <button
@@ -79,13 +81,13 @@ export function UserSearch({
           disabled={loading}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {loading ? '検索中...' : '検索'}
+          {loading ? t('searching') : t('search')}
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
-          {showAdvanced ? '詳細を隠す' : '詳細検索'}
+          {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
       </div>
 
@@ -95,13 +97,13 @@ export function UserSearch({
           {/* Member ID Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              会員ID（完全一致）
+              {t('memberIdLabel')}
             </label>
             <input
               type="text"
               value={memberId}
               onChange={(e) => setMemberId(e.target.value)}
-              placeholder="12桁の会員ID"
+              placeholder={t('memberIdPlaceholder')}
               maxLength={12}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
@@ -111,7 +113,7 @@ export function UserSearch({
           {diseases.length > 0 && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                疾患で絞り込み
+                {t('diseaseFilterLabel')}
               </label>
               <div className="max-h-60 overflow-y-auto space-y-1">
                 {diseases.map((disease) => (
@@ -153,7 +155,7 @@ export function UserSearch({
       {results.length > 0 && (
         <div className="space-y-2">
           <h3 className="text-lg font-semibold text-gray-900">
-            検索結果 ({results.length}件)
+            {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-4">
             {results.map((user) => (
@@ -184,7 +186,7 @@ export function UserSearch({
                     {user.username && (
                       <p className="text-sm text-gray-600">@{user.username}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">会員ID: {user.member_id}</p>
+                    <p className="text-xs text-gray-500 mt-1">{t('memberId')}: {user.member_id}</p>
 
                     {user.bio && <p className="text-sm text-gray-700 mt-2">{user.bio}</p>}
 
@@ -223,7 +225,7 @@ export function UserSearch({
 
       {/* No Results */}
       {!loading && results.length === 0 && (searchQuery || memberId || selectedDiseases.length > 0) && (
-        <div className="text-center py-8 text-gray-500">検索結果がありません</div>
+        <div className="text-center py-8 text-gray-500">{t('noResults')}</div>
       )}
     </div>
   );

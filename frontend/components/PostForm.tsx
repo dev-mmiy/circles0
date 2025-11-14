@@ -2,6 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { createPost, type CreatePostData } from '@/lib/api/posts';
 
 interface PostFormProps {
@@ -11,9 +12,10 @@ interface PostFormProps {
 
 export default function PostForm({
   onPostCreated,
-  placeholder = '今の気持ちや経験をシェアしましょう...',
+  placeholder,
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
+  const t = useTranslations('postForm');
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     'public'
@@ -25,12 +27,12 @@ export default function PostForm({
     e.preventDefault();
 
     if (!content.trim()) {
-      setError('投稿内容を入力してください');
+      setError(t('errors.contentRequired'));
       return;
     }
 
     if (content.length > 5000) {
-      setError('投稿内容は5000文字以内にしてください');
+      setError(t('errors.contentTooLong'));
       return;
     }
 
@@ -57,7 +59,7 @@ export default function PostForm({
       }
     } catch (err: any) {
       console.error('Failed to create post:', err);
-      setError(err.message || '投稿の作成に失敗しました');
+      setError(err.message || t('errors.createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -70,7 +72,7 @@ export default function PostForm({
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder || t('placeholder')}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           rows={4}
           maxLength={5000}
@@ -92,7 +94,7 @@ export default function PostForm({
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center space-x-2">
             <label htmlFor="visibility" className="text-sm font-medium text-gray-700">
-              公開範囲:
+              {t('visibilityLabel')}
             </label>
             <select
               id="visibility"
@@ -105,9 +107,9 @@ export default function PostForm({
               className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={isSubmitting}
             >
-              <option value="public">全体公開</option>
-              <option value="followers_only">フォロワーのみ</option>
-              <option value="private">自分のみ</option>
+              <option value="public">{t('visibility.public')}</option>
+              <option value="followers_only">{t('visibility.followersOnly')}</option>
+              <option value="private">{t('visibility.private')}</option>
             </select>
           </div>
 
@@ -120,7 +122,7 @@ export default function PostForm({
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            {isSubmitting ? '投稿中...' : '投稿する'}
+            {isSubmitting ? t('submitting') : t('submit')}
           </button>
         </div>
 

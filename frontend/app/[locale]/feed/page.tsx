@@ -2,6 +2,8 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
 import PostForm from '@/components/PostForm';
 import Header from '@/components/Header';
@@ -9,6 +11,7 @@ import { getFeed, type Post } from '@/lib/api/posts';
 
 export default function FeedPage() {
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
+  const t = useTranslations('feed');
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +46,7 @@ export default function FeedPage() {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load posts:', err);
-      setError(err.message || '投稿の読み込みに失敗しました');
+      setError(err.message || t('errorLoadingPosts'));
     } finally {
       setIsLoading(false);
       setIsLoadingMore(false);
@@ -94,9 +97,9 @@ export default function FeedPage() {
         <div className="max-w-2xl mx-auto px-4">
         {/* Page Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">コミュニティフィード</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
           <p className="text-gray-600 mt-2">
-            みんなの経験や気持ちをシェアしましょう
+            {t('subtitle')}
           </p>
         </div>
 
@@ -111,11 +114,7 @@ export default function FeedPage() {
         {!isAuthenticated && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-blue-800">
-              投稿を作成するには
-              <a href="/login" className="font-semibold hover:underline ml-1">
-                ログイン
-              </a>
-              してください
+              {t('loginPrompt')}
             </p>
           </div>
         )}
@@ -128,7 +127,7 @@ export default function FeedPage() {
               onClick={() => loadPosts(true)}
               className="mt-2 text-sm text-red-700 hover:underline"
             >
-              再試行
+              {t('retry')}
             </button>
           </div>
         )}
@@ -151,10 +150,10 @@ export default function FeedPage() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-900">
-                投稿がまだありません
+                {t('noPosts')}
               </h3>
               <p className="mt-2 text-gray-500">
-                最初の投稿を作成して、コミュニティとつながりましょう！
+                {t('noPostsMessage')}
               </p>
             </div>
           ) : (
@@ -200,10 +199,10 @@ export default function FeedPage() {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        読み込み中...
+                        {t('loading')}
                       </span>
                     ) : (
-                      'さらに読み込む'
+                      t('loadMore')
                     )}
                   </button>
                 </div>
@@ -212,7 +211,7 @@ export default function FeedPage() {
               {/* End of feed message */}
               {!hasMore && posts.length > 0 && (
                 <div className="text-center py-6">
-                  <p className="text-gray-500">全ての投稿を表示しました</p>
+                  <p className="text-gray-500">{t('allPostsShown')}</p>
                 </div>
               )}
             </>

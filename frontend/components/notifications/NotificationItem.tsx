@@ -1,8 +1,9 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { useLocale, useTranslations } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { ja, enUS } from 'date-fns/locale';
 import { X } from 'lucide-react';
 import {
   Notification,
@@ -29,6 +30,8 @@ export default function NotificationItem({
   onDelete,
 }: NotificationItemProps) {
   const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('notificationItem');
   const [isDeleting, setIsDeleting] = useState(false);
 
   // 通知クリック時の処理
@@ -65,9 +68,10 @@ export default function NotificationItem({
   };
 
   // 相対時間を取得
+  const dateFnsLocale = locale === 'ja' ? ja : enUS;
   const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
     addSuffix: true,
-    locale: ja,
+    locale: dateFnsLocale,
   });
 
   return (
@@ -114,7 +118,7 @@ export default function NotificationItem({
         onClick={handleDelete}
         disabled={isDeleting}
         className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
-        aria-label="削除"
+        aria-label={t('delete')}
       >
         <X className="w-4 h-4" />
       </button>

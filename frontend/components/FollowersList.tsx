@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
 import {
   getFollowers,
@@ -16,6 +17,7 @@ interface FollowersListProps {
 
 export default function FollowersList({ userId }: FollowersListProps) {
   const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
+  const t = useTranslations('followersList');
   const [followers, setFollowers] = useState<FollowerResponse[]>([]);
   const [followStats, setFollowStats] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -55,7 +57,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
       setError(null);
     } catch (err: any) {
       console.error('Failed to load followers:', err);
-      setError(err.message || 'フォロワーの読み込みに失敗しました');
+      setError(err.message || t('errors.loadFailed'));
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +93,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
   if (followers.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">フォロワーはまだいません</p>
+        <p className="text-gray-500">{t('noFollowers')}</p>
       </div>
     );
   }

@@ -3,6 +3,8 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link as I18nLink } from '@/i18n/routing';
 import {
   createComment,
   getCommentReplies,
@@ -22,6 +24,7 @@ export default function CommentSection({
   onCommentAdded,
 }: CommentSectionProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const t = useTranslations('commentSection');
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newCommentContent, setNewCommentContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -31,17 +34,17 @@ export default function CommentSection({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      alert('コメントするにはログインが必要です');
+      alert(t('errors.loginRequired'));
       return;
     }
 
     if (!newCommentContent.trim()) {
-      setError('コメント内容を入力してください');
+      setError(t('errors.contentRequired'));
       return;
     }
 
     if (newCommentContent.length > 2000) {
-      setError('コメントは2000文字以内にしてください');
+      setError(t('errors.contentTooLong'));
       return;
     }
 
@@ -67,7 +70,7 @@ export default function CommentSection({
       }
     } catch (err: any) {
       console.error('Failed to create comment:', err);
-      setError(err.message || 'コメントの投稿に失敗しました');
+      setError(err.message || t('errors.createFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -76,7 +79,7 @@ export default function CommentSection({
   return (
     <div className="mt-6">
       <h3 className="text-lg font-semibold mb-4">
-        コメント ({comments.length})
+        {t('title', { count: comments.length })}
       </h3>
 
       {/* Comment form */}
@@ -84,7 +87,7 @@ export default function CommentSection({
         <textarea
           value={newCommentContent}
           onChange={(e) => setNewCommentContent(e.target.value)}
-          placeholder="コメントを追加..."
+          placeholder={t('placeholder')}
           className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
           rows={3}
           maxLength={2000}
@@ -109,7 +112,7 @@ export default function CommentSection({
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
-            {isSubmitting ? 'コメント中...' : 'コメントする'}
+            {isSubmitting ? t('submitting') : t('submit')}
           </button>
         </div>
 
@@ -121,7 +124,13 @@ export default function CommentSection({
 
         {!isAuthenticated && (
           <p className="mt-2 text-sm text-gray-500">
-            コメントするには<Link href="/login" className="text-blue-600 hover:underline">ログイン</Link>してください
+            {t.rich('loginPrompt', {
+              login: (chunks) => (
+                <I18nLink href="/login" className="text-blue-600 hover:underline">
+                  {chunks}
+                </I18nLink>
+              ),
+            })}
           </p>
         )}
       </form>
@@ -130,7 +139,7 @@ export default function CommentSection({
       <div className="space-y-4">
         {comments.length === 0 ? (
           <p className="text-gray-500 text-center py-8">
-            まだコメントがありません
+            {t('noComments')}
           </p>
         ) : (
           comments.map((comment) => (
@@ -166,6 +175,7 @@ function CommentItem({
   isReply = false,
 }: CommentItemProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const t = useTranslations('commentSection');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -183,9 +193,9 @@ function CommentItem({
       const diffInMinutes = Math.floor(
         (now.getTime() - date.getTime()) / (1000 * 60)
       );
-      return diffInMinutes < 1 ? 'たった今' : `${diffInMinutes}分前`;
+      return diffInMinutes < 1 ? t('time.justNow') : t('time.minutesAgo', { minutes: diffInMinutes });
     } else if (diffInHours < 24) {
-      return `${diffInHours}時間前`;
+      return t('time.hoursAgo', { hours: diffInHours });
     } else {
       return date.toLocaleDateString('ja-JP', {
         year: 'numeric',
@@ -209,7 +219,7 @@ function CommentItem({
       setShowReplies(true);
     } catch (error) {
       console.error('Failed to load replies:', error);
-      alert('返信の読み込みに失敗しました');
+      alert(t('errors.loadRepliesFailed'));
     } finally {
       setLoadingReplies(false);
     }
@@ -220,7 +230,7 @@ function CommentItem({
     e.preventDefault();
 
     if (!isAuthenticated) {
-      alert('返信するにはログインが必要です');
+      alert(t('errors.replyLoginRequired'));
       return;
     }
 
@@ -252,7 +262,7 @@ function CommentItem({
       }
     } catch (error) {
       console.error('Failed to create reply:', error);
-      alert('返信の投稿に失敗しました');
+      alert(t('errors.replyFailed'));
     } finally {
       setIsSubmitting(false);
     }
@@ -286,7 +296,7 @@ function CommentItem({
                 href={`/profile/${comment.user_id}`}
                 className="font-semibold text-sm text-gray-900 hover:underline"
               >
-                {comment.author?.nickname || 'Unknown User'}
+                {comment.author?.nickname || t('unknownUser')}
               </Link>
               <span className="text-xs text-gray-500">
                 {formatDate(comment.created_at)}
@@ -304,7 +314,7 @@ function CommentItem({
               className="text-sm text-gray-500 hover:text-blue-600"
               disabled={!isAuthenticated}
             >
-              返信
+              {t('reply')}
             </button>
 
             {comment.reply_count > 0 && !isReply && (
@@ -314,10 +324,10 @@ function CommentItem({
                 disabled={loadingReplies}
               >
                 {loadingReplies
-                  ? '読み込み中...'
+                  ? t('loadingReplies')
                   : showReplies
-                  ? '返信を非表示'
-                  : `返信を表示 (${comment.reply_count})`}
+                  ? t('hideReplies')
+                  : t('showReplies', { count: comment.reply_count })}
               </button>
             )}
           </div>
@@ -328,7 +338,7 @@ function CommentItem({
               <textarea
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
-                placeholder="返信を入力..."
+                placeholder={t('replyPlaceholder')}
                 className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                 rows={2}
                 maxLength={2000}
@@ -344,7 +354,7 @@ function CommentItem({
                   className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
                   disabled={isSubmitting}
                 >
-                  キャンセル
+                  {t('cancel')}
                 </button>
                 <button
                   type="submit"
@@ -355,7 +365,7 @@ function CommentItem({
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >
-                  {isSubmitting ? '送信中...' : '返信'}
+                  {isSubmitting ? t('replySubmitting') : t('replySubmit')}
                 </button>
               </div>
             </form>

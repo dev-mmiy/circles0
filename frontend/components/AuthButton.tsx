@@ -3,13 +3,15 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import React, { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { createOrGetUser } from '@/lib/api/users';
 import { useUser } from '@/contexts/UserContext';
 
 export default function AuthButton() {
   const { loginWithRedirect, logout, user, isAuthenticated, isLoading, error } = useAuth0();
   const { user: currentUser } = useUser();
+  const t = useTranslations('auth');
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [authState, setAuthState] = useState<
     'loading' | 'authenticated' | 'unauthenticated' | 'error'
@@ -117,12 +119,12 @@ export default function AuthButton() {
     console.error('Auth0Provider not properly initialized');
     return (
       <div className="flex flex-col items-center space-y-2">
-        <div className="text-red-600 text-sm">Auth0 not initialized</div>
+        <div className="text-red-600 text-sm">{t('notInitialized')}</div>
         <button
           onClick={() => window.location.reload()}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
         >
-          Retry
+          {t('retry')}
         </button>
       </div>
     );
@@ -133,7 +135,7 @@ export default function AuthButton() {
     return (
       <div className="flex items-center space-x-2">
         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-        <span className="text-sm text-gray-600">Loading...</span>
+        <span className="text-sm text-gray-600">{t('loading')}</span>
       </div>
     );
   }
@@ -165,7 +167,7 @@ export default function AuthButton() {
           disabled={isLoggingOut}
           className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {isLoggingOut ? 'Logging out...' : 'Logout'}
+          {isLoggingOut ? t('loggingOut') : t('logout')}
         </button>
       </div>
     );
@@ -178,7 +180,7 @@ export default function AuthButton() {
       return (
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-          <span className="text-sm text-gray-600">Loading...</span>
+          <span className="text-sm text-gray-600">{t('loading')}</span>
         </div>
       );
     }
@@ -186,11 +188,11 @@ export default function AuthButton() {
     console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">
-        <div className="text-red-600 text-sm font-bold">Login Error</div>
-        <div className="text-red-600 text-sm">Auth Error: {error?.message || 'Unknown error'}</div>
-        <div className="text-xs text-gray-500">Error type: {error?.name || 'Unknown'}</div>
-        <div className="text-xs text-gray-500">Timestamp: {new Date().toISOString()}</div>
-        <div className="text-xs text-blue-500">Auto-clearing cache and reloading...</div>
+        <div className="text-red-600 text-sm font-bold">{t('loginError')}</div>
+        <div className="text-red-600 text-sm">{t('authError')}: {error?.message || t('unknownError')}</div>
+        <div className="text-xs text-gray-500">{t('errorType')}: {error?.name || t('unknown')}</div>
+        <div className="text-xs text-gray-500">{t('timestamp')}: {new Date().toISOString()}</div>
+        <div className="text-xs text-blue-500">{t('autoClearingCache')}</div>
         <button
           onClick={() => {
             // Clear all Auth0 related cache and reload
@@ -208,7 +210,7 @@ export default function AuthButton() {
           }}
           className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors"
         >
-          Clear Cache & Retry
+          {t('clearCacheRetry')}
         </button>
       </div>
     );
@@ -219,7 +221,7 @@ export default function AuthButton() {
       onClick={handleLogin}
       className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
     >
-      Login
+      {t('login')}
     </button>
   );
 }

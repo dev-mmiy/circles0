@@ -22,7 +22,7 @@ from app.services.notification_service import NotificationService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
 
-router = APIRouter(prefix="/notifications", tags=["notifications"])
+router = APIRouter()
 
 
 def get_user_id_from_token(db: Session, current_user: dict) -> UUID:

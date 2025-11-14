@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import Link from 'next/link';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import { likePost, unlikePost, type Post } from '@/lib/api/posts';
 
 interface PostCardProps {
@@ -17,6 +18,7 @@ export default function PostCard({
   showFullContent = false,
 }: PostCardProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const t = useTranslations('post');
   const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [isLiking, setIsLiking] = useState(false);
@@ -31,15 +33,15 @@ export default function PostCard({
       const diffInMinutes = Math.floor(
         (now.getTime() - date.getTime()) / (1000 * 60)
       );
-      return diffInMinutes < 1 ? 'たった今' : `${diffInMinutes}分前`;
+      return diffInMinutes < 1 ? t('time.justNow') : t('time.minutesAgo', { minutes: diffInMinutes });
     } else if (diffInHours < 24) {
-      return `${diffInHours}時間前`;
+      return t('time.hoursAgo', { hours: diffInHours });
     } else if (diffInHours < 168) {
       // 7 days
       const diffInDays = Math.floor(diffInHours / 24);
-      return `${diffInDays}日前`;
+      return t('time.daysAgo', { days: diffInDays });
     } else {
-      return date.toLocaleDateString('ja-JP', {
+      return date.toLocaleDateString(t('time.locale'), {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -53,19 +55,19 @@ export default function PostCard({
       case 'public':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-            公開
+            {t('visibility.public')}
           </span>
         );
       case 'followers_only':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
-            フォロワー限定
+            {t('visibility.followersOnly')}
           </span>
         );
       case 'private':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
-            非公開
+            {t('visibility.private')}
           </span>
         );
       default:
@@ -76,7 +78,7 @@ export default function PostCard({
   // Handle like toggle
   const handleLikeToggle = async () => {
     if (!isAuthenticated) {
-      alert('いいねするにはログインが必要です');
+      alert(t('errors.loginRequired'));
       return;
     }
 
@@ -101,7 +103,7 @@ export default function PostCard({
       }
     } catch (error) {
       console.error('Failed to toggle like:', error);
-      alert('いいねの処理に失敗しました');
+      alert(t('errors.likeFailed'));
     } finally {
       setIsLiking(false);
     }
@@ -142,7 +144,7 @@ export default function PostCard({
               href={`/profile/${post.user_id}`}
               className="font-semibold text-gray-900 hover:underline"
             >
-              {post.author?.nickname || 'Unknown User'}
+              {post.author?.nickname || t('unknownUser')}
             </Link>
             {post.author?.username && (
               <span className="text-gray-500 text-sm ml-1">
@@ -167,7 +169,7 @@ export default function PostCard({
             href={`/posts/${post.id}`}
             className="text-blue-600 hover:underline text-sm mt-2 inline-block"
           >
-            続きを読む
+            {t('readMore')}
           </Link>
         )}
       </div>

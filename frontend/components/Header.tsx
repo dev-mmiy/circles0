@@ -1,21 +1,20 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useUser } from '@/contexts/UserContext';
-import { useTranslations } from '@/lib/i18n/translations';
+import { useTranslations } from 'next-intl';
+import { Link } from '@/i18n/routing';
 import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
+import LanguageSwitcher from './LanguageSwitcher';
 
 /**
  * Application Header Component with i18n support
  */
 export default function Header() {
   const { isAuthenticated } = useAuth0();
-  const { user } = useUser();
-  const { t } = useTranslations(user?.preferred_language);
+  const t = useTranslations('navigation');
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   return (
@@ -36,42 +35,47 @@ export default function Header() {
                 href="/"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                {t('navigation.home')}
+                {t('home')}
               </Link>
               <Link
                 href="/feed"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                {t('navigation.feed')}
+                {t('feed')}
               </Link>
               <Link
-                href="/users/search"
+                href="/search"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                {t('navigation.userSearch')}
+                {t('userSearch')}
               </Link>
               <Link
                 href="/profile/me"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
-                {t('navigation.myPage')}
+                {t('myPage')}
               </Link>
             </nav>
           )}
 
           {/* 右側のアクション */}
           <div className="flex items-center gap-4">
+            {/* 言語切り替え */}
+            <LanguageSwitcher />
+
             {/* 通知ベル */}
-            <div className="relative">
-              <NotificationBell
-                onClick={() => setIsNotificationOpen(!isNotificationOpen)}
-                isOpen={isNotificationOpen}
-              />
-              <NotificationDropdown
-                isOpen={isNotificationOpen}
-                onClose={() => setIsNotificationOpen(false)}
-              />
-            </div>
+            {isAuthenticated && (
+              <div className="relative">
+                <NotificationBell
+                  onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+                  isOpen={isNotificationOpen}
+                />
+                <NotificationDropdown
+                  isOpen={isNotificationOpen}
+                  onClose={() => setIsNotificationOpen(false)}
+                />
+              </div>
+            )}
 
             {/* 認証ボタン */}
             <AuthButton />

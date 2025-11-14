@@ -16,7 +16,7 @@ from app.database import get_db
 from app.models.user import User
 from app.services.notification_broadcaster import broadcaster
 
-router = APIRouter(prefix="/notifications", tags=["notifications", "sse"])
+router = APIRouter()
 
 logger = logging.getLogger(__name__)
 

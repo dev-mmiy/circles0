@@ -1,0 +1,431 @@
+{
+  "app": {
+    "name": "疾患コミュニティプラットフォーム",
+    "description": "疾患を持つ人々がつながり、経験を共有するプラットフォーム"
+  },
+  "navigation": {
+    "home": "ホーム",
+    "feed": "フィード",
+    "users": "ユーザー",
+    "userSearch": "ユーザー検索",
+    "diseases": "疾患",
+    "posts": "投稿",
+    "profile": "プロフィール",
+    "myPage": "マイページ",
+    "settings": "設定",
+    "logout": "ログアウト"
+  },
+  "buttons": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "create": "作成",
+    "update": "更新",
+    "search": "検索",
+    "filter": "フィルター",
+    "clear": "クリア",
+    "submit": "送信",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ"
+  },
+  "messages": {
+    "success": {
+      "saved": "正常に保存されました",
+      "updated": "正常に更新されました",
+      "deleted": "正常に削除されました",
+      "created": "正常に作成されました"
+    },
+    "error": {
+      "general": "エラーが発生しました",
+      "network": "ネットワークエラー",
+      "validation": "バリデーションエラー",
+      "notFound": "見つかりません",
+      "unauthorized": "認証が必要です",
+      "forbidden": "アクセスが拒否されました"
+    },
+    "loading": "読み込み中...",
+    "noData": "データがありません",
+    "confirmDelete": "この項目を削除してもよろしいですか？"
+  },
+  "validation": {
+    "required": "この項目は必須です",
+    "email": "有効なメールアドレスを入力してください",
+    "minLength": "最小文字数は{min}文字です",
+    "maxLength": "最大文字数は{max}文字です",
+    "password": "パスワードは8文字以上である必要があります",
+    "confirmPassword": "パスワードが一致しません",
+    "email_required": "メールアドレスは必須です",
+    "email_invalid": "有効なメールアドレスを入力してください",
+    "nickname_required": "ニックネームは必須です",
+    "nickname_too_short": "ニックネームは3文字以上である必要があります",
+    "first_name_required": "名は必須です",
+    "last_name_required": "姓は必須です",
+    "phone_invalid": "有効な電話番号を入力してください"
+  },
+  "dateTime": {
+    "format": "YYYY/MM/DD",
+    "timeFormat": "HH:mm",
+    "dateTimeFormat": "YYYY/MM/DD HH:mm"
+  },
+  "currency": {
+    "symbol": "¥",
+    "format": "{amount}"
+  },
+  "register": {
+    "title": "アカウント作成",
+    "subtitle": "コミュニティに参加して他の人とつながりましょう",
+    "basic_info": "基本情報",
+    "name_info": "名前情報",
+    "additional_info": "追加情報",
+    "preferences": "設定",
+    "email": "メールアドレス",
+    "email_placeholder": "メールアドレスを入力してください",
+    "nickname": "ニックネーム",
+    "nickname_placeholder": "ユニークなニックネームを選択してください",
+    "first_name": "名",
+    "first_name_placeholder": "名を入力してください",
+    "middle_name": "ミドルネーム",
+    "middle_name_placeholder": "ミドルネームを入力してください（任意）",
+    "last_name": "姓",
+    "last_name_placeholder": "姓を入力してください",
+    "name_display_order": "名前表示順序",
+    "custom_name_format": "カスタム名前形式",
+    "custom_format_help": "{first}、{middle}、{last}を使用して名前をフォーマットしてください",
+    "name_preview": "名前プレビュー",
+    "name_preview_empty": "ここに名前が表示されます",
+    "phone": "電話番号",
+    "phone_placeholder": "電話番号を入力してください",
+    "birth_date": "生年月日",
+    "country": "国",
+    "select_country": "国を選択してください",
+    "timezone": "タイムゾーン",
+    "bio": "自己紹介",
+    "bio_placeholder": "あなたについて教えてください",
+    "preferred_language": "優先言語",
+    "preferred_locale": "優先ロケール",
+    "back_to_home": "ホームに戻る",
+    "create_account": "アカウント作成",
+    "creating": "アカウント作成中..."
+  },
+  "errors": {
+    "registration_failed": "登録に失敗しました。もう一度お試しください。",
+    "network_error": "ネットワークエラーです。接続を確認してください。"
+  },
+  "auth": {
+    "login": "ログイン",
+    "logout": "ログアウト",
+    "loggingOut": "ログアウト中...",
+    "loading": "読み込み中...",
+    "notInitialized": "Auth0が初期化されていません",
+    "retry": "再試行",
+    "loginError": "ログインエラー",
+    "authError": "認証エラー",
+    "unknownError": "不明なエラー",
+    "unknown": "不明",
+    "errorType": "エラータイプ",
+    "timestamp": "タイムスタンプ",
+    "autoClearingCache": "自動的にキャッシュをクリアして再読み込み中...",
+    "clearCacheRetry": "キャッシュをクリアして再試行"
+  },
+  "notifications": {
+    "title": "通知",
+    "markAllAsRead": "全て既読",
+    "noNotifications": "通知はありません",
+    "viewAll": "全ての通知を見る",
+    "types": {
+      "follow": "{actorName}があなたをフォローしました",
+      "comment": "{actorName}があなたの投稿にコメントしました",
+      "reply": "{actorName}があなたのコメントに返信しました",
+      "like": "{actorName}があなたの投稿にいいねしました",
+      "comment_like": "{actorName}があなたのコメントにいいねしました",
+      "default": "新しい通知があります"
+    },
+    "actions": {
+      "markAsRead": "既読にする",
+      "delete": "削除"
+    }
+  },
+  "feed": {
+    "title": "コミュニティフィード",
+    "subtitle": "みんなの経験や気持ちをシェアしましょう",
+    "loginPrompt": "投稿を作成するにはログインしてください",
+    "errorLoadingPosts": "投稿の読み込みに失敗しました",
+    "retry": "再試行",
+    "noPosts": "投稿がまだありません",
+    "noPostsMessage": "最初の投稿を作成して、コミュニティとつながりましょう！",
+    "loading": "読み込み中...",
+    "loadMore": "さらに読み込む",
+    "allPostsShown": "全ての投稿を表示しました"
+  },
+  "post": {
+    "unknownUser": "不明なユーザー",
+    "readMore": "続きを読む",
+    "time": {
+      "justNow": "たった今",
+      "minutesAgo": "{minutes}分前",
+      "hoursAgo": "{hours}時間前",
+      "daysAgo": "{days}日前",
+      "locale": "ja-JP"
+    },
+    "visibility": {
+      "public": "公開",
+      "followersOnly": "フォロワー限定",
+      "private": "非公開"
+    },
+    "errors": {
+      "loginRequired": "いいねするにはログインが必要です",
+      "likeFailed": "いいねの処理に失敗しました"
+    }
+  },
+  "postForm": {
+    "placeholder": "今の気持ちや経験をシェアしましょう...",
+    "visibilityLabel": "公開範囲:",
+    "visibility": {
+      "public": "全体公開",
+      "followersOnly": "フォロワーのみ",
+      "private": "自分のみ"
+    },
+    "submit": "投稿する",
+    "submitting": "投稿中...",
+    "errors": {
+      "contentRequired": "投稿内容を入力してください",
+      "contentTooLong": "投稿内容は5000文字以内にしてください",
+      "createFailed": "投稿の作成に失敗しました"
+    }
+  },
+  "notificationItem": {
+    "delete": "削除"
+  },
+  "languageSwitcher": {
+    "ariaLabel": "言語を切り替え",
+    "languages": {
+      "ja": "日本語",
+      "en": "English"
+    }
+  },
+  "myProfile": {
+    "loading": "読み込み中...",
+    "loadingProfile": "プロフィールを読み込み中...",
+    "pleaseLogIn": "ログインしてください",
+    "loginRequired": "プロフィールを表示するにはログインが必要です。",
+    "goToHome": "ホームへ",
+    "profileNotFound": "プロフィールが見つかりません",
+    "profileLoadFailed": "プロフィールを読み込めませんでした。",
+    "retry": "再試行",
+    "myDiseases": "登録疾患",
+    "addDisease": "疾患を追加",
+    "addDiseaseButton": "+ 疾患を追加",
+    "backToHome": "← ホームに戻る",
+    "deleteConfirm": "「{diseaseName}」を削除しますか？",
+    "deleteFailed": "疾患の削除に失敗しました"
+  },
+  "userProfileEdit": {
+    "title": "プロフィール編集",
+    "sections": {
+      "publicInfo": "公開情報",
+      "privateInfo": "個人情報",
+      "preferences": "設定"
+    },
+    "fields": {
+      "nickname": "ニックネーム",
+      "username": "ユーザー名",
+      "bio": "自己紹介",
+      "country": "国",
+      "firstName": "名",
+      "lastName": "姓",
+      "phone": "電話番号",
+      "dateOfBirth": "生年月日",
+      "gender": "性別",
+      "preferredLanguage": "優先言語",
+      "profileVisibility": "プロフィール公開設定"
+    },
+    "placeholders": {
+      "nickname": "公開用ニックネーム",
+      "username": "@username",
+      "bio": "あなたについて教えてください",
+      "country": "例: 日本",
+      "phone": "+81-90-1234-5678"
+    },
+    "gender": {
+      "select": "選択してください",
+      "male": "男性",
+      "female": "女性",
+      "other": "その他",
+      "preferNotToSay": "回答しない"
+    },
+    "visibility": {
+      "public": "公開",
+      "limited": "制限公開",
+      "private": "非公開"
+    },
+    "privacy": {
+      "showEmail": "メールアドレスを公開する",
+      "showOnlineStatus": "オンライン状態を表示する"
+    },
+    "actions": {
+      "save": "保存",
+      "saving": "保存中...",
+      "cancel": "キャンセル"
+    },
+    "errors": {
+      "saveFailed": "プロフィールの保存に失敗しました"
+    }
+  },
+  "followButton": {
+    "follow": "フォロー",
+    "following": "フォロー中",
+    "processing": "処理中...",
+    "errors": {
+      "updateFailed": "フォローの更新に失敗しました"
+    }
+  },
+  "userSearch": {
+    "placeholder": "ニックネーム、ユーザー名で検索...",
+    "search": "検索",
+    "searching": "検索中...",
+    "advancedSearch": "詳細検索",
+    "hideAdvanced": "詳細を隠す",
+    "memberIdLabel": "会員ID（完全一致）",
+    "memberIdPlaceholder": "12桁の会員ID",
+    "diseaseFilterLabel": "疾患で絞り込み",
+    "resultsTitle": "検索結果 ({count}件)",
+    "noResults": "検索結果がありません",
+    "memberId": "会員ID",
+    "errors": {
+      "searchFailed": "検索に失敗しました"
+    }
+  },
+  "commentSection": {
+    "title": "コメント ({count})",
+    "placeholder": "コメントを追加...",
+    "submit": "コメントする",
+    "submitting": "コメント中...",
+    "noComments": "まだコメントがありません",
+    "reply": "返信",
+    "replyPlaceholder": "返信を入力...",
+    "replySubmit": "返信",
+    "replySubmitting": "送信中...",
+    "cancel": "キャンセル",
+    "showReplies": "返信を表示 ({count})",
+    "hideReplies": "返信を非表示",
+    "loadingReplies": "読み込み中...",
+    "unknownUser": "不明なユーザー",
+    "time": {
+      "justNow": "たった今",
+      "minutesAgo": "{minutes}分前",
+      "hoursAgo": "{hours}時間前"
+    },
+    "errors": {
+      "loginRequired": "コメントするにはログインが必要です",
+      "contentRequired": "コメント内容を入力してください",
+      "contentTooLong": "コメントは2000文字以内にしてください",
+      "createFailed": "コメントの投稿に失敗しました",
+      "replyLoginRequired": "返信するにはログインが必要です",
+      "loadRepliesFailed": "返信の読み込みに失敗しました",
+      "replyFailed": "返信の投稿に失敗しました"
+    },
+    "loginPrompt": "コメントするには<login>ログイン</login>してください"
+  },
+  "followersList": {
+    "loading": "読み込み中...",
+    "noFollowers": "フォロワーはまだいません",
+    "errors": {
+      "loadFailed": "フォロワーの読み込みに失敗しました"
+    }
+  },
+  "followingList": {
+    "loading": "読み込み中...",
+    "noFollowing": "フォロー中のユーザーはいません",
+    "errors": {
+      "loadFailed": "フォロー中のユーザーの読み込みに失敗しました"
+    }
+  },
+  "userProfileCard": {
+    "memberId": "会員ID",
+    "editProfile": "プロフィール編集",
+    "bio": "自己紹介",
+    "country": "国",
+    "language": "言語",
+    "privateInfo": "個人情報",
+    "firstName": "名",
+    "lastName": "姓",
+    "email": "メール",
+    "emailVerified": "認証済み",
+    "phone": "電話番号",
+    "dateOfBirth": "生年月日",
+    "gender": "性別",
+    "accountCreated": "アカウント作成日",
+    "lastLogin": "最終ログイン",
+    "diseaseCount": "登録疾患数",
+    "genderValues": {
+      "male": "男性",
+      "female": "女性",
+      "other": "その他",
+      "prefer_not_to_say": "回答しない"
+    },
+    "notAvailable": "N/A"
+  },
+  "diseaseList": {
+    "loading": "読み込み中...",
+    "noDiseases": "疾患が登録されていません",
+    "noDiseasesMessage": "疾患を追加して、コミュニティとつながりましょう。",
+    "diseaseId": "疾患 ID",
+    "code": "コード",
+    "diagnosisInfo": "診断情報",
+    "diagnosisDate": "診断日",
+    "doctor": "担当医",
+    "hospital": "医療機関",
+    "symptoms": "症状",
+    "limitations": "制限事項",
+    "medications": "服薬情報",
+    "notes": "備考",
+    "public": "公開",
+    "private": "非公開",
+    "searchable": "検索可能",
+    "notSearchable": "検索不可",
+    "inactive": "無効",
+    "detail": "詳細",
+    "edit": "編集",
+    "cancel": "キャンセル",
+    "delete": "削除"
+  },
+  "searchPage": {
+    "title": "検索",
+    "subtitle": "疾患やユーザーを検索できます",
+    "tabDiseases": "疾患を検索",
+    "tabUsers": "ユーザーを検索",
+    "hintsTitle": "検索のヒント",
+    "hintsDiseases": {
+      "hint1": "疾患名の一部を入力して検索できます（例: 「糖尿」）",
+      "hint2": "ICD-10コードで検索できます（例: 「E11」）",
+      "hint3": "カテゴリーを選択して絞り込みができます",
+      "hint4": "日本語・英語の両方で検索可能です"
+    },
+    "hintsUsers": {
+      "hint1": "ニックネームやユーザー名で検索できます",
+      "hint2": "会員IDで正確に検索できます",
+      "hint3": "疾患を選択して、同じ疾患を持つユーザーを探せます",
+      "hint4": "公開プロフィールのみ表示されます"
+    },
+    "backToHome": "← ホームに戻る"
+  },
+  "diseaseSearch": {
+    "placeholder": "疾患名、ICD-10コードで検索...",
+    "search": "検索",
+    "searching": "検索中...",
+    "advancedSearch": "詳細検索",
+    "hideAdvanced": "詳細を隠す",
+    "icdCodeLabel": "ICD-10 コード",
+    "icdCodePlaceholder": "例: E11",
+    "categoryLabel": "カテゴリー",
+    "resultsTitle": "検索結果 ({count}件)",
+    "code": "コード",
+    "select": "選択",
+    "noResults": "検索結果がありません",
+    "errors": {
+      "searchFailed": "検索に失敗しました"
+    }
+  }
+}

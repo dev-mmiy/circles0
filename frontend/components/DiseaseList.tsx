@@ -6,6 +6,8 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
 import { UserDiseaseDetailed } from '@/lib/api/users';
 import { DiseaseStatusBadge, SeverityBadge } from './DiseaseStatusBadge';
 
@@ -30,10 +32,13 @@ export function DiseaseList({
   editForm,
   preferredLanguage = 'ja',
 }: DiseaseListProps) {
+  const t = useTranslations('diseaseList');
+  const locale = useLocale();
+  
   // Get localized disease name
   const getDiseaseName = (disease: UserDiseaseDetailed): string => {
     if (!disease.disease) {
-      return `疾患 ID: ${disease.disease_id}`;
+      return `${t('diseaseId')}: ${disease.disease_id}`;
     }
 
     // Check if translations exist
@@ -61,7 +66,11 @@ export function DiseaseList({
   // Format date for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('ja-JP', {
+    const localeMap: Record<string, string> = {
+      ja: 'ja-JP',
+      en: 'en-US',
+    };
+    return new Date(dateString).toLocaleDateString(localeMap[locale] || 'ja-JP', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -74,7 +83,7 @@ export function DiseaseList({
         <div className="flex justify-center items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
-        <p className="text-center text-gray-600 mt-4">読み込み中...</p>
+        <p className="text-center text-gray-600 mt-4">{t('loading')}</p>
       </div>
     );
   }
@@ -95,9 +104,9 @@ export function DiseaseList({
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="mt-4 text-lg font-medium text-gray-900">疾患が登録されていません</h3>
+        <h3 className="mt-4 text-lg font-medium text-gray-900">{t('noDiseases')}</h3>
         <p className="mt-2 text-sm text-gray-600">
-          疾患を追加して、コミュニティとつながりましょう。
+          {t('noDiseasesMessage')}
         </p>
       </div>
     );
@@ -119,7 +128,7 @@ export function DiseaseList({
                 </h3>
                 {disease.disease?.disease_code && (
                   <p className="text-sm text-gray-500 mt-1">
-                    コード: {disease.disease?.disease_code}
+                    {t('code')}: {disease.disease?.disease_code}
                   </p>
                 )}
               </div>
@@ -136,23 +145,23 @@ export function DiseaseList({
             {/* Diagnosis Information */}
             {(disease.diagnosis_date || disease.diagnosis_doctor || disease.diagnosis_hospital) && (
               <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 mb-2">診断情報</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-2">{t('diagnosisInfo')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {disease.diagnosis_date && (
                     <div>
-                      <span className="text-gray-600">診断日:</span>{' '}
+                      <span className="text-gray-600">{t('diagnosisDate')}:</span>{' '}
                       <span className="text-gray-900">{formatDate(disease.diagnosis_date)}</span>
                     </div>
                   )}
                   {disease.diagnosis_doctor && (
                     <div>
-                      <span className="text-gray-600">担当医:</span>{' '}
+                      <span className="text-gray-600">{t('doctor')}:</span>{' '}
                       <span className="text-gray-900">{disease.diagnosis_doctor}</span>
                     </div>
                   )}
                   {disease.diagnosis_hospital && (
                     <div className="col-span-2">
-                      <span className="text-gray-600">医療機関:</span>{' '}
+                      <span className="text-gray-600">{t('hospital')}:</span>{' '}
                       <span className="text-gray-900">{disease.diagnosis_hospital}</span>
                     </div>
                   )}
@@ -163,7 +172,7 @@ export function DiseaseList({
             {/* Symptoms */}
             {disease.symptoms && (
               <div className="mb-3">
-                <h4 className="text-sm font-semibold text-gray-700 mb-1">症状</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">{t('symptoms')}</h4>
                 <p className="text-sm text-gray-600">{disease.symptoms}</p>
               </div>
             )}
@@ -171,7 +180,7 @@ export function DiseaseList({
             {/* Limitations */}
             {disease.limitations && (
               <div className="mb-3">
-                <h4 className="text-sm font-semibold text-gray-700 mb-1">制限事項</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">{t('limitations')}</h4>
                 <p className="text-sm text-gray-600">{disease.limitations}</p>
               </div>
             )}
@@ -179,7 +188,7 @@ export function DiseaseList({
             {/* Medications */}
             {disease.medications && (
               <div className="mb-3">
-                <h4 className="text-sm font-semibold text-gray-700 mb-1">服薬情報</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">{t('medications')}</h4>
                 <p className="text-sm text-gray-600">{disease.medications}</p>
               </div>
             )}
@@ -187,7 +196,7 @@ export function DiseaseList({
             {/* Notes */}
             {disease.notes && (
               <div className="mb-3">
-                <h4 className="text-sm font-semibold text-gray-700 mb-1">備考</h4>
+                <h4 className="text-sm font-semibold text-gray-700 mb-1">{t('notes')}</h4>
                 <p className="text-sm text-gray-600">{disease.notes}</p>
               </div>
             )}
@@ -196,25 +205,25 @@ export function DiseaseList({
             <div className="flex items-center gap-2 mb-4">
               {disease.is_public ? (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                  公開
+                  {t('public')}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  非公開
+                  {t('private')}
                 </span>
               )}
               {disease.is_searchable ? (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">
-                  検索可能
+                  {t('searchable')}
                 </span>
               ) : (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">
-                  検索不可
+                  {t('notSearchable')}
                 </span>
               )}
               {!disease.is_active && (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                  無効
+                  {t('inactive')}
                 </span>
               )}
             </div>
@@ -226,7 +235,7 @@ export function DiseaseList({
                   onClick={() => onViewDetail(disease)}
                   className="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
                 >
-                  詳細
+                  {t('detail')}
                 </button>
               )}
               {onEdit && (
@@ -234,7 +243,7 @@ export function DiseaseList({
                   onClick={() => onEdit(disease)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
-                  {editingDiseaseId === disease.id ? 'キャンセル' : '編集'}
+                  {editingDiseaseId === disease.id ? t('cancel') : t('edit')}
                 </button>
               )}
               {onDelete && (
@@ -242,7 +251,7 @@ export function DiseaseList({
                   onClick={() => onDelete(disease)}
                   className="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                 >
-                  削除
+                  {t('delete')}
                 </button>
               )}
             </div>
