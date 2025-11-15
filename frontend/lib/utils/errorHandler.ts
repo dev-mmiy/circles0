@@ -118,23 +118,24 @@ export function requiresAuthRedirect(error: ErrorInfo): boolean {
 
 /**
  * Get user-friendly error message key for translation
+ * Note: This returns the key without the namespace prefix since ErrorDisplay uses useTranslations('errors')
  */
 export function getErrorMessageKey(error: ErrorInfo): string {
   switch (error.type) {
     case ErrorType.NETWORK:
-      return 'errors.network';
+      return 'network';
     case ErrorType.UNAUTHORIZED:
-      return 'errors.unauthorized';
+      return 'unauthorized';
     case ErrorType.FORBIDDEN:
-      return 'errors.forbidden';
+      return 'forbidden';
     case ErrorType.NOT_FOUND:
-      return 'errors.notFound';
+      return 'notFound';
     case ErrorType.VALIDATION:
-      return 'errors.validation';
+      return 'validation';
     case ErrorType.SERVER:
-      return 'errors.server';
+      return 'server';
     default:
-      return 'errors.general';
+      return 'general';
   }
 }
 

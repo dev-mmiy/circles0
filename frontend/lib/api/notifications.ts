@@ -79,6 +79,8 @@ export async function getNotifications(
  * 未読通知数を取得
  */
 export async function getUnreadCount(): Promise<number> {
+  console.log('[getUnreadCount] Calling API with baseURL:', apiClient.defaults.baseURL);
+  console.log('[getUnreadCount] Full URL will be:', `${apiClient.defaults.baseURL}/notifications/unread-count`);
   const response = await apiClient.get<UnreadCountResponse>('/notifications/unread-count');
   return response.data.unread_count;
 }

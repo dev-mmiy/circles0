@@ -9,7 +9,10 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.orm import Session, joinedload
 
-from app.models.post import Post, PostComment, PostLike
+from app.models.disease import UserDisease
+from app.models.hashtag import Hashtag, PostHashtag
+from app.models.mention import PostMention
+from app.models.post import Post, PostComment, PostImage, PostLike
 from app.models.user import User
 from app.schemas.post import (
     PostCommentCreate,
@@ -37,6 +40,19 @@ class PostService:
         db.add(post)
         db.commit()
         db.refresh(post)
+
+        # Create post images if provided
+        if post_data.image_urls:
+            for index, image_url in enumerate(post_data.image_urls[:5]):  # Max 5 images
+                post_image = PostImage(
+                    post_id=post.id,
+                    image_url=image_url,
+                    display_order=index,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(post_image)
+            db.commit()
+
         return post
 
     @staticmethod
@@ -57,6 +73,8 @@ class PostService:
                 joinedload(Post.user),
                 joinedload(Post.likes).joinedload(PostLike.user),
                 joinedload(Post.comments).joinedload(PostComment.user),
+                joinedload(Post.mentions).joinedload(PostMention.mentioned_user),
+                joinedload(Post.images),
             )
             .filter(Post.id == post_id, Post.is_active == True)
         )
@@ -91,6 +109,7 @@ class PostService:
                 joinedload(Post.user),
                 joinedload(Post.likes),
                 joinedload(Post.comments),
+                joinedload(Post.images),
             )
             .filter(Post.user_id == user_id, Post.is_active == True)
         )
@@ -120,16 +139,19 @@ class PostService:
         skip: int = 0,
         limit: int = 20,
         filter_type: str = "all",
+        disease_id: Optional[int] = None,
     ) -> List[Post]:
         """
         Get feed of posts for the current user.
 
         Args:
-            filter_type: "all" for all posts, "following" for posts from followed users only
+            filter_type: "all" for all posts, "following" for posts from followed users only, "disease" for posts from users with specific disease
+            disease_id: Disease ID to filter by (required when filter_type="disease")
 
         If authenticated:
             - filter_type="all": public posts + followers_only posts from followed users
             - filter_type="following": posts from followed users only (public + followers_only)
+            - filter_type="disease": posts from users who have the specified disease (public + followers_only from followed users)
         If not authenticated: only public posts
         """
         from app.models.follow import Follow
@@ -140,9 +162,32 @@ class PostService:
                 joinedload(Post.user),
                 joinedload(Post.likes),
                 joinedload(Post.comments),
+                joinedload(Post.images),
             )
             .filter(Post.is_active == True)
         )
+
+        # Filter by disease if specified
+        if disease_id is not None:
+            # Get user IDs that have this disease (public and searchable)
+            user_diseases = (
+                db.query(UserDisease.user_id)
+                .filter(
+                    UserDisease.disease_id == disease_id,
+                    UserDisease.is_active == True,
+                    UserDisease.is_public == True,
+                    UserDisease.is_searchable == True,
+                )
+                .all()
+            )
+            disease_user_ids = [ud[0] for ud in user_diseases]
+
+            if not disease_user_ids:
+                # No users have this disease, return empty result
+                return []
+
+            # Filter posts to only those from users with this disease
+            query = query.filter(Post.user_id.in_(disease_user_ids))
 
         if current_user_id:
             if filter_type == "following":
@@ -170,7 +215,7 @@ class PostService:
                     # User is not following anyone, return empty result
                     return []
             else:
-                # filter_type="all": show public posts + followers_only posts from followed users
+                # filter_type="all" or "disease": show public posts + followers_only posts from followed users
                 # Get list of user IDs that current user is following
                 following_ids = (
                     db.query(Follow.following_id)
@@ -192,6 +237,96 @@ class PostService:
                         ),
                     )
                 )
+        else:
+            # Unauthenticated user - only public posts
+            query = query.filter(Post.visibility == "public")
+
+        return query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+
+    @staticmethod
+    def get_posts_by_hashtag(
+        db: Session,
+        hashtag_name: str,
+        current_user_id: Optional[UUID] = None,
+        skip: int = 0,
+        limit: int = 20,
+    ) -> List[Post]:
+        """
+        Get posts by hashtag name.
+
+        Args:
+            db: Database session
+            hashtag_name: Hashtag name (without #)
+            current_user_id: Current user ID for visibility filtering
+            skip: Number of posts to skip
+            limit: Maximum number of posts to return
+
+        Returns:
+            List of posts that contain the specified hashtag
+        """
+        from app.models.follow import Follow
+        from app.utils.hashtag import normalize_hashtag
+
+        # Normalize hashtag name
+        normalized_name = normalize_hashtag(hashtag_name)
+
+        # Find hashtag
+        hashtag = db.query(Hashtag).filter(
+            func.lower(Hashtag.name) == normalized_name
+        ).first()
+
+        if not hashtag:
+            return []
+
+        # Get post IDs that have this hashtag
+        post_ids = [
+            ph.post_id
+            for ph in db.query(PostHashtag).filter(
+                PostHashtag.hashtag_id == hashtag.id
+            ).all()
+        ]
+
+        if not post_ids:
+            return []
+
+        # Build query with visibility filtering
+        query = (
+            db.query(Post)
+            .options(
+                joinedload(Post.user),
+                joinedload(Post.likes),
+                joinedload(Post.comments),
+                joinedload(Post.images),
+            )
+            .filter(
+                Post.id.in_(post_ids),
+                Post.is_active == True
+            )
+        )
+
+        # Apply visibility filtering (similar to get_feed)
+        if current_user_id:
+            # Get list of user IDs that current user is following
+            following_ids = (
+                db.query(Follow.following_id)
+                .filter(
+                    Follow.follower_id == current_user_id,
+                    Follow.is_active == True,
+                )
+                .all()
+            )
+            following_user_ids = [f[0] for f in following_ids]
+
+            # Show public posts OR followers_only posts from followed users
+            query = query.filter(
+                or_(
+                    Post.visibility == "public",
+                    and_(
+                        Post.visibility == "followers_only",
+                        Post.user_id.in_(following_user_ids),
+                    ),
+                )
+            )
         else:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")

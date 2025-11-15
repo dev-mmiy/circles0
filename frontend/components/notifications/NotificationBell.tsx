@@ -3,6 +3,7 @@
 import { useEffect } from 'react';
 import { Bell } from 'lucide-react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { useTranslations } from 'next-intl';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 
 interface NotificationBellProps {
@@ -17,6 +18,7 @@ interface NotificationBellProps {
 export default function NotificationBell({ onClick, isOpen }: NotificationBellProps) {
   const { isAuthenticated } = useAuth0();
   const { unreadCount, isConnected } = useNotificationContext();
+  const t = useTranslations('notifications');
 
   if (!isAuthenticated) {
     return null;
@@ -28,8 +30,8 @@ export default function NotificationBell({ onClick, isOpen }: NotificationBellPr
       className={`relative p-2 rounded-full hover:bg-gray-100 transition-colors ${
         isOpen ? 'bg-gray-100' : ''
       }`}
-      aria-label="通知"
-      title={isConnected ? 'リアルタイム接続中' : '接続中...'}
+      aria-label={t('title')}
+      title={isConnected ? t('realtimeConnected') : t('connecting')}
     >
       <Bell className="w-6 h-6 text-gray-700" />
 

@@ -8,7 +8,7 @@ improving maintainability and testability.
 from typing import List
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, get_current_user_optional
@@ -20,7 +20,16 @@ from app.schemas.disease import (
     UserDiseaseResponse,
     UserDiseaseUpdate,
 )
-from app.schemas.user import UserCreate, UserPublicResponse, UserResponse, UserUpdate
+from app.schemas.user import (
+    AllFieldVisibilityResponse,
+    FieldVisibilityResponse,
+    FieldVisibilityUpdate,
+    UserCreate,
+    UserPublicResponse,
+    UserResponse,
+    UserUpdate,
+)
+from app.services.user_field_visibility_service import UserFieldVisibilityService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
 from app.models.user import User
@@ -174,7 +183,9 @@ async def get_user_public_profile(
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user_optional),
 ):
-    """Get a user's public profile."""
+    """Get a user's public profile with field-level visibility filtering."""
+    from app.models.disease import UserDisease
+
     user = UserService.get_user_by_id(db, user_id, active_only=True)
 
     if not user:
@@ -185,21 +196,53 @@ async def get_user_public_profile(
     # Check profile visibility
     UserService.check_profile_visibility(user, current_user)
 
-    # Get user's diseases
+    # Get current viewer's ID and disease IDs
+    viewer_id = None
+    viewer_disease_ids = None
+    if current_user:
+        auth0_id = extract_auth0_id(current_user)
+        viewer = UserService.get_user_by_auth0_id(db, auth0_id)
+        if viewer:
+            viewer_id = viewer.id
+            viewer_disease_ids = [
+                ud.disease_id
+                for ud in db.query(UserDisease)
+                .filter(
+                    UserDisease.user_id == viewer_id,
+                    UserDisease.is_active == True,
+                )
+                .all()
+            ]
+
+    # Get user's diseases (only public ones)
     user_diseases = UserService.get_user_diseases(db, user.id)
 
-    # Create response with diseases
+    # Build response with field-level visibility filtering
     user_dict = {
         "id": user.id,
         "member_id": user.member_id,
-        "nickname": user.nickname,
+        "nickname": user.nickname,  # Always visible
+        "created_at": user.created_at,  # Always visible
+        "diseases": user_diseases,  # Already filtered to public diseases
+    }
+
+    # Check visibility for each field
+    fields_to_check = {
         "username": user.username,
         "bio": user.bio,
         "avatar_url": user.avatar_url,
         "country": user.country,
-        "created_at": user.created_at,
-        "diseases": user_diseases,
+        "date_of_birth": user.date_of_birth,
+        "gender": user.gender,
+        "language": user.language,
+        "timezone": user.timezone,
     }
+
+    for field_name, field_value in fields_to_check.items():
+        if UserFieldVisibilityService.can_view_field(
+            db, user.id, field_name, viewer_id, viewer_disease_ids
+        ):
+            user_dict[field_name] = field_value
 
     return user_dict
 
@@ -416,6 +459,8 @@ async def search_users(
     country: str | None = None,
     language: str | None = None,
     member_id: str | None = None,
+    sort_by: str = Query("created_at", regex="^(created_at|last_login|nickname)$", description="Sort field: created_at, last_login, or nickname"),
+    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order: asc or desc"),
     limit: int = 20,
     db: Session = Depends(get_db),
     current_user: dict | None = Depends(get_current_user_optional),
@@ -428,11 +473,13 @@ async def search_users(
     - country: Filter by country code
     - language: Filter by preferred language
     - member_id: Search by exact member ID
+    - sort_by: Sort field (created_at, last_login, nickname)
+    - sort_order: Sort order (asc, desc)
     - limit: Maximum number of results (default: 20, max: 100)
 
     Only returns public profiles or limited profiles (if authenticated).
     """
-    from sqlalchemy import or_, and_
+    from sqlalchemy import or_, and_, desc, asc
     from app.models.disease import UserDisease
 
     # Validate limit
@@ -490,6 +537,13 @@ async def search_users(
                 detail="Invalid disease_ids format"
             )
 
+    # Apply sorting
+    sort_column = getattr(User, sort_by, User.created_at)
+    if sort_order == "desc":
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
+
     # Execute query
     users = query.limit(limit).all()
 
@@ -530,3 +584,76 @@ async def search_users(
         })
 
     return result
+
+
+# Field Visibility Endpoints
+
+
+@router.get(
+    "/me/field-visibility",
+    response_model=AllFieldVisibilityResponse,
+    summary="Get all field visibility settings",
+)
+async def get_field_visibilities(
+    db: Session = Depends(get_db), current_user: dict = Depends(get_current_user)
+):
+    """Get all field visibility settings for the current user."""
+    from app.utils.auth_utils import extract_auth0_id
+
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    field_visibilities = UserFieldVisibilityService.get_all_field_visibilities(
+        db, user.id
+    )
+
+    return AllFieldVisibilityResponse(field_visibilities=field_visibilities)
+
+
+@router.put(
+    "/me/field-visibility/{field_name}",
+    response_model=FieldVisibilityResponse,
+    summary="Set field visibility",
+)
+async def set_field_visibility(
+    field_name: str,
+    visibility_data: FieldVisibilityUpdate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """Set visibility for a specific field."""
+    from app.utils.auth_utils import extract_auth0_id
+
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
+    # Ensure field_name matches
+    if field_name != visibility_data.field_name:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Field name in URL must match field name in body",
+        )
+
+    try:
+        visibility_setting = UserFieldVisibilityService.set_field_visibility(
+            db, user.id, visibility_data.field_name, visibility_data.visibility
+        )
+
+        return FieldVisibilityResponse(
+            field_name=visibility_setting.field_name,
+            visibility=visibility_setting.visibility,
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+        )

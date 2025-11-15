@@ -174,6 +174,75 @@ export default function PostCard({
         )}
       </div>
 
+      {/* Hashtags */}
+      {post.hashtags && post.hashtags.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {post.hashtags.map((hashtag) => (
+            <Link
+              key={hashtag.id}
+              href={`/search?q=${encodeURIComponent(hashtag.name)}&type=hashtags`}
+              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
+            >
+              #{hashtag.name}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Mentions */}
+      {post.mentions && post.mentions.length > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          <span className="text-sm text-gray-600 font-medium mr-1">
+            {t('mentions')}:
+          </span>
+          {post.mentions.map((mention) => (
+            <Link
+              key={mention.id}
+              href={`/profile/${mention.id}`}
+              className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium hover:bg-purple-100 transition-colors"
+            >
+              @{mention.nickname}
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* Images */}
+      {post.images && post.images.length > 0 && (
+        <div className="mb-4">
+          <div className={`grid gap-2 ${
+            post.images.length === 1
+              ? 'grid-cols-1'
+              : post.images.length === 2
+              ? 'grid-cols-2'
+              : 'grid-cols-2'
+          }`}>
+            {post.images.map((image, index) => (
+              <div
+                key={image.id}
+                className={`relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100 ${
+                  post.images!.length === 1
+                    ? 'aspect-auto max-h-96'
+                    : 'aspect-square'
+                }`}
+              >
+                <img
+                  src={image.image_url}
+                  alt={`Post image ${index + 1}`}
+                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => {
+                    window.open(image.image_url, '_blank');
+                  }}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3EImage not found%3C/text%3E%3C/svg%3E';
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Actions: Like and Comment */}
       <div className="flex items-center space-x-6 pt-3 border-t border-gray-200">
         {/* Like button */}

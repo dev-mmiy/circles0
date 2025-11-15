@@ -9,21 +9,31 @@ import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
+import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import { DiseaseSearch } from '@/components/DiseaseSearch';
 import { UserSearch } from '@/components/UserSearch';
+import { HashtagSearch } from '@/components/HashtagSearch';
 import { searchDiseases, searchUsers } from '@/lib/api/search';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useUser } from '@/contexts/UserContext';
 
-type SearchTab = 'diseases' | 'users';
+type SearchTab = 'diseases' | 'users' | 'hashtags';
 
 export default function SearchPage() {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('searchPage');
   const { user } = useUser();
   const { categories, diseases: allDiseases } = useDisease();
-  const [activeTab, setActiveTab] = useState<SearchTab>('diseases');
+  const searchParams = useSearchParams();
+  
+  // Get initial tab and query from URL params
+  const urlTab = searchParams.get('type') as SearchTab | null;
+  const urlQuery = searchParams.get('q') || '';
+  
+  const [activeTab, setActiveTab] = useState<SearchTab>(
+    urlTab && ['diseases', 'users', 'hashtags'].includes(urlTab) ? urlTab : 'diseases'
+  );
 
   const handleDiseaseSearch = async (params: any) => {
     try {
@@ -100,6 +110,16 @@ export default function SearchPage() {
                 >
                   {t('tabUsers')}
                 </button>
+                <button
+                  onClick={() => setActiveTab('hashtags')}
+                  className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === 'hashtags'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {t('tabHashtags')}
+                </button>
               </nav>
             </div>
 
@@ -111,11 +131,15 @@ export default function SearchPage() {
                   categories={formattedCategories}
                   preferredLanguage={user?.preferred_language || 'ja'}
                 />
-              ) : (
+              ) : activeTab === 'users' ? (
                 <UserSearch
                   onSearch={handleUserSearch}
                   diseases={formattedDiseases}
                   preferredLanguage={user?.preferred_language || 'ja'}
+                />
+              ) : (
+                <HashtagSearch
+                  initialHashtag={activeTab === 'hashtags' && urlQuery ? urlQuery.replace(/^#/, '') : undefined}
                 />
               )}
             </div>
@@ -132,12 +156,19 @@ export default function SearchPage() {
                   <li>• {t('hintsDiseases.hint3')}</li>
                   <li>• {t('hintsDiseases.hint4')}</li>
                 </>
-              ) : (
+              ) : activeTab === 'users' ? (
                 <>
                   <li>• {t('hintsUsers.hint1')}</li>
                   <li>• {t('hintsUsers.hint2')}</li>
                   <li>• {t('hintsUsers.hint3')}</li>
                   <li>• {t('hintsUsers.hint4')}</li>
+                </>
+              ) : (
+                <>
+                  <li>• {t('hintsHashtags.hint1')}</li>
+                  <li>• {t('hintsHashtags.hint2')}</li>
+                  <li>• {t('hintsHashtags.hint3')}</li>
+                  <li>• {t('hintsHashtags.hint4')}</li>
                 </>
               )}
             </ul>

@@ -67,8 +67,48 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
       setUnreadCount((prev) => prev + 1);
     }
 
+    // Show browser notification if permission is granted
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      // Note: Browser notifications don't support i18n directly
+      // We'll use English messages for now, or you can implement locale detection
+      const messages: Record<string, { title: string; body: string }> = {
+        follow: { title: 'New Follower', body: 'Someone started following you' },
+        comment: { title: 'New Comment', body: 'Someone commented on your post' },
+        reply: { title: 'New Reply', body: 'Someone replied to your comment' },
+        like: { title: 'New Like', body: 'Someone liked your post' },
+        comment_like: { title: 'New Like', body: 'Someone liked your comment' },
+      };
+
+      const message = messages[notification.type] || { title: 'New Notification', body: 'You have a new notification' };
+      
+      // Build notification URL
+      let url = '/notifications';
+      if (notification.post_id) {
+        url = `/posts/${notification.post_id}`;
+      }
+
+      // Show browser notification
+      const browserNotification = new Notification(message.title, {
+        body: message.body,
+        icon: '/icon-192x192.png',
+        badge: '/icon-96x96.png',
+        tag: `notification-${notification.id}`,
+        data: {
+          notification_id: notification.id,
+          type: notification.type,
+          url: url,
+        },
+      });
+
+      // Handle notification click
+      browserNotification.onclick = () => {
+        window.focus();
+        window.location.href = url;
+        browserNotification.close();
+      };
+    }
+
     // You can add more logic here, such as:
-    // - Show browser notification
     // - Play sound
     // - Update notification list in state
   }, []);

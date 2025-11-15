@@ -10,10 +10,19 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 from app.api.auth import router as auth_router
 from app.api.diseases import router as diseases_router
 from app.api.follows import router as follows_router
+from app.api.hashtags import router as hashtags_router
 from app.api.notifications import router as notifications_router
 from app.api.notifications_sse import router as notifications_sse_router
 from app.api.posts import router as posts_router
 from app.api.users import router as users_router
+
+# Try to import push subscriptions router (optional - requires pywebpush)
+try:
+    from app.api.push_subscriptions import router as push_subscriptions_router
+    PUSH_SUBSCRIPTIONS_AVAILABLE = True
+except ImportError:
+    PUSH_SUBSCRIPTIONS_AVAILABLE = False
+    push_subscriptions_router = None
 
 # from app.auth.router import router as session_auth_router  # Temporarily disabled
 from app.middleware.market import MarketMiddleware
@@ -109,8 +118,11 @@ app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"])
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
+app.include_router(hashtags_router, prefix="/api/v1", tags=["hashtags"])
 app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(notifications_sse_router, prefix="/api/v1/notifications", tags=["notifications", "sse"])
+if PUSH_SUBSCRIPTIONS_AVAILABLE:
+    app.include_router(push_subscriptions_router, prefix="/api/v1/push-subscriptions", tags=["push-subscriptions"])
 
 
 @app.get("/")

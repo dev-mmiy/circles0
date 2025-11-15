@@ -13,7 +13,9 @@
     "profile": "プロフィール",
     "myPage": "マイページ",
     "settings": "設定",
-    "logout": "ログアウト"
+    "logout": "ログアウト",
+    "openMenu": "メニューを開く",
+    "closeMenu": "メニューを閉じる"
   },
   "buttons": {
     "save": "保存",
@@ -74,16 +76,33 @@
     "format": "{amount}"
   },
   "register": {
-    "title": "アカウント作成",
-    "subtitle": "コミュニティに参加して他の人とつながりましょう",
+    "title": "会員登録",
+    "subtitle": "ようこそ！プロフィール情報を入力して、会員登録を完了してください。",
+    "loading": "読み込み中...",
+    "email": "メールアドレス",
+    "nickname": "ニックネーム",
+    "nickname_placeholder": "公開用のニックネームを入力",
+    "nicknameHelp": "他のユーザーに表示されるニックネームです（50文字以内）",
+    "profileVisibility": "プロフィール公開設定",
+    "visibility": {
+      "public": "公開 - すべてのユーザーが閲覧可能",
+      "limited": "限定公開 - 登録ユーザーのみ閲覧可能",
+      "private": "非公開 - 自分のみ閲覧可能"
+    },
+    "avatarLabel": "プロフィール画像",
+    "avatarAlt": "プロフィール",
+    "avatarNote": "Auth0から取得した画像を使用します",
+    "submitting": "登録中...",
+    "submitButton": "会員登録を完了する",
+    "termsNote": "登録することで、利用規約とプライバシーポリシーに同意したものとみなされます。",
+    "errors": {
+      "registrationFailed": "会員登録に失敗しました"
+    },
     "basic_info": "基本情報",
     "name_info": "名前情報",
     "additional_info": "追加情報",
     "preferences": "設定",
-    "email": "メールアドレス",
     "email_placeholder": "メールアドレスを入力してください",
-    "nickname": "ニックネーム",
-    "nickname_placeholder": "ユニークなニックネームを選択してください",
     "first_name": "名",
     "first_name_placeholder": "名を入力してください",
     "middle_name": "ミドルネーム",
@@ -134,6 +153,19 @@
     "markAllAsRead": "全て既読",
     "noNotifications": "通知はありません",
     "viewAll": "全ての通知を見る",
+    "pageTitle": "通知一覧",
+    "pageSubtitle": "すべての通知を確認できます",
+    "filterAll": "すべての通知",
+    "filterUnread": "未読のみ",
+    "loading": "読み込み中...",
+    "loadMore": "さらに読み込む",
+    "allNotificationsShown": "全ての通知を表示しました",
+    "noUnreadNotifications": "未読の通知はありません",
+    "noUnreadNotificationsMessage": "すべての通知を既読にしました！",
+    "errorLoading": "通知の読み込みに失敗しました",
+    "retry": "再試行",
+    "realtimeConnected": "リアルタイム接続中",
+    "connecting": "接続中...",
     "types": {
       "follow": "{actorName}があなたをフォローしました",
       "comment": "{actorName}があなたの投稿にコメントしました",
@@ -160,8 +192,14 @@
     "allPostsShown": "全ての投稿を表示しました",
     "filterAll": "すべての投稿",
     "filterFollowing": "フォロー中のユーザー",
+    "filterDisease": "疾患別",
+    "selectDisease": "疾患を選択",
+    "selectDiseasePlaceholder": "疾患を選択してください",
+    "selectDiseasePrompt": "疾患を選択して、その疾患を持つユーザーの投稿を表示します",
     "noFollowingPosts": "フォロー中のユーザーの投稿がまだありません",
-    "noFollowingPostsMessage": "ユーザーをフォローして、その投稿を見ましょう！"
+    "noFollowingPostsMessage": "ユーザーをフォローして、その投稿を見ましょう！",
+    "noDiseasePosts": "この疾患の投稿がまだありません",
+    "noDiseasePostsMessage": "{diseaseName}を持つユーザーの投稿がまだありません"
   },
   "post": {
     "unknownUser": "不明なユーザー",
@@ -178,6 +216,7 @@
       "followersOnly": "フォロワー限定",
       "private": "非公開"
     },
+    "mentions": "メンション",
     "errors": {
       "loginRequired": "いいねするにはログインが必要です",
       "likeFailed": "いいねの処理に失敗しました"
@@ -191,11 +230,17 @@
       "followersOnly": "フォロワーのみ",
       "private": "自分のみ"
     },
+    "detectedHashtags": "検出されたハッシュタグ",
+    "detectedMentions": "メンション",
+    "imagesLabel": "画像",
+    "imageUrlPlaceholder": "画像URLを入力（最大5枚）",
+    "addImage": "追加",
     "submit": "投稿する",
     "submitting": "投稿中...",
     "errors": {
       "contentRequired": "投稿内容を入力してください",
       "contentTooLong": "投稿内容は5000文字以内にしてください",
+      "tooManyImages": "画像は最大5枚までです",
       "createFailed": "投稿の作成に失敗しました"
     }
   },
@@ -230,7 +275,8 @@
     "sections": {
       "publicInfo": "公開情報",
       "privateInfo": "個人情報",
-      "preferences": "設定"
+      "preferences": "設定",
+      "fieldVisibility": "フィールド別公開設定"
     },
     "fields": {
       "nickname": "ニックネーム",
@@ -243,7 +289,10 @@
       "dateOfBirth": "生年月日",
       "gender": "性別",
       "preferredLanguage": "優先言語",
-      "profileVisibility": "プロフィール公開設定"
+      "profileVisibility": "プロフィール公開設定",
+      "avatarUrl": "アバター画像URL",
+      "language": "言語",
+      "timezone": "タイムゾーン"
     },
     "placeholders": {
       "nickname": "公開用ニックネーム",
@@ -267,6 +316,24 @@
     "privacy": {
       "showEmail": "メールアドレスを公開する",
       "showOnlineStatus": "オンライン状態を表示する"
+    },
+    "fieldVisibility": {
+      "description": "各フィールドの公開範囲を個別に設定できます",
+      "loading": "読み込み中...",
+      "updateFailed": "公開設定の更新に失敗しました",
+      "options": {
+        "public": "公開",
+        "limited": "制限公開",
+        "private": "非公開",
+        "sameDiseaseOnly": "同じ疾患を持つユーザーのみ"
+      }
+    },
+    "languages": {
+      "ja": "日本語",
+      "en": "English",
+      "es": "Español",
+      "fr": "Français",
+      "de": "Deutsch"
     },
     "actions": {
       "save": "保存",
@@ -294,9 +361,20 @@
     "memberIdLabel": "会員ID（完全一致）",
     "memberIdPlaceholder": "12桁の会員ID",
     "diseaseFilterLabel": "疾患で絞り込み",
+    "sortByLabel": "並び順",
+    "sortByDate": "登録日順",
+    "sortByLogin": "最終ログイン順",
+    "sortByName": "ニックネーム順",
+    "sortOrderAsc": "昇順",
+    "sortOrderDesc": "降順",
     "resultsTitle": "検索結果 ({count}件)",
     "noResults": "検索結果がありません",
     "memberId": "会員ID",
+    "searchHistory": "検索履歴",
+    "clearHistory": "履歴をクリア",
+    "clearFilters": "フィルターをクリア",
+    "noHistory": "検索履歴がありません",
+    "clickToSearch": "クリックして検索",
     "errors": {
       "searchFailed": "検索に失敗しました"
     }
@@ -400,6 +478,7 @@
     "subtitle": "疾患やユーザーを検索できます",
     "tabDiseases": "疾患を検索",
     "tabUsers": "ユーザーを検索",
+    "tabHashtags": "ハッシュタグを検索",
     "hintsTitle": "検索のヒント",
     "hintsDiseases": {
       "hint1": "疾患名の一部を入力して検索できます（例: 「糖尿」）",
@@ -413,7 +492,26 @@
       "hint3": "疾患を選択して、同じ疾患を持つユーザーを探せます",
       "hint4": "公開プロフィールのみ表示されます"
     },
+    "hintsHashtags": {
+      "hint1": "ハッシュタグ名を入力して検索できます（例: 「test」）",
+      "hint2": "#記号は自動的に削除されます",
+      "hint3": "人気のハッシュタグから選択することもできます",
+      "hint4": "ハッシュタグを含む投稿が表示されます"
+    },
     "backToHome": "← ホームに戻る"
+  },
+  "hashtagSearch": {
+    "placeholder": "ハッシュタグを検索...",
+    "search": "検索",
+    "popularHashtags": "人気のハッシュタグ",
+    "postsForHashtag": "#{hashtag} の投稿",
+    "loading": "読み込み中...",
+    "loadMore": "もっと見る",
+    "noPosts": "このハッシュタグを含む投稿はありません",
+    "errors": {
+      "searchFailed": "ハッシュタグの検索に失敗しました",
+      "loadPostsFailed": "投稿の読み込みに失敗しました"
+    }
   },
   "diseaseSearch": {
     "placeholder": "疾患名、ICD-10コードで検索...",
@@ -424,10 +522,21 @@
     "icdCodeLabel": "ICD-10 コード",
     "icdCodePlaceholder": "例: E11",
     "categoryLabel": "カテゴリー",
+    "sortByLabel": "並び順",
+    "sortByName": "名前順",
+    "sortByCode": "コード順",
+    "sortByDate": "登録日順",
+    "sortOrderAsc": "昇順",
+    "sortOrderDesc": "降順",
     "resultsTitle": "検索結果 ({count}件)",
     "code": "コード",
     "select": "選択",
     "noResults": "検索結果がありません",
+    "searchHistory": "検索履歴",
+    "clearHistory": "履歴をクリア",
+    "clearFilters": "フィルターをクリア",
+    "noHistory": "検索履歴がありません",
+    "clickToSearch": "クリックして検索",
     "errors": {
       "searchFailed": "検索に失敗しました"
     }

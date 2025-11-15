@@ -98,7 +98,7 @@ class NotificationService:
     @staticmethod
     async def _broadcast_notification(notification: Notification):
         """
-        Broadcast a notification to real-time SSE connections.
+        Broadcast a notification to real-time SSE connections and send push notifications.
 
         Args:
             notification: The notification object to broadcast
@@ -115,12 +115,97 @@ class NotificationService:
             "created_at": notification.created_at.isoformat(),
         }
 
-        # Broadcast to the recipient
+        # Broadcast to the recipient via SSE
         await broadcaster.broadcast_to_user(
             notification.recipient_id,
             "notification",
             notification_data
         )
+
+        # Send push notification (if push service is configured)
+        try:
+            try:
+                from app.services.push_service import PushService
+            except ImportError:
+                # pywebpush not installed, skip push notifications
+                return
+
+            import os
+            from app.database import SessionLocal
+
+            vapid_private_key = os.getenv("VAPID_PRIVATE_KEY")
+            vapid_public_key = os.getenv("VAPID_PUBLIC_KEY")
+            vapid_email = os.getenv("VAPID_EMAIL", "mailto:admin@example.com")
+
+            if vapid_private_key and vapid_public_key:
+                push_service = PushService(
+                    vapid_private_key=vapid_private_key,
+                    vapid_public_key=vapid_public_key,
+                    vapid_email=vapid_email,
+                )
+
+                # Get notification message based on type
+                db = SessionLocal()
+                try:
+                    # Load actor information
+                    actor = db.query(User).filter(User.id == notification.actor_id).first()
+                    actor_name = actor.nickname if actor else "Someone"
+
+                    title, body = NotificationService._get_notification_message(
+                        notification, actor_name
+                    )
+
+                    # Build notification URL
+                    url = None
+                    if notification.post_id:
+                        url = f"/posts/{notification.post_id}"
+                    elif notification.comment_id:
+                        url = f"/posts/{notification.post_id}" if notification.post_id else None
+
+                    # Send push notification
+                    push_service.send_notification_to_user(
+                        db=db,
+                        user_id=notification.recipient_id,
+                        title=title,
+                        body=body,
+                        url=url,
+                        tag=f"notification-{notification.type.value}",
+                        data={
+                            "notification_id": str(notification.id),
+                            "type": notification.type.value,
+                        },
+                    )
+                finally:
+                    db.close()
+        except Exception as e:
+            # Log error but don't fail the notification creation
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Failed to send push notification: {e}")
+
+    @staticmethod
+    def _get_notification_message(notification: Notification, actor_name: str = "Someone") -> tuple[str, str]:
+        """
+        Get notification title and body based on notification type.
+
+        Args:
+            notification: The notification object
+            actor_name: Name of the user who triggered the notification
+
+        Returns:
+            Tuple of (title, body)
+        """
+        # Map notification types to messages
+        messages = {
+            "follow": ("New Follower", f"{actor_name} started following you"),
+            "comment": ("New Comment", f"{actor_name} commented on your post"),
+            "reply": ("New Reply", f"{actor_name} replied to your comment"),
+            "like": ("New Like", f"{actor_name} liked your post"),
+            "comment_like": ("New Like", f"{actor_name} liked your comment"),
+        }
+
+        title, body = messages.get(notification.type.value, ("New Notification", "You have a new notification"))
+        return title, body
 
     @staticmethod
     def get_notifications(

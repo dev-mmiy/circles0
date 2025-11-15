@@ -169,6 +169,20 @@ export interface UserProfileUpdate {
   show_online_status?: boolean;
 }
 
+export interface FieldVisibilityUpdate {
+  field_name: string;
+  visibility: 'public' | 'limited' | 'private' | 'same_disease_only';
+}
+
+export interface FieldVisibilityResponse {
+  field_name: string;
+  visibility: string;
+}
+
+export interface AllFieldVisibilityResponse {
+  field_visibilities: Record<string, string>;
+}
+
 export interface UserPublicProfile {
   id: string;
   member_id: string; // 12-digit member ID (public)
@@ -444,4 +458,52 @@ export async function removeUserDisease(accessToken: string, diseaseId: number):
     const error = await response.json();
     throw new Error(error.detail || 'Failed to remove disease');
   }
+}
+
+/**
+ * Get all field visibility settings for current user
+ */
+export async function getFieldVisibilities(accessToken: string): Promise<AllFieldVisibilityResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/field-visibility`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get field visibilities');
+  }
+
+  return response.json();
+}
+
+/**
+ * Set visibility for a specific field
+ */
+export async function setFieldVisibility(
+  accessToken: string,
+  fieldName: string,
+  visibility: 'public' | 'limited' | 'private' | 'same_disease_only'
+): Promise<FieldVisibilityResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/field-visibility/${fieldName}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify({
+      field_name: fieldName,
+      visibility,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to set field visibility');
+  }
+
+  return response.json();
 }

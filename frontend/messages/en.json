@@ -13,7 +13,9 @@
     "profile": "Profile",
     "myPage": "My Page",
     "settings": "Settings",
-    "logout": "Logout"
+    "logout": "Logout",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "buttons": {
     "save": "Save",
@@ -74,16 +76,33 @@
     "format": "{amount}"
   },
   "register": {
-    "title": "Create Your Account",
-    "subtitle": "Join our community and connect with others",
+    "title": "Registration",
+    "subtitle": "Welcome! Please enter your profile information to complete registration.",
+    "loading": "Loading...",
+    "email": "Email Address",
+    "nickname": "Nickname",
+    "nickname_placeholder": "Enter a public nickname",
+    "nicknameHelp": "This nickname will be displayed to other users (max 50 characters)",
+    "profileVisibility": "Profile Visibility",
+    "visibility": {
+      "public": "Public - All users can view",
+      "limited": "Limited - Only registered users can view",
+      "private": "Private - Only you can view"
+    },
+    "avatarLabel": "Profile Picture",
+    "avatarAlt": "Profile",
+    "avatarNote": "Using image from Auth0",
+    "submitting": "Registering...",
+    "submitButton": "Complete Registration",
+    "termsNote": "By registering, you agree to the Terms of Service and Privacy Policy.",
+    "errors": {
+      "registrationFailed": "Registration failed"
+    },
     "basic_info": "Basic Information",
     "name_info": "Name Information",
     "additional_info": "Additional Information",
     "preferences": "Preferences",
-    "email": "Email Address",
     "email_placeholder": "Enter your email address",
-    "nickname": "Nickname",
-    "nickname_placeholder": "Choose a unique nickname",
     "first_name": "First Name",
     "first_name_placeholder": "Enter your first name",
     "middle_name": "Middle Name",
@@ -134,6 +153,19 @@
     "markAllAsRead": "Mark all as read",
     "noNotifications": "No notifications",
     "viewAll": "View all notifications",
+    "pageTitle": "Notifications",
+    "pageSubtitle": "View all your notifications",
+    "filterAll": "All notifications",
+    "filterUnread": "Unread only",
+    "loading": "Loading...",
+    "loadMore": "Load more",
+    "allNotificationsShown": "All notifications shown",
+    "noUnreadNotifications": "No unread notifications",
+    "noUnreadNotificationsMessage": "You've read all notifications!",
+    "errorLoading": "Failed to load notifications",
+    "retry": "Retry",
+    "realtimeConnected": "Real-time connected",
+    "connecting": "Connecting...",
     "types": {
       "follow": "{actorName} followed you",
       "comment": "{actorName} commented on your post",
@@ -160,8 +192,14 @@
     "allPostsShown": "All posts have been shown",
     "filterAll": "All Posts",
     "filterFollowing": "Following",
+    "filterDisease": "By Disease",
+    "selectDisease": "Select Disease",
+    "selectDiseasePlaceholder": "Please select a disease",
+    "selectDiseasePrompt": "Select a disease to view posts from users with that disease",
     "noFollowingPosts": "No posts from users you follow yet",
-    "noFollowingPostsMessage": "Follow users to see their posts!"
+    "noFollowingPostsMessage": "Follow users to see their posts!",
+    "noDiseasePosts": "No posts for this disease yet",
+    "noDiseasePostsMessage": "No posts from users with {diseaseName} yet"
   },
   "post": {
     "unknownUser": "Unknown User",
@@ -178,6 +216,7 @@
       "followersOnly": "Followers only",
       "private": "Private"
     },
+    "mentions": "Mentions",
     "errors": {
       "loginRequired": "Please log in to like this post",
       "likeFailed": "Failed to like the post"
@@ -191,11 +230,17 @@
       "followersOnly": "Followers only",
       "private": "Private"
     },
+    "detectedHashtags": "Detected hashtags",
+    "detectedMentions": "Mentions",
+    "imagesLabel": "Images",
+    "imageUrlPlaceholder": "Enter image URL (max 5 images)",
+    "addImage": "Add",
     "submit": "Post",
     "submitting": "Posting...",
     "errors": {
       "contentRequired": "Please enter post content",
       "contentTooLong": "Post content must be 5000 characters or less",
+      "tooManyImages": "Maximum 5 images allowed",
       "createFailed": "Failed to create post"
     }
   },
@@ -230,7 +275,8 @@
     "sections": {
       "publicInfo": "Public Information",
       "privateInfo": "Private Information",
-      "preferences": "Preferences"
+      "preferences": "Preferences",
+      "fieldVisibility": "Field-Level Visibility Settings"
     },
     "fields": {
       "nickname": "Nickname",
@@ -243,7 +289,10 @@
       "dateOfBirth": "Date of Birth",
       "gender": "Gender",
       "preferredLanguage": "Preferred Language",
-      "profileVisibility": "Profile Visibility"
+      "profileVisibility": "Profile Visibility",
+      "avatarUrl": "Avatar Image URL",
+      "language": "Language",
+      "timezone": "Timezone"
     },
     "placeholders": {
       "nickname": "Public nickname",
@@ -267,6 +316,24 @@
     "privacy": {
       "showEmail": "Show email address publicly",
       "showOnlineStatus": "Show online status"
+    },
+    "fieldVisibility": {
+      "description": "You can set the visibility for each field individually",
+      "loading": "Loading...",
+      "updateFailed": "Failed to update visibility settings",
+      "options": {
+        "public": "Public",
+        "limited": "Limited",
+        "private": "Private",
+        "sameDiseaseOnly": "Same Disease Only"
+      }
+    },
+    "languages": {
+      "ja": "Japanese",
+      "en": "English",
+      "es": "Spanish",
+      "fr": "French",
+      "de": "German"
     },
     "actions": {
       "save": "Save",
@@ -294,9 +361,20 @@
     "memberIdLabel": "Member ID (exact match)",
     "memberIdPlaceholder": "12-digit member ID",
     "diseaseFilterLabel": "Filter by disease",
+    "sortByLabel": "Sort by",
+    "sortByDate": "Registration date",
+    "sortByLogin": "Last login",
+    "sortByName": "Nickname",
+    "sortOrderAsc": "Ascending",
+    "sortOrderDesc": "Descending",
     "resultsTitle": "Search Results ({count} items)",
     "noResults": "No search results",
     "memberId": "Member ID",
+    "searchHistory": "Search History",
+    "clearHistory": "Clear History",
+    "clearFilters": "Clear Filters",
+    "noHistory": "No search history",
+    "clickToSearch": "Click to search",
     "errors": {
       "searchFailed": "Search failed"
     }
@@ -400,6 +478,7 @@
     "subtitle": "Search for diseases and users",
     "tabDiseases": "Search Diseases",
     "tabUsers": "Search Users",
+    "tabHashtags": "Search Hashtags",
     "hintsTitle": "Search Tips",
     "hintsDiseases": {
       "hint1": "You can search by partial disease name (e.g., \"diabetes\")",
@@ -413,7 +492,26 @@
       "hint3": "Select a disease to find users with the same disease",
       "hint4": "Only public profiles are displayed"
     },
+    "hintsHashtags": {
+      "hint1": "You can search by hashtag name (e.g., \"test\")",
+      "hint2": "The # symbol is automatically removed",
+      "hint3": "You can also select from popular hashtags",
+      "hint4": "Posts containing the hashtag will be displayed"
+    },
     "backToHome": "← Back to Home"
+  },
+  "hashtagSearch": {
+    "placeholder": "Search hashtags...",
+    "search": "Search",
+    "popularHashtags": "Popular Hashtags",
+    "postsForHashtag": "Posts for #{hashtag}",
+    "loading": "Loading...",
+    "loadMore": "Load More",
+    "noPosts": "No posts found with this hashtag",
+    "errors": {
+      "searchFailed": "Failed to search hashtags",
+      "loadPostsFailed": "Failed to load posts"
+    }
   },
   "diseaseSearch": {
     "placeholder": "Search by disease name, ICD-10 code...",
@@ -424,10 +522,21 @@
     "icdCodeLabel": "ICD-10 Code",
     "icdCodePlaceholder": "e.g., E11",
     "categoryLabel": "Category",
+    "sortByLabel": "Sort by",
+    "sortByName": "Name",
+    "sortByCode": "Code",
+    "sortByDate": "Registration date",
+    "sortOrderAsc": "Ascending",
+    "sortOrderDesc": "Descending",
     "resultsTitle": "Search Results ({count} items)",
     "code": "Code",
     "select": "Select",
     "noResults": "No search results",
+    "searchHistory": "Search History",
+    "clearHistory": "Clear History",
+    "clearFilters": "Clear Filters",
+    "noHistory": "No search history",
+    "clickToSearch": "Click to search",
     "errors": {
       "searchFailed": "Search failed"
     }

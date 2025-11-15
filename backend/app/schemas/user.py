@@ -163,3 +163,31 @@ class UserPublicResponse(BaseModel):
     diseases: List[UserDiseaseResponse] = []  # Only public diseases
 
     model_config = {"from_attributes": True}
+
+
+class FieldVisibilityUpdate(BaseModel):
+    """Schema for updating field visibility."""
+
+    field_name: str = Field(..., description="Field name to set visibility for")
+    visibility: str = Field(
+        ...,
+        pattern="^(public|limited|private|same_disease_only)$",
+        description="Visibility level: public, limited, private, or same_disease_only",
+    )
+
+
+class FieldVisibilityResponse(BaseModel):
+    """Schema for field visibility response."""
+
+    field_name: str
+    visibility: str
+
+    model_config = {"from_attributes": True}
+
+
+class AllFieldVisibilityResponse(BaseModel):
+    """Schema for all field visibility settings."""
+
+    field_visibilities: dict[str, str] = Field(
+        ..., description="Dictionary mapping field names to visibility levels"
+    )

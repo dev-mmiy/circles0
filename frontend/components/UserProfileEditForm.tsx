@@ -5,9 +5,10 @@
 
 'use client';
 
-import React, { useState, FormEvent } from 'react';
+import React, { useState, FormEvent, useEffect } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { UserProfile, UserProfileUpdate } from '@/lib/api/users';
+import { UserProfile, UserProfileUpdate, getFieldVisibilities, setFieldVisibility, AllFieldVisibilityResponse } from '@/lib/api/users';
 
 interface UserProfileEditFormProps {
   user: UserProfile;
@@ -16,6 +17,7 @@ interface UserProfileEditFormProps {
 }
 
 export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditFormProps) {
+  const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('userProfileEdit');
   const [formData, setFormData] = useState<UserProfileUpdate>({
     nickname: user.nickname,
@@ -37,6 +39,26 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldVisibilities, setFieldVisibilities] = useState<Record<string, string>>({});
+  const [loadingVisibilities, setLoadingVisibilities] = useState(true);
+  const [updatingVisibility, setUpdatingVisibility] = useState<string | null>(null);
+
+  // Load field visibilities on mount
+  useEffect(() => {
+    const loadFieldVisibilities = async () => {
+      try {
+        const accessToken = await getAccessTokenSilently();
+        const response = await getFieldVisibilities(accessToken);
+        setFieldVisibilities(response.field_visibilities);
+      } catch (err) {
+        console.error('Failed to load field visibilities:', err);
+      } finally {
+        setLoadingVisibilities(false);
+      }
+    };
+
+    loadFieldVisibilities();
+  }, [getAccessTokenSilently]);
 
   // Handle input changes
   const handleChange = (
@@ -267,11 +289,11 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="ja">日本語</option>
-              <option value="en">English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-              <option value="de">Deutsch</option>
+              <option value="ja">{t('languages.ja')}</option>
+              <option value="en">{t('languages.en')}</option>
+              <option value="es">{t('languages.es')}</option>
+              <option value="fr">{t('languages.fr')}</option>
+              <option value="de">{t('languages.de')}</option>
             </select>
           </div>
 
@@ -321,6 +343,60 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             </label>
           </div>
         </div>
+      </div>
+
+      {/* Field-Level Visibility Settings */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{t('sections.fieldVisibility')}</h3>
+        <p className="text-sm text-gray-600 mb-4">{t('fieldVisibility.description')}</p>
+
+        {loadingVisibilities ? (
+          <div className="text-center py-4">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="text-sm text-gray-600 mt-2">{t('fieldVisibility.loading')}</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {[
+              { field: 'username', label: t('fields.username') },
+              { field: 'bio', label: t('fields.bio') },
+              { field: 'avatar_url', label: t('fields.avatarUrl') },
+              { field: 'country', label: t('fields.country') },
+              { field: 'date_of_birth', label: t('fields.dateOfBirth') },
+              { field: 'gender', label: t('fields.gender') },
+              { field: 'language', label: t('fields.language') },
+              { field: 'timezone', label: t('fields.timezone') },
+            ].map(({ field, label }) => (
+              <div key={field} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <label className="text-sm font-medium text-gray-700">{label}</label>
+                <select
+                  value={fieldVisibilities[field] || 'limited'}
+                  onChange={async (e) => {
+                    const newVisibility = e.target.value as 'public' | 'limited' | 'private' | 'same_disease_only';
+                    setUpdatingVisibility(field);
+                    try {
+                      const accessToken = await getAccessTokenSilently();
+                      await setFieldVisibility(accessToken, field, newVisibility);
+                      setFieldVisibilities(prev => ({ ...prev, [field]: newVisibility }));
+                    } catch (err) {
+                      console.error(`Failed to update visibility for ${field}:`, err);
+                      setError(err instanceof Error ? err.message : t('fieldVisibility.updateFailed'));
+                    } finally {
+                      setUpdatingVisibility(null);
+                    }
+                  }}
+                  disabled={updatingVisibility === field}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+                >
+                  <option value="public">{t('fieldVisibility.options.public')}</option>
+                  <option value="limited">{t('fieldVisibility.options.limited')}</option>
+                  <option value="private">{t('fieldVisibility.options.private')}</option>
+                  <option value="same_disease_only">{t('fieldVisibility.options.sameDiseaseOnly')}</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Form Actions */}

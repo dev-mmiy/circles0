@@ -2,12 +2,14 @@
 
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import { createUserProfile } from '@/lib/api/users';
 
 export default function RegisterPage() {
   const { user, getAccessTokenSilently, isLoading } = useAuth0();
   const router = useRouter();
+  const t = useTranslations('register');
   const [formData, setFormData] = useState({
     nickname: user?.nickname || user?.name || '',
     profile_visibility: 'public' as 'public' | 'limited' | 'private',
@@ -37,7 +39,7 @@ export default function RegisterPage() {
       router.push('/profile/me');
     } catch (err) {
       console.error('Failed to create user profile:', err);
-      setError(err instanceof Error ? err.message : '会員登録に失敗しました');
+      setError(err instanceof Error ? err.message : t('errors.registrationFailed'));
     } finally {
       setSubmitting(false);
     }
@@ -55,7 +57,7 @@ export default function RegisterPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
+          <p className="text-gray-600">{t('loading')}</p>
         </div>
       </div>
     );
@@ -65,10 +67,10 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">会員登録</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('title')}</h1>
 
           <p className="text-gray-600 mb-6">
-            ようこそ！プロフィール情報を入力して、会員登録を完了してください。
+            {t('subtitle')}
           </p>
 
           {error && (
@@ -81,7 +83,7 @@ export default function RegisterPage() {
             {/* Email (read-only) */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                メールアドレス
+                {t('email')}
               </label>
               <input
                 type="email"
@@ -95,7 +97,7 @@ export default function RegisterPage() {
             {/* Nickname */}
             <div>
               <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 mb-1">
-                ニックネーム <span className="text-red-500">*</span>
+                {t('nickname')} <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -106,10 +108,10 @@ export default function RegisterPage() {
                 required
                 maxLength={50}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="公開用のニックネームを入力"
+                placeholder={t('nickname_placeholder')}
               />
               <p className="mt-1 text-sm text-gray-500">
-                他のユーザーに表示されるニックネームです（50文字以内）
+                {t('nicknameHelp')}
               </p>
             </div>
 
@@ -119,7 +121,7 @@ export default function RegisterPage() {
                 htmlFor="profile_visibility"
                 className="block text-sm font-medium text-gray-700 mb-1"
               >
-                プロフィール公開設定 <span className="text-red-500">*</span>
+                {t('profileVisibility')} <span className="text-red-500">*</span>
               </label>
               <select
                 id="profile_visibility"
@@ -129,9 +131,9 @@ export default function RegisterPage() {
                 required
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="public">公開 - すべてのユーザーが閲覧可能</option>
-                <option value="limited">限定公開 - 登録ユーザーのみ閲覧可能</option>
-                <option value="private">非公開 - 自分のみ閲覧可能</option>
+                <option value="public">{t('visibility.public')}</option>
+                <option value="limited">{t('visibility.limited')}</option>
+                <option value="private">{t('visibility.private')}</option>
               </select>
             </div>
 
@@ -139,15 +141,15 @@ export default function RegisterPage() {
             {user?.picture && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  プロフィール画像
+                  {t('avatarLabel')}
                 </label>
                 <div className="flex items-center space-x-4">
                   <img
                     src={user.picture}
-                    alt="Profile"
+                    alt={t('avatarAlt')}
                     className="w-16 h-16 rounded-full object-cover"
                   />
-                  <p className="text-sm text-gray-500">Auth0から取得した画像を使用します</p>
+                  <p className="text-sm text-gray-500">{t('avatarNote')}</p>
                 </div>
               </div>
             )}
@@ -159,14 +161,14 @@ export default function RegisterPage() {
                 disabled={submitting || !formData.nickname}
                 className="w-full px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {submitting ? '登録中...' : '会員登録を完了する'}
+                {submitting ? t('submitting') : t('submitButton')}
               </button>
             </div>
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-500 text-center">
-              登録することで、利用規約とプライバシーポリシーに同意したものとみなされます。
+              {t('termsNote')}
             </p>
           </div>
         </div>

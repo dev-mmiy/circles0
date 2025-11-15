@@ -12,9 +12,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
+import { getApiBaseUrl } from '@/lib/config';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-const SSE_ENDPOINT = `${API_BASE_URL}/notifications/stream`;
+const SSE_ENDPOINT = `${getApiBaseUrl()}/api/v1/notifications/stream`;
 
 // Reconnection configuration
 const INITIAL_RETRY_DELAY = 1000; // 1 second

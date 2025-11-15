@@ -21,6 +21,7 @@ from app.schemas.post import (
     PostResponse,
     PostUpdate,
 )
+from app.services.hashtag_service import HashtagService
 from app.services.post_service import PostService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
@@ -77,6 +78,15 @@ async def create_post(
 
     post = PostService.create_post(db, user_id, post_data)
 
+    # Extract and create hashtags from post content
+    HashtagService.extract_and_create_hashtags(db, post.id, post_data.content)
+    
+    # Extract and create mentions from post content
+    from app.services.mention_service import MentionService
+    MentionService.extract_and_create_mentions(db, post.id, post_data.content, exclude_user_id=user_id)
+    
+    db.commit()
+
     # Fetch post with relationships for response
     post_with_data = PostService.get_post_by_id(db, post.id, user_id)
 
@@ -91,7 +101,8 @@ async def create_post(
 async def get_feed(
     skip: int = Query(0, ge=0, description="Number of posts to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
-    filter_type: str = Query("all", regex="^(all|following)$", description="Filter type: 'all' for all posts, 'following' for posts from followed users only"),
+    filter_type: str = Query("all", regex="^(all|following|disease)$", description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease"),
+    disease_id: Optional[int] = Query(None, description="Disease ID to filter by (required when filter_type='disease')"),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -105,6 +116,7 @@ async def get_feed(
     Filter types:
     - "all": Show all public posts + followers_only posts from followed users
     - "following": Show only posts from users you follow (public + followers_only)
+    - "disease": Show posts from users who have the specified disease (requires disease_id parameter)
     """
     user_id = get_user_id_from_token(db, current_user)
 
@@ -112,7 +124,38 @@ async def get_feed(
     if filter_type == "following" and not user_id:
         return []
 
-    posts = PostService.get_feed(db, user_id, skip, limit, filter_type)
+    # If filter_type is "disease" but disease_id is not provided, return empty
+    if filter_type == "disease" and disease_id is None:
+        return []
+
+    posts = PostService.get_feed(db, user_id, skip, limit, filter_type, disease_id)
+
+    return [_build_post_response(db, post, user_id) for post in posts]
+
+
+@router.get(
+    "/hashtag/{hashtag_name}",
+    response_model=List[PostResponse],
+    summary="Get posts by hashtag",
+)
+async def get_posts_by_hashtag(
+    hashtag_name: str,
+    skip: int = Query(0, ge=0, description="Number of posts to skip"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
+):
+    """
+    Get posts that contain a specific hashtag.
+
+    Respects visibility settings:
+    - Public posts are visible to everyone
+    - Followers-only posts are visible to authenticated users who follow the author
+    - Private posts are not included
+    """
+    user_id = get_user_id_from_token(db, current_user)
+
+    posts = PostService.get_posts_by_hashtag(db, hashtag_name, user_id, skip, limit)
 
     return [_build_post_response(db, post, user_id) for post in posts]
 
@@ -200,6 +243,22 @@ async def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found or you don't have permission to update it",
         )
+
+    # Update hashtags and mentions if content was updated
+    if post_data.content is not None:
+        from app.services.mention_service import MentionService
+        
+        # Delete old hashtags
+        HashtagService.delete_post_hashtags(db, post.id)
+        # Extract and create new hashtags
+        HashtagService.extract_and_create_hashtags(db, post.id, post_data.content)
+        
+        # Delete old mentions
+        MentionService.delete_post_mentions(db, post.id)
+        # Extract and create new mentions
+        MentionService.extract_and_create_mentions(db, post.id, post_data.content, exclude_user_id=user_id)
+        
+        db.commit()
 
     # Fetch post with relationships for response
     post_with_data = PostService.get_post_by_id(db, post.id, user_id)
@@ -484,7 +543,8 @@ async def delete_comment(
 
 def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> PostResponse:
     """Build PostResponse with calculated fields."""
-    from app.schemas.post import PostAuthor
+    from app.schemas.post import HashtagResponse, MentionResponse, PostAuthor, PostImageResponse
+    from app.services.mention_service import MentionService
 
     like_count = PostService.get_like_count(db, post.id)
     comment_count = PostService.get_comment_count(db, post.id)
@@ -493,6 +553,40 @@ def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> 
         if current_user_id
         else False
     )
+
+    # Get hashtags for the post
+    hashtags = HashtagService.get_hashtags_for_post(db, post.id)
+    hashtag_responses = [
+        HashtagResponse(
+            id=hashtag.id,
+            name=hashtag.name,
+            created_at=hashtag.created_at,
+        )
+        for hashtag in hashtags
+    ]
+
+    # Get mentions for the post
+    mentioned_users = MentionService.get_mentions_for_post(db, post.id)
+    mention_responses = [
+        MentionResponse(
+            id=user.id,
+            nickname=user.nickname,
+            username=user.username,
+            avatar_url=user.avatar_url,
+        )
+        for user in mentioned_users
+    ]
+
+    # Get images for the post
+    image_responses = [
+        PostImageResponse(
+            id=image.id,
+            image_url=image.image_url,
+            display_order=image.display_order,
+            created_at=image.created_at,
+        )
+        for image in (post.images if hasattr(post, 'images') and post.images else [])
+    ]
 
     return PostResponse(
         id=post.id,
@@ -513,6 +607,9 @@ def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> 
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
+        hashtags=hashtag_responses,
+        mentions=mention_responses,
+        images=image_responses,
     )
 
 
@@ -520,7 +617,8 @@ def _build_post_detail_response(
     db: Session, post, current_user_id: Optional[UUID]
 ) -> PostDetailResponse:
     """Build PostDetailResponse with comments and likes."""
-    from app.schemas.post import PostAuthor
+    from app.schemas.post import HashtagResponse, PostAuthor, PostImageResponse
+    from app.services.mention_service import MentionService
 
     like_count = PostService.get_like_count(db, post.id)
     comment_count = PostService.get_comment_count(db, post.id)
@@ -529,6 +627,40 @@ def _build_post_detail_response(
         if current_user_id
         else False
     )
+
+    # Get hashtags for the post
+    hashtags = HashtagService.get_hashtags_for_post(db, post.id)
+    hashtag_responses = [
+        HashtagResponse(
+            id=hashtag.id,
+            name=hashtag.name,
+            created_at=hashtag.created_at,
+        )
+        for hashtag in hashtags
+    ]
+
+    # Get mentions for the post
+    mentioned_users = MentionService.get_mentions_for_post(db, post.id)
+    mention_responses = [
+        MentionResponse(
+            id=user.id,
+            nickname=user.nickname,
+            username=user.username,
+            avatar_url=user.avatar_url,
+        )
+        for user in mentioned_users
+    ]
+
+    # Get images for the post
+    image_responses = [
+        PostImageResponse(
+            id=image.id,
+            image_url=image.image_url,
+            display_order=image.display_order,
+            created_at=image.created_at,
+        )
+        for image in (post.images if hasattr(post, 'images') and post.images else [])
+    ]
 
     # Build comments
     comments = [_build_comment_response(db, comment) for comment in post.comments if comment.is_active]
@@ -572,6 +704,9 @@ def _build_post_detail_response(
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
+        hashtags=hashtag_responses,
+        mentions=mention_responses,
+        images=image_responses,
         comments=comments,
         likes=likes,
     )

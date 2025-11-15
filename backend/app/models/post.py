@@ -59,6 +59,15 @@ class Post(Base):
     comments = relationship(
         "PostComment", back_populates="post", cascade="all, delete-orphan"
     )
+    hashtags = relationship(
+        "PostHashtag", back_populates="post", cascade="all, delete-orphan"
+    )
+    mentions = relationship(
+        "PostMention", back_populates="post", cascade="all, delete-orphan"
+    )
+    images = relationship(
+        "PostImage", back_populates="post", cascade="all, delete-orphan", order_by="PostImage.display_order"
+    )
 
 
 class PostLike(Base):
@@ -149,3 +158,29 @@ class PostComment(Base):
         back_populates="parent_comment",
         cascade="all, delete-orphan",
     )
+
+
+class PostImage(Base):
+    """
+    Post image model.
+
+    Stores image URLs for posts. Supports multiple images per post.
+    """
+
+    __tablename__ = "post_images"
+
+    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    post_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    image_url = Column(String(500), nullable=False, comment="URL to the image file")
+    display_order = Column(
+        Integer, nullable=False, default=0, comment="Order for displaying images"
+    )
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    post = relationship("Post", back_populates="images")

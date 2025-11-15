@@ -15,9 +15,12 @@ from .disease import (
     UserDisease,
 )
 from .follow import Follow
+from .hashtag import Hashtag, PostHashtag
+from .mention import CommentMention, PostMention
 from .notification import Notification, NotificationType
-from .post import Post, PostComment, PostLike
+from .post import Post, PostComment, PostImage, PostLike
 from .user import User
+from .user_field_visibility import UserFieldVisibility
 
 __all__ = [
     "Base",
@@ -33,7 +36,13 @@ __all__ = [
     "Post",
     "PostLike",
     "PostComment",
+    "PostImage",
+    "Hashtag",
+    "PostHashtag",
+    "PostMention",
+    "CommentMention",
     "Follow",
     "Notification",
     "NotificationType",
+    "UserFieldVisibility",
 ]

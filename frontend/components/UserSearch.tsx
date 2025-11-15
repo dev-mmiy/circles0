@@ -5,11 +5,25 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile, getLocalizedDiseaseName } from '@/lib/api/users';
+import {
+  getSearchHistory,
+  addToSearchHistory,
+  clearSearchHistory,
+  removeFromSearchHistory,
+  type SearchHistoryItem,
+} from '@/lib/utils/searchHistory';
+import {
+  getUserSearchFilterSettings,
+  saveUserSearchFilterSettings,
+  clearUserSearchFilterSettings,
+  type UserSearchFilterSettings,
+} from '@/lib/utils/filterSettings';
+import { X, Clock } from 'lucide-react';
 
 interface UserSearchProps {
   onSearch: (params: UserSearchParams) => Promise<UserPublicProfile[]>;
@@ -26,10 +40,14 @@ export function UserSearch({
   const [searchQuery, setSearchQuery] = useState('');
   const [memberId, setMemberId] = useState('');
   const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState<'created_at' | 'last_login' | 'nickname'>('created_at');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [results, setResults] = useState<UserPublicProfile[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
 
   const handleSearch = async () => {
     setLoading(true);
@@ -38,6 +56,8 @@ export function UserSearch({
     try {
       const params: UserSearchParams = {
         limit: 20,
+        sort_by: sortBy,
+        sort_order: sortOrder,
       };
 
       if (searchQuery) params.q = searchQuery;
@@ -48,6 +68,19 @@ export function UserSearch({
 
       const searchResults = await onSearch(params);
       setResults(searchResults);
+      
+      // Save to search history if query exists
+      if (searchQuery.trim()) {
+        addToSearchHistory('user', searchQuery, {
+          member_id: memberId || undefined,
+          disease_ids: selectedDiseases.length > 0 ? selectedDiseases.join(',') : undefined,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+        });
+        setSearchHistory(getSearchHistory('user'));
+      }
+      
+      setShowHistory(false);
     } catch (err) {
       console.error('Search error:', err);
       setError(err instanceof Error ? err.message : t('errors.searchFailed'));
@@ -55,6 +88,33 @@ export function UserSearch({
       setLoading(false);
     }
   };
+
+  // Load search history and filter settings on mount
+  useEffect(() => {
+    setSearchHistory(getSearchHistory('user'));
+    
+    // Restore saved filter settings
+    const savedSettings = getUserSearchFilterSettings();
+    if (savedSettings) {
+      if (savedSettings.memberId) setMemberId(savedSettings.memberId);
+      if (savedSettings.diseaseIds && savedSettings.diseaseIds.length > 0) {
+        setSelectedDiseases(savedSettings.diseaseIds);
+      }
+      if (savedSettings.sortBy) setSortBy(savedSettings.sortBy);
+      if (savedSettings.sortOrder) setSortOrder(savedSettings.sortOrder);
+    }
+  }, []);
+
+  // Save filter settings when they change
+  useEffect(() => {
+    const settings: UserSearchFilterSettings = {
+      memberId: memberId || undefined,
+      diseaseIds: selectedDiseases.length > 0 ? selectedDiseases : undefined,
+      sortBy,
+      sortOrder,
+    };
+    saveUserSearchFilterSettings(settings);
+  }, [memberId, selectedDiseases, sortBy, sortOrder]);
 
   const toggleDisease = (diseaseId: number) => {
     setSelectedDiseases((prev) =>
@@ -64,18 +124,96 @@ export function UserSearch({
     );
   };
 
+  // Handle search from history
+  const handleHistoryClick = (historyItem: SearchHistoryItem) => {
+    setSearchQuery(historyItem.query);
+    setShowHistory(false);
+    // Optionally restore params if stored
+    if (historyItem.params) {
+      if (historyItem.params.member_id) setMemberId(historyItem.params.member_id);
+      if (historyItem.params.disease_ids) {
+        setSelectedDiseases(historyItem.params.disease_ids.split(',').map(Number));
+      }
+      if (historyItem.params.sort_by) setSortBy(historyItem.params.sort_by);
+      if (historyItem.params.sort_order) setSortOrder(historyItem.params.sort_order);
+    }
+    // Trigger search
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
+  };
+
+  // Clear search history
+  const handleClearHistory = () => {
+    clearSearchHistory('user');
+    setSearchHistory([]);
+  };
+
+  // Remove single history item
+  const handleRemoveHistoryItem = (e: React.MouseEvent, query: string) => {
+    e.stopPropagation();
+    removeFromSearchHistory('user', query);
+    setSearchHistory(getSearchHistory('user'));
+  };
+
   return (
     <div className="space-y-4">
       {/* Search Bar */}
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder={t('placeholder')}
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="flex gap-2 relative">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowHistory(e.target.value === '' && searchHistory.length > 0);
+            }}
+            onFocus={() => {
+              if (searchHistory.length > 0 && !searchQuery) {
+                setShowHistory(true);
+              }
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder={t('placeholder')}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          
+          {/* Search History Dropdown */}
+          {showHistory && searchHistory.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-gray-200 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {t('searchHistory')}
+                </span>
+                <button
+                  onClick={handleClearHistory}
+                  className="text-xs text-gray-500 hover:text-gray-700"
+                >
+                  {t('clearHistory')}
+                </button>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {searchHistory.map((item) => (
+                  <button
+                    key={`${item.query}-${item.timestamp}`}
+                    onClick={() => handleHistoryClick(item)}
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                  >
+                    <span className="text-sm text-gray-700 flex-1">{item.query}</span>
+                    <button
+                      onClick={(e) => handleRemoveHistoryItem(e, item.query)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                      aria-label="Remove"
+                    >
+                      <X className="w-3 h-3 text-gray-500" />
+                    </button>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
         <button
           onClick={handleSearch}
           disabled={loading}
@@ -90,10 +228,33 @@ export function UserSearch({
           {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
       </div>
+      
+      {/* Click outside to close history */}
+      {showHistory && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => setShowHistory(false)}
+        />
+      )}
 
       {/* Advanced Search Options */}
       {showAdvanced && (
         <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+          {/* Clear Filters Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setMemberId('');
+                setSelectedDiseases([]);
+                setSortBy('created_at');
+                setSortOrder('desc');
+                clearUserSearchFilterSettings();
+              }}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-white transition-colors"
+            >
+              {t('clearFilters')}
+            </button>
+          </div>
           {/* Member ID Search */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -141,6 +302,37 @@ export function UserSearch({
               </div>
             </div>
           )}
+
+          {/* Sort Options */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('sortByLabel')}
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login' | 'nickname')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="created_at">{t('sortByDate')}</option>
+                <option value="last_login">{t('sortByLogin')}</option>
+                <option value="nickname">{t('sortByName')}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {t('sortOrderAsc')} / {t('sortOrderDesc')}
+              </label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="asc">{t('sortOrderAsc')}</option>
+                <option value="desc">{t('sortOrderDesc')}</option>
+              </select>
+            </div>
+          </div>
         </div>
       )}
 

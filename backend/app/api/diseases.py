@@ -79,6 +79,8 @@ async def search_diseases(
     category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
     icd_code: Optional[str] = Query(None, description="ICD-10 code (exact or partial match)"),
     language: str = Query("en", description="Preferred language for search"),
+    sort_by: str = Query("name", regex="^(name|disease_code|created_at)$", description="Sort field: name, disease_code, or created_at"),
+    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order: asc or desc"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     db: Session = Depends(get_db)
 ):
@@ -88,9 +90,10 @@ async def search_diseases(
     - Search by name (English or translated names)
     - Filter by category IDs
     - Search by ICD-10 code
+    - Sort by name, disease_code, or created_at
     - Returns diseases with translations eager-loaded
     """
-    from sqlalchemy import or_
+    from sqlalchemy import or_, desc, asc
     from sqlalchemy.orm import joinedload
     from app.models.disease import DiseaseTranslation, DiseaseCategoryMapping
 
@@ -132,6 +135,13 @@ async def search_diseases(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Invalid category_ids format"
             )
+
+    # Apply sorting
+    sort_column = getattr(Disease, sort_by, Disease.name)
+    if sort_order == "desc":
+        query = query.order_by(desc(sort_column))
+    else:
+        query = query.order_by(asc(sort_column))
 
     # Execute query with limit
     diseases = query.limit(limit).all()

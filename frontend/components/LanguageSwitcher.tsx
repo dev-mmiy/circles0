@@ -32,6 +32,10 @@ export default function LanguageSwitcher() {
 
   const handleLanguageChange = (newLocale: 'ja' | 'en') => {
     setIsOpen(false);
+    
+    // Mark that user has manually overridden locale preference
+    localStorage.setItem('locale_override', 'true');
+    
     startTransition(() => {
       // Navigate to the same page but with the new locale
       router.replace(pathname, { locale: newLocale });
