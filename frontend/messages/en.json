@@ -157,7 +157,11 @@
     "noPostsMessage": "Create the first post and connect with the community!",
     "loading": "Loading...",
     "loadMore": "Load more",
-    "allPostsShown": "All posts have been shown"
+    "allPostsShown": "All posts have been shown",
+    "filterAll": "All Posts",
+    "filterFollowing": "Following",
+    "noFollowingPosts": "No posts from users you follow yet",
+    "noFollowingPostsMessage": "Follow users to see their posts!"
   },
   "post": {
     "unknownUser": "Unknown User",

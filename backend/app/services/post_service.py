@@ -119,13 +119,21 @@ class PostService:
         current_user_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 20,
+        filter_type: str = "all",
     ) -> List[Post]:
         """
         Get feed of posts for the current user.
 
-        If authenticated: public posts + followers_only posts (TODO: from followed users)
+        Args:
+            filter_type: "all" for all posts, "following" for posts from followed users only
+
+        If authenticated:
+            - filter_type="all": public posts + followers_only posts from followed users
+            - filter_type="following": posts from followed users only (public + followers_only)
         If not authenticated: only public posts
         """
+        from app.models.follow import Follow
+
         query = (
             db.query(Post)
             .options(
@@ -137,14 +145,53 @@ class PostService:
         )
 
         if current_user_id:
-            # Authenticated user - show public and followers_only posts
-            # TODO: Filter followers_only to only show from followed users
-            query = query.filter(
-                or_(
-                    Post.visibility == "public",
-                    Post.visibility == "followers_only",
+            if filter_type == "following":
+                # Get list of user IDs that current user is following
+                following_ids = (
+                    db.query(Follow.following_id)
+                    .filter(
+                        Follow.follower_id == current_user_id,
+                        Follow.is_active == True,
+                    )
+                    .all()
                 )
-            )
+                following_user_ids = [f[0] for f in following_ids]
+
+                if following_user_ids:
+                    # Show posts from followed users only (public + followers_only)
+                    query = query.filter(
+                        Post.user_id.in_(following_user_ids),
+                        or_(
+                            Post.visibility == "public",
+                            Post.visibility == "followers_only",
+                        ),
+                    )
+                else:
+                    # User is not following anyone, return empty result
+                    return []
+            else:
+                # filter_type="all": show public posts + followers_only posts from followed users
+                # Get list of user IDs that current user is following
+                following_ids = (
+                    db.query(Follow.following_id)
+                    .filter(
+                        Follow.follower_id == current_user_id,
+                        Follow.is_active == True,
+                    )
+                    .all()
+                )
+                following_user_ids = [f[0] for f in following_ids]
+
+                # Show public posts OR followers_only posts from followed users
+                query = query.filter(
+                    or_(
+                        Post.visibility == "public",
+                        and_(
+                            Post.visibility == "followers_only",
+                            Post.user_id.in_(following_user_ids),
+                        ),
+                    )
+                )
         else:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")

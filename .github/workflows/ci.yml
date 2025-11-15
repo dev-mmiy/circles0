@@ -362,10 +362,29 @@ jobs:
         curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/health
         echo "✅ Backend is healthy"
         
-        # フロントエンドアクセステスト
+        # フロントエンドアクセステスト（next-intlのリダイレクトを考慮）
         echo "🔍 Testing frontend access..."
-        curl -f https://disease-community-frontend-508246122017.asia-northeast1.run.app
-        echo "✅ Frontend is accessible"
+        # ルートパスは/jaにリダイレクトされるため、リダイレクトを許可してテスト
+        FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -L https://disease-community-frontend-508246122017.asia-northeast1.run.app)
+        if [ "$FRONTEND_STATUS" = "200" ]; then
+            echo "✅ Frontend is accessible"
+        else
+            # 307/308リダイレクトも正常な動作として扱う
+            if [ "$FRONTEND_STATUS" = "307" ] || [ "$FRONTEND_STATUS" = "308" ]; then
+                echo "ℹ️ Frontend redirects to /ja (expected behavior)"
+                # リダイレクト先を直接テスト
+                JA_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://disease-community-frontend-508246122017.asia-northeast1.run.app/ja)
+                if [ "$JA_STATUS" = "200" ]; then
+                    echo "✅ Frontend (/ja) is accessible"
+                else
+                    echo "❌ Frontend (/ja) failed with HTTP $JA_STATUS"
+                    exit 1
+                fi
+            else
+                echo "❌ Frontend failed with HTTP $FRONTEND_STATUS"
+                exit 1
+            fi
+        fi
         
         # APIエンドポイントテスト
         echo "🔍 Testing API endpoints..."

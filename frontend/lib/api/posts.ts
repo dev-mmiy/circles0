@@ -111,7 +111,8 @@ export async function createPost(
 export async function getFeed(
   skip: number = 0,
   limit: number = 20,
-  accessToken?: string
+  accessToken?: string,
+  filterType: 'all' | 'following' = 'all'
 ): Promise<Post[]> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
@@ -122,7 +123,7 @@ export async function getFeed(
   }
 
   const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts?skip=${skip}&limit=${limit}`,
+    `${getApiBaseUrl()}/api/v1/posts?skip=${skip}&limit=${limit}&filter_type=${filterType}`,
     {
       method: 'GET',
       headers,

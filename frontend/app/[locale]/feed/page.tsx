@@ -20,6 +20,7 @@ export default function FeedPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [filterType, setFilterType] = useState<'all' | 'following'>('all');
 
   const POSTS_PER_PAGE = 20;
 
@@ -34,7 +35,8 @@ export default function FeedPage() {
       const fetchedPosts = await getFeed(
         currentPage * POSTS_PER_PAGE,
         POSTS_PER_PAGE,
-        accessToken
+        accessToken,
+        filterType
       );
 
       if (reset) {
@@ -56,12 +58,13 @@ export default function FeedPage() {
     }
   };
 
-  // Initial load
+  // Initial load and reload when filter changes
   useEffect(() => {
     if (!authLoading) {
       loadPosts(true);
     }
-  }, [authLoading, isAuthenticated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, isAuthenticated, filterType]);
 
   // Load more posts
   const handleLoadMore = () => {
@@ -105,6 +108,34 @@ export default function FeedPage() {
             {t('subtitle')}
           </p>
         </div>
+
+        {/* Filter Tabs */}
+        {isAuthenticated && (
+          <div className="mb-6 border-b border-gray-200">
+            <nav className="flex space-x-8" aria-label="Feed filter">
+              <button
+                onClick={() => setFilterType('all')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  filterType === 'all'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {t('filterAll')}
+              </button>
+              <button
+                onClick={() => setFilterType('following')}
+                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                  filterType === 'following'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                {t('filterFollowing')}
+              </button>
+            </nav>
+          </div>
+        )}
 
         {/* Post creation form - only shown when authenticated */}
         {isAuthenticated && (
@@ -151,10 +182,10 @@ export default function FeedPage() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-900">
-                {t('noPosts')}
+                {filterType === 'following' ? t('noFollowingPosts') : t('noPosts')}
               </h3>
               <p className="mt-2 text-gray-500">
-                {t('noPostsMessage')}
+                {filterType === 'following' ? t('noFollowingPostsMessage') : t('noPostsMessage')}
               </p>
             </div>
           ) : (

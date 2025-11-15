@@ -91,6 +91,7 @@ async def create_post(
 async def get_feed(
     skip: int = Query(0, ge=0, description="Number of posts to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
+    filter_type: str = Query("all", regex="^(all|following)$", description="Filter type: 'all' for all posts, 'following' for posts from followed users only"),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -98,12 +99,20 @@ async def get_feed(
     Get a feed of posts.
 
     - Public posts are visible to everyone
-    - Followers-only posts are visible to authenticated users (TODO: filter by following)
+    - Followers-only posts are visible to authenticated users who follow the author
     - Private posts are not included in feed
+    
+    Filter types:
+    - "all": Show all public posts + followers_only posts from followed users
+    - "following": Show only posts from users you follow (public + followers_only)
     """
     user_id = get_user_id_from_token(db, current_user)
 
-    posts = PostService.get_feed(db, user_id, skip, limit)
+    # If filter_type is "following" but user is not authenticated, return empty
+    if filter_type == "following" and not user_id:
+        return []
+
+    posts = PostService.get_feed(db, user_id, skip, limit, filter_type)
 
     return [_build_post_response(db, post, user_id) for post in posts]
 
