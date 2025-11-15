@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile, getLocalizedDiseaseName } from '@/lib/api/users';
@@ -359,9 +360,11 @@ export function UserSearch({
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
                   {user.avatar_url ? (
-                    <img
+                    <Image
                       src={user.avatar_url}
                       alt={user.nickname || 'User'}
+                      width={64}
+                      height={64}
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (

@@ -4,6 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
+import Image from 'next/image';
 import { likePost, unlikePost, type Post } from '@/lib/api/posts';
 
 interface PostCardProps {
@@ -124,9 +125,11 @@ export default function PostCard({
           {/* Avatar */}
           <Link href={`/profile/${post.user_id}`}>
             {post.author?.avatar_url ? (
-              <img
+              <Image
                 src={post.author.avatar_url}
                 alt={post.author.nickname}
+                width={40}
+                height={40}
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
@@ -226,15 +229,17 @@ export default function PostCard({
                     : 'aspect-square'
                 }`}
               >
-                <img
+                <Image
                   src={image.image_url}
                   alt={`Post image ${index + 1}`}
-                  className="w-full h-full object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  fill
+                  className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
                   onClick={() => {
                     window.open(image.image_url, '_blank');
                   }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect width="400" height="400" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="16"%3EImage not found%3C/text%3E%3C/svg%3E';
+                    // Fallback handled by Next.js Image component
+                    console.error('Failed to load image:', image.image_url);
                   }}
                 />
               </div>

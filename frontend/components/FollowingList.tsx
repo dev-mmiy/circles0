@@ -2,6 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
@@ -86,9 +87,11 @@ export default function FollowingList({ userId }: FollowingListProps) {
               {/* Avatar */}
               <div className="flex-shrink-0">
                 {follow.following.avatar_url ? (
-                  <img
+                  <Image
                     src={follow.following.avatar_url}
                     alt={follow.following.nickname}
+                    width={48}
+                    height={48}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                 ) : (

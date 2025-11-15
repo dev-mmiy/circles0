@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useMemo, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { createPost, type CreatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
@@ -242,15 +243,14 @@ export default function PostForm({
               {imagePreviews.map((preview, index) => (
                 <div
                   key={index}
-                  className="relative inline-block group"
+                  className="relative inline-block group w-20 h-20"
                 >
-                  <img
+                  <Image
                     src={preview.url}
                     alt={`Image ${index + 1}`}
+                    width={80}
+                    height={80}
                     className="w-20 h-20 object-cover rounded-lg border border-gray-300"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3EInvalid%3C/text%3E%3C/svg%3E';
-                    }}
                   />
                   {uploadingImages && preview.file && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">

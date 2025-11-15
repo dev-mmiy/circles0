@@ -6,6 +6,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { UserProfile } from '@/lib/api/users';
@@ -47,9 +48,11 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
       <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
         <div className="flex items-center space-x-4">
           {user.avatar_url ? (
-            <img
+            <Image
               src={user.avatar_url}
               alt={user.nickname}
+              width={80}
+              height={80}
               className="w-20 h-20 rounded-full border-4 border-white object-cover"
             />
           ) : (

@@ -2,6 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link as I18nLink } from '@/i18n/routing';
@@ -274,9 +275,11 @@ function CommentItem({
         {/* Avatar */}
         <Link href={`/profile/${comment.user_id}`}>
           {comment.author?.avatar_url ? (
-            <img
+            <Image
               src={comment.author.avatar_url}
               alt={comment.author.nickname}
+              width={32}
+              height={32}
               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
             />
           ) : (

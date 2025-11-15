@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useRouter } from '@/i18n/routing';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { createUserProfile } from '@/lib/api/users';
 
 export default function RegisterPage() {
@@ -144,9 +145,11 @@ export default function RegisterPage() {
                   {t('avatarLabel')}
                 </label>
                 <div className="flex items-center space-x-4">
-                  <img
+                  <Image
                     src={user.picture}
                     alt={t('avatarAlt')}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover"
                   />
                   <p className="text-sm text-gray-500">{t('avatarNote')}</p>
