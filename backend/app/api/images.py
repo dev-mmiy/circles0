@@ -39,9 +39,9 @@ async def upload_image(
 ):
     """
     Upload an image file to Google Cloud Storage.
-    
+
     Returns the public URL of the uploaded image.
-    
+
     Requires authentication.
     """
     # Check if storage service is available
@@ -109,11 +109,11 @@ async def upload_multiple_images(
 ):
     """
     Upload multiple image files to Google Cloud Storage.
-    
+
     Returns a list of public URLs of the uploaded images.
-    
+
     Maximum 5 images per request.
-    
+
     Requires authentication.
     """
     # Check if storage service is available
@@ -192,7 +192,7 @@ async def delete_image(
 ):
     """
     Delete an image from Google Cloud Storage.
-    
+
     Requires authentication.
     """
     # Check if storage service is available
@@ -216,4 +216,3 @@ async def delete_image(
             "message": "Image deleted successfully",
         },
     )
-

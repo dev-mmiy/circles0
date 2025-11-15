@@ -45,8 +45,10 @@ class NotificationBroadcaster:
                 self._connections[user_id] = set()
             self._connections[user_id].add(queue)
 
-        logger.info(f"User {user_id} connected to notification stream. "
-                   f"Total connections for user: {len(self._connections[user_id])}")
+        logger.info(
+            f"User {user_id} connected to notification stream. "
+            f"Total connections for user: {len(self._connections[user_id])}"
+        )
 
         return queue
 
@@ -67,8 +69,10 @@ class NotificationBroadcaster:
                     del self._connections[user_id]
                     logger.info(f"User {user_id} has no more active connections")
                 else:
-                    logger.info(f"User {user_id} disconnected. "
-                              f"Remaining connections: {len(self._connections[user_id])}")
+                    logger.info(
+                        f"User {user_id} disconnected. "
+                        f"Remaining connections: {len(self._connections[user_id])}"
+                    )
 
     async def broadcast_to_user(self, user_id: UUID, event_type: str, data: dict):
         """
@@ -80,7 +84,9 @@ class NotificationBroadcaster:
             data: The event data (will be JSON-serialized)
         """
         if user_id not in self._connections:
-            logger.debug(f"No active connections for user {user_id}, skipping broadcast")
+            logger.debug(
+                f"No active connections for user {user_id}, skipping broadcast"
+            )
             return
 
         # Serialize data once
@@ -90,10 +96,7 @@ class NotificationBroadcaster:
             logger.error(f"Failed to serialize notification data: {e}")
             return
 
-        event = {
-            "event": event_type,
-            "data": json_data
-        }
+        event = {"event": event_type, "data": json_data}
 
         # Broadcast to all connections for this user
         disconnected_queues = []
@@ -115,8 +118,10 @@ class NotificationBroadcaster:
                 if not self._connections[user_id]:
                     del self._connections[user_id]
 
-        logger.debug(f"Broadcast {event_type} to user {user_id}, "
-                    f"{len(self._connections[user_id])} active connections")
+        logger.debug(
+            f"Broadcast {event_type} to user {user_id}, "
+            f"{len(self._connections[user_id])} active connections"
+        )
 
     async def broadcast_to_all(self, event_type: str, data: dict):
         """

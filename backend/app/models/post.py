@@ -66,7 +66,10 @@ class Post(Base):
         "PostMention", back_populates="post", cascade="all, delete-orphan"
     )
     images = relationship(
-        "PostImage", back_populates="post", cascade="all, delete-orphan", order_by="PostImage.display_order"
+        "PostImage",
+        back_populates="post",
+        cascade="all, delete-orphan",
+        order_by="PostImage.display_order",
     )
 
 
@@ -106,9 +109,7 @@ class PostLike(Base):
     user = relationship("User", back_populates="post_likes")
 
     # Ensure one user can only like a post once
-    __table_args__ = (
-        UniqueConstraint("post_id", "user_id", name="uq_post_user_like"),
-    )
+    __table_args__ = (UniqueConstraint("post_id", "user_id", name="uq_post_user_like"),)
 
 
 class PostComment(Base):

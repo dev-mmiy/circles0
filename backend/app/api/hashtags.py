@@ -65,4 +65,3 @@ async def get_popular_hashtags(
         )
         for hashtag in hashtags
     ]
-

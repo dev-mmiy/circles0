@@ -49,7 +49,7 @@ def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optiona
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found. Please complete registration first."
+            detail="User profile not found. Please complete registration first.",
         )
 
     return user.id
@@ -80,11 +80,14 @@ async def create_post(
 
     # Extract and create hashtags from post content
     HashtagService.extract_and_create_hashtags(db, post.id, post_data.content)
-    
+
     # Extract and create mentions from post content
     from app.services.mention_service import MentionService
-    MentionService.extract_and_create_mentions(db, post.id, post_data.content, exclude_user_id=user_id)
-    
+
+    MentionService.extract_and_create_mentions(
+        db, post.id, post_data.content, exclude_user_id=user_id
+    )
+
     db.commit()
 
     # Fetch post with relationships for response
@@ -100,9 +103,18 @@ async def create_post(
 )
 async def get_feed(
     skip: int = Query(0, ge=0, description="Number of posts to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
-    filter_type: str = Query("all", regex="^(all|following|disease)$", description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease"),
-    disease_id: Optional[int] = Query(None, description="Disease ID to filter by (required when filter_type='disease')"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of posts to return"
+    ),
+    filter_type: str = Query(
+        "all",
+        regex="^(all|following|disease)$",
+        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease",
+    ),
+    disease_id: Optional[int] = Query(
+        None,
+        description="Disease ID to filter by (required when filter_type='disease')",
+    ),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -112,7 +124,7 @@ async def get_feed(
     - Public posts are visible to everyone
     - Followers-only posts are visible to authenticated users who follow the author
     - Private posts are not included in feed
-    
+
     Filter types:
     - "all": Show all public posts + followers_only posts from followed users
     - "following": Show only posts from users you follow (public + followers_only)
@@ -141,7 +153,9 @@ async def get_feed(
 async def get_posts_by_hashtag(
     hashtag_name: str,
     skip: int = Query(0, ge=0, description="Number of posts to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of posts to return"
+    ),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -199,7 +213,9 @@ async def get_post(
 async def get_user_posts(
     user_id: UUID,
     skip: int = Query(0, ge=0, description="Number of posts to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of posts to return"
+    ),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -247,17 +263,19 @@ async def update_post(
     # Update hashtags and mentions if content was updated
     if post_data.content is not None:
         from app.services.mention_service import MentionService
-        
+
         # Delete old hashtags
         HashtagService.delete_post_hashtags(db, post.id)
         # Extract and create new hashtags
         HashtagService.extract_and_create_hashtags(db, post.id, post_data.content)
-        
+
         # Delete old mentions
         MentionService.delete_post_mentions(db, post.id)
         # Extract and create new mentions
-        MentionService.extract_and_create_mentions(db, post.id, post_data.content, exclude_user_id=user_id)
-        
+        MentionService.extract_and_create_mentions(
+            db, post.id, post_data.content, exclude_user_id=user_id
+        )
+
         db.commit()
 
     # Fetch post with relationships for response
@@ -333,14 +351,16 @@ async def like_post(
         user_id=like.user_id,
         reaction_type=like.reaction_type,
         created_at=like.created_at,
-        user=PostAuthor(
-            id=like.user.id,
-            nickname=like.user.nickname,
-            username=like.user.username,
-            avatar_url=like.user.avatar_url,
-        )
-        if like.user
-        else None,
+        user=(
+            PostAuthor(
+                id=like.user.id,
+                nickname=like.user.nickname,
+                username=like.user.username,
+                avatar_url=like.user.avatar_url,
+            )
+            if like.user
+            else None
+        ),
     )
 
 
@@ -378,7 +398,9 @@ async def unlike_post(
 async def get_post_likes(
     post_id: UUID,
     skip: int = Query(0, ge=0, description="Number of likes to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of likes to return"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of likes to return"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -395,14 +417,16 @@ async def get_post_likes(
             user_id=like.user_id,
             reaction_type=like.reaction_type,
             created_at=like.created_at,
-            user=PostAuthor(
-                id=like.user.id,
-                nickname=like.user.nickname,
-                username=like.user.username,
-                avatar_url=like.user.avatar_url,
-            )
-            if like.user
-            else None,
+            user=(
+                PostAuthor(
+                    id=like.user.id,
+                    nickname=like.user.nickname,
+                    username=like.user.username,
+                    avatar_url=like.user.avatar_url,
+                )
+                if like.user
+                else None
+            ),
         )
         for like in likes
     ]
@@ -449,7 +473,9 @@ async def create_comment(
 async def get_post_comments(
     post_id: UUID,
     skip: int = Query(0, ge=0, description="Number of comments to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of comments to return"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of comments to return"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -470,7 +496,9 @@ async def get_post_comments(
 async def get_comment_replies(
     comment_id: UUID,
     skip: int = Query(0, ge=0, description="Number of replies to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of replies to return"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of replies to return"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -541,9 +569,16 @@ async def delete_comment(
 # ========== Helper Functions ==========
 
 
-def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> PostResponse:
+def _build_post_response(
+    db: Session, post, current_user_id: Optional[UUID]
+) -> PostResponse:
     """Build PostResponse with calculated fields."""
-    from app.schemas.post import HashtagResponse, MentionResponse, PostAuthor, PostImageResponse
+    from app.schemas.post import (
+        HashtagResponse,
+        MentionResponse,
+        PostAuthor,
+        PostImageResponse,
+    )
     from app.services.mention_service import MentionService
 
     like_count = PostService.get_like_count(db, post.id)
@@ -585,7 +620,7 @@ def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> 
             display_order=image.display_order,
             created_at=image.created_at,
         )
-        for image in (post.images if hasattr(post, 'images') and post.images else [])
+        for image in (post.images if hasattr(post, "images") and post.images else [])
     ]
 
     return PostResponse(
@@ -596,14 +631,16 @@ def _build_post_response(db: Session, post, current_user_id: Optional[UUID]) -> 
         is_active=post.is_active,
         created_at=post.created_at,
         updated_at=post.updated_at,
-        author=PostAuthor(
-            id=post.user.id,
-            nickname=post.user.nickname,
-            username=post.user.username,
-            avatar_url=post.user.avatar_url,
-        )
-        if post.user
-        else None,
+        author=(
+            PostAuthor(
+                id=post.user.id,
+                nickname=post.user.nickname,
+                username=post.user.username,
+                avatar_url=post.user.avatar_url,
+            )
+            if post.user
+            else None
+        ),
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
@@ -659,11 +696,15 @@ def _build_post_detail_response(
             display_order=image.display_order,
             created_at=image.created_at,
         )
-        for image in (post.images if hasattr(post, 'images') and post.images else [])
+        for image in (post.images if hasattr(post, "images") and post.images else [])
     ]
 
     # Build comments
-    comments = [_build_comment_response(db, comment) for comment in post.comments if comment.is_active]
+    comments = [
+        _build_comment_response(db, comment)
+        for comment in post.comments
+        if comment.is_active
+    ]
 
     # Build likes
     likes = [
@@ -673,14 +714,16 @@ def _build_post_detail_response(
             user_id=like.user_id,
             reaction_type=like.reaction_type,
             created_at=like.created_at,
-            user=PostAuthor(
-                id=like.user.id,
-                nickname=like.user.nickname,
-                username=like.user.username,
-                avatar_url=like.user.avatar_url,
-            )
-            if like.user
-            else None,
+            user=(
+                PostAuthor(
+                    id=like.user.id,
+                    nickname=like.user.nickname,
+                    username=like.user.username,
+                    avatar_url=like.user.avatar_url,
+                )
+                if like.user
+                else None
+            ),
         )
         for like in post.likes
     ]
@@ -693,14 +736,16 @@ def _build_post_detail_response(
         is_active=post.is_active,
         created_at=post.created_at,
         updated_at=post.updated_at,
-        author=PostAuthor(
-            id=post.user.id,
-            nickname=post.user.nickname,
-            username=post.user.username,
-            avatar_url=post.user.avatar_url,
-        )
-        if post.user
-        else None,
+        author=(
+            PostAuthor(
+                id=post.user.id,
+                nickname=post.user.nickname,
+                username=post.user.username,
+                avatar_url=post.user.avatar_url,
+            )
+            if post.user
+            else None
+        ),
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
@@ -727,13 +772,15 @@ def _build_comment_response(db: Session, comment) -> PostCommentResponse:
         is_active=comment.is_active,
         created_at=comment.created_at,
         updated_at=comment.updated_at,
-        author=PostAuthor(
-            id=comment.user.id,
-            nickname=comment.user.nickname,
-            username=comment.user.username,
-            avatar_url=comment.user.avatar_url,
-        )
-        if comment.user
-        else None,
+        author=(
+            PostAuthor(
+                id=comment.user.id,
+                nickname=comment.user.nickname,
+                username=comment.user.username,
+                avatar_url=comment.user.avatar_url,
+            )
+            if comment.user
+            else None
+        ),
         reply_count=reply_count,
     )

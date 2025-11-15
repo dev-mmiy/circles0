@@ -28,7 +28,9 @@ class Notification(Base):
 
     __tablename__ = "notifications"
 
-    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
+    id = Column(
+        PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
+    )
     recipient_id = Column(
         PostgreSQLUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -40,7 +42,11 @@ class Notification(Base):
         ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
     )
-    type = Column(SQLEnum(NotificationType, create_type=False, native_enum=False), nullable=False, index=True)
+    type = Column(
+        SQLEnum(NotificationType, create_type=False, native_enum=False),
+        nullable=False,
+        index=True,
+    )
 
     # Target references (nullable, depends on notification type)
     post_id = Column(
@@ -58,7 +64,9 @@ class Notification(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
 
     # Relationships
-    recipient = relationship("User", foreign_keys=[recipient_id], back_populates="notifications_received")
+    recipient = relationship(
+        "User", foreign_keys=[recipient_id], back_populates="notifications_received"
+    )
     actor = relationship("User", foreign_keys=[actor_id])
     post = relationship("Post", foreign_keys=[post_id])
     comment = relationship("PostComment", foreign_keys=[comment_id])

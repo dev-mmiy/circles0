@@ -271,9 +271,11 @@ class PostService:
         normalized_name = normalize_hashtag(hashtag_name)
 
         # Find hashtag
-        hashtag = db.query(Hashtag).filter(
-            func.lower(Hashtag.name) == normalized_name
-        ).first()
+        hashtag = (
+            db.query(Hashtag)
+            .filter(func.lower(Hashtag.name) == normalized_name)
+            .first()
+        )
 
         if not hashtag:
             return []
@@ -281,9 +283,9 @@ class PostService:
         # Get post IDs that have this hashtag
         post_ids = [
             ph.post_id
-            for ph in db.query(PostHashtag).filter(
-                PostHashtag.hashtag_id == hashtag.id
-            ).all()
+            for ph in db.query(PostHashtag)
+            .filter(PostHashtag.hashtag_id == hashtag.id)
+            .all()
         ]
 
         if not post_ids:
@@ -298,10 +300,7 @@ class PostService:
                 joinedload(Post.comments),
                 joinedload(Post.images),
             )
-            .filter(
-                Post.id.in_(post_ids),
-                Post.is_active == True
-            )
+            .filter(Post.id.in_(post_ids), Post.is_active == True)
         )
 
         # Apply visibility filtering (similar to get_feed)
@@ -338,7 +337,9 @@ class PostService:
         db: Session, post_id: UUID, user_id: UUID, post_data: PostUpdate
     ) -> Optional[Post]:
         """Update a post. Only the author can update their post."""
-        post = db.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+        post = (
+            db.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+        )
 
         if not post:
             return None
@@ -350,6 +351,21 @@ class PostService:
             post.visibility = post_data.visibility
         if post_data.is_active is not None:
             post.is_active = post_data.is_active
+
+        # Update images if provided
+        if post_data.image_urls is not None:
+            # Delete existing images
+            db.query(PostImage).filter(PostImage.post_id == post_id).delete()
+
+            # Create new images
+            for index, image_url in enumerate(post_data.image_urls[:5]):  # Max 5 images
+                post_image = PostImage(
+                    post_id=post.id,
+                    image_url=image_url,
+                    display_order=index,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(post_image)
 
         post.updated_at = datetime.utcnow()
 
@@ -364,7 +380,9 @@ class PostService:
 
         Returns True if successful, False otherwise.
         """
-        post = db.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+        post = (
+            db.query(Post).filter(Post.id == post_id, Post.user_id == user_id).first()
+        )
 
         if not post:
             return False
@@ -611,7 +629,11 @@ class PostService:
     @staticmethod
     def get_like_count(db: Session, post_id: UUID) -> int:
         """Get the number of likes for a post."""
-        return db.query(func.count(PostLike.id)).filter(PostLike.post_id == post_id).scalar()
+        return (
+            db.query(func.count(PostLike.id))
+            .filter(PostLike.post_id == post_id)
+            .scalar()
+        )
 
     @staticmethod
     def get_comment_count(db: Session, post_id: UUID) -> int:

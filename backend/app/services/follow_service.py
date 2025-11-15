@@ -18,7 +18,9 @@ class FollowService:
     """Service for follow/follower operations."""
 
     @staticmethod
-    def follow_user(db: Session, follower_id: UUID, following_id: UUID) -> Optional[Follow]:
+    def follow_user(
+        db: Session, follower_id: UUID, following_id: UUID
+    ) -> Optional[Follow]:
         """
         Create a follow relationship.
 

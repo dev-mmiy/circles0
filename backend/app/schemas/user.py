@@ -110,7 +110,9 @@ class UserResponse(BaseModel):
     """Schema for user profile responses (full profile for owner)."""
 
     id: UUID
-    member_id: Optional[str] = None  # 12-digit member ID (nullable for incomplete profiles)
+    member_id: Optional[str] = (
+        None  # 12-digit member ID (nullable for incomplete profiles)
+    )
     auth0_id: Optional[str]  # Nullable for migration compatibility
     idp_id: Optional[str]  # Generic IDP ID
     idp_provider: str = "auth0"
@@ -153,7 +155,9 @@ class UserPublicResponse(BaseModel):
     """Schema for public user profile (limited information)."""
 
     id: UUID
-    member_id: Optional[str] = None  # 12-digit member ID (public, nullable for incomplete profiles)
+    member_id: Optional[str] = (
+        None  # 12-digit member ID (public, nullable for incomplete profiles)
+    )
     nickname: Optional[str] = None  # Public nickname (nullable for incomplete profiles)
     username: Optional[str]
     bio: Optional[str]

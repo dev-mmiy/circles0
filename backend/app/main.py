@@ -20,6 +20,7 @@ from app.api.users import router as users_router
 # Try to import push subscriptions router (optional - requires pywebpush)
 try:
     from app.api.push_subscriptions import router as push_subscriptions_router
+
     PUSH_SUBSCRIPTIONS_AVAILABLE = True
 except ImportError:
     PUSH_SUBSCRIPTIONS_AVAILABLE = False
@@ -121,10 +122,20 @@ app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(hashtags_router, prefix="/api/v1", tags=["hashtags"])
 app.include_router(images_router, prefix="/api/v1", tags=["images"])
-app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
-app.include_router(notifications_sse_router, prefix="/api/v1/notifications", tags=["notifications", "sse"])
+app.include_router(
+    notifications_router, prefix="/api/v1/notifications", tags=["notifications"]
+)
+app.include_router(
+    notifications_sse_router,
+    prefix="/api/v1/notifications",
+    tags=["notifications", "sse"],
+)
 if PUSH_SUBSCRIPTIONS_AVAILABLE:
-    app.include_router(push_subscriptions_router, prefix="/api/v1/push-subscriptions", tags=["push-subscriptions"])
+    app.include_router(
+        push_subscriptions_router,
+        prefix="/api/v1/push-subscriptions",
+        tags=["push-subscriptions"],
+    )
 
 
 @app.get("/")
@@ -178,7 +189,9 @@ async def config_check():
             "auth0_domain_configured": bool(auth0_domain),
             "auth0_domain_value": auth0_domain[:20] + "..." if auth0_domain else None,
             "auth0_audience_configured": bool(auth0_audience),
-            "auth0_audience_value": auth0_audience[:30] + "..." if auth0_audience else None,
+            "auth0_audience_value": (
+                auth0_audience[:30] + "..." if auth0_audience else None
+            ),
             "database_url_configured": bool(database_url),
         },
         "timestamp": datetime.utcnow().isoformat(),

@@ -52,8 +52,8 @@ async def event_generator(user_id: UUID, request: Request):
             "data": {
                 "message": "Connected to notification stream",
                 "user_id": str(user_id),
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         }
 
         start_time = asyncio.get_event_loop().time()
@@ -67,22 +67,21 @@ async def event_generator(user_id: UUID, request: Request):
             # Check if we've exceeded the connection timeout
             elapsed = asyncio.get_event_loop().time() - start_time
             if elapsed > CONNECTION_TIMEOUT:
-                logger.info(f"Connection timeout reached for user {user_id}, requesting reconnect")
+                logger.info(
+                    f"Connection timeout reached for user {user_id}, requesting reconnect"
+                )
                 yield {
                     "event": "reconnect",
                     "data": {
                         "message": "Connection timeout, please reconnect",
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
+                        "timestamp": datetime.utcnow().isoformat(),
+                    },
                 }
                 break
 
             try:
                 # Wait for notification event with timeout (for heartbeat)
-                event = await asyncio.wait_for(
-                    queue.get(),
-                    timeout=HEARTBEAT_INTERVAL
-                )
+                event = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_INTERVAL)
 
                 # Send the notification event
                 yield event
@@ -91,9 +90,7 @@ async def event_generator(user_id: UUID, request: Request):
                 # No events received, send heartbeat
                 yield {
                     "event": "ping",
-                    "data": {
-                        "timestamp": datetime.utcnow().isoformat()
-                    }
+                    "data": {"timestamp": datetime.utcnow().isoformat()},
                 }
 
     except asyncio.CancelledError:
@@ -106,8 +103,8 @@ async def event_generator(user_id: UUID, request: Request):
             "event": "error",
             "data": {
                 "message": "An error occurred",
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         }
 
     finally:
@@ -150,5 +147,5 @@ async def notification_stream(
         headers={
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no",  # Disable nginx buffering
-        }
+        },
     )

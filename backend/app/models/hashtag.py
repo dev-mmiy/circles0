@@ -26,7 +26,9 @@ class Hashtag(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     # Relationships
-    post_hashtags = relationship("PostHashtag", back_populates="hashtag", cascade="all, delete-orphan")
+    post_hashtags = relationship(
+        "PostHashtag", back_populates="hashtag", cascade="all, delete-orphan"
+    )
 
 
 class PostHashtag(Base):
@@ -61,4 +63,3 @@ class PostHashtag(Base):
     __table_args__ = (
         UniqueConstraint("post_id", "hashtag_id", name="uq_post_hashtag"),
     )
-

@@ -48,7 +48,7 @@ def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optiona
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found. Please complete registration first."
+            detail="User profile not found. Please complete registration first.",
         )
 
     return user.id
@@ -126,7 +126,9 @@ async def unfollow_user(
 async def get_user_followers(
     user_id: UUID,
     skip: int = Query(0, ge=0, description="Number of followers to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of followers to return"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of followers to return"
+    ),
     db: Session = Depends(get_db),
 ):
     """
@@ -139,16 +141,18 @@ async def get_user_followers(
             id=follow.id,
             follower_id=follow.follower_id,
             created_at=follow.created_at,
-            follower=UserFollowSummary(
-                id=follow.follower.id,
-                member_id=follow.follower.member_id,
-                nickname=follow.follower.nickname,
-                username=follow.follower.username,
-                avatar_url=follow.follower.avatar_url,
-                bio=follow.follower.bio,
-            )
-            if follow.follower
-            else None,
+            follower=(
+                UserFollowSummary(
+                    id=follow.follower.id,
+                    member_id=follow.follower.member_id,
+                    nickname=follow.follower.nickname,
+                    username=follow.follower.username,
+                    avatar_url=follow.follower.avatar_url,
+                    bio=follow.follower.bio,
+                )
+                if follow.follower
+                else None
+            ),
         )
         for follow in followers
     ]
@@ -175,16 +179,18 @@ async def get_user_following(
             id=follow.id,
             following_id=follow.following_id,
             created_at=follow.created_at,
-            following=UserFollowSummary(
-                id=follow.following.id,
-                member_id=follow.following.member_id,
-                nickname=follow.following.nickname,
-                username=follow.following.username,
-                avatar_url=follow.following.avatar_url,
-                bio=follow.following.bio,
-            )
-            if follow.following
-            else None,
+            following=(
+                UserFollowSummary(
+                    id=follow.following.id,
+                    member_id=follow.following.member_id,
+                    nickname=follow.following.nickname,
+                    username=follow.following.username,
+                    avatar_url=follow.following.avatar_url,
+                    bio=follow.following.bio,
+                )
+                if follow.following
+                else None
+            ),
         )
         for follow in following
     ]

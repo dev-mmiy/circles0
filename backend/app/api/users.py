@@ -459,8 +459,14 @@ async def search_users(
     country: str | None = None,
     language: str | None = None,
     member_id: str | None = None,
-    sort_by: str = Query("created_at", regex="^(created_at|last_login|nickname)$", description="Sort field: created_at, last_login, or nickname"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order: asc or desc"),
+    sort_by: str = Query(
+        "created_at",
+        regex="^(created_at|last_login|nickname)$",
+        description="Sort field: created_at, last_login, or nickname",
+    ),
+    sort_order: str = Query(
+        "desc", regex="^(asc|desc)$", description="Sort order: asc or desc"
+    ),
     limit: int = 20,
     db: Session = Depends(get_db),
     current_user: dict | None = Depends(get_current_user_optional),
@@ -493,9 +499,10 @@ async def search_users(
             User.profile_visibility == "public",
             and_(
                 User.profile_visibility == "limited",
-                current_user is not None  # Limited profiles only visible when authenticated
-            )
-        )
+                current_user
+                is not None,  # Limited profiles only visible when authenticated
+            ),
+        ),
     )
 
     # Search by member ID (exact match)
@@ -505,10 +512,7 @@ async def search_users(
     # Search by nickname or username
     if q:
         query = query.filter(
-            or_(
-                User.nickname.ilike(f"%{q}%"),
-                User.username.ilike(f"%{q}%")
-            )
+            or_(User.nickname.ilike(f"%{q}%"), User.username.ilike(f"%{q}%"))
         )
 
     # Filter by country
@@ -524,17 +528,22 @@ async def search_users(
         try:
             disease_id_list = [int(did.strip()) for did in disease_ids.split(",")]
             # Find users who have ANY of the specified diseases
-            user_ids_with_diseases = db.query(UserDisease.user_id).filter(
-                UserDisease.disease_id.in_(disease_id_list),
-                UserDisease.is_active == True,
-                UserDisease.is_searchable == True  # Only include searchable diseases
-            ).distinct()
+            user_ids_with_diseases = (
+                db.query(UserDisease.user_id)
+                .filter(
+                    UserDisease.disease_id.in_(disease_id_list),
+                    UserDisease.is_active == True,
+                    UserDisease.is_searchable
+                    == True,  # Only include searchable diseases
+                )
+                .distinct()
+            )
 
             query = query.filter(User.id.in_(user_ids_with_diseases))
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid disease_ids format"
+                detail="Invalid disease_ids format",
             )
 
     # Apply sorting
@@ -571,17 +580,19 @@ async def search_users(
             for disease in public_diseases
         ]
 
-        result.append({
-            "id": user.id,
-            "member_id": user.member_id,
-            "nickname": user.nickname,
-            "username": user.username,
-            "bio": user.bio,
-            "avatar_url": user.avatar_url,
-            "country": user.country,
-            "created_at": user.created_at,
-            "diseases": user_diseases,
-        })
+        result.append(
+            {
+                "id": user.id,
+                "member_id": user.member_id,
+                "nickname": user.nickname,
+                "username": user.username,
+                "bio": user.bio,
+                "avatar_url": user.avatar_url,
+                "country": user.country,
+                "created_at": user.created_at,
+                "diseases": user_diseases,
+            }
+        )
 
     return result
 
@@ -654,6 +665,4 @@ async def set_field_visibility(
             visibility=visibility_setting.visibility,
         )
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

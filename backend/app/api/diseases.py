@@ -75,14 +75,26 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
 
 @router.get("/search", response_model=List[DiseaseResponse])
 async def search_diseases(
-    q: Optional[str] = Query(None, description="Search query (name, code, or translation)"),
-    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
-    icd_code: Optional[str] = Query(None, description="ICD-10 code (exact or partial match)"),
+    q: Optional[str] = Query(
+        None, description="Search query (name, code, or translation)"
+    ),
+    category_ids: Optional[str] = Query(
+        None, description="Comma-separated category IDs"
+    ),
+    icd_code: Optional[str] = Query(
+        None, description="ICD-10 code (exact or partial match)"
+    ),
     language: str = Query("en", description="Preferred language for search"),
-    sort_by: str = Query("name", regex="^(name|disease_code|created_at)$", description="Sort field: name, disease_code, or created_at"),
-    sort_order: str = Query("asc", regex="^(asc|desc)$", description="Sort order: asc or desc"),
+    sort_by: str = Query(
+        "name",
+        regex="^(name|disease_code|created_at)$",
+        description="Sort field: name, disease_code, or created_at",
+    ),
+    sort_order: str = Query(
+        "asc", regex="^(asc|desc)$", description="Sort order: asc or desc"
+    ),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
 ):
     """
     Advanced disease search with multiple filters.
@@ -98,10 +110,13 @@ async def search_diseases(
     from app.models.disease import DiseaseTranslation, DiseaseCategoryMapping
 
     # Start with base query
-    query = db.query(Disease).options(
-        joinedload(Disease.translations),
-        joinedload(Disease.category_mappings)
-    ).filter(Disease.is_active == True)
+    query = (
+        db.query(Disease)
+        .options(
+            joinedload(Disease.translations), joinedload(Disease.category_mappings)
+        )
+        .filter(Disease.is_active == True)
+    )
 
     # Search by query string (name, code, or translation)
     if q:
@@ -114,7 +129,7 @@ async def search_diseases(
             or_(
                 Disease.name.ilike(f"%{q}%"),
                 Disease.disease_code.ilike(f"%{q}%"),
-                Disease.id.in_(translation_subquery)
+                Disease.id.in_(translation_subquery),
             )
         )
 
@@ -133,7 +148,7 @@ async def search_diseases(
         except ValueError:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid category_ids format"
+                detail="Invalid category_ids format",
             )
 
     # Apply sorting

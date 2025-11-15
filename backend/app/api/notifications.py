@@ -45,7 +45,7 @@ def get_user_id_from_token(db: Session, current_user: dict) -> UUID:
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found. Please complete registration first."
+            detail="User profile not found. Please complete registration first.",
         )
 
     return user.id
@@ -112,7 +112,9 @@ def _format_notification_response(notification) -> NotificationResponse:
 )
 async def get_notifications(
     skip: int = Query(0, ge=0, description="Number of notifications to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum number of notifications to return"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of notifications to return"
+    ),
     unread_only: bool = Query(False, description="Only return unread notifications"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
@@ -235,7 +237,9 @@ async def delete_notification(
     """
     current_user_id = get_user_id_from_token(db, current_user)
 
-    success = NotificationService.delete_notification(db, notification_id, current_user_id)
+    success = NotificationService.delete_notification(
+        db, notification_id, current_user_id
+    )
 
     if not success:
         raise HTTPException(

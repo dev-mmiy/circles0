@@ -89,9 +89,7 @@ class NotificationService:
 
         # Broadcast notification to SSE connections
         # Run in background to not block the response
-        asyncio.create_task(
-            NotificationService._broadcast_notification(notification)
-        )
+        asyncio.create_task(NotificationService._broadcast_notification(notification))
 
         return notification
 
@@ -110,16 +108,16 @@ class NotificationService:
             "recipient_id": str(notification.recipient_id),
             "actor_id": str(notification.actor_id),
             "post_id": str(notification.post_id) if notification.post_id else None,
-            "comment_id": str(notification.comment_id) if notification.comment_id else None,
+            "comment_id": (
+                str(notification.comment_id) if notification.comment_id else None
+            ),
             "is_read": notification.is_read,
             "created_at": notification.created_at.isoformat(),
         }
 
         # Broadcast to the recipient via SSE
         await broadcaster.broadcast_to_user(
-            notification.recipient_id,
-            "notification",
-            notification_data
+            notification.recipient_id, "notification", notification_data
         )
 
         # Send push notification (if push service is configured)
@@ -148,7 +146,9 @@ class NotificationService:
                 db = SessionLocal()
                 try:
                     # Load actor information
-                    actor = db.query(User).filter(User.id == notification.actor_id).first()
+                    actor = (
+                        db.query(User).filter(User.id == notification.actor_id).first()
+                    )
                     actor_name = actor.nickname if actor else "Someone"
 
                     title, body = NotificationService._get_notification_message(
@@ -160,7 +160,11 @@ class NotificationService:
                     if notification.post_id:
                         url = f"/posts/{notification.post_id}"
                     elif notification.comment_id:
-                        url = f"/posts/{notification.post_id}" if notification.post_id else None
+                        url = (
+                            f"/posts/{notification.post_id}"
+                            if notification.post_id
+                            else None
+                        )
 
                     # Send push notification
                     push_service.send_notification_to_user(
@@ -180,11 +184,14 @@ class NotificationService:
         except Exception as e:
             # Log error but don't fail the notification creation
             import logging
+
             logger = logging.getLogger(__name__)
             logger.warning(f"Failed to send push notification: {e}")
 
     @staticmethod
-    def _get_notification_message(notification: Notification, actor_name: str = "Someone") -> tuple[str, str]:
+    def _get_notification_message(
+        notification: Notification, actor_name: str = "Someone"
+    ) -> tuple[str, str]:
         """
         Get notification title and body based on notification type.
 
@@ -204,7 +211,9 @@ class NotificationService:
             "comment_like": ("New Like", f"{actor_name} liked your comment"),
         }
 
-        title, body = messages.get(notification.type.value, ("New Notification", "You have a new notification"))
+        title, body = messages.get(
+            notification.type.value, ("New Notification", "You have a new notification")
+        )
         return title, body
 
     @staticmethod

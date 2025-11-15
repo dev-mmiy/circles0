@@ -28,11 +28,13 @@ class MentionService:
             User instance if found, None otherwise.
         """
         from sqlalchemy import func
-        
+
         normalized_nickname = normalize_mention(nickname)
-        return db.query(User).filter(
-            func.lower(User.nickname) == normalized_nickname
-        ).first()
+        return (
+            db.query(User)
+            .filter(func.lower(User.nickname) == normalized_nickname)
+            .first()
+        )
 
     @staticmethod
     def extract_and_create_mentions(
@@ -58,26 +60,27 @@ class MentionService:
         for mention_name in mention_names:
             # Find user by nickname
             user = MentionService.find_user_by_nickname(db, mention_name)
-            
+
             if not user:
                 # User not found, skip this mention
                 continue
-            
+
             # Skip if this is the post author
             if exclude_user_id and user.id == exclude_user_id:
                 continue
-            
+
             # Check if mention already exists
-            existing = db.query(PostMention).filter(
-                PostMention.post_id == post_id,
-                PostMention.mentioned_user_id == user.id
-            ).first()
+            existing = (
+                db.query(PostMention)
+                .filter(
+                    PostMention.post_id == post_id,
+                    PostMention.mentioned_user_id == user.id,
+                )
+                .first()
+            )
 
             if not existing:
-                post_mention = PostMention(
-                    post_id=post_id,
-                    mentioned_user_id=user.id
-                )
+                post_mention = PostMention(post_id=post_id, mentioned_user_id=user.id)
                 db.add(post_mention)
                 post_mentions.append(post_mention)
 
@@ -85,7 +88,10 @@ class MentionService:
 
     @staticmethod
     def extract_and_create_comment_mentions(
-        db: Session, comment_id: UUID, content: str, exclude_user_id: Optional[UUID] = None
+        db: Session,
+        comment_id: UUID,
+        content: str,
+        exclude_user_id: Optional[UUID] = None,
     ) -> List[CommentMention]:
         """
         Extract mentions from comment content and create associations.
@@ -107,25 +113,28 @@ class MentionService:
         for mention_name in mention_names:
             # Find user by nickname
             user = MentionService.find_user_by_nickname(db, mention_name)
-            
+
             if not user:
                 # User not found, skip this mention
                 continue
-            
+
             # Skip if this is the comment author
             if exclude_user_id and user.id == exclude_user_id:
                 continue
-            
+
             # Check if mention already exists
-            existing = db.query(CommentMention).filter(
-                CommentMention.comment_id == comment_id,
-                CommentMention.mentioned_user_id == user.id
-            ).first()
+            existing = (
+                db.query(CommentMention)
+                .filter(
+                    CommentMention.comment_id == comment_id,
+                    CommentMention.mentioned_user_id == user.id,
+                )
+                .first()
+            )
 
             if not existing:
                 comment_mention = CommentMention(
-                    comment_id=comment_id,
-                    mentioned_user_id=user.id
+                    comment_id=comment_id, mentioned_user_id=user.id
                 )
                 db.add(comment_mention)
                 comment_mentions.append(comment_mention)
@@ -144,9 +153,9 @@ class MentionService:
         Returns:
             List of User instances mentioned in the post.
         """
-        post_mentions = db.query(PostMention).filter(
-            PostMention.post_id == post_id
-        ).all()
+        post_mentions = (
+            db.query(PostMention).filter(PostMention.post_id == post_id).all()
+        )
 
         return [pm.mentioned_user for pm in post_mentions]
 
@@ -162,9 +171,11 @@ class MentionService:
         Returns:
             List of User instances mentioned in the comment.
         """
-        comment_mentions = db.query(CommentMention).filter(
-            CommentMention.comment_id == comment_id
-        ).all()
+        comment_mentions = (
+            db.query(CommentMention)
+            .filter(CommentMention.comment_id == comment_id)
+            .all()
+        )
 
         return [cm.mentioned_user for cm in comment_mentions]
 
@@ -188,5 +199,6 @@ class MentionService:
             db: Database session.
             comment_id: The comment ID.
         """
-        db.query(CommentMention).filter(CommentMention.comment_id == comment_id).delete()
-
+        db.query(CommentMention).filter(
+            CommentMention.comment_id == comment_id
+        ).delete()

@@ -31,7 +31,7 @@ def extract_hashtags(text: str) -> List[str]:
     """
     # Pattern: # followed by one or more alphanumeric characters or underscores
     # The pattern uses word boundary to ensure we don't match mid-word
-    pattern = r'#([a-zA-Z0-9_]+)'
+    pattern = r"#([a-zA-Z0-9_]+)"
     matches = re.findall(pattern, text)
 
     # Convert to lowercase and remove duplicates while preserving order
@@ -59,7 +59,6 @@ def normalize_hashtag(hashtag: str) -> str:
         The normalized hashtag (lowercase, no leading '#').
     """
     hashtag = hashtag.strip()
-    if hashtag.startswith('#'):
+    if hashtag.startswith("#"):
         hashtag = hashtag[1:]
     return hashtag.lower()
-

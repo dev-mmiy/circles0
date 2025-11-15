@@ -44,10 +44,14 @@ class PostUpdate(BaseModel):
     """Schema for updating a post."""
 
     content: Optional[str] = Field(None, min_length=1, max_length=5000)
-    visibility: Optional[str] = Field(
-        None, pattern="^(public|followers_only|private)$"
-    )
+    visibility: Optional[str] = Field(None, pattern="^(public|followers_only|private)$")
     is_active: Optional[bool] = None
+    image_urls: Optional[List[str]] = Field(
+        default=None,
+        max_length=5,
+        description="List of image URLs (max 5 images)",
+        min_length=0,
+    )
 
 
 class PostAuthor(BaseModel):
@@ -80,9 +84,7 @@ class PostResponse(PostBase):
 class PostLikeCreate(BaseModel):
     """Schema for creating a post like."""
 
-    reaction_type: str = Field(
-        default="like", pattern="^(like|support|empathy)$"
-    )
+    reaction_type: str = Field(default="like", pattern="^(like|support|empathy)$")
 
 
 class PostLikeResponse(BaseModel):

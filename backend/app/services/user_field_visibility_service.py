@@ -28,9 +28,7 @@ class UserFieldVisibilityService:
     }
 
     @staticmethod
-    def get_field_visibility(
-        db: Session, user_id: UUID, field_name: str
-    ) -> str:
+    def get_field_visibility(db: Session, user_id: UUID, field_name: str) -> str:
         """
         Get visibility setting for a specific field.
 
@@ -99,9 +97,7 @@ class UserFieldVisibilityService:
         return visibility_setting
 
     @staticmethod
-    def get_all_field_visibilities(
-        db: Session, user_id: UUID
-    ) -> Dict[str, str]:
+    def get_all_field_visibilities(db: Session, user_id: UUID) -> Dict[str, str]:
         """
         Get all field visibility settings for a user.
 
@@ -196,4 +192,3 @@ class UserFieldVisibilityService:
             return bool(set(owner_disease_ids) & set(viewer_disease_ids))
 
         return False
-

@@ -15,7 +15,7 @@ from app.database import Base
 class PostMention(Base):
     """
     Post mention model.
-    
+
     Tracks which users are mentioned in which posts.
     """
 
@@ -47,7 +47,7 @@ class PostMention(Base):
 class CommentMention(Base):
     """
     Comment mention model.
-    
+
     Tracks which users are mentioned in which comments.
     """
 
@@ -74,4 +74,3 @@ class CommentMention(Base):
 
     def __repr__(self):
         return f"<CommentMention comment_id={self.comment_id} mentioned_user_id={self.mentioned_user_id}>"
-

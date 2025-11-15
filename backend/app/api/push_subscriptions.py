@@ -41,7 +41,11 @@ class PushSubscriptionResponse(BaseModel):
         from_attributes = True
 
 
-@router.post("/register", response_model=PushSubscriptionResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=PushSubscriptionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 async def register_push_subscription(
     subscription_data: PushSubscriptionRequest,
     current_user: User = Depends(get_current_user),
@@ -150,4 +154,3 @@ async def get_vapid_public_key():
         )
 
     return {"publicKey": vapid_public_key}
-

@@ -136,9 +136,7 @@ class PushService:
             List of PushSubscription objects
         """
         return (
-            db.query(PushSubscription)
-            .filter(PushSubscription.user_id == user_id)
-            .all()
+            db.query(PushSubscription).filter(PushSubscription.user_id == user_id).all()
         )
 
     def send_push_notification(
@@ -291,8 +289,8 @@ class PushService:
                 success_count += 1
                 # Update last_used_at
                 from datetime import datetime, timezone
+
                 subscription.last_used_at = datetime.now(timezone.utc)
                 db.commit()
 
         return success_count
-

@@ -30,9 +30,11 @@ class HashtagService:
         normalized_name = normalize_hashtag(name)
 
         # Try to find existing hashtag
-        hashtag = db.query(Hashtag).filter(
-            func.lower(Hashtag.name) == normalized_name
-        ).first()
+        hashtag = (
+            db.query(Hashtag)
+            .filter(func.lower(Hashtag.name) == normalized_name)
+            .first()
+        )
 
         if not hashtag:
             # Create new hashtag
@@ -64,16 +66,16 @@ class HashtagService:
             hashtag = HashtagService.get_or_create_hashtag(db, name)
 
             # Check if association already exists
-            existing = db.query(PostHashtag).filter(
-                PostHashtag.post_id == post_id,
-                PostHashtag.hashtag_id == hashtag.id
-            ).first()
+            existing = (
+                db.query(PostHashtag)
+                .filter(
+                    PostHashtag.post_id == post_id, PostHashtag.hashtag_id == hashtag.id
+                )
+                .first()
+            )
 
             if not existing:
-                post_hashtag = PostHashtag(
-                    post_id=post_id,
-                    hashtag_id=hashtag.id
-                )
+                post_hashtag = PostHashtag(post_id=post_id, hashtag_id=hashtag.id)
                 db.add(post_hashtag)
                 post_hashtags.append(post_hashtag)
 
@@ -91,9 +93,9 @@ class HashtagService:
         Returns:
             List of Hashtag instances.
         """
-        post_hashtags = db.query(PostHashtag).filter(
-            PostHashtag.post_id == post_id
-        ).all()
+        post_hashtags = (
+            db.query(PostHashtag).filter(PostHashtag.post_id == post_id).all()
+        )
 
         return [ph.hashtag for ph in post_hashtags]
 
@@ -111,9 +113,12 @@ class HashtagService:
             List of matching Hashtag instances.
         """
         normalized_query = normalize_hashtag(query)
-        hashtags = db.query(Hashtag).filter(
-            Hashtag.name.ilike(f'%{normalized_query}%')
-        ).limit(limit).all()
+        hashtags = (
+            db.query(Hashtag)
+            .filter(Hashtag.name.ilike(f"%{normalized_query}%"))
+            .limit(limit)
+            .all()
+        )
 
         return hashtags
 
@@ -129,11 +134,14 @@ class HashtagService:
         Returns:
             List of Hashtag instances ordered by popularity.
         """
-        hashtags = db.query(Hashtag).join(PostHashtag).group_by(
-            Hashtag.id
-        ).order_by(
-            func.count(PostHashtag.id).desc()
-        ).limit(limit).all()
+        hashtags = (
+            db.query(Hashtag)
+            .join(PostHashtag)
+            .group_by(Hashtag.id)
+            .order_by(func.count(PostHashtag.id).desc())
+            .limit(limit)
+            .all()
+        )
 
         return hashtags
 
@@ -147,4 +155,3 @@ class HashtagService:
             post_id: The post ID.
         """
         db.query(PostHashtag).filter(PostHashtag.post_id == post_id).delete()
-
