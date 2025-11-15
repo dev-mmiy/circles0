@@ -58,7 +58,7 @@ export default function FeedPage() {
         skip: currentPage * POSTS_PER_PAGE,
         limit: POSTS_PER_PAGE,
         filterType,
-        diseaseId: filterType === 'disease' ? selectedDiseaseId : undefined
+        diseaseId: filterType === 'disease' ? (selectedDiseaseId ?? undefined) : undefined
       });
 
       const fetchedPosts = await getFeed(
@@ -66,7 +66,7 @@ export default function FeedPage() {
         POSTS_PER_PAGE,
         accessToken,
         filterType,
-        filterType === 'disease' ? selectedDiseaseId : undefined
+        filterType === 'disease' ? (selectedDiseaseId ?? undefined) : undefined
       );
 
       console.log('[FeedPage] Posts fetched:', fetchedPosts.length);
@@ -132,14 +132,17 @@ export default function FeedPage() {
       setSelectedDiseaseId(null);
     } else if (userDiseases.length > 0 && !selectedDiseaseId) {
       // Auto-select first disease if none selected
-      setSelectedDiseaseId(userDiseases[0].disease.id);
+      const firstDisease = userDiseases.find(ud => ud.disease);
+      if (firstDisease?.disease) {
+        setSelectedDiseaseId(firstDisease.disease.id);
+      }
     }
   };
 
   // Get disease name for display
   const getDiseaseName = (diseaseId: number): string => {
-    const userDisease = userDiseases.find(ud => ud.disease.id === diseaseId);
-    if (!userDisease) return '';
+    const userDisease = userDiseases.find(ud => ud.disease?.id === diseaseId);
+    if (!userDisease?.disease) return '';
     
     const translation = userDisease.disease.translations?.find(
       t => t.language_code === locale
@@ -228,17 +231,20 @@ export default function FeedPage() {
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md"
                 >
                   <option value="">{t('selectDiseasePlaceholder')}</option>
-                  {userDiseases.map((userDisease) => {
-                    const translation = userDisease.disease.translations?.find(
-                      t => t.language_code === locale
-                    );
-                    const diseaseName = translation?.translated_name || userDisease.disease.name;
-                    return (
-                      <option key={userDisease.disease.id} value={userDisease.disease.id}>
-                        {diseaseName}
-                      </option>
-                    );
-                  })}
+                  {userDiseases
+                    .filter(userDisease => userDisease.disease)
+                    .map((userDisease) => {
+                      const disease = userDisease.disease!;
+                      const translation = disease.translations?.find(
+                        t => t.language_code === locale
+                      );
+                      const diseaseName = translation?.translated_name || disease.name;
+                      return (
+                        <option key={disease.id} value={disease.id}>
+                          {diseaseName}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
             )}
