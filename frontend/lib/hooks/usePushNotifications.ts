@@ -112,9 +112,12 @@ export function usePushNotifications(): UsePushNotificationsReturn {
 
     if (permission !== 'granted') {
       await requestPermission();
-      if (permission !== 'granted') {
+      // Check the actual permission status after request
+      const currentPermission = getNotificationPermission();
+      if (currentPermission !== 'granted') {
         return;
       }
+      setPermission(currentPermission);
     }
 
     setIsLoading(true);
