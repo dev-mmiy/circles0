@@ -117,14 +117,15 @@ Next.js 14 App Routerに対応したnext-intlを使用して、日本語と英�
 #### 翻訳統計
 | コンポーネント | 翻訳キー数 | 名前空間 | 実装日 |
 |--------------|----------|---------|--------|
-| Header | 5 | `navigation` | 2025-11-14 |
+| Header | 7 | `navigation` | 2025-11-14 (2025-11-15更新) |
 | AuthButton | 14 | `auth` | 2025-11-15 |
 | NotificationDropdown | 16 | `notifications` | 2025-11-15 |
+| NotificationBell | 2 (追加) | `notifications` | 2025-11-15 |
 | Feed Page | 10 | `feed` | 2025-11-15 |
 | PostCard | 11 | `post` | 2025-11-15 |
 | PostForm | 9 | `postForm` | 2025-11-15 |
 | NotificationItem | 1 + ロケール対応 | `notificationItem` | 2025-11-15 |
-| UserProfileEditForm | 38 | `userProfileEdit` | 2025-11-15 |
+| UserProfileEditForm | 54 | `userProfileEdit` | 2025-11-15 (2025-11-15更新) |
 | LanguageSwitcher | 3 | `languageSwitcher` | 2025-11-15 |
 | DiseaseList | 23 | `diseaseList` | 2025-11-15 |
 | DiseaseForm | 50 | `diseaseForm` | 2025-11-15 |
@@ -145,7 +146,8 @@ Next.js 14 App Routerに対応したnext-intlを使用して、日本語と英�
 | FollowingList | 3 | `followingList` | 2025-11-15 |
 | FollowButton | 4 | `followButton` | 2025-11-15 |
 | Search Page | 15 | `searchPage` | 2025-11-15 |
-| **合計** | **357キー** | **26名前空間** | - |
+| Register Page | 13 | `register` | 2025-11-15 |
+| **合計** | **381キー** | **26名前空間** | - |
 
 **翻訳ファイルサイズ:**
 - messages/ja.json: 619行
@@ -337,7 +339,11 @@ Auth0を使用したOAuth2.0認証システム。
      - **Search Page (検索ページ)** ✅ 完了
    - ⏳ 今後の拡張:
      - 追加のページコンポーネント (設定ページなど)
-     - ユーザーの`preferred_language`設定に基づいた自動ロケール選択
+   - ✅ **ユーザーの`preferred_language`設定に基づいた自動ロケール選択** ✅ 完了（2025-11-15）
+     - UserContextでユーザー情報取得時に`preferred_language`をチェック
+     - 現在のロケールと異なる場合、自動的にロケールを切り替え
+     - ユーザーが手動で言語を切り替えた場合は、その設定を優先（localStorageに`locale_override`フラグを保存）
+     - LanguageSwitcherコンポーネントで手動切り替え時に`locale_override`フラグを設定
 
 2. **エラーハンドリングの改善** ✅ 完了
    - ✅ 401/403エラー時の自動リダイレクト処理
@@ -382,14 +388,14 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### Phase 1: コア機能強化（優先度：高）
 
-#### 1.1 疾患検索・フィルタリング ✅ 完了（2025-11-09）
+#### 1.1 疾患検索・フィルタリング ✅ 完了（2025-11-09、検索履歴・フィルター保存は2025-11-15完了）
 - [x] **疾患名による検索機能**
   - [x] 部分一致検索
   - [x] 英語・日本語翻訳名での検索
-  - [ ] 検索履歴保存
+  - [x] 検索履歴保存 ✅ 完了（2025-11-15）
 - [x] **カテゴリーによるフィルタリング**
   - [x] 複数カテゴリー選択
-  - [ ] フィルター条件の保存
+  - [x] フィルター条件の保存 ✅ 完了（2025-11-15）
 - [x] **ICD-10コードによる検索**
   - [x] 部分一致検索
   - [ ] コード範囲指定
@@ -403,10 +409,13 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] ニックネーム検索
   - [x] 会員ID検索
   - [x] 国・言語による絞り込み
-- [ ] **検索結果のソート**
-  - [ ] 登録日順
-  - [ ] 最終ログイン順
-  - [ ] 関連度順
+- [x] **検索結果のソート** ✅ 完了（2025-11-15）
+  - [x] 登録日順
+  - [x] 最終ログイン順
+  - [x] ニックネーム順（ユーザー検索）
+  - [x] 名前順（疾患検索）
+  - [x] コード順（疾患検索）
+  - [x] 昇順/降順の選択
 
 #### 1.3 プロフィール公開範囲制御
 - [ ] **詳細な公開設定**
@@ -424,13 +433,20 @@ Auth0を使用したOAuth2.0認証システム。
 #### 2.1 投稿・フィード機能 ✅ 完了（2025-11-09）
 - [x] **投稿機能**
   - [x] テキスト投稿
-  - [ ] 画像添付（最大5枚）
-  - [ ] ハッシュタグ
-  - [ ] メンション
+  - [x] 画像添付（最大5枚、画像URL対応） ✅ 完了（2025-11-15）
+  - [x] ハッシュタグ ✅ 完了（2025-11-15）
+    - [x] ハッシュタグ抽出・保存機能
+    - [x] ハッシュタグ検索機能
+    - [x] ハッシュタグ別投稿表示
+  - [x] メンション ✅ 完了（2025-11-15）
+    - [x] メンション抽出・保存機能（バックエンド）
+    - [x] メンション表示機能（フロントエンド）
+    - [x] 投稿フォームでのメンション検出・表示
+    - [x] 投稿カードでのメンション表示（プロフィールリンク付き）
 - [x] **フィード**
   - [x] タイムライン表示
-  - [ ] 疾患別フィード
-  - [ ] フォローしているユーザーのフィード
+  - [x] 疾患別フィード ✅ 完了（2025-11-15）
+  - [x] フォローしているユーザーのフィード ✅ 完了（既に実装済み）
   - [x] 無限スクロール（ページネーション）
 
 #### 2.2 コメント・リアクション ✅ 完了（2025-11-09）
@@ -452,7 +468,7 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] 相互フォロー表示
   - [x] フォロー統計（フォロワー数/フォロー中数）
   - [x] プロフィールページからのフォロー
-  - [ ] フォロワー限定投稿フィルター
+  - [x] フォロワー限定投稿フィルター ✅ 完了（既に実装済み）
 - [x] **通知機能** ✅ 完了（2025-11-11）
   - [x] 通知データモデル（Notification テーブル）
   - [x] 通知タイプ（FOLLOW、COMMENT、REPLY、LIKE、COMMENT_LIKE）
@@ -466,7 +482,7 @@ Auth0を使用したOAuth2.0認証システム。
     - [x] 通知アイテムUI（タイムスタンプ、既読/削除）
     - [x] ヘッダーコンポーネント統合
     - [x] リアルタイム通知機能（SSE） ✅ 完了（2025-11-13）
-    - [ ] 通知一覧ページ
+    - [x] 通知一覧ページ ✅ 完了（2025-11-15）
 
 ### Phase 3: メッセージング・コミュニケーション（優先度：中）
 
@@ -633,35 +649,72 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] ローカル環境でのテスト完了
    - [x] 本番環境デプロイ完了
 
-2. ~~**リアルタイム通知機能**~~ ✅ 完了（2025-11-13）
+2. ~~**リアルタイム通知機能**~~ ✅ 完了（2025-11-15）
    - [x] Server-Sent Events (SSE) 実装
    - [x] 通知のリアルタイム配信
-   - [ ] ブラウザ通知（Web Push API）
+   - [x] ブラウザ通知（Web Push API） ✅ 完了（2025-11-15）
 
-3. **フォロワー限定投稿フィルター**
-   - バックエンド: フォロー関係に基づく投稿フィルタリング
-   - フロントエンド: フォローしているユーザーの投稿のみ表示
+3. ~~**フォロワー限定投稿フィルター**~~ ✅ 完了（既に実装済み）
+   - [x] バックエンド: フォロー関係に基づく投稿フィルタリング
+   - [x] フロントエンド: フォローしているユーザーの投稿のみ表示
+   - [x] フィルタータブUI実装（すべての投稿/フォロー中のユーザー）
+
+4. ~~**通知一覧ページ**~~ ✅ 完了（2025-11-15）
+   - [x] 通知一覧ページ (`app/[locale]/notifications/page.tsx`) の作成
+   - [x] フィルター機能（すべての通知/未読のみ）の実装
+   - [x] ページネーション対応（20件ずつ読み込み）
+   - [x] 全て既読にするボタンの実装
+   - [x] リアルタイム通知の自動更新対応
+   - [x] 多言語対応（日本語・英語）
+   - [x] 認証チェックと未認証時のリダイレクト処理
+   - [x] エラーハンドリングと再試行機能
 
 ### 優先度高（短期目標）
-4. **投稿機能の拡張**
-   - 画像添付機能（Cloud Storage連携）
-   - ハッシュタグ対応
-   - メンション機能
-   - 疾患別フィード
+5. ~~**投稿機能の拡張**~~ ✅ 完了（2025-11-15）
+   - [x] 画像添付機能（画像URL対応） ✅ 完了（2025-11-15）
+     - [x] PostImageモデルの作成（post_imagesテーブル）
+     - [x] データベースマイグレーション（add_post_image_table_20251115.py）
+     - [x] PostCreateスキーマにimage_urlsフィールド追加（最大5枚）
+     - [x] PostServiceに画像作成処理追加
+     - [x] APIレスポンスに画像情報を含める（PostImageResponse）
+     - [x] PostFormに画像URL入力機能追加（プレビュー、削除機能付き）
+     - [x] PostCardに画像表示機能追加（グリッドレイアウト、クリックで拡大）
+     - [x] 多言語対応（日本語・英語）
+   - [ ] 画像アップロード機能（Cloud Storage連携） - 今後実装予定
+   - [x] ハッシュタグ対応 ✅ 完了（2025-11-15）
+   - [x] メンション機能 ✅ 完了（2025-11-15）
+   - [x] 疾患別フィード ✅ 完了（2025-11-15）
 
-5. **検索機能の拡張**
-   - 検索履歴保存
-   - 検索結果のソート機能
-   - フィルター条件の保存
+6. ~~**検索機能の拡張**~~ ✅ 完了（2025-11-15）
+   - [x] 検索履歴保存 ✅ 完了（2025-11-15）
+     - [x] 検索履歴ユーティリティ関数の作成（localStorage使用）
+     - [x] ユーザー検索の検索履歴機能（最大10件、重複排除）
+     - [x] 疾患検索の検索履歴機能（最大10件、重複排除）
+     - [x] 検索履歴ドロップダウンUI（クリックで再検索、個別削除、全削除）
+     - [x] 検索パラメータの保存と復元（フィルター、ソート設定）
+     - [x] 多言語対応（日本語・英語）
+   - [x] 検索結果のソート機能 ✅ 完了（2025-11-15）
+     - [x] ユーザー検索のソート機能（登録日順、最終ログイン順、ニックネーム順）
+     - [x] 疾患検索のソート機能（名前順、コード順、登録日順）
+     - [x] 昇順/降順の選択機能
+     - [x] 多言語対応（日本語・英語）
+   - [x] フィルター条件の保存 ✅ 完了（2025-11-15）
+     - [x] フィルター条件保存ユーティリティ関数の作成（filterSettings.ts）
+     - [x] ユーザー検索のフィルター条件保存・復元（会員ID、疾患フィルター、ソート設定）
+     - [x] 疾患検索のフィルター条件保存・復元（カテゴリー、ICD-10コード、ソート設定）
+     - [x] フィルター条件の自動保存（変更時に即座に保存）
+     - [x] ページ読み込み時のフィルター条件自動復元
+     - [x] フィルター条件クリアボタンの実装
+     - [x] 多言語対応（日本語・英語）
 
 ### 技術改善
 6. **自動テストの導入**
    - pytest によるバックエンドテスト
    - Jest によるフロントエンドテスト
 
-7. **`.gitignore` の更新**
-   - `tsconfig.tsbuildinfo` 追加
-   - その他ビルドアーティファクト
+7. ~~**`.gitignore` の更新**~~ ✅ 完了（2025-11-15）
+   - [x] `tsconfig.tsbuildinfo` 追加
+   - [x] `*.tsbuildinfo` パターン追加
 
 ---
 
@@ -801,8 +854,119 @@ Auth0を使用したOAuth2.0認証システム。
       - ホームに戻るリンク
   - **合計**: 357キー、26名前空間、619行 (両言語)
   - Progress.md 更新 (翻訳統計テーブル更新、フェーズ12追加)
+  - **フェーズ13** (追加):
+    - Header コンポーネントのモバイルメニューaria-label翻訳追加 (2キー)
+      - メニューを開く/閉じるのaria-labelの多言語対応
+      - `navigation.openMenu` / `navigation.closeMenu` キー追加
+  - **フェーズ14** (追加):
+    - NotificationBell コンポーネントの翻訳追加 (2キー)
+      - aria-labelとtitle属性の多言語対応
+      - `notifications.realtimeConnected` / `notifications.connecting` キー追加
+      - 既存の`notifications.title`キーを活用
+  - **フェーズ15** (追加):
+    - UserProfileEditForm コンポーネントの言語選択オプション翻訳追加 (5キー)
+      - 優先言語選択の言語名の多言語対応
+      - `userProfileEdit.languages` セクション追加（ja, en, es, fr, de）
+      - 日本語環境では各言語のネイティブ名、英語環境では英語名を表示
+  - **フェーズ16** (追加):
+    - Register Page (app/[locale]/register/page.tsx) の翻訳追加 (13キー)
+      - 会員登録ページの完全な多言語対応
+      - タイトル、サブタイトル、ローディングメッセージ
+      - フォームフィールド（メール、ニックネーム、プロフィール公開設定）
+      - プロフィール画像セクション
+      - 送信ボタンと利用規約の注意書き
+      - エラーメッセージ
+  - **フェーズ17** (新機能追加):
+    - **ユーザーの`preferred_language`設定に基づいた自動ロケール選択機能** ✅ 完了
+      - UserContextに自動ロケール選択ロジックを追加
+      - ユーザー情報取得時に`preferred_language`をチェック
+      - 現在のロケールと異なる場合、自動的にロケールを切り替え
+      - ユーザーが手動で言語を切り替えた場合は、その設定を優先（localStorageに`locale_override`フラグを保存）
+      - LanguageSwitcherコンポーネントで手動切り替え時に`locale_override`フラグを設定
+      - 実装ファイル:
+        - `frontend/contexts/UserContext.tsx` - 自動ロケール選択ロジック
+        - `frontend/components/LanguageSwitcher.tsx` - 手動切り替え時のフラグ設定
+  - **フェーズ18** (バグ修正):
+    - UserProfileEditFormコンポーネントの不足翻訳キー追加 (11キー)
+      - フィールド別公開設定セクションの翻訳キー追加
+      - `sections.fieldVisibility` - セクションタイトル
+      - `fieldVisibility.description` - 説明文
+      - `fieldVisibility.loading` - ローディングメッセージ
+      - `fieldVisibility.updateFailed` - エラーメッセージ
+      - `fieldVisibility.options.*` - 公開設定オプション（public, limited, private, sameDiseaseOnly）
+      - `fields.avatarUrl`, `fields.language`, `fields.timezone` - フィールドラベル
 
 ### 2025-11-15 (続き)
+- **ハッシュタグ機能の実装** ✅ 完了
+  - バックエンド実装:
+    - ハッシュタグデータモデル（Hashtag, PostHashtag）の作成
+    - マイグレーションファイル（add_hashtag_tables_20251115.py）の作成
+    - ハッシュタグ抽出ユーティリティ関数（extract_hashtags, normalize_hashtag）
+    - ハッシュタグサービス（HashtagService）の実装
+      - ハッシュタグの取得・作成（get_or_create_hashtag）
+      - 投稿からのハッシュタグ抽出・関連付け（extract_and_create_hashtags）
+      - ハッシュタグ検索（search_hashtags）
+      - 人気ハッシュタグ取得（get_popular_hashtags）
+    - ハッシュタグAPIエンドポイント（/api/v1/hashtags）の実装
+      - GET /api/v1/hashtags?q={query} - ハッシュタグ検索
+      - GET /api/v1/hashtags/popular - 人気ハッシュタグ取得
+    - 投稿作成・更新時のハッシュタグ自動抽出・保存機能
+    - 投稿レスポンスにハッシュタグを含める機能
+  - フロントエンド実装:
+    - ハッシュタグ抽出ユーティリティ関数（extractHashtags）の実装
+    - PostFormコンポーネントにハッシュタグ自動検出・表示機能を追加
+      - 入力中にハッシュタグを自動検出
+      - 検出されたハッシュタグを視覚的に表示
+    - PostCardコンポーネントにハッシュタグ表示機能を追加
+      - 投稿に含まれるハッシュタグを表示
+      - ハッシュタグをクリック可能なリンクとして表示（検索ページへのリンク）
+    - 翻訳キーの追加（日本語・英語）
+      - postForm.detectedHashtags
+  - テスト結果:
+    - バックエンド: ハッシュタグ抽出機能のテスト（10テストケース全てパス）
+    - フロントエンド: ハッシュタグ抽出機能のテスト（10テストケース全てパス）
+  - 動作確認チェックリスト: HASHTAG_FEATURE_CHECKLIST.md を作成
+
+- **ハッシュタグ検索機能の実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - PostServiceに`get_posts_by_hashtag`メソッドを追加
+      - ハッシュタグ名で投稿を検索
+      - 公開範囲設定を考慮したフィルタリング
+      - フォロー関係を考慮した表示制御
+    - Posts APIに`GET /api/v1/posts/hashtag/{hashtag_name}`エンドポイントを追加
+      - ページネーション対応（skip, limit）
+      - 認証オプショナル
+  - フロントエンド実装:
+    - ハッシュタグ検索API関数の実装
+      - `searchHashtags` - ハッシュタグ検索（部分一致）
+      - `getPopularHashtags` - 人気ハッシュタグ取得
+      - `getPostsByHashtag` - ハッシュタグで投稿取得
+    - HashtagSearchコンポーネントの作成
+      - ハッシュタグ検索フォーム（自動補完機能付き）
+      - 人気ハッシュタグの表示
+      - ハッシュタグを含む投稿一覧の表示
+      - ページネーション（もっと見るボタン）
+      - エラーハンドリング
+    - 検索ページに「ハッシュタグ」タブを追加
+      - タブナビゲーションに統合
+      - URLパラメータ対応（`?q=hashtag&type=hashtags`）
+      - 初期値としてURLパラメータから読み込み
+    - PostCardコンポーネントのハッシュタグリンク修正
+      - ハッシュタグクリックで検索ページに遷移
+      - URLパラメータで検索結果を表示
+    - 翻訳キーの追加（日本語・英語）
+      - `searchPage.tabHashtags`
+      - `searchPage.hintsHashtags` (4つのヒント)
+      - `hashtagSearch`名前空間（7キー）
+  - 修正内容:
+    - TypeScriptエラー修正: `lib/utils/hashtag.ts`の`matchAll`を`exec`ループに変更（ES5互換性）
+    - useEffect依存配列の修正: ESLint警告の適切な処理
+  - 動作確認:
+    - TypeScript型チェック: パス
+    - リンターエラー: なし
+    - バックエンド構文チェック: パス
+  - 動作確認ドキュメント: HASHTAG_SEARCH_VERIFICATION.md を作成
+
 - **モバイル対応のハンバーガーメニュー実装** ✅ 完了
   - Headerコンポーネントにハンバーガーメニューを追加
   - スマートフォンでナビゲーションメニューにアクセス可能に
@@ -833,6 +997,149 @@ Auth0を使用したOAuth2.0認証システム。
   - フィードページでの使用例実装
     - ErrorDisplayコンポーネントの統合
     - extractErrorInfoを使用したエラー情報の抽出
+
+- **通知一覧ページの実装** ✅ 完了
+  - 通知一覧ページ (`app/[locale]/notifications/page.tsx`) の作成
+  - フィルター機能（すべての通知/未読のみ）の実装
+  - ページネーション対応（20件ずつ読み込み）
+  - 全て既読にするボタンの実装
+  - リアルタイム通知の自動更新対応
+  - 多言語対応（日本語・英語）
+  - 翻訳キーの追加（pageTitle, pageSubtitle, filterAll, filterUnread, loading, loadMore, allNotificationsShown, noUnreadNotifications, noUnreadNotificationsMessage, errorLoading, retry）
+  - 認証チェックと未認証時のリダイレクト処理
+  - エラーハンドリングと再試行機能
+
+- **検索履歴保存機能の実装** ✅ 完了
+  - 検索履歴ユーティリティ関数の作成 (`lib/utils/searchHistory.ts`)
+    - localStorageを使用した検索履歴の保存・取得
+    - 最大10件の履歴保持、重複排除機能
+    - 検索パラメータの保存と復元機能
+  - UserSearchコンポーネントに検索履歴機能を追加
+    - 検索ボックスフォーカス時に履歴ドロップダウン表示
+    - 履歴アイテムクリックで再検索
+    - 個別削除・全削除機能
+    - 検索パラメータ（フィルター、ソート設定）の保存と復元
+  - DiseaseSearchコンポーネントに検索履歴機能を追加
+    - 同様の機能を疾患検索にも実装
+  - 多言語対応（日本語・英語）
+    - 翻訳キーの追加（searchHistory, clearHistory, noHistory, clickToSearch）
+
+- **`.gitignore`の更新** ✅ 完了
+  - `*.tsbuildinfo`と`tsconfig.tsbuildinfo`を追加
+
+- **バックエンドのバグ修正** ✅ 完了
+  - `app/api/users.py`に`Query`のインポートを追加（NameError修正）
+
+- **投稿機能の拡張** ✅ 完了（2025-11-15）
+  - **疾患別フィード機能の実装**
+    - フィードページに「疾患別」タブを追加
+    - ユーザーの登録疾患から選択してフィルタリング
+    - 選択した疾患を持つユーザーの投稿を表示
+    - 多言語対応（日本語・英語）
+    - 翻訳キーの追加（filterDisease, selectDisease, selectDiseasePlaceholder, selectDiseasePrompt, noDiseasePosts, noDiseasePostsMessage）
+  - **メンション機能の実装**
+    - バックエンド実装:
+      - PostMentionとCommentMentionモデルの作成
+      - メンション抽出ユーティリティ関数（`@username`形式を検出）
+      - MentionServiceの実装（メンション抽出・保存・取得）
+      - 投稿作成・更新時のメンション自動抽出
+      - APIレスポンスにメンション情報を含める
+      - データベースマイグレーション（post_mentions, comment_mentionsテーブル）
+    - フロントエンド実装:
+      - メンション抽出ユーティリティ関数
+      - 投稿フォームでのメンション検出・表示
+      - 投稿カードでのメンション表示（プロフィールリンク付き）
+      - 多言語対応（日本語・英語）
+      - 翻訳キーの追加（postForm.detectedMentions, post.mentions）
+  - **エラーハンドリングの修正**
+    - errorHandler.tsのgetErrorMessageKey関数を修正（名前空間プレフィックスを削除）
+    - ErrorDisplayコンポーネントが正しく翻訳キーを解決できるように修正
+  - **データベースマイグレーション実行**
+    - ハッシュタグテーブルとメンションテーブルのマイグレーションを実行
+- **Web Push API（ブラウザ通知）の実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - PushSubscriptionモデルの作成（push_subscriptionsテーブル）
+    - データベースマイグレーション（add_push_subscription_table_20251115.py）
+    - PushServiceの実装（サブスクリプション管理、プッシュ通知送信）
+    - Push Subscription APIエンドポイント（登録・削除・公開キー取得）
+    - NotificationServiceへのPush通知送信統合
+    - VAPIDキー生成スクリプト（scripts/generate_vapid_keys.py）
+    - 必要なライブラリ追加（pywebpush, py-vapid）
+  - フロントエンド実装:
+    - Service Workerの実装（public/sw.js）
+      - Push通知の受信と表示
+      - 通知クリック時のページ遷移処理
+    - Push通知ユーティリティ関数（lib/utils/pushNotifications.ts）
+      - Service Worker登録
+      - 通知許可リクエスト
+      - サブスクリプション管理
+    - usePushNotificationsフック（lib/hooks/usePushNotifications.ts）
+      - Push通知の状態管理
+      - サブスクリプションの有効化/無効化
+    - NotificationContextへのブラウザ通知表示機能追加
+    - next.config.jsにService Worker設定追加
+  - ドキュメント:
+    - WEB_PUSH_SETUP.md - セットアップガイド作成
+  - 機能:
+    - ユーザーが通知許可を付与すると、自動的にプッシュサブスクリプションが登録される
+    - 新しい通知が作成されると、ブラウザにプッシュ通知が表示される
+    - 通知をクリックすると、関連するページに遷移する
+    - ブラウザが閉じていても通知を受信できる
+
+- **フィルター条件の保存機能** ✅ 完了（2025-11-15）
+  - フィルター条件保存ユーティリティ関数の作成（`lib/utils/filterSettings.ts`）
+    - ユーザー検索フィルター設定の保存・取得・クリア機能
+    - 疾患検索フィルター設定の保存・取得・クリア機能
+    - localStorageを使用した永続化
+  - UserSearchコンポーネントへの統合
+    - ページ読み込み時のフィルター条件自動復元
+    - フィルター条件変更時の自動保存
+    - フィルター条件クリアボタンの追加
+  - DiseaseSearchコンポーネントへの統合
+    - 同様の機能を疾患検索にも実装
+  - 多言語対応（日本語・英語）
+    - 翻訳キーの追加（clearFilters）
+
+- **画像添付機能の実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - PostImageモデルの作成（post_imagesテーブル）
+      - post_id, image_url, display_order, created_atフィールド
+      - Postモデルとのリレーションシップ（1対多）
+    - データベースマイグレーション（add_post_image_table_20251115.py）
+      - post_imagesテーブルの作成
+      - 外部キー制約（CASCADE削除）
+      - インデックス追加
+    - PostCreateスキーマにimage_urlsフィールド追加（最大5枚）
+      - Optional[List[str]]型
+      - バリデーション（最大5枚）
+    - PostServiceに画像作成処理追加
+      - create_postメソッドで画像URLを受け取り、PostImageレコードを作成
+      - display_orderで順序管理
+    - APIレスポンスに画像情報を含める
+      - PostImageResponseスキーマの作成
+      - _build_post_responseと_build_post_detail_responseに画像情報追加
+      - get_post_by_id, get_feed, get_user_posts, get_posts_by_hashtagで画像をjoinedload
+  - フロントエンド実装:
+    - APIクライアントの型定義更新
+      - PostImageインターフェースの追加
+      - Postインターフェースにimagesフィールド追加
+      - CreatePostDataにimage_urlsフィールド追加
+    - PostFormに画像URL入力機能追加
+      - 画像URL入力フィールド（最大5枚）
+      - 画像プレビュー表示（サムネイル）
+      - 画像削除機能（×ボタン）
+      - Enterキーで画像追加
+      - バリデーション（最大5枚）
+    - PostCardに画像表示機能追加
+      - 画像グリッドレイアウト（1枚: 1列、2枚以上: 2列）
+      - 画像クリックで新しいタブで開く
+      - エラー時のフォールバック画像表示
+      - レスポンシブ対応
+    - 多言語対応（日本語・英語）
+      - 翻訳キーの追加（imagesLabel, imageUrlPlaceholder, addImage, tooManyImages）
+  - 注意事項:
+    - 現在は画像URLを直接入力する形式
+    - Cloud Storage連携による画像アップロード機能は今後実装予定
 
 ### 2025-11-14
 - **next-intl国際化対応の基盤実装**
@@ -866,16 +1173,16 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+4c58a60 - docs: Archive outdated markdown files to docs/archive (2025-11-15)
+02f1d83 - feat: Add follower-only post filter and fix CI/CD tests (2025-11-15)
 b615f74 - feat: Add mobile hamburger menu to Header component (2025-11-15)
-9f68044 - fix: make master data seeding idempotent to preserve user data (2025-11-13)
-6e039d3 - feat: add automatic master data seeding on startup (2025-11-13)
-acabe54 - fix: use raw SQL for notification enum type creation to handle duplicates (2025-11-13)
-3eb567a - fix: improve CI test scripts with better error handling and environment detection (2025-11-13)
-afa18c0 - fix: enable automatic database migrations in all environments (2025-11-13)
-4e04e92 - docs: update PROGRESS.md with completed notification feature (2025-11-12)
-b2d0d10 - fix: add missing dependencies and API client for notifications (2025-11-13)
-e64a53b - feat: implement notification frontend with UI components (2025-11-13)
-4a0ad0c - fix: correct notification model imports and add migration file (2025-11-13)
+25efeae - feat: Expand internationalization support and implement search page (2025-11-15)
+e156d6f - feat: add i18n support to Header component (2025-11-13)
+6a166ca - feat: add home link to header navigation (2025-11-13)
+b2415e7 - feat: add header to profile pages (2025-11-13)
+468161c - fix: correct user ID retrieval from Auth0 tokens in API endpoints (2025-11-13)
+9eaffe6 - feat: display user nickname instead of email in header (2025-11-13)
+daf9215 - feat: add header with notification bell to homepage (2025-11-13)
 ```
 
 ---
@@ -895,4 +1202,4 @@ e64a53b - feat: implement notification frontend with UI components (2025-11-13)
 
 **最終更新日**: 2025-11-15  
 **最終更新者**: Claude Code  
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付）実装完了、多言語対応拡充中
