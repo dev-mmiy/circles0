@@ -2,7 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
 import { getFollowing, type FollowingResponse } from '@/lib/api/follows';
@@ -20,7 +20,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
 
   const currentUserId = user?.sub;
 
-  const loadFollowing = async () => {
+  const loadFollowing = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await getFollowing(userId, 0, 100);
@@ -32,11 +32,11 @@ export default function FollowingList({ userId }: FollowingListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, t]);
 
   useEffect(() => {
     loadFollowing();
-  }, [userId]);
+  }, [loadFollowing]);
 
   const handleUnfollow = (followingId: string) => {
     // Remove from list optimistically

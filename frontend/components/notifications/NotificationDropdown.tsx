@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
@@ -32,7 +32,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   const { unreadCount, setUnreadCount, lastNotification } = useNotificationContext();
 
   // 通知を取得
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setIsLoading(true);
       const response = await getNotifications(0, 20, false);
@@ -44,14 +44,14 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [setUnreadCount]);
 
   // ドロップダウンが開いたら通知を取得
   useEffect(() => {
     if (isOpen) {
       fetchNotifications();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchNotifications]);
 
   // リアルタイム通知を受信したらリストを更新
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
       // 新しい通知をリストの先頭に追加
       fetchNotifications();
     }
-  }, [lastNotification, isOpen]);
+  }, [lastNotification, isOpen, fetchNotifications]);
 
   // 外部クリックでドロップダウンを閉じる
   useEffect(() => {

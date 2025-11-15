@@ -61,7 +61,7 @@ export default function PublicProfilePage() {
     if (userId) {
       fetchProfile();
     }
-  }, [userId, isAuthenticated, getAccessTokenSilently]);
+  }, [userId, isAuthenticated, getAccessTokenSilently, t]);
 
   const handleFollowChange = async (isFollowing: boolean) => {
     if (!followStats) return;

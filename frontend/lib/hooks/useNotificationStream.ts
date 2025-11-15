@@ -50,6 +50,21 @@ export function useNotificationStream(
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
   const shouldReconnectRef = useRef(true);
+  const scheduleReconnectRef = useRef<(() => void) | null>(null);
+
+  const closeConnection = useCallback(() => {
+    if (eventSourceRef.current) {
+      console.log('[SSE] Closing connection');
+      eventSourceRef.current.close();
+      eventSourceRef.current = null;
+      setIsConnected(false);
+    }
+
+    if (retryTimeoutRef.current) {
+      clearTimeout(retryTimeoutRef.current);
+      retryTimeoutRef.current = null;
+    }
+  }, []);
 
   const connect = useCallback(async () => {
     if (!isAuthenticated) {
@@ -107,7 +122,7 @@ export function useNotificationStream(
       eventSource.addEventListener('reconnect', (event) => {
         console.log('[SSE] Server requested reconnection:', event.data);
         closeConnection();
-        scheduleReconnect();
+        scheduleReconnectRef.current?.();
       });
 
       // Error event
@@ -128,7 +143,7 @@ export function useNotificationStream(
         // Connection lost, schedule reconnection
         if (shouldReconnectRef.current) {
           closeConnection();
-          scheduleReconnect();
+          scheduleReconnectRef.current?.();
         }
       };
 
@@ -137,24 +152,10 @@ export function useNotificationStream(
       setError(error instanceof Error ? error : new Error('Connection failed'));
 
       if (shouldReconnectRef.current) {
-        scheduleReconnect();
+        scheduleReconnectRef.current?.();
       }
     }
-  }, [isAuthenticated, getAccessTokenSilently, onNotification]);
-
-  const closeConnection = useCallback(() => {
-    if (eventSourceRef.current) {
-      console.log('[SSE] Closing connection');
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-      setIsConnected(false);
-    }
-
-    if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
-    }
-  }, []);
+  }, [isAuthenticated, getAccessTokenSilently, onNotification, closeConnection]);
 
   const scheduleReconnect = useCallback(() => {
     if (!shouldReconnectRef.current) {
@@ -181,6 +182,9 @@ export function useNotificationStream(
     }, delay);
   }, [connect]);
 
+  // Store scheduleReconnect in ref to avoid circular dependency
+  scheduleReconnectRef.current = scheduleReconnect;
+
   // Initial connection on mount
   useEffect(() => {
     if (isAuthenticated) {
@@ -202,3 +206,4 @@ export function useNotificationStream(
     lastNotification,
   };
 }
+

@@ -5,7 +5,7 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useRouter } from '@/i18n/routing';
 import { useParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import CommentSection from '@/components/CommentSection';
 import PostCard from '@/components/PostCard';
 import { getPost, type PostDetail } from '@/lib/api/posts';
@@ -22,7 +22,7 @@ export default function PostDetailPage() {
   const postId = params.id as string;
 
   // Load post
-  const loadPost = async () => {
+  const loadPost = useCallback(async () => {
     try {
       const accessToken = isAuthenticated
         ? await getAccessTokenSilently()
@@ -37,13 +37,13 @@ export default function PostDetailPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [postId, isAuthenticated, getAccessTokenSilently, t]);
 
   useEffect(() => {
     if (!authLoading) {
       loadPost();
     }
-  }, [postId, authLoading, isAuthenticated]);
+  }, [authLoading, loadPost]);
 
   // Refresh post after comment is added
   const handleCommentAdded = () => {

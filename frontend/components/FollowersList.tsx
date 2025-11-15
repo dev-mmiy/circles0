@@ -2,7 +2,7 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
 import {
@@ -25,7 +25,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
 
   const currentUserId = user?.sub;
 
-  const loadFollowers = async () => {
+  const loadFollowers = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await getFollowers(userId, 0, 100);
@@ -61,11 +61,11 @@ export default function FollowersList({ userId }: FollowersListProps) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId, isAuthenticated, getAccessTokenSilently, t]);
 
   useEffect(() => {
     loadFollowers();
-  }, [userId, isAuthenticated]);
+  }, [loadFollowers]);
 
   const handleFollowChange = (followerId: string, isFollowing: boolean) => {
     setFollowStats((prev) => ({
