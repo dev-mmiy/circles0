@@ -152,7 +152,17 @@ class StorageService:
             )
 
             # Make blob publicly readable
-            blob.make_public()
+            # Note: If uniform bucket-level access is enabled, make_public() will fail.
+            # In that case, the bucket-level IAM policy should allow public access.
+            try:
+                blob.make_public()
+            except GoogleCloudError as e:
+                # If uniform bucket-level access is enabled, skip make_public()
+                # The public URL will still work if bucket-level access is configured
+                if "uniform bucket-level access" in str(e).lower():
+                    logger.info("Uniform bucket-level access is enabled. Skipping make_public().")
+                else:
+                    raise
 
             # Get public URL
             public_url = blob.public_url
