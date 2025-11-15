@@ -299,7 +299,7 @@ jobs:
           --max-instances 10 \
           --allow-unauthenticated \
           --add-cloudsql-instances=circles-202510:asia-northeast1:disease-community-db \
-          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }},AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}"
+          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }},AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }},GCS_BUCKET_NAME=disease-community-images,GCS_PROJECT_ID=${{ env.PROJECT_ID }}"
         
         # IAM Policy設定を別途実行
         echo "🔐 Setting IAM policy..."

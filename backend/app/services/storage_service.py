@@ -12,6 +12,7 @@ try:
     from google.cloud import storage
     from google.cloud.exceptions import GoogleCloudError
     from PIL import Image
+
     GCS_AVAILABLE = True
 except ImportError:
     GCS_AVAILABLE = False
@@ -39,13 +40,15 @@ class StorageService:
         # Get configuration from environment variables
         self.bucket_name = os.getenv("GCS_BUCKET_NAME")
         self.project_id = os.getenv("GCS_PROJECT_ID")
-        
+
         # Initialize GCS client
         if self.bucket_name:
             try:
                 self.client = storage.Client(project=self.project_id)
                 self.bucket = self.client.bucket(self.bucket_name)
-                logger.info(f"GCS Storage service initialized with bucket: {self.bucket_name}")
+                logger.info(
+                    f"GCS Storage service initialized with bucket: {self.bucket_name}"
+                )
             except Exception as e:
                 logger.error(f"Failed to initialize GCS client: {e}")
                 self.client = None
@@ -60,17 +63,21 @@ class StorageService:
         return GCS_AVAILABLE and self.client is not None and self.bucket is not None
 
     def _resize_image(
-        self, image_data: bytes, max_width: int = 1920, max_height: int = 1920, quality: int = 85
+        self,
+        image_data: bytes,
+        max_width: int = 1920,
+        max_height: int = 1920,
+        quality: int = 85,
     ) -> bytes:
         """
         Resize and optimize image.
-        
+
         Args:
             image_data: Original image bytes
             max_width: Maximum width in pixels
             max_height: Maximum height in pixels
             quality: JPEG quality (1-100)
-            
+
         Returns:
             Resized image bytes
         """
@@ -80,17 +87,19 @@ class StorageService:
         try:
             # Open image
             img = Image.open(BytesIO(image_data))
-            
+
             # Convert RGBA to RGB if necessary (for JPEG)
-            if img.mode in ('RGBA', 'LA', 'P'):
-                background = Image.new('RGB', img.size, (255, 255, 255))
-                if img.mode == 'P':
-                    img = img.convert('RGBA')
-                background.paste(img, mask=img.split()[-1] if img.mode == 'RGBA' else None)
+            if img.mode in ("RGBA", "LA", "P"):
+                background = Image.new("RGB", img.size, (255, 255, 255))
+                if img.mode == "P":
+                    img = img.convert("RGBA")
+                background.paste(
+                    img, mask=img.split()[-1] if img.mode == "RGBA" else None
+                )
                 img = background
-            elif img.mode != 'RGB':
-                img = img.convert('RGB')
-            
+            elif img.mode != "RGB":
+                img = img.convert("RGB")
+
             # Calculate new size maintaining aspect ratio
             width, height = img.size
             if width > max_width or height > max_height:
@@ -98,10 +107,10 @@ class StorageService:
                 new_width = int(width * ratio)
                 new_height = int(height * ratio)
                 img = img.resize((new_width, new_height), Image.Resampling.LANCZOS)
-            
+
             # Save to bytes
             output = BytesIO()
-            img.save(output, format='JPEG', quality=quality, optimize=True)
+            img.save(output, format="JPEG", quality=quality, optimize=True)
             return output.getvalue()
         except Exception as e:
             logger.error(f"Failed to resize image: {e}")
@@ -118,7 +127,7 @@ class StorageService:
     ) -> Optional[str]:
         """
         Upload an image to GCS.
-        
+
         Args:
             image_data: Image file bytes
             content_type: MIME type of the image
@@ -126,7 +135,7 @@ class StorageService:
             resize: Whether to resize the image
             max_width: Maximum width for resizing
             max_height: Maximum height for resizing
-            
+
         Returns:
             Public URL of the uploaded image, or None if upload failed
         """
@@ -160,7 +169,9 @@ class StorageService:
                 # If uniform bucket-level access is enabled, skip make_public()
                 # The public URL will still work if bucket-level access is configured
                 if "uniform bucket-level access" in str(e).lower():
-                    logger.info("Uniform bucket-level access is enabled. Skipping make_public().")
+                    logger.info(
+                        "Uniform bucket-level access is enabled. Skipping make_public()."
+                    )
                 else:
                     raise
 
@@ -180,10 +191,10 @@ class StorageService:
     def delete_image(self, image_url: str) -> bool:
         """
         Delete an image from GCS.
-        
+
         Args:
             image_url: Public URL of the image to delete
-            
+
         Returns:
             True if deletion was successful, False otherwise
         """
@@ -198,7 +209,9 @@ class StorageService:
             if "storage.googleapis.com" in image_url:
                 parts = image_url.split("storage.googleapis.com/")
                 if len(parts) == 2:
-                    blob_path = parts[1].split("/", 1)[1] if "/" in parts[1] else parts[1]
+                    blob_path = (
+                        parts[1].split("/", 1)[1] if "/" in parts[1] else parts[1]
+                    )
                 else:
                     logger.error(f"Invalid GCS URL format: {image_url}")
                     return False
@@ -223,4 +236,3 @@ class StorageService:
 
 # Global instance
 storage_service = StorageService()
-
