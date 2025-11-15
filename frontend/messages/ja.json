@@ -235,6 +235,9 @@
     "imagesLabel": "画像",
     "imageUrlPlaceholder": "画像URLを入力（最大5枚）",
     "addImage": "追加",
+    "uploadImage": "画像をアップロード",
+    "uploading": "アップロード中...",
+    "removeImage": "画像を削除",
     "submit": "投稿する",
     "submitting": "投稿中...",
     "errors": {

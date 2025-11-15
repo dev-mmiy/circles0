@@ -235,6 +235,9 @@
     "imagesLabel": "Images",
     "imageUrlPlaceholder": "Enter image URL (max 5 images)",
     "addImage": "Add",
+    "uploadImage": "Upload Image",
+    "uploading": "Uploading...",
+    "removeImage": "Remove Image",
     "submit": "Post",
     "submitting": "Posting...",
     "errors": {

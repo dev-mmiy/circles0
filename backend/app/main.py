@@ -11,6 +11,7 @@ from app.api.auth import router as auth_router
 from app.api.diseases import router as diseases_router
 from app.api.follows import router as follows_router
 from app.api.hashtags import router as hashtags_router
+from app.api.images import router as images_router
 from app.api.notifications import router as notifications_router
 from app.api.notifications_sse import router as notifications_sse_router
 from app.api.posts import router as posts_router
@@ -119,6 +120,7 @@ app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"]
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(hashtags_router, prefix="/api/v1", tags=["hashtags"])
+app.include_router(images_router, prefix="/api/v1", tags=["images"])
 app.include_router(notifications_router, prefix="/api/v1/notifications", tags=["notifications"])
 app.include_router(notifications_sse_router, prefix="/api/v1/notifications", tags=["notifications", "sse"])
 if PUSH_SUBSCRIPTIONS_AVAILABLE:

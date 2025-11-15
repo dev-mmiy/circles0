@@ -1,11 +1,12 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { createPost, type CreatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
+import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
 
 interface PostFormProps {
   onPostCreated?: () => void;
@@ -24,8 +25,11 @@ export default function PostForm({
   );
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [newImageUrl, setNewImageUrl] = useState('');
+  const [imagePreviews, setImagePreviews] = useState<{ url: string; file?: File }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Extract hashtags from content
   const detectedHashtags = useMemo(() => {
@@ -36,6 +40,96 @@ export default function PostForm({
   const detectedMentions = useMemo(() => {
     return extractMentions(content);
   }, [content]);
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles = Array.from(files).slice(0, 5 - imageUrls.length);
+    const validFiles: File[] = [];
+    const previews: { url: string; file: File }[] = [];
+
+    // Validate and create previews
+    for (const file of newFiles) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid file');
+        continue;
+      }
+
+      try {
+        const previewUrl = await createImagePreview(file);
+        validFiles.push(file);
+        previews.push({ url: previewUrl, file });
+      } catch (err) {
+        console.error('Failed to create preview:', err);
+        setError('Failed to create preview for one or more images');
+      }
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Update previews
+    setImagePreviews([...imagePreviews, ...previews]);
+
+    // Upload images
+    setUploadingImages(true);
+    setError(null);
+
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const uploadResponse = await uploadMultipleImages(validFiles, accessToken);
+
+      if (uploadResponse.urls && uploadResponse.urls.length > 0) {
+        // Update image URLs
+        const newImageUrls = [...imageUrls, ...uploadResponse.urls];
+        setImageUrls(newImageUrls);
+        
+        // Update previews with uploaded URLs
+        const newPreviews = [...imagePreviews];
+        uploadResponse.urls.forEach((url, index) => {
+          const previewIndex = imagePreviews.length + index;
+          if (newPreviews[previewIndex]) {
+            newPreviews[previewIndex] = { url, file: validFiles[index] };
+          } else {
+            newPreviews.push({ url, file: validFiles[index] });
+          }
+        });
+        setImagePreviews(newPreviews);
+      }
+
+      if (uploadResponse.errors && uploadResponse.errors.length > 0) {
+        setError(uploadResponse.errors.join(', '));
+      }
+    } catch (err: any) {
+      console.error('Failed to upload images:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to upload images');
+      // Remove failed previews
+      setImagePreviews(imagePreviews.slice(0, imagePreviews.length - validFiles.length));
+    } finally {
+      setUploadingImages(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Handle manual URL input
+  const handleAddImageUrl = () => {
+    if (newImageUrl.trim() && imageUrls.length < 5) {
+      setImageUrls([...imageUrls, newImageUrl.trim()]);
+      setImagePreviews([...imagePreviews, { url: newImageUrl.trim() }]);
+      setNewImageUrl('');
+    }
+  };
+
+  // Remove image
+  const handleRemoveImage = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,6 +167,7 @@ export default function PostForm({
       setContent('');
       setVisibility('public');
       setImageUrls([]);
+      setImagePreviews([]);
       setNewImageUrl('');
 
       // Notify parent component
@@ -135,33 +230,39 @@ export default function PostForm({
           </div>
         )}
 
-        {/* Image URLs */}
+        {/* Images */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('imagesLabel')} ({imageUrls.length}/5)
           </label>
-          {imageUrls.length > 0 && (
-            <div className="mb-2 flex flex-wrap gap-2">
-              {imageUrls.map((url, index) => (
+          
+          {/* Image previews */}
+          {imagePreviews.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {imagePreviews.map((preview, index) => (
                 <div
                   key={index}
                   className="relative inline-block group"
                 >
                   <img
-                    src={url}
+                    src={preview.url}
                     alt={`Image ${index + 1}`}
                     className="w-20 h-20 object-cover rounded-lg border border-gray-300"
                     onError={(e) => {
                       (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="80" height="80"%3E%3Crect width="80" height="80" fill="%23f3f4f6"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%239ca3af" font-size="12"%3EInvalid%3C/text%3E%3C/svg%3E';
                     }}
                   />
+                  {uploadingImages && preview.file && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => {
-                      setImageUrls(imageUrls.filter((_, i) => i !== index));
-                    }}
-                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
-                    disabled={isSubmitting}
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-red-600"
+                    disabled={isSubmitting || uploadingImages}
+                    title={t('removeImage')}
                   >
                     ×
                   </button>
@@ -169,38 +270,71 @@ export default function PostForm({
               ))}
             </div>
           )}
+
+          {/* Upload options */}
           {imageUrls.length < 5 && (
-            <div className="flex gap-2">
-              <input
-                type="url"
-                value={newImageUrl}
-                onChange={(e) => setNewImageUrl(e.target.value)}
-                placeholder={t('imageUrlPlaceholder')}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isSubmitting}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && newImageUrl.trim()) {
-                    e.preventDefault();
-                    if (imageUrls.length < 5) {
-                      setImageUrls([...imageUrls, newImageUrl.trim()]);
-                      setNewImageUrl('');
+            <div className="space-y-2">
+              {/* File upload */}
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleFileSelect}
+                  disabled={isSubmitting || uploadingImages || imageUrls.length >= 5}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                    isSubmitting || uploadingImages || imageUrls.length >= 5
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {uploadingImages ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                      {t('uploading')}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      {t('uploadImage')}
+                    </>
+                  )}
+                </label>
+              </div>
+
+              {/* Manual URL input */}
+              <div className="flex gap-2">
+                <input
+                  type="url"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  placeholder={t('imageUrlPlaceholder')}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isSubmitting || uploadingImages}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && newImageUrl.trim()) {
+                      e.preventDefault();
+                      handleAddImageUrl();
                     }
-                  }
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  if (newImageUrl.trim() && imageUrls.length < 5) {
-                    setImageUrls([...imageUrls, newImageUrl.trim()]);
-                    setNewImageUrl('');
-                  }
-                }}
-                disabled={isSubmitting || !newImageUrl.trim() || imageUrls.length >= 5}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {t('addImage')}
-              </button>
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  disabled={isSubmitting || uploadingImages || !newImageUrl.trim() || imageUrls.length >= 5}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {t('addImage')}
+                </button>
+              </div>
             </div>
           )}
         </div>

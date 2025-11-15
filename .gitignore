@@ -119,3 +119,8 @@ temp/
 
 # GCP
 .gcloudignore
+
+# Service account keys (GCS, etc.)
+*service-account*.json
+secrets/
+*.key.json
