@@ -34,6 +34,7 @@ from app.middleware.market import MarketMiddleware
 
 # Load environment variables from .env if present (ignore if file doesn't exist)
 import warnings
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     try:

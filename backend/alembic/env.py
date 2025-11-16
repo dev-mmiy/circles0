@@ -8,6 +8,7 @@ from alembic import context
 
 # Load environment variables from .env file (ignore if file doesn't exist)
 import warnings
+
 with warnings.catch_warnings():
     warnings.simplefilter("ignore")
     try:
