@@ -6,8 +6,8 @@ from dotenv import load_dotenv
 
 from alembic import context
 
-# Load environment variables from .env file
-load_dotenv()
+# Load environment variables from .env file (ignore if file doesn't exist)
+load_dotenv(override=False)
 
 # add your model's MetaData object here
 # for 'autogenerate' support
