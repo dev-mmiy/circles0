@@ -44,9 +44,7 @@ def upgrade() -> None:
             ondelete="CASCADE",
         ),
         sa.PrimaryKeyConstraint("id", name="pk_blocks"),
-        sa.UniqueConstraint(
-            "blocker_id", "blocked_id", name="uq_blocker_blocked"
-        ),
+        sa.UniqueConstraint("blocker_id", "blocked_id", name="uq_blocker_blocked"),
     )
 
     # Create indexes for better query performance
@@ -68,4 +66,3 @@ def downgrade() -> None:
 
     # Drop blocks table
     op.drop_table("blocks")
-

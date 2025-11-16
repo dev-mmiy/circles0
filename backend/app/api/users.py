@@ -228,7 +228,9 @@ async def search_users(
 
     # Filter by disease IDs
     if disease_ids:
-        disease_id_list = [int(did.strip()) for did in disease_ids.split(",") if did.strip()]
+        disease_id_list = [
+            int(did.strip()) for did in disease_ids.split(",") if did.strip()
+        ]
         if disease_id_list:
             from app.models.disease import UserDisease
 

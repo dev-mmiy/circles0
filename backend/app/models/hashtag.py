@@ -63,4 +63,3 @@ class PostHashtag(Base):
     __table_args__ = (
         UniqueConstraint("post_id", "hashtag_id", name="uq_post_hashtag"),
     )
-

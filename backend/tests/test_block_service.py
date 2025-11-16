@@ -150,13 +150,17 @@ class TestBlockService:
         db_session.commit()
 
         # Initially not blocked
-        assert BlockService.is_blocked_by(db_session, test_user.id, other_user.id) is False
+        assert (
+            BlockService.is_blocked_by(db_session, test_user.id, other_user.id) is False
+        )
 
         # Block user (other_user blocks test_user)
         BlockService.block_user(db_session, other_user.id, test_user.id)
 
         # Now should be blocked
-        assert BlockService.is_blocked_by(db_session, test_user.id, other_user.id) is True
+        assert (
+            BlockService.is_blocked_by(db_session, test_user.id, other_user.id) is True
+        )
 
     def test_are_blocked(self, db_session: Session, test_user: User):
         """Test checking if two users have blocked each other."""
@@ -172,7 +176,9 @@ class TestBlockService:
         db_session.commit()
 
         # Initially not blocked
-        assert BlockService.are_blocked(db_session, test_user.id, other_user.id) is False
+        assert (
+            BlockService.are_blocked(db_session, test_user.id, other_user.id) is False
+        )
 
         # Block in one direction
         BlockService.block_user(db_session, test_user.id, other_user.id)
@@ -242,5 +248,3 @@ class TestBlockService:
 
         # Should have 2 blocked users
         assert BlockService.get_blocked_users_count(db_session, test_user.id) == 2
-
-

@@ -55,7 +55,7 @@ def setup_test_db():
 def db_session(setup_test_db) -> Session:
     """
     Create a fresh database session for each test.
-    
+
     Tables are created once per session, but data is cleared after each test.
     This is much faster than dropping/recreating tables for every test.
     """
@@ -67,9 +67,9 @@ def db_session(setup_test_db) -> Session:
         for table in reversed(Base.metadata.sorted_tables):
             session.execute(delete(table))
         session.commit()
-        
+
         yield session
-        
+
         # Clear all data after test
         session.rollback()  # Rollback any uncommitted changes
         for table in reversed(Base.metadata.sorted_tables):
@@ -94,9 +94,13 @@ def reset_db():
 def mock_notification_broadcast():
     """Mock notification broadcasting to avoid async issues in tests."""
     # Mock asyncio.create_task to prevent async issues in tests
-    with patch("app.services.notification_service.asyncio.create_task") as mock_create_task:
+    with patch(
+        "app.services.notification_service.asyncio.create_task"
+    ) as mock_create_task:
         # Return a mock task that does nothing
-        mock_task = type("MockTask", (), {"done": lambda: True, "cancel": lambda: None})()
+        mock_task = type(
+            "MockTask", (), {"done": lambda: True, "cancel": lambda: None}
+        )()
         mock_create_task.return_value = mock_task
         yield mock_create_task
 

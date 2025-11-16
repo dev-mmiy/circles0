@@ -45,9 +45,7 @@ def upgrade() -> None:
         sa.PrimaryKeyConstraint("id", name=op.f("pk_posts")),
     )
     op.create_index(op.f("ix_posts_user_id"), "posts", ["user_id"], unique=False)
-    op.create_index(
-        op.f("ix_posts_created_at"), "posts", ["created_at"], unique=False
-    )
+    op.create_index(op.f("ix_posts_created_at"), "posts", ["created_at"], unique=False)
 
     # Create post_likes table
     op.create_table(

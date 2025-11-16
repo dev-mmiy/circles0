@@ -119,9 +119,7 @@ def _build_conversation_response(
         last_message = _build_message_response(db, last_message_data, current_user_id)
 
     # Get unread count
-    unread_count = MessageService.get_unread_count(
-        db, conversation.id, current_user_id
-    )
+    unread_count = MessageService.get_unread_count(db, conversation.id, current_user_id)
 
     return ConversationResponse(
         id=conversation.id,
@@ -299,9 +297,7 @@ async def get_messages(
     total = len(messages)  # TODO: Get actual total count
 
     return MessageListResponse(
-        messages=[
-            _build_message_response(db, msg, user_id) for msg in messages
-        ],
+        messages=[_build_message_response(db, msg, user_id) for msg in messages],
         total=total,
         skip=skip,
         limit=limit,
@@ -366,4 +362,3 @@ async def delete_message(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found or not accessible",
         )
-

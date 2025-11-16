@@ -102,7 +102,9 @@ async def event_generator(user_id: UUID, request: Request):
         raise
 
     except Exception as e:
-        logger.error(f"Error in message SSE stream for user {user_id}: {e}", exc_info=True)
+        logger.error(
+            f"Error in message SSE stream for user {user_id}: {e}", exc_info=True
+        )
 
     finally:
         await broadcaster.disconnect(user_id, queue)
@@ -145,4 +147,3 @@ async def message_stream(
             "X-Accel-Buffering": "no",  # Disable nginx buffering
         },
     )
-

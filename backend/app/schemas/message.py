@@ -13,7 +13,9 @@ class MessageCreate(BaseModel):
     """Schema for creating a new message."""
 
     recipient_id: UUID = Field(..., description="ID of the message recipient")
-    content: str = Field(..., min_length=1, max_length=5000, description="Message text content")
+    content: str = Field(
+        ..., min_length=1, max_length=5000, description="Message text content"
+    )
     image_url: Optional[str] = Field(
         None, max_length=500, description="URL of an image attached to the message"
     )
@@ -98,7 +100,8 @@ class MarkReadRequest(BaseModel):
     """Schema for marking messages as read."""
 
     message_ids: Optional[List[UUID]] = Field(
-        None, description="Specific message IDs to mark as read. If None, marks all unread messages in the conversation."
+        None,
+        description="Specific message IDs to mark as read. If None, marks all unread messages in the conversation.",
     )
 
 
@@ -107,4 +110,3 @@ class MarkReadResponse(BaseModel):
 
     marked_count: int
     message_ids: List[UUID]
-

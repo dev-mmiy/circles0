@@ -128,13 +128,17 @@ class TestFollowService:
         db_session.commit()
 
         # Initially not following
-        assert FollowService.is_following(db_session, test_user.id, other_user.id) is False
+        assert (
+            FollowService.is_following(db_session, test_user.id, other_user.id) is False
+        )
 
         # Follow user
         FollowService.follow_user(db_session, test_user.id, other_user.id)
 
         # Now should be following
-        assert FollowService.is_following(db_session, test_user.id, other_user.id) is True
+        assert (
+            FollowService.is_following(db_session, test_user.id, other_user.id) is True
+        )
 
     def test_get_followers(self, db_session: Session, test_user: User):
         """Test getting list of followers."""
@@ -307,5 +311,3 @@ class TestFollowService:
         mutual_follows = FollowService.get_mutual_follows(db_session, test_user.id)
 
         assert mutual_user.id in mutual_follows
-
-

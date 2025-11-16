@@ -36,22 +36,22 @@ def generate_vapid_keys():
     )
 
     # Convert to base64 (URL-safe for public key)
-    private_key_base64 = base64.b64encode(private_key_pem).decode('utf-8')
-    public_key_base64 = base64.urlsafe_b64encode(public_key_der).decode('utf-8').rstrip('=')
+    private_key_base64 = base64.b64encode(private_key_pem).decode("utf-8")
+    public_key_base64 = (
+        base64.urlsafe_b64encode(public_key_der).decode("utf-8").rstrip("=")
+    )
 
     return private_key_base64, public_key_base64
 
 
-if __name__ == '__main__':
-    print('Generating VAPID keys for Web Push API...\n')
+if __name__ == "__main__":
+    print("Generating VAPID keys for Web Push API...\n")
 
     private_key, public_key = generate_vapid_keys()
 
-    print('VAPID Keys Generated Successfully!\n')
-    print('Add these to your .env file:\n')
+    print("VAPID Keys Generated Successfully!\n")
+    print("Add these to your .env file:\n")
     print(f'VAPID_PRIVATE_KEY="{private_key}"')
     print(f'VAPID_PUBLIC_KEY="{public_key}"')
     print('VAPID_EMAIL="mailto:admin@yourdomain.com"\n')
     print('Note: Replace "admin@yourdomain.com" with your actual email address.')
-
-

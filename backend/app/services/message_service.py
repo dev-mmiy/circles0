@@ -119,7 +119,7 @@ class MessageService:
         conversation.last_message_at = datetime.utcnow()
         conversation.updated_at = datetime.utcnow()
         db.commit()
-        
+
         # Load sender information for broadcast
         db.refresh(message)
         message = (
@@ -139,8 +139,11 @@ class MessageService:
         # Broadcast message to both sender and recipient via SSE
         # Run in background to not block the response
         import asyncio
+
         asyncio.create_task(
-            MessageService._broadcast_message(message, sender_id, message_data.recipient_id)
+            MessageService._broadcast_message(
+                message, sender_id, message_data.recipient_id
+            )
         )
 
         return message
@@ -312,7 +315,9 @@ class MessageService:
             List of messages
         """
         # Verify user is a participant
-        conversation = MessageService.get_conversation_by_id(db, conversation_id, user_id)
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
         if not conversation:
             return []
 
@@ -355,7 +360,9 @@ class MessageService:
             Number of messages marked as read
         """
         # Verify user is a participant
-        conversation = MessageService.get_conversation_by_id(db, conversation_id, reader_id)
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, reader_id
+        )
         if not conversation:
             return 0
 
@@ -419,7 +426,9 @@ class MessageService:
         Returns:
             True if deleted, False if not found or user is not a participant
         """
-        conversation = MessageService.get_conversation_by_id(db, conversation_id, user_id)
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
         if not conversation:
             return False
 
@@ -476,7 +485,9 @@ class MessageService:
             Number of unread messages
         """
         # Verify user is a participant
-        conversation = MessageService.get_conversation_by_id(db, conversation_id, user_id)
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
         if not conversation:
             return 0
 
@@ -507,4 +518,3 @@ class MessageService:
         }
 
         return len(all_message_ids) - len(read_message_ids)
-

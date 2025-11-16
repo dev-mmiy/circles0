@@ -72,11 +72,11 @@ def run_migrations_online() -> None:
     database_url = config.get_main_option("sqlalchemy.url")
     if not database_url:
         raise ValueError("DATABASE_URL environment variable is not set")
-    
+
     # Create engine configuration
     configuration = config.get_section(config.config_ini_section, {})
     configuration["sqlalchemy.url"] = database_url
-    
+
     connectable = engine_from_config(
         configuration,
         prefix="sqlalchemy.",

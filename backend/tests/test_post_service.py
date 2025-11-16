@@ -37,7 +37,10 @@ class TestPostService:
         post_data = PostCreate(
             content="Test post with images",
             visibility="public",
-            image_urls=["https://example.com/image1.jpg", "https://example.com/image2.jpg"],
+            image_urls=[
+                "https://example.com/image1.jpg",
+                "https://example.com/image2.jpg",
+            ],
         )
 
         post = PostService.create_post(db_session, test_user.id, post_data)
@@ -68,7 +71,9 @@ class TestPostService:
         assert retrieved_post.id == post.id
         assert retrieved_post.content == "Public post"
 
-    def test_get_post_by_id_private_as_owner(self, db_session: Session, test_user: User):
+    def test_get_post_by_id_private_as_owner(
+        self, db_session: Session, test_user: User
+    ):
         """Test getting a private post by ID as the owner."""
         post = Post(
             user_id=test_user.id,
@@ -86,7 +91,9 @@ class TestPostService:
         assert retrieved_post is not None
         assert retrieved_post.id == post.id
 
-    def test_get_post_by_id_private_as_other_user(self, db_session: Session, test_user: User):
+    def test_get_post_by_id_private_as_other_user(
+        self, db_session: Session, test_user: User
+    ):
         """Test getting a private post by ID as another user."""
         other_user = User(
             id=uuid4(),
@@ -134,7 +141,9 @@ class TestPostService:
 
         update_data = PostUpdate(content="Updated content", visibility="followers_only")
 
-        updated_post = PostService.update_post(db_session, post.id, test_user.id, update_data)
+        updated_post = PostService.update_post(
+            db_session, post.id, test_user.id, update_data
+        )
 
         assert updated_post.content == "Updated content"
         assert updated_post.visibility == "followers_only"
@@ -172,7 +181,7 @@ class TestPostService:
     def test_update_post_delete_images(self, db_session: Session, test_user: User):
         """Test updating a post to delete all images."""
         print("\n[TEST] test_update_post_delete_images: Starting...")
-        
+
         # Create post with images
         print("[TEST] Creating post with images...")
         post = Post(
@@ -201,7 +210,9 @@ class TestPostService:
 
         # Verify images exist
         print("[TEST] Verifying images exist before update...")
-        images_before = db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        images_before = (
+            db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        )
         assert len(images_before) == 2
         print(f"[TEST] ✓ Found {len(images_before)} images before update")
 
@@ -209,22 +220,28 @@ class TestPostService:
         print("[TEST] Updating post with empty image_urls to delete all images...")
         update_data = PostUpdate(image_urls=[])
 
-        updated_post = PostService.update_post(db_session, post.id, test_user.id, update_data)
+        updated_post = PostService.update_post(
+            db_session, post.id, test_user.id, update_data
+        )
 
         assert updated_post is not None
         print("[TEST] ✓ Post updated successfully")
 
         # Verify all images are deleted
         print("[TEST] Verifying all images are deleted...")
-        images_after = db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        images_after = (
+            db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        )
         assert len(images_after) == 0
-        print(f"[TEST] ✓ All images deleted successfully (found {len(images_after)} images)")
+        print(
+            f"[TEST] ✓ All images deleted successfully (found {len(images_after)} images)"
+        )
         print("[TEST] test_update_post_delete_images: PASSED ✓\n")
 
     def test_update_post_replace_images(self, db_session: Session, test_user: User):
         """Test updating a post to replace images with new ones."""
         print("\n[TEST] test_update_post_replace_images: Starting...")
-        
+
         # Create post with images
         print("[TEST] Creating post with original images...")
         post = Post(
@@ -254,17 +271,28 @@ class TestPostService:
         # Update post with new images
         print("[TEST] Replacing images with 3 new images...")
         update_data = PostUpdate(
-            image_urls=["https://example.com/new1.jpg", "https://example.com/new2.jpg", "https://example.com/new3.jpg"]
+            image_urls=[
+                "https://example.com/new1.jpg",
+                "https://example.com/new2.jpg",
+                "https://example.com/new3.jpg",
+            ]
         )
 
-        updated_post = PostService.update_post(db_session, post.id, test_user.id, update_data)
+        updated_post = PostService.update_post(
+            db_session, post.id, test_user.id, update_data
+        )
 
         assert updated_post is not None
         print("[TEST] ✓ Post updated successfully")
 
         # Verify old images are deleted and new images are added
         print("[TEST] Verifying old images are deleted and new images are added...")
-        images_after = db_session.query(PostImage).filter(PostImage.post_id == post.id).order_by(PostImage.display_order).all()
+        images_after = (
+            db_session.query(PostImage)
+            .filter(PostImage.post_id == post.id)
+            .order_by(PostImage.display_order)
+            .all()
+        )
         assert len(images_after) == 3
         assert images_after[0].image_url == "https://example.com/new1.jpg"
         assert images_after[0].display_order == 0
@@ -275,10 +303,14 @@ class TestPostService:
         print(f"[TEST] ✓ Images replaced successfully ({len(images_after)} new images)")
         print("[TEST] test_update_post_replace_images: PASSED ✓\n")
 
-    def test_update_post_add_images_to_post_without_images(self, db_session: Session, test_user: User):
+    def test_update_post_add_images_to_post_without_images(
+        self, db_session: Session, test_user: User
+    ):
         """Test adding images to a post that previously had no images."""
-        print("\n[TEST] test_update_post_add_images_to_post_without_images: Starting...")
-        
+        print(
+            "\n[TEST] test_update_post_add_images_to_post_without_images: Starting..."
+        )
+
         # Create post without images
         print("[TEST] Creating post without images...")
         post = Post(
@@ -292,7 +324,9 @@ class TestPostService:
 
         # Verify no images exist
         print("[TEST] Verifying post has no images...")
-        images_before = db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        images_before = (
+            db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        )
         assert len(images_before) == 0
         print(f"[TEST] ✓ Post has no images ({len(images_before)} images)")
 
@@ -302,14 +336,21 @@ class TestPostService:
             image_urls=["https://example.com/new1.jpg", "https://example.com/new2.jpg"]
         )
 
-        updated_post = PostService.update_post(db_session, post.id, test_user.id, update_data)
+        updated_post = PostService.update_post(
+            db_session, post.id, test_user.id, update_data
+        )
 
         assert updated_post is not None
         print("[TEST] ✓ Post updated successfully")
 
         # Verify images are added
         print("[TEST] Verifying images are added...")
-        images_after = db_session.query(PostImage).filter(PostImage.post_id == post.id).order_by(PostImage.display_order).all()
+        images_after = (
+            db_session.query(PostImage)
+            .filter(PostImage.post_id == post.id)
+            .order_by(PostImage.display_order)
+            .all()
+        )
         assert len(images_after) == 2
         assert images_after[0].image_url == "https://example.com/new1.jpg"
         assert images_after[1].image_url == "https://example.com/new2.jpg"
@@ -392,7 +433,9 @@ class TestPostService:
 
         comment_data = PostCommentCreate(post_id=post.id, content="Test comment")
 
-        comment = PostService.create_comment(db_session, post.id, test_user.id, comment_data)
+        comment = PostService.create_comment(
+            db_session, post.id, test_user.id, comment_data
+        )
 
         assert comment is not None
         assert comment.post_id == post.id
@@ -512,5 +555,3 @@ def test_user(db_session: Session) -> User:
     db_session.commit()
     db_session.refresh(user)
     return user
-
-

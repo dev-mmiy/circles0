@@ -142,20 +142,26 @@ async def search_diseases(
     # Filter by ICD-10 code (supports range search like "E11-E15")
     if icd_code:
         # Check if it's a range format (e.g., "E11-E15")
-        if '-' in icd_code and not icd_code.startswith('-') and not icd_code.endswith('-'):
-            parts = icd_code.split('-', 1)
+        if (
+            "-" in icd_code
+            and not icd_code.startswith("-")
+            and not icd_code.endswith("-")
+        ):
+            parts = icd_code.split("-", 1)
             if len(parts) == 2:
                 code_from = parts[0].strip()
                 code_to = parts[1].strip()
                 # Normalize codes (remove dots, uppercase)
-                code_from_normalized = code_from.replace('.', '').upper()
-                code_to_normalized = code_to.replace('.', '').upper()
-                
+                code_from_normalized = code_from.replace(".", "").upper()
+                code_to_normalized = code_to.replace(".", "").upper()
+
                 # For range search, we need to compare codes lexicographically
                 # This works for ICD-10 codes which follow a pattern
                 query = query.filter(
-                    func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized,
-                    func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+                    func.replace(func.upper(Disease.disease_code), ".", "")
+                    >= code_from_normalized,
+                    func.replace(func.upper(Disease.disease_code), ".", "")
+                    <= code_to_normalized,
                 )
             else:
                 # Invalid range format, fall back to partial match
@@ -163,25 +169,29 @@ async def search_diseases(
         else:
             # Regular partial match
             query = query.filter(Disease.disease_code.ilike(f"%{icd_code}%"))
-    
+
     # Filter by ICD-10 code range (using separate from/to parameters)
     if icd_code_from or icd_code_to:
         if icd_code_from and icd_code_to:
-            code_from_normalized = icd_code_from.replace('.', '').upper()
-            code_to_normalized = icd_code_to.replace('.', '').upper()
+            code_from_normalized = icd_code_from.replace(".", "").upper()
+            code_to_normalized = icd_code_to.replace(".", "").upper()
             query = query.filter(
-                func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized,
-                func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+                func.replace(func.upper(Disease.disease_code), ".", "")
+                >= code_from_normalized,
+                func.replace(func.upper(Disease.disease_code), ".", "")
+                <= code_to_normalized,
             )
         elif icd_code_from:
-            code_from_normalized = icd_code_from.replace('.', '').upper()
+            code_from_normalized = icd_code_from.replace(".", "").upper()
             query = query.filter(
-                func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized
+                func.replace(func.upper(Disease.disease_code), ".", "")
+                >= code_from_normalized
             )
         elif icd_code_to:
-            code_to_normalized = icd_code_to.replace('.', '').upper()
+            code_to_normalized = icd_code_to.replace(".", "").upper()
             query = query.filter(
-                func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+                func.replace(func.upper(Disease.disease_code), ".", "")
+                <= code_to_normalized
             )
 
     # Filter by category IDs
@@ -243,28 +253,28 @@ async def autocomplete_icd_codes(
 ):
     """
     Autocomplete ICD-10 codes.
-    
+
     Returns a list of unique ICD-10 codes matching the query prefix.
     Useful for providing autocomplete suggestions in the UI.
     """
     from sqlalchemy import distinct, func
-    
+
     # Search for codes that start with the query (case-insensitive)
     codes = (
         db.query(distinct(Disease.disease_code))
         .filter(
             Disease.is_active == True,
             Disease.disease_code.isnot(None),
-            func.upper(Disease.disease_code).like(f"{q.upper()}%")
+            func.upper(Disease.disease_code).like(f"{q.upper()}%"),
         )
         .order_by(Disease.disease_code)
         .limit(limit)
         .all()
     )
-    
+
     # Extract code strings from tuples
     result = [code[0] for code in codes if code[0]]
-    
+
     return {"codes": result}
 
 

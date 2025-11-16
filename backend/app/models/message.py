@@ -22,7 +22,9 @@ class Conversation(Base):
 
     __tablename__ = "conversations"
 
-    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
+    id = Column(
+        PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
+    )
     user1_id = Column(
         PostgreSQLUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -59,8 +61,12 @@ class Conversation(Base):
     )
 
     # Relationships
-    user1 = relationship("User", foreign_keys=[user1_id], back_populates="conversations_as_user1")
-    user2 = relationship("User", foreign_keys=[user2_id], back_populates="conversations_as_user2")
+    user1 = relationship(
+        "User", foreign_keys=[user1_id], back_populates="conversations_as_user1"
+    )
+    user2 = relationship(
+        "User", foreign_keys=[user2_id], back_populates="conversations_as_user2"
+    )
     messages = relationship(
         "Message",
         back_populates="conversation",
@@ -87,7 +93,9 @@ class Message(Base):
 
     __tablename__ = "messages"
 
-    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True)
+    id = Column(
+        PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
+    )
     conversation_id = Column(
         PostgreSQLUUID(as_uuid=True),
         ForeignKey("conversations.id", ondelete="CASCADE"),
@@ -114,7 +122,9 @@ class Message(Base):
 
     # Relationships
     conversation = relationship("Conversation", back_populates="messages")
-    sender = relationship("User", foreign_keys=[sender_id], back_populates="messages_sent")
+    sender = relationship(
+        "User", foreign_keys=[sender_id], back_populates="messages_sent"
+    )
     reads = relationship(
         "MessageRead",
         back_populates="message",
@@ -155,4 +165,3 @@ class MessageRead(Base):
 
     def __repr__(self):
         return f"<MessageRead {self.id} - message {self.message_id} read by {self.reader_id}>"
-

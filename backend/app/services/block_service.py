@@ -21,9 +21,7 @@ class BlockService:
     """Service for block/unblock operations."""
 
     @staticmethod
-    def block_user(
-        db: Session, blocker_id: UUID, blocked_id: UUID
-    ) -> Optional[Block]:
+    def block_user(db: Session, blocker_id: UUID, blocked_id: UUID) -> Optional[Block]:
         """
         Create a block relationship.
 
@@ -200,9 +198,7 @@ class BlockService:
             raise
 
     @staticmethod
-    def is_blocked_by(
-        db: Session, user_id: UUID, other_user_id: UUID
-    ) -> bool:
+    def is_blocked_by(db: Session, user_id: UUID, other_user_id: UUID) -> bool:
         """
         Check if user_id is blocked by other_user_id.
 
@@ -230,18 +226,15 @@ class BlockService:
             raise
 
     @staticmethod
-    def are_blocked(
-        db: Session, user1_id: UUID, user2_id: UUID
-    ) -> bool:
+    def are_blocked(db: Session, user1_id: UUID, user2_id: UUID) -> bool:
         """
         Check if two users have blocked each other (either direction).
 
         Returns True if either user has blocked the other.
         """
-        return (
-            BlockService.is_blocked(db, user1_id, user2_id)
-            or BlockService.is_blocked(db, user2_id, user1_id)
-        )
+        return BlockService.is_blocked(
+            db, user1_id, user2_id
+        ) or BlockService.is_blocked(db, user2_id, user1_id)
 
     @staticmethod
     def get_blocked_users(
@@ -289,4 +282,3 @@ class BlockService:
                 )
                 return 0
             raise
-

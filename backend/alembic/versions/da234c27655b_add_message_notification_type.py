@@ -5,6 +5,7 @@ Revises: add_message_tables_20251115
 Create Date: 2025-11-16 20:47:39.642134
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
@@ -12,17 +13,19 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'da234c27655b'
-down_revision: Union[str, None] = 'add_message_tables_20251115'
+revision: str = "da234c27655b"
+down_revision: Union[str, None] = "add_message_tables_20251115"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
     # Add 'message' value to notificationtype enum
-    op.execute("""
+    op.execute(
+        """
         ALTER TYPE notificationtype ADD VALUE IF NOT EXISTS 'message';
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

@@ -350,7 +350,9 @@ class TestPostsAPI:
 
         # Verify images exist
         print("[TEST] Verifying images exist before update...")
-        images_before = db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        images_before = (
+            db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        )
         assert len(images_before) == 2
         print(f"[TEST] ✓ Found {len(images_before)} images before update")
 
@@ -370,7 +372,7 @@ class TestPostsAPI:
         assert response.status_code == 200
         data = response.json()
         print(f"[TEST] ✓ API call successful (status: {response.status_code})")
-        
+
         # Verify images are deleted in response
         print("[TEST] Verifying images are deleted in API response...")
         assert "images" in data
@@ -379,7 +381,9 @@ class TestPostsAPI:
 
         # Verify images are deleted in database
         print("[TEST] Verifying images are deleted in database...")
-        images_after = db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        images_after = (
+            db_session.query(PostImage).filter(PostImage.post_id == post.id).all()
+        )
         assert len(images_after) == 0
         print(f"[TEST] ✓ Database shows {len(images_after)} images")
         print("[TEST] test_update_post_delete_images (API): PASSED ✓\n")
@@ -425,7 +429,7 @@ class TestPostsAPI:
             "image_urls": [
                 "https://example.com/new1.jpg",
                 "https://example.com/new2.jpg",
-                "https://example.com/new3.jpg"
+                "https://example.com/new3.jpg",
             ],
         }
 
@@ -435,7 +439,7 @@ class TestPostsAPI:
         assert response.status_code == 200
         data = response.json()
         print(f"[TEST] ✓ API call successful (status: {response.status_code})")
-        
+
         # Verify new images are in response
         print("[TEST] Verifying new images in API response...")
         assert "images" in data
@@ -447,7 +451,12 @@ class TestPostsAPI:
 
         # Verify old images are deleted and new images are added in database
         print("[TEST] Verifying images are replaced in database...")
-        images_after = db_session.query(PostImage).filter(PostImage.post_id == post.id).order_by(PostImage.display_order).all()
+        images_after = (
+            db_session.query(PostImage)
+            .filter(PostImage.post_id == post.id)
+            .order_by(PostImage.display_order)
+            .all()
+        )
         assert len(images_after) == 3
         assert images_after[0].image_url == "https://example.com/new1.jpg"
         assert images_after[1].image_url == "https://example.com/new2.jpg"
@@ -539,4 +548,3 @@ class TestPostsAPI:
         assert data["post_id"] == str(post.id)
         assert data["user_id"] == str(test_user.id)
         assert data["content"] == "Test comment"
-

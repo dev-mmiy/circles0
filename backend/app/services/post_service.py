@@ -135,7 +135,7 @@ class PostService:
         # Filter out posts from blocked users if current_user_id exists and viewing another user's posts
         if current_user_id and current_user_id != user_id:
             from app.services.block_service import BlockService
-            
+
             filtered_posts = []
             for post in posts:
                 # Check if current user has blocked the post author or vice versa
@@ -263,7 +263,7 @@ class PostService:
         # Filter out posts from blocked users if current_user_id exists
         if current_user_id:
             from app.services.block_service import BlockService
-            
+
             filtered_posts = []
             for post in posts:
                 # Check if current user has blocked the post author or vice versa
@@ -365,7 +365,7 @@ class PostService:
         # Filter out posts from blocked users if current_user_id exists
         if current_user_id:
             from app.services.block_service import BlockService
-            
+
             filtered_posts = []
             for post in posts:
                 # Check if current user has blocked the post author or vice versa

@@ -152,7 +152,9 @@ async def check_block_status(
 )
 async def get_blocked_users(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of records to return"
+    ),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -205,5 +207,3 @@ async def get_block_stats(
     blocked_count = BlockService.get_blocked_users_count(db, current_user_id)
 
     return BlockStats(blocked_count=blocked_count)
-
-

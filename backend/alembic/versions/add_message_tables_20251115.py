@@ -153,4 +153,3 @@ def downgrade() -> None:
     op.drop_table("message_reads")
     op.drop_table("messages")
     op.drop_table("conversations")
-
