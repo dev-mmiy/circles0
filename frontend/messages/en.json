@@ -766,7 +766,13 @@
       "following": "Following"
     },
     "registeredDiseases": "Registered Diseases",
-    "postsComingSoon": "User posts list will be implemented in the future",
+    "loadingPosts": "Loading posts...",
+    "noPosts": "No posts",
+    "noPostsMessage": "This user hasn't posted anything yet",
+    "loadMore": "Load more",
+    "loadingMore": "Loading...",
+    "errorLoadingPosts": "Failed to load posts",
+    "retry": "Retry",
     "backToHome": "← Back to Home"
   },
   "postDetailPage": {

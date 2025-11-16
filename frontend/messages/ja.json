@@ -766,7 +766,13 @@
       "following": "フォロー中"
     },
     "registeredDiseases": "登録疾患",
-    "postsComingSoon": "ユーザーの投稿一覧は今後実装予定です",
+    "loadingPosts": "投稿を読み込み中...",
+    "noPosts": "投稿がありません",
+    "noPostsMessage": "このユーザーはまだ投稿していません",
+    "loadMore": "もっと見る",
+    "loadingMore": "読み込み中...",
+    "errorLoadingPosts": "投稿の読み込みに失敗しました",
+    "retry": "再試行",
     "backToHome": "← ホームに戻る"
   },
   "postDetailPage": {

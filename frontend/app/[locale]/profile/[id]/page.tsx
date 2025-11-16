@@ -1,17 +1,19 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
 import { getFollowStats, type FollowStats } from '@/lib/api/follows';
+import { getUserPosts, type Post } from '@/lib/api/posts';
 import FollowButton from '@/components/FollowButton';
 import BlockButton from '@/components/BlockButton';
 import FollowersList from '@/components/FollowersList';
 import FollowingList from '@/components/FollowingList';
+import PostCard from '@/components/PostCard';
 import { useUser } from '@/contexts/UserContext';
 
 export default function PublicProfilePage() {
@@ -26,6 +28,16 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'followers' | 'following'>('posts');
+  
+  // Posts state
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoadingPosts, setIsLoadingPosts] = useState(false);
+  const [postsError, setPostsError] = useState<string | null>(null);
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  const POSTS_PER_PAGE = 20;
 
   // Compare UUIDs to determine if this is the current user's profile
   const isOwnProfile = currentUser?.id === profile?.id;
@@ -84,6 +96,75 @@ export default function PublicProfilePage() {
         is_followed_by: false,
       });
     }
+  };
+
+  // Load user posts
+  const loadPosts = useCallback(async (reset: boolean = false, currentPageOverride?: number) => {
+    if (!profile) return;
+    
+    try {
+      setIsLoadingPosts(reset);
+      setIsLoadingMore(!reset);
+      setPostsError(null);
+      
+      const currentPage = reset ? 0 : (currentPageOverride ?? page);
+      let accessToken: string | undefined = undefined;
+      
+      if (isAuthenticated) {
+        try {
+          accessToken = await getAccessTokenSilently();
+        } catch (err) {
+          console.log('Failed to get access token, continuing without auth');
+        }
+      }
+
+      const fetchedPosts = await getUserPosts(
+        profile.id,
+        currentPage * POSTS_PER_PAGE,
+        POSTS_PER_PAGE,
+        accessToken
+      );
+
+      if (reset) {
+        setPosts(fetchedPosts);
+        setPage(0);
+      } else {
+        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
+      }
+
+      setHasMore(fetchedPosts.length === POSTS_PER_PAGE);
+    } catch (err) {
+      console.error('Failed to load posts:', err);
+      setPostsError(err instanceof Error ? err.message : t('errorLoadingPosts'));
+    } finally {
+      setIsLoadingPosts(false);
+      setIsLoadingMore(false);
+    }
+  }, [profile, isAuthenticated, getAccessTokenSilently, page, t]);
+
+  // Load posts when activeTab changes to 'posts' or profile is loaded
+  useEffect(() => {
+    if (activeTab === 'posts' && profile) {
+      loadPosts(true);
+    }
+  }, [activeTab, profile]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Load more posts
+  const handleLoadMore = () => {
+    if (!isLoadingMore && hasMore) {
+      const nextPage = page + 1;
+      setPage(nextPage);
+      loadPosts(false, nextPage);
+    }
+  };
+
+  // Handle post updates/deletions
+  const handlePostUpdated = () => {
+    loadPosts(true);
+  };
+
+  const handlePostDeleted = () => {
+    loadPosts(true);
   };
 
   if (loading) {
@@ -260,7 +341,7 @@ export default function PublicProfilePage() {
               <div>
                 {/* Diseases */}
                 {profile.diseases && profile.diseases.length > 0 && (
-                  <div>
+                  <div className="mb-6">
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('registeredDiseases')}</h2>
                     <div className="space-y-2">
                       {profile.diseases.map(disease => (
@@ -275,9 +356,54 @@ export default function PublicProfilePage() {
                     </div>
                   </div>
                 )}
-                {/* TODO: Add user posts here in the future */}
-                <div className="mt-6 text-center text-gray-500">
-                  <p>{t('postsComingSoon')}</p>
+                
+                {/* Posts */}
+                <div>
+                  {isLoadingPosts && posts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <p className="text-gray-600">{t('loadingPosts')}</p>
+                    </div>
+                  ) : postsError ? (
+                    <div className="text-center py-8">
+                      <p className="text-red-600 mb-4">{t('errorLoadingPosts')}</p>
+                      <button
+                        onClick={() => loadPosts(true)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        {t('retry')}
+                      </button>
+                    </div>
+                  ) : posts.length === 0 ? (
+                    <div className="text-center py-8">
+                      <p className="text-gray-600">{t('noPosts')}</p>
+                      <p className="text-gray-500 text-sm mt-2">{t('noPostsMessage')}</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {posts.map((post) => (
+                        <PostCard
+                          key={post.id}
+                          post={post}
+                          onPostUpdated={handlePostUpdated}
+                          onPostDeleted={handlePostDeleted}
+                        />
+                      ))}
+                      
+                      {/* Load More Button */}
+                      {hasMore && (
+                        <div className="text-center pt-4">
+                          <button
+                            onClick={handleLoadMore}
+                            disabled={isLoadingMore}
+                            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {isLoadingMore ? t('loadingMore') : t('loadMore')}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
