@@ -555,7 +555,7 @@ class UserService:
 
     @staticmethod
     def check_profile_visibility(
-        user: User, current_user: Optional[dict] = None
+        user: User, current_user: Optional[dict] = None, db: Optional[Session] = None
     ) -> bool:
         """
         Check if current user can view the profile.
@@ -563,6 +563,7 @@ class UserService:
         Args:
             user: User whose profile is being accessed
             current_user: Current authenticated user (from Auth0)
+            db: Database session (optional, needed for block check)
 
         Returns:
             True if profile is visible, False otherwise
@@ -571,6 +572,21 @@ class UserService:
             HTTPException: If profile is not visible
         """
         is_own_profile = current_user and current_user.get("sub") == user.auth0_id
+
+        # Check if blocked (if db is provided and current_user exists)
+        if db and current_user and not is_own_profile:
+            from app.services.block_service import BlockService
+            from app.utils.auth_utils import extract_auth0_id
+
+            current_user_obj = UserService.get_user_by_auth0_id(
+                db, extract_auth0_id(current_user)
+            )
+            if current_user_obj:
+                if BlockService.are_blocked(db, current_user_obj.id, user.id):
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail="This profile is not accessible",
+                    )
 
         if user.profile_visibility == "private":
             if not is_own_profile:

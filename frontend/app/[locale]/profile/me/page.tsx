@@ -131,9 +131,10 @@ export default function MyProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <>
       <Header />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Card */}
         <div className="mb-6">
           <UserProfileCard user={user} showPrivateInfo={true} onEdit={handleEdit} />
@@ -179,13 +180,25 @@ export default function MyProfilePage() {
           )}
         </div>
 
+        {/* Blocked Users Link */}
+        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('privacySettings')}</h2>
+          <Link
+            href="/blocks"
+            className="text-blue-600 hover:text-blue-800 underline"
+          >
+            {t('viewBlockedUsers')}
+          </Link>
+        </div>
+
         {/* Back to Home */}
         <div className="mt-8 text-center">
           <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
             {t('backToHome')}
           </Link>
         </div>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

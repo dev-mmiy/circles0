@@ -57,3 +57,4 @@ def normalize_mention(mention: str) -> str:
         Normalized mention string.
     """
     return mention.lower().strip()
+

@@ -154,3 +154,4 @@ async def get_vapid_public_key():
         )
 
     return {"publicKey": vapid_public_key}
+

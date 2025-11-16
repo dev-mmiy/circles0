@@ -78,7 +78,7 @@ export default function Header() {
 
             {/* ロゴ・ホーム */}
             <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700">
-              Disease Community
+              Lifry
             </Link>
           </div>
 
@@ -108,6 +108,12 @@ export default function Header() {
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
                 {t('myPage')}
+              </Link>
+              <Link
+                href="/messages"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              >
+                {t('messages')}
               </Link>
             </nav>
           )}
@@ -179,6 +185,13 @@ export default function Header() {
                 className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
               >
                 {t('myPage')}
+              </Link>
+              <Link
+                href="/messages"
+                onClick={handleMobileMenuClose}
+                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
+              >
+                {t('messages')}
               </Link>
             </nav>
           </div>

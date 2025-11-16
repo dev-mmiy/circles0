@@ -28,6 +28,7 @@ class FollowService:
         - Trying to follow yourself
         - Already following
         - User doesn't exist
+        - User is blocked or blocking
         """
         # Check if trying to follow yourself
         if follower_id == following_id:
@@ -36,6 +37,12 @@ class FollowService:
         # Check if following user exists
         following_user = db.query(User).filter(User.id == following_id).first()
         if not following_user:
+            return None
+
+        # Check if blocked (either direction)
+        from app.services.block_service import BlockService
+
+        if BlockService.are_blocked(db, follower_id, following_id):
             return None
 
         # Check if already following

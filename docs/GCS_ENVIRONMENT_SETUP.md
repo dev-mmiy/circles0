@@ -200,24 +200,180 @@ gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
 
 #### 2-4. Secret Managerを使用する方法（高度）
 
-機密情報をSecret Managerに保存する方法：
+機密情報をSecret Managerに保存する方法。本番環境でサービスアカウントキーを安全に管理する場合に推奨されます。
 
-1. Secret Managerにシークレットを作成：
+**メリット：**
+- ✅ キーファイルをコンテナイメージに含めない
+- ✅ シークレットのバージョン管理が可能
+- ✅ 自動ローテーションが可能
+- ✅ アクセスログの記録
+
+**デメリット：**
+- ⚠️ セットアップがやや複雑
+- ⚠️ Secret Manager APIの有効化が必要
+
+##### 2-4-1. Secret Manager APIの有効化
+
+まず、Secret Manager APIが有効になっているか確認：
+
+```bash
+# APIの有効化状態を確認
+gcloud services list --enabled --filter="name:secretmanager.googleapis.com"
+
+# 有効化されていない場合は有効化
+gcloud services enable secretmanager.googleapis.com
+```
+
+##### 2-4-2. シークレットの作成
+
+サービスアカウントキーをSecret Managerに保存：
 
 ```bash
 # サービスアカウントキーをシークレットとして保存
 gcloud secrets create gcs-service-account-key \
   --data-file=/path/to/service-account-key.json \
-  --replication-policy="automatic"
+  --replication-policy="automatic" \
+  --project=circles-202510
 ```
 
-2. Cloud Runサービスにシークレットをマウント：
+**注意点：**
+- `--replication-policy="automatic"` は自動レプリケーションを有効化（高可用性）
+- `--replication-policy="user-managed"` で特定リージョンを指定可能
+- シークレット名は英数字とハイフンのみ使用可能
+
+##### 2-4-3. Cloud Runサービスアカウントに権限を付与
+
+Cloud RunのデフォルトサービスアカウントにSecret Managerへのアクセス権限を付与：
+
+```bash
+# プロジェクト番号を取得
+PROJECT_NUMBER=$(gcloud projects describe $(gcloud config get-value project) --format="value(projectNumber)")
+SERVICE_ACCOUNT="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+
+# Secret Manager Secret Accessorロールを付与
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
+  --member="serviceAccount:${SERVICE_ACCOUNT}" \
+  --role="roles/secretmanager.secretAccessor"
+```
+
+##### 2-4-4. Cloud Runサービスにシークレットをマウント
+
+環境変数としてシークレットをマウント：
 
 ```bash
 gcloud run services update disease-community-api \
   --set-secrets="GOOGLE_APPLICATION_CREDENTIALS=gcs-service-account-key:latest" \
+  --region=asia-northeast1 \
+  --project=circles-202510
+```
+
+**シークレットのバージョン指定：**
+- `:latest` - 最新バージョン（推奨）
+- `:1` - 特定のバージョン番号
+- `:2` - 別のバージョン
+
+##### 2-4-5. シークレットをファイルとしてマウントする方法
+
+環境変数ではなく、ファイルとしてマウントする場合：
+
+```bash
+gcloud run services update disease-community-api \
+  --set-secrets="/app/secrets/service-account-key.json=gcs-service-account-key:latest" \
   --region=asia-northeast1
 ```
+
+この場合、環境変数は以下のように設定：
+
+```bash
+gcloud run services update disease-community-api \
+  --set-env-vars="GOOGLE_APPLICATION_CREDENTIALS=/app/secrets/service-account-key.json" \
+  --region=asia-northeast1
+```
+
+##### 2-4-6. シークレットの更新
+
+サービスアカウントキーを更新する場合：
+
+```bash
+# 新しいバージョンを作成
+gcloud secrets versions add gcs-service-account-key \
+  --data-file=/path/to/new-service-account-key.json
+
+# Cloud Runサービスを再デプロイ（:latestを使用している場合は自動的に最新版を使用）
+gcloud run services update disease-community-api \
+  --region=asia-northeast1
+```
+
+##### 2-4-7. シークレットの確認
+
+作成したシークレットを確認：
+
+```bash
+# シークレット一覧を表示
+gcloud secrets list
+
+# シークレットの詳細を確認
+gcloud secrets describe gcs-service-account-key
+
+# シークレットのバージョン一覧を確認
+gcloud secrets versions list gcs-service-account-key
+```
+
+##### 2-4-8. トラブルシューティング
+
+**エラー: "Permission denied on secret"**
+
+Cloud Runサービスアカウントに権限がない場合：
+
+```bash
+# 権限を確認
+gcloud projects get-iam-policy $(gcloud config get-value project) \
+  --flatten="bindings[].members" \
+  --filter="bindings.members:serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com" \
+  --filter="bindings.role:roles/secretmanager.secretAccessor"
+
+# 権限を付与（上記の2-4-3を参照）
+```
+
+**エラー: "Secret not found"**
+
+シークレットが存在しない、または名前が間違っている場合：
+
+```bash
+# シークレット一覧を確認
+gcloud secrets list
+
+# 正しいシークレット名で再設定
+gcloud run services update disease-community-api \
+  --set-secrets="GOOGLE_APPLICATION_CREDENTIALS=正しいシークレット名:latest" \
+  --region=asia-northeast1
+```
+
+##### 2-4-9. セキュリティベストプラクティス
+
+1. **最小権限の原則**
+   - Cloud Runサービスアカウントには `roles/secretmanager.secretAccessor` のみを付与
+   - Secret Managerの管理者権限は不要
+
+2. **シークレットのローテーション**
+   - 定期的にサービスアカウントキーをローテーション
+   - 新しいバージョンを作成後、Cloud Runサービスを再デプロイ
+
+3. **アクセス監査**
+   - Secret Managerのアクセスログを確認
+   ```bash
+   gcloud logging read "resource.type=secretmanager.googleapis.com/Secret" --limit=50
+   ```
+
+4. **バージョン管理**
+   - 古いバージョンは無効化または削除
+   ```bash
+   # バージョンを無効化
+   gcloud secrets versions disable 1 --secret=gcs-service-account-key
+   
+   # バージョンを削除（注意：復元不可）
+   gcloud secrets versions destroy 1 --secret=gcs-service-account-key
+   ```
 
 ### 方法3: Docker Composeを使用する場合
 

@@ -9,7 +9,7 @@ const DISEASE_SEARCH_FILTER_KEY = 'disease_search_filter_settings';
 export interface UserSearchFilterSettings {
   memberId?: string;
   diseaseIds?: number[];
-  sortBy?: 'created_at' | 'last_login' | 'nickname';
+  sortBy?: 'created_at' | 'last_login_at' | 'nickname';
   sortOrder?: 'asc' | 'desc';
 }
 
@@ -109,4 +109,5 @@ export function clearDiseaseSearchFilterSettings(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(DISEASE_SEARCH_FILTER_KEY);
 }
+
 

@@ -130,7 +130,20 @@ class PostService:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")
 
-        return query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+        posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+
+        # Filter out posts from blocked users if current_user_id exists and viewing another user's posts
+        if current_user_id and current_user_id != user_id:
+            from app.services.block_service import BlockService
+            
+            filtered_posts = []
+            for post in posts:
+                # Check if current user has blocked the post author or vice versa
+                if not BlockService.are_blocked(db, current_user_id, post.user_id):
+                    filtered_posts.append(post)
+            posts = filtered_posts
+
+        return posts
 
     @staticmethod
     def get_feed(
@@ -145,13 +158,14 @@ class PostService:
         Get feed of posts for the current user.
 
         Args:
-            filter_type: "all" for all posts, "following" for posts from followed users only, "disease" for posts from users with specific disease
+            filter_type: "all" for all posts, "following" for posts from followed users only, "disease" for posts from users with specific disease, "my_posts" for current user's posts only
             disease_id: Disease ID to filter by (required when filter_type="disease")
 
         If authenticated:
             - filter_type="all": public posts + followers_only posts from followed users
             - filter_type="following": posts from followed users only (public + followers_only)
             - filter_type="disease": posts from users who have the specified disease (public + followers_only from followed users)
+            - filter_type="my_posts": posts from current user only (all visibility levels)
         If not authenticated: only public posts
         """
         from app.models.follow import Follow
@@ -190,7 +204,10 @@ class PostService:
             query = query.filter(Post.user_id.in_(disease_user_ids))
 
         if current_user_id:
-            if filter_type == "following":
+            if filter_type == "my_posts":
+                # Show only posts from current user (all visibility levels)
+                query = query.filter(Post.user_id == current_user_id)
+            elif filter_type == "following":
                 # Get list of user IDs that current user is following
                 following_ids = (
                     db.query(Follow.following_id)
@@ -241,7 +258,20 @@ class PostService:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")
 
-        return query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+        posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+
+        # Filter out posts from blocked users if current_user_id exists
+        if current_user_id:
+            from app.services.block_service import BlockService
+            
+            filtered_posts = []
+            for post in posts:
+                # Check if current user has blocked the post author or vice versa
+                if not BlockService.are_blocked(db, current_user_id, post.user_id):
+                    filtered_posts.append(post)
+            posts = filtered_posts
+
+        return posts
 
     @staticmethod
     def get_posts_by_hashtag(
@@ -330,7 +360,20 @@ class PostService:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")
 
-        return query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+        posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
+
+        # Filter out posts from blocked users if current_user_id exists
+        if current_user_id:
+            from app.services.block_service import BlockService
+            
+            filtered_posts = []
+            for post in posts:
+                # Check if current user has blocked the post author or vice versa
+                if not BlockService.are_blocked(db, current_user_id, post.user_id):
+                    filtered_posts.append(post)
+            posts = filtered_posts
+
+        return posts
 
     @staticmethod
     def update_post(

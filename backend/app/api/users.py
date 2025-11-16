@@ -5,7 +5,7 @@ This module has been refactored to use a service layer for business logic,
 improving maintainability and testability.
 """
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -177,6 +177,178 @@ async def create_or_get_user(user_data: UserCreate, db: Session = Depends(get_db
         )
 
 
+@router.get("/search")
+async def search_users(
+    q: Optional[str] = Query(None, description="Search query (nickname or member_id)"),
+    member_id: Optional[str] = Query(None, description="Member ID (exact match)"),
+    disease_ids: Optional[str] = Query(
+        None, description="Comma-separated disease IDs to filter by"
+    ),
+    country: Optional[str] = Query(None, description="Country code"),
+    language: Optional[str] = Query(None, description="Language code"),
+    sort_by: str = Query(
+        "created_at",
+        regex="^(created_at|last_login_at|nickname)$",
+        description="Sort field: created_at, last_login_at, or nickname",
+    ),
+    sort_order: str = Query(
+        "desc", regex="^(asc|desc)$", description="Sort order: asc or desc"
+    ),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user_optional),
+):
+    """
+    Search for users with various filters.
+
+    - Search by nickname or member_id (q parameter)
+    - Filter by member_id (exact match)
+    - Filter by disease IDs (comma-separated)
+    - Filter by country and language
+    - Sort by created_at, last_login_at, or nickname
+    """
+    from sqlalchemy import or_, desc, asc, func
+    from sqlalchemy.orm import joinedload
+
+    # Start with base query (only active users)
+    query = db.query(User).filter(User.is_active == True)
+
+    # Search by query string (nickname or member_id)
+    if q:
+        query = query.filter(
+            or_(
+                User.nickname.ilike(f"%{q}%"),
+                User.member_id.ilike(f"%{q}%"),
+            )
+        )
+
+    # Filter by member_id (exact match)
+    if member_id:
+        query = query.filter(User.member_id == member_id)
+
+    # Filter by disease IDs
+    if disease_ids:
+        disease_id_list = [int(did.strip()) for did in disease_ids.split(",") if did.strip()]
+        if disease_id_list:
+            from app.models.disease import UserDisease
+
+            # Get users who have at least one of the specified diseases
+            # (public and searchable diseases only)
+            users_with_diseases = (
+                db.query(UserDisease.user_id)
+                .filter(
+                    UserDisease.disease_id.in_(disease_id_list),
+                    UserDisease.is_active == True,
+                    UserDisease.is_public == True,
+                    UserDisease.is_searchable == True,
+                )
+                .distinct()
+            )
+            query = query.filter(User.id.in_(users_with_diseases))
+
+    # Filter by country
+    if country:
+        query = query.filter(User.country == country)
+
+    # Filter by language
+    if language:
+        query = query.filter(User.language == language)
+
+    # Apply sorting
+    if sort_by == "nickname":
+        order_func = asc if sort_order == "asc" else desc
+        query = query.order_by(order_func(User.nickname))
+    elif sort_by == "last_login_at":
+        order_func = asc if sort_order == "asc" else desc
+        query = query.order_by(order_func(User.last_login_at))
+    else:  # created_at (default)
+        order_func = asc if sort_order == "asc" else desc
+        query = query.order_by(order_func(User.created_at))
+
+    # Apply limit
+    users = query.limit(limit).all()
+
+    # Get current viewer's ID for visibility checks
+    viewer_id = None
+    viewer_disease_ids = None
+    if current_user:
+        auth0_id = extract_auth0_id(current_user)
+        viewer = UserService.get_user_by_auth0_id(db, auth0_id)
+        if viewer:
+            viewer_id = viewer.id
+            from app.models.disease import UserDisease
+
+            viewer_disease_ids = [
+                ud.disease_id
+                for ud in db.query(UserDisease)
+                .filter(
+                    UserDisease.user_id == viewer_id,
+                    UserDisease.is_active == True,
+                )
+                .all()
+            ]
+
+    # Build response with visibility filtering
+    results = []
+    for user in users:
+        # Check profile visibility
+        try:
+            UserService.check_profile_visibility(user, current_user, db)
+        except HTTPException:
+            # Skip users whose profiles are not visible
+            continue
+
+        # Get user's public diseases
+        user_diseases = UserService.get_user_public_diseases(db, user.id)
+
+        # Build user dict with field-level visibility
+        user_dict = {
+            "id": user.id,
+            "member_id": user.member_id,
+            "nickname": user.nickname,  # Always visible
+            "created_at": user.created_at,  # Always visible
+            "diseases": [
+                {
+                    "id": d.id,
+                    "name": d.name,
+                    "description": d.description,
+                    "category": d.category,
+                    "translations": [
+                        {
+                            "language_code": trans.language_code,
+                            "translated_name": trans.translated_name,
+                            "details": trans.details,
+                        }
+                        for trans in d.translations
+                    ],
+                }
+                for d in user_diseases
+            ],
+        }
+
+        # Check visibility for each field
+        fields_to_check = {
+            "username": user.username,
+            "bio": user.bio,
+            "avatar_url": user.avatar_url,
+            "country": user.country,
+            "date_of_birth": user.date_of_birth,
+            "gender": user.gender,
+            "language": user.language,
+            "timezone": user.timezone,
+        }
+
+        for field_name, field_value in fields_to_check.items():
+            if UserFieldVisibilityService.can_view_field(
+                db, user.id, field_name, viewer_id, viewer_disease_ids
+            ):
+                user_dict[field_name] = field_value
+
+        results.append(user_dict)
+
+    return results
+
+
 @router.get("/{user_id}", response_model=UserPublicResponse)
 async def get_user_public_profile(
     user_id: UUID,
@@ -193,8 +365,8 @@ async def get_user_public_profile(
             status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
-    # Check profile visibility
-    UserService.check_profile_visibility(user, current_user)
+    # Check profile visibility (with block check)
+    UserService.check_profile_visibility(user, current_user, db)
 
     # Get current viewer's ID and disease IDs
     viewer_id = None
@@ -447,154 +619,6 @@ async def remove_user_disease(
     UserService.remove_disease_from_user(db, user.id, user_disease_id)
 
     return None
-
-
-# User Search Endpoints
-
-
-@router.get("/search", response_model=List[UserPublicResponse])
-async def search_users(
-    q: str | None = None,
-    disease_ids: str | None = None,
-    country: str | None = None,
-    language: str | None = None,
-    member_id: str | None = None,
-    sort_by: str = Query(
-        "created_at",
-        regex="^(created_at|last_login|nickname)$",
-        description="Sort field: created_at, last_login, or nickname",
-    ),
-    sort_order: str = Query(
-        "desc", regex="^(asc|desc)$", description="Sort order: asc or desc"
-    ),
-    limit: int = 20,
-    db: Session = Depends(get_db),
-    current_user: dict | None = Depends(get_current_user_optional),
-):
-    """
-    Search users by various criteria.
-
-    - q: Search by nickname or username
-    - disease_ids: Comma-separated disease IDs
-    - country: Filter by country code
-    - language: Filter by preferred language
-    - member_id: Search by exact member ID
-    - sort_by: Sort field (created_at, last_login, nickname)
-    - sort_order: Sort order (asc, desc)
-    - limit: Maximum number of results (default: 20, max: 100)
-
-    Only returns public profiles or limited profiles (if authenticated).
-    """
-    from sqlalchemy import or_, and_, desc, asc
-    from app.models.disease import UserDisease
-
-    # Validate limit
-    if limit > 100:
-        limit = 100
-
-    # Start with base query for active users with public or limited visibility
-    query = db.query(User).filter(
-        User.is_active == True,
-        or_(
-            User.profile_visibility == "public",
-            and_(
-                User.profile_visibility == "limited",
-                current_user
-                is not None,  # Limited profiles only visible when authenticated
-            ),
-        ),
-    )
-
-    # Search by member ID (exact match)
-    if member_id:
-        query = query.filter(User.member_id == member_id)
-
-    # Search by nickname or username
-    if q:
-        query = query.filter(
-            or_(User.nickname.ilike(f"%{q}%"), User.username.ilike(f"%{q}%"))
-        )
-
-    # Filter by country
-    if country:
-        query = query.filter(User.country == country)
-
-    # Filter by language
-    if language:
-        query = query.filter(User.preferred_language == language)
-
-    # Filter by diseases
-    if disease_ids:
-        try:
-            disease_id_list = [int(did.strip()) for did in disease_ids.split(",")]
-            # Find users who have ANY of the specified diseases
-            user_ids_with_diseases = (
-                db.query(UserDisease.user_id)
-                .filter(
-                    UserDisease.disease_id.in_(disease_id_list),
-                    UserDisease.is_active == True,
-                    UserDisease.is_searchable
-                    == True,  # Only include searchable diseases
-                )
-                .distinct()
-            )
-
-            query = query.filter(User.id.in_(user_ids_with_diseases))
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid disease_ids format",
-            )
-
-    # Apply sorting
-    sort_column = getattr(User, sort_by, User.created_at)
-    if sort_order == "desc":
-        query = query.order_by(desc(sort_column))
-    else:
-        query = query.order_by(asc(sort_column))
-
-    # Execute query
-    users = query.limit(limit).all()
-
-    # Format response with public disease information
-    result = []
-    for user in users:
-        # Get only public and searchable diseases
-        public_diseases = UserService.get_user_public_diseases(db, user.id)
-
-        user_diseases = [
-            {
-                "id": disease.id,
-                "name": disease.name,
-                "description": disease.description,
-                "category": disease.category,
-                "translations": [
-                    {
-                        "language_code": trans.language_code,
-                        "translated_name": trans.translated_name,
-                        "details": trans.details,
-                    }
-                    for trans in disease.translations
-                ],
-            }
-            for disease in public_diseases
-        ]
-
-        result.append(
-            {
-                "id": user.id,
-                "member_id": user.member_id,
-                "nickname": user.nickname,
-                "username": user.username,
-                "bio": user.bio,
-                "avatar_url": user.avatar_url,
-                "country": user.country,
-                "created_at": user.created_at,
-                "diseases": user_diseases,
-            }
-        )
-
-    return result
 
 
 # Field Visibility Endpoints

@@ -25,6 +25,7 @@ import {
   type UserSearchFilterSettings,
 } from '@/lib/utils/filterSettings';
 import { X, Clock } from 'lucide-react';
+import { extractErrorInfo } from '@/lib/utils/errorHandler';
 
 interface UserSearchProps {
   onSearch: (params: UserSearchParams) => Promise<UserPublicProfile[]>;
@@ -41,7 +42,7 @@ export function UserSearch({
   const [searchQuery, setSearchQuery] = useState('');
   const [memberId, setMemberId] = useState('');
   const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<'created_at' | 'last_login' | 'nickname'>('created_at');
+  const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at' | 'nickname'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [results, setResults] = useState<UserPublicProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,7 +85,9 @@ export function UserSearch({
       setShowHistory(false);
     } catch (err) {
       console.error('Search error:', err);
-      setError(err instanceof Error ? err.message : t('errors.searchFailed'));
+      // Extract error information using error handler utility
+      const errorInfo = extractErrorInfo(err);
+      setError(errorInfo.message || t('errors.searchFailed'));
     } finally {
       setLoading(false);
     }
@@ -312,11 +315,11 @@ export function UserSearch({
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login' | 'nickname')}
+                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="created_at">{t('sortByDate')}</option>
-                <option value="last_login">{t('sortByLogin')}</option>
+                <option value="last_login_at">{t('sortByLogin')}</option>
                 <option value="nickname">{t('sortByName')}</option>
               </select>
             </div>

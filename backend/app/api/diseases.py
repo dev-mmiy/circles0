@@ -82,7 +82,13 @@ async def search_diseases(
         None, description="Comma-separated category IDs"
     ),
     icd_code: Optional[str] = Query(
-        None, description="ICD-10 code (exact or partial match)"
+        None, description="ICD-10 code (exact, partial match, or range like 'E11-E15')"
+    ),
+    icd_code_from: Optional[str] = Query(
+        None, description="ICD-10 code range start (for range search)"
+    ),
+    icd_code_to: Optional[str] = Query(
+        None, description="ICD-10 code range end (for range search)"
     ),
     language: str = Query("en", description="Preferred language for search"),
     sort_by: str = Query(
@@ -105,7 +111,7 @@ async def search_diseases(
     - Sort by name, disease_code, or created_at
     - Returns diseases with translations eager-loaded
     """
-    from sqlalchemy import or_, desc, asc
+    from sqlalchemy import or_, desc, asc, func
     from sqlalchemy.orm import joinedload
     from app.models.disease import DiseaseTranslation, DiseaseCategoryMapping
 
@@ -133,9 +139,50 @@ async def search_diseases(
             )
         )
 
-    # Filter by ICD-10 code
+    # Filter by ICD-10 code (supports range search like "E11-E15")
     if icd_code:
-        query = query.filter(Disease.disease_code.ilike(f"%{icd_code}%"))
+        # Check if it's a range format (e.g., "E11-E15")
+        if '-' in icd_code and not icd_code.startswith('-') and not icd_code.endswith('-'):
+            parts = icd_code.split('-', 1)
+            if len(parts) == 2:
+                code_from = parts[0].strip()
+                code_to = parts[1].strip()
+                # Normalize codes (remove dots, uppercase)
+                code_from_normalized = code_from.replace('.', '').upper()
+                code_to_normalized = code_to.replace('.', '').upper()
+                
+                # For range search, we need to compare codes lexicographically
+                # This works for ICD-10 codes which follow a pattern
+                query = query.filter(
+                    func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized,
+                    func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+                )
+            else:
+                # Invalid range format, fall back to partial match
+                query = query.filter(Disease.disease_code.ilike(f"%{icd_code}%"))
+        else:
+            # Regular partial match
+            query = query.filter(Disease.disease_code.ilike(f"%{icd_code}%"))
+    
+    # Filter by ICD-10 code range (using separate from/to parameters)
+    if icd_code_from or icd_code_to:
+        if icd_code_from and icd_code_to:
+            code_from_normalized = icd_code_from.replace('.', '').upper()
+            code_to_normalized = icd_code_to.replace('.', '').upper()
+            query = query.filter(
+                func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized,
+                func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+            )
+        elif icd_code_from:
+            code_from_normalized = icd_code_from.replace('.', '').upper()
+            query = query.filter(
+                func.replace(func.upper(Disease.disease_code), '.', '') >= code_from_normalized
+            )
+        elif icd_code_to:
+            code_to_normalized = icd_code_to.replace('.', '').upper()
+            query = query.filter(
+                func.replace(func.upper(Disease.disease_code), '.', '') <= code_to_normalized
+            )
 
     # Filter by category IDs
     if category_ids:
@@ -186,6 +233,39 @@ async def search_diseases(
         result.append(disease_dict)
 
     return result
+
+
+@router.get("/codes/autocomplete")
+async def autocomplete_icd_codes(
+    q: str = Query(..., description="Partial ICD-10 code for autocomplete"),
+    limit: int = Query(10, ge=1, le=50, description="Maximum number of suggestions"),
+    db: Session = Depends(get_db),
+):
+    """
+    Autocomplete ICD-10 codes.
+    
+    Returns a list of unique ICD-10 codes matching the query prefix.
+    Useful for providing autocomplete suggestions in the UI.
+    """
+    from sqlalchemy import distinct, func
+    
+    # Search for codes that start with the query (case-insensitive)
+    codes = (
+        db.query(distinct(Disease.disease_code))
+        .filter(
+            Disease.is_active == True,
+            Disease.disease_code.isnot(None),
+            func.upper(Disease.disease_code).like(f"{q.upper()}%")
+        )
+        .order_by(Disease.disease_code)
+        .limit(limit)
+        .all()
+    )
+    
+    # Extract code strings from tuples
+    result = [code[0] for code in codes if code[0]]
+    
+    return {"codes": result}
 
 
 @router.get("/{disease_id}", response_model=DiseaseResponse)

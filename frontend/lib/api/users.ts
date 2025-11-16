@@ -507,3 +507,145 @@ export async function setFieldVisibility(
 
   return response.json();
 }
+
+// ========== Block Functions ==========
+
+export interface BlockResponse {
+  id: string;
+  blocker_id: string;
+  blocked_id: string;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface BlockedUserSummary {
+  id: string;
+  member_id: string;
+  nickname: string;
+  avatar_url: string | null;
+  blocked_at: string;
+}
+
+export interface BlockStats {
+  blocked_count: number;
+}
+
+export interface BlockStatus {
+  is_blocked: boolean;
+  is_blocked_by: boolean;
+  are_blocked: boolean;
+}
+
+/**
+ * Block a user
+ */
+export async function blockUser(
+  accessToken: string,
+  userId: string
+): Promise<BlockResponse> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to block user');
+  }
+
+  return response.json();
+}
+
+/**
+ * Unblock a user
+ */
+export async function unblockUser(
+  accessToken: string,
+  userId: string
+): Promise<void> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to unblock user');
+  }
+}
+
+/**
+ * Check block status between current user and another user
+ */
+export async function checkBlockStatus(
+  accessToken: string,
+  userId: string
+): Promise<BlockStatus> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}/status`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to check block status');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get list of blocked users
+ */
+export async function getBlockedUsers(
+  accessToken: string,
+  skip: number = 0,
+  limit: number = 50
+): Promise<BlockedUserSummary[]> {
+  const response = await fetch(
+    `${getApiBaseUrl()}/api/v1/blocks/me/blocked?skip=${skip}&limit=${limit}`,
+    {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get blocked users');
+  }
+
+  return response.json();
+}
+
+/**
+ * Get block statistics
+ */
+export async function getBlockStats(accessToken: string): Promise<BlockStats> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/me/stats`, {
+    method: 'GET',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to get block stats');
+  }
+
+  return response.json();
+}

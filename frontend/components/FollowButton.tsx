@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { followUser, unfollowUser } from '@/lib/api/follows';
 
@@ -22,6 +22,11 @@ export default function FollowButton({
   const t = useTranslations('followButton');
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Update isFollowing when initialIsFollowing changes
+  useEffect(() => {
+    setIsFollowing(initialIsFollowing);
+  }, [initialIsFollowing]);
 
   const handleFollowToggle = async () => {
     if (!isAuthenticated) {

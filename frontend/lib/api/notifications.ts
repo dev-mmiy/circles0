@@ -10,6 +10,7 @@ export enum NotificationType {
   REPLY = 'reply',
   LIKE = 'like',
   COMMENT_LIKE = 'comment_like',
+  MESSAGE = 'message',
 }
 
 export interface UserSummary {
@@ -123,6 +124,8 @@ export function getNotificationText(notification: Notification): string {
       return `${actorName}があなたの投稿にいいねしました`;
     case NotificationType.COMMENT_LIKE:
       return `${actorName}があなたのコメントにいいねしました`;
+    case NotificationType.MESSAGE:
+      return `${actorName}からメッセージが届きました`;
     default:
       return '新しい通知があります';
   }
@@ -143,6 +146,8 @@ export function getNotificationIcon(type: NotificationType): string {
       return '❤️';
     case NotificationType.COMMENT_LIKE:
       return '❤️';
+    case NotificationType.MESSAGE:
+      return '✉️';
     default:
       return '🔔';
   }
@@ -164,6 +169,9 @@ export function getNotificationLink(notification: Notification): string {
         return `/posts/${notification.post_id}`;
       }
       return '/feed';
+    case NotificationType.MESSAGE:
+      // メッセージ通知 - メッセージ一覧へ
+      return '/messages';
     default:
       return '/feed';
   }

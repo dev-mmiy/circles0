@@ -105,7 +105,14 @@ export default function PostForm({
       }
     } catch (err: any) {
       console.error('Failed to upload images:', err);
-      setError(err.response?.data?.detail || err.message || 'Failed to upload images');
+      
+      // Handle 503 error (GCS not configured)
+      if (err.response?.status === 503) {
+        setError(t('errors.uploadServiceNotConfigured'));
+      } else {
+        setError(err.response?.data?.detail || err.message || t('errors.uploadFailed'));
+      }
+      
       // Remove failed previews
       setImagePreviews(imagePreviews.slice(0, imagePreviews.length - validFiles.length));
     } finally {
@@ -274,7 +281,33 @@ export default function PostForm({
           {/* Upload options */}
           {imageUrls.length < 5 && (
             <div className="space-y-2">
-              {/* File upload */}
+              {/* Image URL input (always available) */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newImageUrl}
+                  onChange={(e) => setNewImageUrl(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleAddImageUrl();
+                    }
+                  }}
+                  placeholder={t('imageUrlPlaceholder')}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  disabled={isSubmitting || uploadingImages}
+                />
+                <button
+                  type="button"
+                  onClick={handleAddImageUrl}
+                  disabled={isSubmitting || uploadingImages || !newImageUrl.trim()}
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                >
+                  {t('addImage')}
+                </button>
+              </div>
+              
+              {/* File upload (optional - requires GCS) */}
               <div>
                 <input
                   ref={fileInputRef}
@@ -308,32 +341,6 @@ export default function PostForm({
                     </>
                   )}
                 </label>
-              </div>
-
-              {/* Manual URL input */}
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={newImageUrl}
-                  onChange={(e) => setNewImageUrl(e.target.value)}
-                  placeholder={t('imageUrlPlaceholder')}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  disabled={isSubmitting || uploadingImages}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && newImageUrl.trim()) {
-                      e.preventDefault();
-                      handleAddImageUrl();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleAddImageUrl}
-                  disabled={isSubmitting || uploadingImages || !newImageUrl.trim() || imageUrls.length >= 5}
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {t('addImage')}
-                </button>
               </div>
             </div>
           )}

@@ -87,6 +87,7 @@ export interface UpdatePostData {
   content?: string;
   visibility?: 'public' | 'followers_only' | 'private';
   is_active?: boolean;
+  image_urls?: string[];
 }
 
 export interface CreateCommentData {
@@ -136,7 +137,7 @@ export async function getFeed(
   skip: number = 0,
   limit: number = 20,
   accessToken?: string,
-  filterType: 'all' | 'following' | 'disease' = 'all',
+  filterType: 'all' | 'following' | 'disease' | 'my_posts' = 'all',
   diseaseId?: number
 ): Promise<Post[]> {
   const headers: HeadersInit = {

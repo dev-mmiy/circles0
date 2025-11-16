@@ -62,3 +62,4 @@ def normalize_hashtag(hashtag: str) -> str:
     if hashtag.startswith("#"):
         hashtag = hashtag[1:]
     return hashtag.lower()
+

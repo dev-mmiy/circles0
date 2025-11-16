@@ -54,3 +54,4 @@ if __name__ == '__main__':
     print('VAPID_EMAIL="mailto:admin@yourdomain.com"\n')
     print('Note: Replace "admin@yourdomain.com" with your actual email address.')
 
+

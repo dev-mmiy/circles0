@@ -12,6 +12,7 @@
     "posts": "投稿",
     "profile": "プロフィール",
     "myPage": "マイページ",
+    "messages": "メッセージ",
     "settings": "設定",
     "logout": "ログアウト",
     "openMenu": "メニューを開く",
@@ -192,18 +193,30 @@
     "allPostsShown": "全ての投稿を表示しました",
     "filterAll": "すべての投稿",
     "filterFollowing": "フォロー中のユーザー",
+    "filterMyPosts": "自分の投稿",
     "filterDisease": "疾患別",
     "selectDisease": "疾患を選択",
     "selectDiseasePlaceholder": "疾患を選択してください",
     "selectDiseasePrompt": "疾患を選択して、その疾患を持つユーザーの投稿を表示します",
     "noFollowingPosts": "フォロー中のユーザーの投稿がまだありません",
     "noFollowingPostsMessage": "ユーザーをフォローして、その投稿を見ましょう！",
+    "noMyPosts": "自分の投稿がまだありません",
+    "noMyPostsMessage": "最初の投稿を作成してみましょう！",
     "noDiseasePosts": "この疾患の投稿がまだありません",
     "noDiseasePostsMessage": "{diseaseName}を持つユーザーの投稿がまだありません"
   },
   "post": {
     "unknownUser": "不明なユーザー",
     "readMore": "続きを読む",
+    "edit": "編集",
+    "delete": "削除",
+    "deleting": "削除中...",
+    "cancel": "キャンセル",
+    "deleteConfirm": "この投稿を削除しますか？",
+    "deleteConfirmMessage": "この操作は取り消せません。",
+    "deleteSuccess": "投稿を削除しました",
+    "deleteFailed": "投稿の削除に失敗しました",
+    "editSuccess": "投稿を更新しました",
     "time": {
       "justNow": "たった今",
       "minutesAgo": "{minutes}分前",
@@ -219,11 +232,15 @@
     "mentions": "メンション",
     "errors": {
       "loginRequired": "いいねするにはログインが必要です",
-      "likeFailed": "いいねの処理に失敗しました"
+      "likeFailed": "いいねの処理に失敗しました",
+      "editFailed": "投稿の編集に失敗しました",
+      "deleteFailed": "投稿の削除に失敗しました"
     }
   },
   "postForm": {
     "placeholder": "今の気持ちや経験をシェアしましょう...",
+    "contentLabel": "投稿内容",
+    "contentPlaceholder": "今の気持ちや経験をシェアしましょう...",
     "visibilityLabel": "公開範囲:",
     "visibility": {
       "public": "全体公開",
@@ -240,11 +257,19 @@
     "removeImage": "画像を削除",
     "submit": "投稿する",
     "submitting": "投稿中...",
+    "update": "更新",
+    "updating": "更新中...",
+    "editTitle": "投稿を編集",
+    "cancel": "キャンセル",
+    "characters": "文字",
     "errors": {
       "contentRequired": "投稿内容を入力してください",
       "contentTooLong": "投稿内容は5000文字以内にしてください",
       "tooManyImages": "画像は最大5枚までです",
-      "createFailed": "投稿の作成に失敗しました"
+      "createFailed": "投稿の作成に失敗しました",
+      "updateFailed": "投稿の更新に失敗しました",
+      "uploadServiceNotConfigured": "画像アップロードサービスが設定されていません。画像URL入力を使用するか、GCS設定を確認してください。",
+      "uploadFailed": "画像のアップロードに失敗しました"
     }
   },
   "notificationItem": {
@@ -271,7 +296,9 @@
     "addDiseaseButton": "+ 疾患を追加",
     "backToHome": "← ホームに戻る",
     "deleteConfirm": "「{diseaseName}」を削除しますか？",
-    "deleteFailed": "疾患の削除に失敗しました"
+    "deleteFailed": "疾患の削除に失敗しました",
+    "privacySettings": "プライバシー設定",
+    "viewBlockedUsers": "ブロック済みユーザーを表示"
   },
   "userProfileEdit": {
     "title": "プロフィール編集",
@@ -316,6 +343,15 @@
       "limited": "制限公開",
       "private": "非公開"
     },
+    "visibilityPresets": {
+      "title": "公開範囲プリセット",
+      "description": "ワンクリックで推奨設定を適用できます",
+      "public": "完全公開",
+      "limited": "認証ユーザーのみ",
+      "sameDiseaseOnly": "同じ疾患を持つユーザーのみ",
+      "private": "非公開",
+      "applyFailed": "プリセットの適用に失敗しました"
+    },
     "privacy": {
       "showEmail": "メールアドレスを公開する",
       "showOnlineStatus": "オンライン状態を表示する"
@@ -345,6 +381,14 @@
     },
     "errors": {
       "saveFailed": "プロフィールの保存に失敗しました"
+    }
+  },
+  "blockButton": {
+    "block": "ブロック",
+    "unblock": "ブロック解除",
+    "processing": "処理中...",
+    "errors": {
+      "updateFailed": "ブロック状態の更新に失敗しました"
     }
   },
   "followButton": {
@@ -523,7 +567,14 @@
     "advancedSearch": "詳細検索",
     "hideAdvanced": "詳細を隠す",
     "icdCodeLabel": "ICD-10 コード",
-    "icdCodePlaceholder": "例: E11",
+    "icdCodePlaceholder": "例: E11 または E11-E15",
+    "icdCodeRangeLabel": "ICD-10 コード範囲",
+    "icdCodeFromLabel": "開始コード",
+    "icdCodeFromPlaceholder": "例: E11",
+    "icdCodeToLabel": "終了コード",
+    "icdCodeToPlaceholder": "例: E15",
+    "useRangeSearch": "範囲検索を使用",
+    "autocompleteSuggestions": "候補",
     "categoryLabel": "カテゴリー",
     "sortByLabel": "並び順",
     "sortByName": "名前順",
@@ -672,7 +723,11 @@
     "timezone": "タイムゾーン:",
     "currency": "通貨:",
     "getStarted": "始める",
-    "apiDocumentation": "API ドキュメント"
+    "apiDocumentation": "API ドキュメント",
+    "recentPosts": "最近の投稿",
+    "viewAllPosts": "すべての投稿を見る",
+    "noPostsYet": "投稿がまだありません",
+    "loginToSeePosts": "ログインして投稿を見る"
   },
   "addDiseasePage": {
     "title": "疾患を追加",
@@ -721,6 +776,22 @@
     "postNotFoundMessage": "投稿が削除されたか、アクセス権限がありません",
     "backToFeed": "フィードに戻る"
   },
+  "blocksPage": {
+    "title": "ブロック済みユーザー",
+    "subtitle": "ブロックしたユーザーの一覧です。ブロックを解除すると、そのユーザーと再びやり取りできるようになります。",
+    "loading": "読み込み中...",
+    "noBlockedUsers": "ブロックしているユーザーはいません。",
+    "searchUsers": "ユーザーを検索",
+    "memberId": "会員ID",
+    "blockedAt": "ブロック日時",
+    "unblock": "ブロック解除",
+    "unblocking": "解除中...",
+    "backToProfile": "プロフィールに戻る",
+    "errors": {
+      "loadFailed": "ブロック済みユーザーの取得に失敗しました",
+      "unblockFailed": "ブロック解除に失敗しました"
+    }
+  },
   "errors": {
     "network": "ネットワークエラーが発生しました。インターネット接続を確認してください。",
     "unauthorized": "認証が必要です。ログインしてください。",
@@ -731,5 +802,41 @@
     "general": "エラーが発生しました。",
     "statusCode": "ステータスコード",
     "retry": "再試行"
+  },
+  "messages": {
+    "title": "メッセージ",
+    "conversations": "会話一覧",
+    "noConversations": "会話がありません",
+    "noConversationsMessage": "まだ誰ともメッセージのやり取りをしていません。",
+    "loading": "読み込み中...",
+    "loadMore": "もっと見る",
+    "allConversationsShown": "すべての会話を表示しました",
+    "errorLoading": "会話の読み込みに失敗しました",
+    "retry": "再試行",
+    "deleteConversation": "会話を削除",
+    "deleteConversationConfirm": "この会話を削除してもよろしいですか？",
+    "deleting": "削除中...",
+    "conversation": {
+      "title": "会話",
+      "sendMessage": "メッセージを送信",
+      "messagePlaceholder": "メッセージを入力...",
+      "imageUrlPlaceholder": "画像URL（オプション）",
+      "send": "送信",
+      "sending": "送信中...",
+      "noMessages": "メッセージがありません",
+      "noMessagesMessage": "まだメッセージがありません。最初のメッセージを送信しましょう！",
+      "loadMore": "過去のメッセージを読み込む",
+      "allMessagesShown": "すべてのメッセージを表示しました",
+      "errorLoading": "メッセージの読み込みに失敗しました",
+      "errorSending": "メッセージの送信に失敗しました",
+      "deleteMessage": "メッセージを削除",
+      "deleting": "削除中...",
+      "markAsRead": "既読にする",
+      "messageRequired": "メッセージを入力してください",
+      "messageTooLong": "メッセージは5000文字以内で入力してください",
+      "imageUrlTooLong": "画像URLは500文字以内で入力してください",
+      "deletedMessage": "削除されたメッセージ"
+    },
+    "backToConversations": "会話一覧に戻る"
   }
 }

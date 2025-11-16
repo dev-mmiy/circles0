@@ -77,13 +77,16 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         reply: { title: 'New Reply', body: 'Someone replied to your comment' },
         like: { title: 'New Like', body: 'Someone liked your post' },
         comment_like: { title: 'New Like', body: 'Someone liked your comment' },
+        message: { title: 'New Message', body: 'Someone sent you a message' },
       };
 
       const message = messages[notification.type] || { title: 'New Notification', body: 'You have a new notification' };
       
       // Build notification URL
       let url = '/notifications';
-      if (notification.post_id) {
+      if (notification.type === 'message') {
+        url = '/messages';
+      } else if (notification.post_id) {
         url = `/posts/${notification.post_id}`;
       }
 

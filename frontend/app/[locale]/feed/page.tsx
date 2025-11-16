@@ -1,17 +1,31 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
-import PostForm from '@/components/PostForm';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { getFeed, type Post } from '@/lib/api/posts';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useLocale } from 'next-intl';
+
+// Dynamically import PostForm to reduce initial bundle size
+const PostForm = dynamic(() => import('@/components/PostForm'), {
+  loading: () => (
+    <div className="mb-6 bg-white rounded-lg shadow p-4">
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+        <div className="h-20 bg-gray-200 rounded mb-2"></div>
+        <div className="h-8 bg-gray-200 rounded w-24"></div>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
 
 export default function FeedPage() {
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -24,7 +38,7 @@ export default function FeedPage() {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [filterType, setFilterType] = useState<'all' | 'following' | 'disease'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'following' | 'disease' | 'my_posts'>('all');
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
 
   const POSTS_PER_PAGE = 20;
@@ -126,7 +140,7 @@ export default function FeedPage() {
   };
 
   // Handle filter type change
-  const handleFilterChange = (newFilterType: 'all' | 'following' | 'disease') => {
+  const handleFilterChange = (newFilterType: 'all' | 'following' | 'disease' | 'my_posts') => {
     setFilterType(newFilterType);
     if (newFilterType !== 'disease') {
       setSelectedDiseaseId(null);
@@ -153,7 +167,7 @@ export default function FeedPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -166,7 +180,7 @@ export default function FeedPage() {
     <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
@@ -174,6 +188,13 @@ export default function FeedPage() {
             {t('subtitle')}
           </p>
         </div>
+
+        {/* Post creation form - only shown when authenticated */}
+        {isAuthenticated && (
+          <div className="mb-6">
+            <PostForm onPostCreated={handlePostCreated} />
+          </div>
+        )}
 
         {/* Filter Tabs */}
         {isAuthenticated && (
@@ -189,6 +210,16 @@ export default function FeedPage() {
                   }`}
                 >
                   {t('filterAll')}
+                </button>
+                <button
+                  onClick={() => handleFilterChange('my_posts')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    filterType === 'my_posts'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  {t('filterMyPosts')}
                 </button>
                 <button
                   onClick={() => handleFilterChange('following')}
@@ -258,13 +289,6 @@ export default function FeedPage() {
           </div>
         )}
 
-        {/* Post creation form - only shown when authenticated */}
-        {isAuthenticated && (
-          <div className="mb-6">
-            <PostForm onPostCreated={handlePostCreated} />
-          </div>
-        )}
-
         {/* Login prompt for unauthenticated users */}
         {!isAuthenticated && (
           <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -307,6 +331,8 @@ export default function FeedPage() {
                   ? t('noFollowingPosts') 
                   : filterType === 'disease'
                   ? t('noDiseasePosts')
+                  : filterType === 'my_posts'
+                  ? t('noMyPosts')
                   : t('noPosts')}
               </h3>
               <p className="mt-2 text-gray-500">
@@ -314,6 +340,8 @@ export default function FeedPage() {
                   ? t('noFollowingPostsMessage') 
                   : filterType === 'disease'
                   ? t('noDiseasePostsMessage', { diseaseName: selectedDiseaseId ? getDiseaseName(selectedDiseaseId) : '' })
+                  : filterType === 'my_posts'
+                  ? t('noMyPostsMessage')
                   : t('noPostsMessage')}
               </p>
             </div>
@@ -324,6 +352,8 @@ export default function FeedPage() {
                   key={post.id}
                   post={post}
                   onLikeToggle={handleLikeToggle}
+                  onPostUpdated={handlePostCreated}
+                  onPostDeleted={handlePostCreated}
                 />
               ))}
 

@@ -2,8 +2,12 @@ import os
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config, pool
+from dotenv import load_dotenv
 
 from alembic import context
+
+# Load environment variables from .env file
+load_dotenv()
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -22,6 +26,8 @@ if config.config_file_name is not None:
 database_url = os.getenv("DATABASE_URL")
 if database_url:
     config.set_main_option("sqlalchemy.url", database_url)
+else:
+    raise ValueError("DATABASE_URL environment variable is not set")
 
 target_metadata = Base.metadata
 
@@ -62,8 +68,17 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Get database URL from config
+    database_url = config.get_main_option("sqlalchemy.url")
+    if not database_url:
+        raise ValueError("DATABASE_URL environment variable is not set")
+    
+    # Create engine configuration
+    configuration = config.get_section(config.config_ini_section, {})
+    configuration["sqlalchemy.url"] = database_url
+    
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )

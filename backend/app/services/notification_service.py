@@ -157,7 +157,9 @@ class NotificationService:
 
                     # Build notification URL
                     url = None
-                    if notification.post_id:
+                    if notification.type == NotificationType.MESSAGE:
+                        url = "/messages"
+                    elif notification.post_id:
                         url = f"/posts/{notification.post_id}"
                     elif notification.comment_id:
                         url = (
@@ -209,6 +211,7 @@ class NotificationService:
             "reply": ("New Reply", f"{actor_name} replied to your comment"),
             "like": ("New Like", f"{actor_name} liked your post"),
             "comment_like": ("New Like", f"{actor_name} liked your comment"),
+            "message": ("New Message", f"{actor_name} sent you a message"),
         }
 
         title, body = messages.get(
@@ -488,4 +491,28 @@ class NotificationService:
             actor_id=liker_id,
             notification_type=NotificationType.LIKE,
             post_id=post_id,
+        )
+
+    @staticmethod
+    def create_message_notification(
+        db: Session,
+        sender_id: UUID,
+        recipient_id: UUID,
+    ) -> Optional[Notification]:
+        """
+        Create a notification when someone sends a message.
+
+        Args:
+            db: Database session
+            sender_id: User who sent the message
+            recipient_id: User who received the message
+
+        Returns:
+            Created notification or None
+        """
+        return NotificationService.create_notification(
+            db=db,
+            recipient_id=recipient_id,
+            actor_id=sender_id,
+            notification_type=NotificationType.MESSAGE,
         )

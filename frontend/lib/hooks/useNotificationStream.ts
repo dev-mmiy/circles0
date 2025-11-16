@@ -23,7 +23,7 @@ const RETRY_BACKOFF_MULTIPLIER = 1.5;
 
 export interface NotificationEvent {
   id: string;
-  type: 'follow' | 'comment' | 'reply' | 'like' | 'comment_like';
+  type: 'follow' | 'comment' | 'reply' | 'like' | 'comment_like' | 'message';
   recipient_id: string;
   actor_id: string;
   post_id: string | null;

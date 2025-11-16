@@ -12,6 +12,7 @@
     "posts": "Posts",
     "profile": "Profile",
     "myPage": "My Page",
+    "messages": "Messages",
     "settings": "Settings",
     "logout": "Logout",
     "openMenu": "Open menu",
@@ -192,18 +193,30 @@
     "allPostsShown": "All posts have been shown",
     "filterAll": "All Posts",
     "filterFollowing": "Following",
+    "filterMyPosts": "My Posts",
     "filterDisease": "By Disease",
     "selectDisease": "Select Disease",
     "selectDiseasePlaceholder": "Please select a disease",
     "selectDiseasePrompt": "Select a disease to view posts from users with that disease",
     "noFollowingPosts": "No posts from users you follow yet",
     "noFollowingPostsMessage": "Follow users to see their posts!",
+    "noMyPosts": "You haven't posted anything yet",
+    "noMyPostsMessage": "Create your first post to get started!",
     "noDiseasePosts": "No posts for this disease yet",
     "noDiseasePostsMessage": "No posts from users with {diseaseName} yet"
   },
   "post": {
     "unknownUser": "Unknown User",
     "readMore": "Read more",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "cancel": "Cancel",
+    "deleteConfirm": "Delete this post?",
+    "deleteConfirmMessage": "This action cannot be undone.",
+    "deleteSuccess": "Post deleted successfully",
+    "deleteFailed": "Failed to delete post",
+    "editSuccess": "Post updated successfully",
     "time": {
       "justNow": "Just now",
       "minutesAgo": "{minutes}m ago",
@@ -219,11 +232,15 @@
     "mentions": "Mentions",
     "errors": {
       "loginRequired": "Please log in to like this post",
-      "likeFailed": "Failed to like the post"
+      "likeFailed": "Failed to like the post",
+      "editFailed": "Failed to edit post",
+      "deleteFailed": "Failed to delete post"
     }
   },
   "postForm": {
     "placeholder": "Share your feelings and experiences...",
+    "contentLabel": "Post Content",
+    "contentPlaceholder": "Share your feelings and experiences...",
     "visibilityLabel": "Visibility:",
     "visibility": {
       "public": "Public",
@@ -240,11 +257,19 @@
     "removeImage": "Remove Image",
     "submit": "Post",
     "submitting": "Posting...",
+    "update": "Update",
+    "updating": "Updating...",
+    "editTitle": "Edit Post",
+    "cancel": "Cancel",
+    "characters": "characters",
     "errors": {
       "contentRequired": "Please enter post content",
       "contentTooLong": "Post content must be 5000 characters or less",
       "tooManyImages": "Maximum 5 images allowed",
-      "createFailed": "Failed to create post"
+      "createFailed": "Failed to create post",
+      "updateFailed": "Failed to update post",
+      "uploadServiceNotConfigured": "Image upload service is not configured. Please use image URL input instead, or configure GCS settings.",
+      "uploadFailed": "Failed to upload images"
     }
   },
   "notificationItem": {
@@ -271,7 +296,9 @@
     "addDiseaseButton": "+ Add Disease",
     "backToHome": "← Back to Home",
     "deleteConfirm": "Are you sure you want to delete \"{diseaseName}\"?",
-    "deleteFailed": "Failed to delete disease"
+    "deleteFailed": "Failed to delete disease",
+    "privacySettings": "Privacy Settings",
+    "viewBlockedUsers": "View Blocked Users"
   },
   "userProfileEdit": {
     "title": "Edit Profile",
@@ -316,6 +343,15 @@
       "limited": "Limited",
       "private": "Private"
     },
+    "visibilityPresets": {
+      "title": "Visibility Presets",
+      "description": "Apply recommended settings with one click",
+      "public": "Fully Public",
+      "limited": "Authenticated Users Only",
+      "sameDiseaseOnly": "Same Disease Users Only",
+      "private": "Private",
+      "applyFailed": "Failed to apply preset"
+    },
     "privacy": {
       "showEmail": "Show email address publicly",
       "showOnlineStatus": "Show online status"
@@ -345,6 +381,14 @@
     },
     "errors": {
       "saveFailed": "Failed to save profile"
+    }
+  },
+  "blockButton": {
+    "block": "Block",
+    "unblock": "Unblock",
+    "processing": "Processing...",
+    "errors": {
+      "updateFailed": "Failed to update block status"
     }
   },
   "followButton": {
@@ -523,7 +567,14 @@
     "advancedSearch": "Advanced Search",
     "hideAdvanced": "Hide Advanced",
     "icdCodeLabel": "ICD-10 Code",
-    "icdCodePlaceholder": "e.g., E11",
+    "icdCodePlaceholder": "e.g., E11 or E11-E15",
+    "icdCodeRangeLabel": "ICD-10 Code Range",
+    "icdCodeFromLabel": "From Code",
+    "icdCodeFromPlaceholder": "e.g., E11",
+    "icdCodeToLabel": "To Code",
+    "icdCodeToPlaceholder": "e.g., E15",
+    "useRangeSearch": "Use Range Search",
+    "autocompleteSuggestions": "Suggestions",
     "categoryLabel": "Category",
     "sortByLabel": "Sort by",
     "sortByName": "Name",
@@ -672,7 +723,11 @@
     "timezone": "Timezone:",
     "currency": "Currency:",
     "getStarted": "Get Started",
-    "apiDocumentation": "API Documentation"
+    "apiDocumentation": "API Documentation",
+    "recentPosts": "Recent Posts",
+    "viewAllPosts": "View All Posts",
+    "noPostsYet": "No posts yet",
+    "loginToSeePosts": "Login to see posts"
   },
   "addDiseasePage": {
     "title": "Add Disease",
@@ -721,6 +776,22 @@
     "postNotFoundMessage": "The post may have been deleted or you don't have access permission",
     "backToFeed": "Back to Feed"
   },
+  "blocksPage": {
+    "title": "Blocked Users",
+    "subtitle": "List of users you have blocked. Unblocking a user will allow you to interact with them again.",
+    "loading": "Loading...",
+    "noBlockedUsers": "You haven't blocked any users.",
+    "searchUsers": "Search users",
+    "memberId": "Member ID",
+    "blockedAt": "Blocked at",
+    "unblock": "Unblock",
+    "unblocking": "Unblocking...",
+    "backToProfile": "Back to profile",
+    "errors": {
+      "loadFailed": "Failed to load blocked users",
+      "unblockFailed": "Failed to unblock user"
+    }
+  },
   "errors": {
     "network": "A network error occurred. Please check your internet connection.",
     "unauthorized": "Authentication required. Please log in.",
@@ -731,5 +802,41 @@
     "general": "An error occurred.",
     "statusCode": "Status Code",
     "retry": "Retry"
+  },
+  "messages": {
+    "title": "Messages",
+    "conversations": "Conversations",
+    "noConversations": "No conversations",
+    "noConversationsMessage": "You haven't exchanged messages with anyone yet.",
+    "loading": "Loading...",
+    "loadMore": "Load more",
+    "allConversationsShown": "All conversations shown",
+    "errorLoading": "Failed to load conversations",
+    "retry": "Retry",
+    "deleteConversation": "Delete conversation",
+    "deleteConversationConfirm": "Are you sure you want to delete this conversation?",
+    "deleting": "Deleting...",
+    "conversation": {
+      "title": "Conversation",
+      "sendMessage": "Send a message",
+      "messagePlaceholder": "Type a message...",
+      "imageUrlPlaceholder": "Image URL (optional)",
+      "send": "Send",
+      "sending": "Sending...",
+      "noMessages": "No messages",
+      "noMessagesMessage": "No messages yet. Send the first message!",
+      "loadMore": "Load older messages",
+      "allMessagesShown": "All messages shown",
+      "errorLoading": "Failed to load messages",
+      "errorSending": "Failed to send message",
+      "deleteMessage": "Delete message",
+      "deleting": "Deleting...",
+      "markAsRead": "Mark as read",
+      "messageRequired": "Please enter a message",
+      "messageTooLong": "Message must be 5000 characters or less",
+      "imageUrlTooLong": "Image URL must be 500 characters or less",
+      "deletedMessage": "Deleted message"
+    },
+    "backToConversations": "Back to conversations"
   }
 }

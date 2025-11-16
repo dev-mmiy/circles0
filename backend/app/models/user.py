@@ -137,5 +137,44 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # Block relationships
+    # Users that this user is blocking
+    blocking_relationships = relationship(
+        "Block",
+        foreign_keys="Block.blocker_id",
+        back_populates="blocker",
+        cascade="all, delete-orphan",
+    )
+    # Users that have blocked this user
+    blocked_relationships = relationship(
+        "Block",
+        foreign_keys="Block.blocked_id",
+        back_populates="blocked",
+        cascade="all, delete-orphan",
+    )
+
+    # Message relationships
+    # Conversations where this user is user1
+    conversations_as_user1 = relationship(
+        "Conversation",
+        foreign_keys="Conversation.user1_id",
+        back_populates="user1",
+        cascade="all, delete-orphan",
+    )
+    # Conversations where this user is user2
+    conversations_as_user2 = relationship(
+        "Conversation",
+        foreign_keys="Conversation.user2_id",
+        back_populates="user2",
+        cascade="all, delete-orphan",
+    )
+    # Messages sent by this user
+    messages_sent = relationship(
+        "Message",
+        foreign_keys="Message.sender_id",
+        back_populates="sender",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"

@@ -60,3 +60,4 @@ export function normalizeMention(mention: string): string {
   return mention.toLowerCase().trim();
 }
 
+

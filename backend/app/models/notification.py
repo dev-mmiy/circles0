@@ -21,6 +21,7 @@ class NotificationType(str, Enum):
     REPLY = "reply"  # Someone replied to your comment
     LIKE = "like"  # Someone liked your post
     COMMENT_LIKE = "comment_like"  # Someone liked your comment
+    MESSAGE = "message"  # Someone sent you a message
 
 
 class Notification(Base):

@@ -94,6 +94,11 @@ jobs:
         cd frontend
         npm run type-check
 
+    - name: Run frontend tests
+      run: |
+        cd frontend
+        npm run test -- --coverage --watchAll=false
+
     - name: Build frontend
       run: |
         cd frontend

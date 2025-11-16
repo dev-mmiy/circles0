@@ -129,7 +129,7 @@ export default function NotificationsPage() {
   if (authLoading || isLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -142,7 +142,7 @@ export default function NotificationsPage() {
     <>
       <Header />
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900">{t('pageTitle')}</h1>

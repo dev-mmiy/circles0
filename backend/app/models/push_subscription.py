@@ -60,3 +60,4 @@ class PushSubscription(Base):
 
     def __repr__(self) -> str:
         return f"<PushSubscription(id={self.id}, user_id={self.user_id}, endpoint={self.endpoint[:50]}...)>"
+

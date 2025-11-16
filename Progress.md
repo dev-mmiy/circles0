@@ -308,6 +308,10 @@ Auth0を使用したOAuth2.0認証システム。
 - [x] ~~`.next` ディレクトリの権限問題（ローカル環境のみ）~~ → 所有者をmmiy:mmiyに変更完了（2025-11-15）
 - [x] ~~`tsconfig.tsbuildinfo` がgitignoreに未登録~~ → Gitの追跡から削除完了（2025-11-15）
 - [x] ~~エラーページとnot-foundページの不足~~ → Next.js App Router用のエラーページ追加完了（2025-11-15）
+- [x] ~~投稿編集で画像を削除して更新しても反映されない~~ → UpdatePostDataにimage_urlsフィールド追加、空のリストを送信するように修正完了（2025-11-15）
+
+### 既知の制限事項
+- **テスト実行時間**: バックエンドテストの実行に時間がかかる（データベース接続やテーブル操作による）。テスト最適化を実施したが、さらなる改善の余地あり。
 
 ---
 
@@ -399,8 +403,8 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] フィルター条件の保存 ✅ 完了（2025-11-15）
 - [x] **ICD-10コードによる検索**
   - [x] 部分一致検索
-  - [ ] コード範囲指定
-  - [ ] コード補完機能
+  - [x] コード範囲指定 ✅ 完了（2025-11-15）
+  - [x] コード補完機能 ✅ 完了（2025-11-15）
 
 #### 1.2 ユーザー検索・発見 ✅ 完了（2025-11-09）
 - [x] **疾患による検索**
@@ -418,16 +422,16 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] コード順（疾患検索）
   - [x] 昇順/降順の選択
 
-#### 1.3 プロフィール公開範囲制御
-- [ ] **詳細な公開設定**
-  - [ ] 疾患ごとの公開範囲設定
-  - [ ] フィールドごとの公開範囲設定
-  - [ ] ブロック機能
-- [ ] **公開範囲プリセット**
-  - [ ] 完全公開
-  - [ ] 認証ユーザーのみ
-  - [ ] 同じ疾患を持つユーザーのみ
-  - [ ] 非公開
+#### 1.3 プロフィール公開範囲制御 ✅ 完了（2025-11-15）
+- [x] **詳細な公開設定**
+  - [x] 疾患ごとの公開範囲設定（UserDisease.is_public, is_searchable） ✅ 既に実装済み
+  - [x] フィールドごとの公開範囲設定 ✅ 完了（2025-11-15）
+  - [x] ブロック機能 ✅ 完了（2025-11-15）
+- [x] **公開範囲プリセット** ✅ 完了（2025-11-15）
+  - [x] 完全公開
+  - [x] 認証ユーザーのみ
+  - [x] 同じ疾患を持つユーザーのみ
+  - [x] 非公開
 
 ### Phase 2: コミュニティ機能（優先度：高）
 
@@ -487,16 +491,20 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### Phase 3: メッセージング・コミュニケーション（優先度：中）
 
-#### 3.1 ダイレクトメッセージ (DM)
-- [ ] **1対1メッセージ**
-  - [ ] テキストメッセージ送受信
-  - [ ] 画像送信
-  - [ ] リンク共有
-  - [ ] 既読・未読管理
-- [ ] **メッセージ一覧**
-  - [ ] 会話スレッド一覧
-  - [ ] 未読バッジ表示
-  - [ ] 検索機能
+#### 3.1 ダイレクトメッセージ (DM) ✅ 完了（2025-11-15）
+- [x] **1対1メッセージ** ✅ 完了
+  - [x] テキストメッセージ送受信 ✅ 完了
+  - [x] 画像送信 ✅ 完了（画像URL対応）
+  - [x] 既読・未読管理 ✅ 完了
+  - [ ] リンク共有（今後実装予定）
+- [x] **メッセージ一覧** ✅ 完了
+  - [x] 会話スレッド一覧 ✅ 完了
+  - [x] 未読バッジ表示 ✅ 完了（APIレスポンスに含まれる）
+  - [ ] 検索機能（今後実装予定）
+- [x] **フロントエンド実装** ✅ 完了（2025-11-15）
+  - [x] メッセージ一覧ページ ✅ 完了
+  - [x] 会話画面 ✅ 完了
+  - [x] リアルタイム更新機能（SSE） ✅ 完了（2025-11-15）
 
 #### 3.2 グループチャット
 - [ ] **グループ作成**
@@ -716,9 +724,23 @@ Auth0を使用したOAuth2.0認証システム。
      - [x] 多言語対応（日本語・英語）
 
 ### 技術改善
-6. **自動テストの導入**
-   - pytest によるバックエンドテスト
-   - Jest によるフロントエンドテスト
+6. ~~**自動テストの導入**~~ ✅ 完了（2025-11-15）
+   - [x] pytest によるバックエンドテスト ✅ 既に実装済み
+     - テストファイル: `backend/tests/` (9ファイル)
+     - テスト設定: `backend/tests/conftest.py`
+     - CI/CD統合: GitHub Actionsで自動実行
+   - [x] Jest によるフロントエンドテスト ✅ 完了（2025-11-15）
+     - Jest設定: `frontend/jest.config.js`
+     - テストセットアップ: `frontend/jest.setup.js`
+     - ユーティリティ関数テスト: `frontend/lib/utils/__tests__/` (3ファイル)
+       - `hashtag.test.ts` - ハッシュタグ抽出・ハイライト機能のテスト
+       - `errorHandler.test.ts` - エラーハンドリング機能のテスト
+       - `searchHistory.test.ts` - 検索履歴管理機能のテスト
+     - コンポーネントテスト: `frontend/components/__tests__/` (2ファイル)
+       - `ErrorDisplay.test.tsx` - エラー表示コンポーネントのテスト
+       - `DiseaseStatusBadge.test.tsx` - 疾患ステータスバッジコンポーネントのテスト
+     - package.json更新: Jest関連の依存関係追加
+     - CI/CD統合: GitHub Actionsで自動実行
 
 7. ~~**`.gitignore` の更新**~~ ✅ 完了（2025-11-15）
    - [x] `tsconfig.tsbuildinfo` 追加
@@ -903,6 +925,77 @@ Auth0を使用したOAuth2.0認証システム。
       - `fieldVisibility.updateFailed` - エラーメッセージ
       - `fieldVisibility.options.*` - 公開設定オプション（public, limited, private, sameDiseaseOnly）
       - `fields.avatarUrl`, `fields.language`, `fields.timezone` - フィールドラベル
+
+### 2025-11-15 (続き)
+- **ダイレクトメッセージ機能のバックエンド実装** ✅ 完了
+  - データベースモデルの作成:
+    - Conversationモデル（会話管理）
+    - Messageモデル（メッセージ管理）
+    - MessageReadモデル（既読管理）
+  - スキーマの作成:
+    - MessageCreate, MessageResponse, ConversationResponse
+    - ConversationListResponse, MessageListResponse
+    - MarkReadRequest, MarkReadResponse
+  - MessageServiceの実装:
+    - get_or_create_conversation - 会話の取得・作成
+    - send_message - メッセージ送信
+    - get_conversations - 会話一覧取得
+    - get_conversation_by_id - 会話詳細取得
+    - get_messages - メッセージ一覧取得
+    - mark_messages_as_read - 既読マーク
+    - delete_conversation - 会話削除（ソフトデリート）
+    - delete_message - メッセージ削除（ソフトデリート）
+    - get_unread_count - 未読数取得
+  - APIエンドポイントの実装:
+    - GET /api/v1/messages/conversations - 会話一覧取得
+    - GET /api/v1/messages/conversations/{conversation_id} - 会話詳細取得
+    - DELETE /api/v1/messages/conversations/{conversation_id} - 会話削除
+    - POST /api/v1/messages - メッセージ送信
+    - GET /api/v1/messages/conversations/{conversation_id}/messages - メッセージ一覧取得
+    - PUT /api/v1/messages/conversations/{conversation_id}/read - 既読マーク
+    - DELETE /api/v1/messages/{message_id} - メッセージ削除
+  - データベースマイグレーション:
+    - add_message_tables_20251115.py - conversations, messages, message_readsテーブル作成
+  - 機能:
+    - ブロック機能との統合（ブロックされたユーザーとはメッセージ不可）
+    - 会話のソフトデリート対応
+    - メッセージのソフトデリート対応
+    - 既読・未読管理
+    - 画像URL対応（画像送信機能）
+  - 実装ファイル:
+    - `backend/app/models/message.py` - データベースモデル
+    - `backend/app/schemas/message.py` - APIスキーマ
+    - `backend/app/services/message_service.py` - ビジネスロジック
+    - `backend/app/api/messages.py` - APIエンドポイント
+    - `backend/alembic/versions/add_message_tables_20251115.py` - マイグレーション
+- **ダイレクトメッセージ機能のリアルタイム更新（SSE）実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - MessageServiceにメッセージ送信時のブロードキャスト機能を追加
+    - メッセージ用SSEエンドポイントの実装（`/api/v1/messages/stream`）
+    - 通知ブロードキャスターを再利用してメッセージイベントを配信
+    - メッセージ送信時に送信者と受信者の両方にブロードキャスト
+  - フロントエンド実装:
+    - useMessageStreamフックの実装（通知SSEフックと同様の構造）
+    - 会話画面でのリアルタイム更新統合
+      - 新しいメッセージが受信されたら自動的にメッセージリストに追加
+      - 現在の会話のメッセージのみ処理
+      - 既読処理の自動実行
+    - メッセージ一覧ページでのリアルタイム更新統合
+      - 新しいメッセージが受信されたら会話リストを更新
+      - 最後のメッセージと未読数の自動更新
+      - メッセージが来た会話を先頭に移動
+  - 実装ファイル:
+    - `backend/app/services/message_service.py` - ブロードキャスト機能追加
+    - `backend/app/api/messages_sse.py` - メッセージ用SSEエンドポイント
+    - `backend/app/main.py` - SSEルーターの追加
+    - `frontend/lib/hooks/useMessageStream.ts` - メッセージ用SSEフック
+    - `frontend/app/[locale]/messages/[conversationId]/page.tsx` - 会話画面のリアルタイム更新
+    - `frontend/app/[locale]/messages/page.tsx` - メッセージ一覧ページのリアルタイム更新
+  - 機能:
+    - メッセージ送信時にリアルタイムで両方のユーザーに配信
+    - 自動再接続機能（指数バックオフ）
+    - ハートビート（30秒間隔）
+    - 接続タイムアウト処理（9分で再接続）
 
 ### 2025-11-15 (続き)
 - **ハッシュタグ機能の実装** ✅ 完了
@@ -1108,6 +1201,61 @@ Auth0を使用したOAuth2.0認証システム。
   - 多言語対応（日本語・英語）
     - 翻訳キーの追加（clearFilters）
 
+- **ICD-10コード範囲指定検索機能の実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - 範囲検索のサポート（例: "E11-E15"形式）
+    - `icd_code_from`と`icd_code_to`パラメータの追加
+    - コード正規化処理（ドット除去、大文字変換）
+    - 辞書順比較による範囲検索
+  - フロントエンド実装:
+    - 範囲検索モードの切り替えチェックボックス
+    - 開始コード・終了コード入力フィールド
+    - 検索パラメータの適切な送信
+    - 多言語対応（日本語・英語）
+  - 翻訳キーの追加:
+    - `icdCodeRangeLabel`, `icdCodeFromLabel`, `icdCodeToLabel`
+    - `icdCodeFromPlaceholder`, `icdCodeToPlaceholder`
+    - `useRangeSearch`
+
+- **ICD-10コード補完機能の実装** ✅ 完了（2025-11-15）
+  - バックエンド実装:
+    - `/api/v1/diseases/codes/autocomplete`エンドポイントの追加
+    - 前方一致検索によるコード候補取得
+    - 重複排除とソート処理
+    - 最大50件までの候補返却
+  - フロントエンド実装:
+    - `autocompleteIcdCodes` API関数の実装
+    - 入力中に自動的に候補を取得（300msデバウンス）
+    - ドロップダウン形式での候補表示
+    - 通常モード・範囲検索モードの両方で動作
+    - 候補クリックで自動入力
+    - 多言語対応（日本語・英語）
+  - 翻訳キーの追加:
+    - `autocompleteSuggestions`
+
+- **投稿画像削除機能のバグ修正** ✅ 完了（2025-11-15）
+  - 問題: 投稿編集で画像を削除して更新しても反映されない
+  - 原因: `UpdatePostData`インターフェースに`image_urls`フィールドが未定義で、空のリストを送信できなかった
+  - 修正内容:
+    - `UpdatePostData`インターフェースに`image_urls?: string[]`フィールドを追加
+    - `EditPostModal.tsx`で空のリストを明示的に送信するように変更（`undefined`ではなく`[]`を送信）
+  - 動作確認:
+    - 画像を削除して更新 → 空の配列`[]`が送信 → 既存の画像が削除される
+    - 画像を追加/変更して更新 → 新しい画像URLの配列が送信 → 既存の画像が削除され、新しい画像が追加される
+
+- **画像削除機能のテスト追加** ✅ 完了（2025-11-15）
+  - バックエンドテスト追加:
+    - `test_update_post_delete_images` - 画像をすべて削除するテスト
+    - `test_update_post_replace_images` - 画像を置き換えるテスト
+    - `test_update_post_add_images_to_post_without_images` - 画像がない投稿に画像を追加するテスト
+  - APIテスト追加:
+    - `test_update_post_delete_images` - API経由で画像を削除するテスト
+    - `test_update_post_replace_images` - API経由で画像を置き換えるテスト
+  - テスト最適化の試み:
+    - 各テストごとにテーブルの作成・削除を行う処理を最適化
+    - セッションスコープでテーブルを作成し、データのみクリアする方式に変更
+    - 注意: テストの実行時間が長い問題が残存（データベース接続やテーブル操作に時間がかかっている可能性）
+
 - **画像添付機能の実装** ✅ 完了（2025-11-15）
   - バックエンド実装:
     - PostImageモデルの作成（post_imagesテーブル）
@@ -1210,4 +1358,4 @@ daf9215 - feat: add header with notification bell to homepage (2025-11-13)
 
 **最終更新日**: 2025-11-15  
 **最終更新者**: Claude Code  
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了

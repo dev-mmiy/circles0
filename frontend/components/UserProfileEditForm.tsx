@@ -74,6 +74,50 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
     }
   };
 
+  // Handle preset selection
+  const handlePresetSelect = async (preset: 'public' | 'limited' | 'private' | 'same_disease_only') => {
+    try {
+      const accessToken = await getAccessTokenSilently();
+      
+      // Update profile visibility
+      let profileVisibility: 'public' | 'limited' | 'private' = 'limited';
+      if (preset === 'public') {
+        profileVisibility = 'public';
+      } else if (preset === 'private') {
+        profileVisibility = 'private';
+      } else {
+        profileVisibility = 'limited';
+      }
+      
+      setFormData(prev => ({ ...prev, profile_visibility: profileVisibility }));
+      
+      // Update field visibilities based on preset
+      const fieldVisibilityMap: Record<string, 'public' | 'limited' | 'private' | 'same_disease_only'> = {
+        username: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        bio: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        avatar_url: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        country: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        date_of_birth: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        gender: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        timezone: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+      };
+      
+      // Update all field visibilities
+      const updates = Object.entries(fieldVisibilityMap).map(([field, visibility]) =>
+        setFieldVisibility(accessToken, field, visibility)
+      );
+      
+      await Promise.all(updates);
+      
+      // Update local state
+      setFieldVisibilities(prev => ({ ...prev, ...fieldVisibilityMap }));
+    } catch (err) {
+      console.error('Failed to apply preset:', err);
+      setError(err instanceof Error ? err.message : t('visibilityPresets.applyFailed'));
+    }
+  };
+
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -297,6 +341,44 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             </select>
           </div>
 
+          {/* Profile Visibility Presets */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('visibilityPresets.title')}
+            </label>
+            <p className="text-xs text-gray-500 mb-3">{t('visibilityPresets.description')}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handlePresetSelect('public')}
+                className="px-4 py-2 border-2 border-blue-200 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors text-sm font-medium"
+              >
+                {t('visibilityPresets.public')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePresetSelect('limited')}
+                className="px-4 py-2 border-2 border-gray-200 bg-gray-50 text-gray-700 rounded-lg hover:bg-gray-100 transition-colors text-sm font-medium"
+              >
+                {t('visibilityPresets.limited')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePresetSelect('same_disease_only')}
+                className="px-4 py-2 border-2 border-green-200 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors text-sm font-medium"
+              >
+                {t('visibilityPresets.sameDiseaseOnly')}
+              </button>
+              <button
+                type="button"
+                onClick={() => handlePresetSelect('private')}
+                className="px-4 py-2 border-2 border-red-200 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors text-sm font-medium"
+              >
+                {t('visibilityPresets.private')}
+              </button>
+            </div>
+          </div>
+
           {/* Profile Visibility */}
           <div>
             <label
@@ -308,7 +390,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             <select
               id="profile_visibility"
               name="profile_visibility"
-              value={formData.profile_visibility || 'public'}
+              value={formData.profile_visibility || 'limited'}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >

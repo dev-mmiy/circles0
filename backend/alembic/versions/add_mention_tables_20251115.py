@@ -79,3 +79,4 @@ def downgrade() -> None:
     op.drop_table('comment_mentions')
     op.drop_table('post_mentions')
 
+

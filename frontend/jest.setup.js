@@ -24,7 +24,12 @@ jest.mock('next/image', () => ({
   },
 }));
 
-// Mock next-i18next (removed since we're not using it anymore)
+// Mock next-intl
+jest.mock('next-intl', () => ({
+  useTranslations: () => (key) => key,
+  useLocale: () => 'ja',
+  useMessages: () => ({}),
+}));
 
 // Mock fetch
 global.fetch = jest.fn();

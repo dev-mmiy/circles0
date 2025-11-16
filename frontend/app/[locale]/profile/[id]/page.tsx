@@ -9,22 +9,26 @@ import Image from 'next/image';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
 import { getFollowStats, type FollowStats } from '@/lib/api/follows';
 import FollowButton from '@/components/FollowButton';
+import BlockButton from '@/components/BlockButton';
 import FollowersList from '@/components/FollowersList';
 import FollowingList from '@/components/FollowingList';
+import { useUser } from '@/contexts/UserContext';
 
 export default function PublicProfilePage() {
   const t = useTranslations('publicProfilePage');
   const locale = useLocale();
   const params = useParams();
   const userId = params.id as string;
-  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { user: currentUser } = useUser();
   const [profile, setProfile] = useState<UserPublicProfile | null>(null);
   const [followStats, setFollowStats] = useState<FollowStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'followers' | 'following'>('posts');
 
-  const isOwnProfile = user?.sub === profile?.id;
+  // Compare UUIDs to determine if this is the current user's profile
+  const isOwnProfile = currentUser?.id === profile?.id;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -64,14 +68,22 @@ export default function PublicProfilePage() {
   }, [userId, isAuthenticated, getAccessTokenSilently, t]);
 
   const handleFollowChange = async (isFollowing: boolean) => {
-    if (!followStats) return;
-
     // Update follower count optimistically
-    setFollowStats({
-      ...followStats,
-      follower_count: followStats.follower_count + (isFollowing ? 1 : -1),
-      is_following: isFollowing,
-    });
+    if (followStats) {
+      setFollowStats({
+        ...followStats,
+        follower_count: followStats.follower_count + (isFollowing ? 1 : -1),
+        is_following: isFollowing,
+      });
+    } else {
+      // If followStats is not loaded yet, create a default one
+      setFollowStats({
+        follower_count: isFollowing ? 1 : 0,
+        following_count: 0,
+        is_following: isFollowing,
+        is_followed_by: false,
+      });
+    }
   };
 
   if (loading) {
@@ -121,7 +133,7 @@ export default function PublicProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start space-x-6">
@@ -149,13 +161,24 @@ export default function PublicProfilePage() {
                   <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
                   {profile.username && <p className="text-gray-600 mt-1">@{profile.username}</p>}
                 </div>
-                {/* Follow Button */}
-                {!isOwnProfile && profile && followStats && (
-                  <FollowButton
-                    userId={profile.id}
-                    initialIsFollowing={followStats.is_following}
-                    onFollowChange={handleFollowChange}
-                  />
+                {/* Action Buttons */}
+                {!isOwnProfile && profile && isAuthenticated && (
+                  <div className="flex items-center space-x-3">
+                    <FollowButton
+                      userId={profile.id}
+                      initialIsFollowing={followStats?.is_following ?? false}
+                      onFollowChange={handleFollowChange}
+                    />
+                    <BlockButton
+                      userId={profile.id}
+                      onBlockChange={(isBlocked) => {
+                        // Refresh page if user is blocked/unblocked
+                        if (isBlocked) {
+                          window.location.reload();
+                        }
+                      }}
+                    />
+                  </div>
                 )}
               </div>
 

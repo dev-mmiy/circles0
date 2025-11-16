@@ -65,3 +65,4 @@ def downgrade() -> None:
     op.drop_table('post_hashtags')
     op.drop_table('hashtags')
 
+

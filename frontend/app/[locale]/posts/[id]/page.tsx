@@ -53,7 +53,7 @@ export default function PostDetailPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -65,7 +65,7 @@ export default function PostDetailPage() {
   if (error || !post) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-3xl mx-auto px-4">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back button */}
           <button
             onClick={() => router.back()}
@@ -123,7 +123,7 @@ export default function PostDetailPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back button */}
         <button
           onClick={() => router.back()}

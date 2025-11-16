@@ -5,24 +5,37 @@ import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
-import { likePost, unlikePost, type Post } from '@/lib/api/posts';
+import { likePost, unlikePost, deletePost, type Post } from '@/lib/api/posts';
+import { useUser } from '@/contexts/UserContext';
+import EditPostModal from './EditPostModal';
 
 interface PostCardProps {
   post: Post;
   onLikeToggle?: () => void;
+  onPostUpdated?: () => void;
+  onPostDeleted?: () => void;
   showFullContent?: boolean;
 }
 
 export default function PostCard({
   post,
   onLikeToggle,
+  onPostUpdated,
+  onPostDeleted,
   showFullContent = false,
 }: PostCardProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { user } = useUser();
   const t = useTranslations('post');
   const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [isLiking, setIsLiking] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Check if current user is the author
+  const isAuthor = user && user.id === post.user_id;
 
   // Format date
   const formatDate = (dateString: string) => {
@@ -110,6 +123,42 @@ export default function PostCard({
     }
   };
 
+  // Handle delete
+  const handleDelete = async () => {
+    if (!isAuthenticated || !isAuthor) return;
+
+    setIsDeleting(true);
+    try {
+      const accessToken = await getAccessTokenSilently();
+      await deletePost(post.id, accessToken);
+      
+      // Notify parent
+      if (onPostDeleted) {
+        onPostDeleted();
+      }
+      
+      setIsDeleteConfirmOpen(false);
+    } catch (error) {
+      console.error('Failed to delete post:', error);
+      alert(t('errors.deleteFailed'));
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Handle edit modal close
+  const handleEditModalClose = () => {
+    setIsEditModalOpen(false);
+  };
+
+  // Handle post updated
+  const handlePostUpdated = () => {
+    if (onPostUpdated) {
+      onPostUpdated();
+    }
+    setIsEditModalOpen(false);
+  };
+
   // Truncate content if needed
   const displayContent = showFullContent
     ? post.content
@@ -160,6 +209,40 @@ export default function PostCard({
             </div>
           </div>
         </div>
+
+        {/* Edit/Delete buttons (only for author) */}
+        {isAuthor && isAuthenticated && (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setIsEditModalOpen(true)}
+              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              title={t('edit')}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                />
+              </svg>
+            </button>
+            <button
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              title={t('delete')}
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Post content */}
@@ -225,23 +308,43 @@ export default function PostCard({
                 key={image.id}
                 className={`relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100 ${
                   post.images!.length === 1
-                    ? 'aspect-auto max-h-96'
+                    ? 'w-full'
                     : 'aspect-square'
                 }`}
               >
-                <Image
-                  src={image.image_url}
-                  alt={`Post image ${index + 1}`}
-                  fill
-                  className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                  onClick={() => {
-                    window.open(image.image_url, '_blank');
-                  }}
-                  onError={(e) => {
-                    // Fallback handled by Next.js Image component
-                    console.error('Failed to load image:', image.image_url);
-                  }}
-                />
+                {post.images!.length === 1 ? (
+                  <img
+                    src={image.image_url}
+                    alt={`Post image ${index + 1}`}
+                    className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      window.open(image.image_url, '_blank');
+                    }}
+                    onError={(e) => {
+                      console.error('Failed to load image:', image.image_url);
+                      // Show fallback
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                    }}
+                  />
+                ) : (
+                  <Image
+                    src={image.image_url}
+                    alt={`Post image ${index + 1}`}
+                    fill
+                    className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    onClick={() => {
+                      window.open(image.image_url, '_blank');
+                    }}
+                    onError={(e) => {
+                      console.error('Failed to load image:', image.image_url);
+                      // Show fallback
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                    }}
+                    unoptimized
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -297,6 +400,54 @@ export default function PostCard({
           <span className="font-medium">{post.comment_count}</span>
         </Link>
       </div>
+
+      {/* Edit Modal */}
+      {isEditModalOpen && (
+        <EditPostModal
+          post={post}
+          isOpen={isEditModalOpen}
+          onClose={handleEditModalClose}
+          onPostUpdated={handlePostUpdated}
+        />
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
+            onClick={() => setIsDeleteConfirmOpen(false)}
+          />
+          <div className="flex min-h-full items-center justify-center p-4">
+            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  {t('deleteConfirm')}
+                </h3>
+                <p className="text-sm text-gray-600 mb-6">
+                  {t('deleteConfirmMessage')}
+                </p>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    disabled={isDeleting}
+                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('cancel')}
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isDeleting ? t('deleting') : t('delete')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

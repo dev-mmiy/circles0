@@ -108,8 +108,8 @@ async def get_feed(
     ),
     filter_type: str = Query(
         "all",
-        regex="^(all|following|disease)$",
-        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease",
+        regex="^(all|following|disease|my_posts)$",
+        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease, 'my_posts' for current user's posts only",
     ),
     disease_id: Optional[int] = Query(
         None,
@@ -129,11 +129,16 @@ async def get_feed(
     - "all": Show all public posts + followers_only posts from followed users
     - "following": Show only posts from users you follow (public + followers_only)
     - "disease": Show posts from users who have the specified disease (requires disease_id parameter)
+    - "my_posts": Show only posts from the current user (requires authentication)
     """
     user_id = get_user_id_from_token(db, current_user)
 
     # If filter_type is "following" but user is not authenticated, return empty
     if filter_type == "following" and not user_id:
+        return []
+
+    # If filter_type is "my_posts" but user is not authenticated, return empty
+    if filter_type == "my_posts" and not user_id:
         return []
 
     # If filter_type is "disease" but disease_id is not provided, return empty

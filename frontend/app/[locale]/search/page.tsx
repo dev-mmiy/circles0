@@ -21,7 +21,7 @@ import { useUser } from '@/contexts/UserContext';
 type SearchTab = 'diseases' | 'users' | 'hashtags';
 
 export default function SearchPage() {
-  const { getAccessTokenSilently } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('searchPage');
   const { user } = useUser();
   const { categories, diseases: allDiseases } = useDisease();
@@ -37,7 +37,14 @@ export default function SearchPage() {
 
   const handleDiseaseSearch = async (params: any) => {
     try {
-      const accessToken = await getAccessTokenSilently();
+      let accessToken: string | undefined = undefined;
+      if (isAuthenticated) {
+        try {
+          accessToken = await getAccessTokenSilently();
+        } catch (tokenError) {
+          console.warn('Failed to get access token for disease search:', tokenError);
+        }
+      }
       return await searchDiseases(params, accessToken);
     } catch (error) {
       console.error('Disease search error:', error);
@@ -48,7 +55,16 @@ export default function SearchPage() {
 
   const handleUserSearch = async (params: any) => {
     try {
-      const accessToken = await getAccessTokenSilently();
+      // Only try to get token if authenticated
+      let accessToken: string | undefined = undefined;
+      if (isAuthenticated) {
+        try {
+          accessToken = await getAccessTokenSilently();
+        } catch (tokenError) {
+          // If token retrieval fails, proceed without token
+          console.warn('Failed to get access token for user search, proceeding without authentication:', tokenError);
+        }
+      }
       return await searchUsers(params, accessToken);
     } catch (error) {
       console.error('User search error:', error);

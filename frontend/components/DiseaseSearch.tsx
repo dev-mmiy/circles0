@@ -7,8 +7,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
-import { DiseaseSearchParams, DiseaseSearchResult } from '@/lib/api/search';
+import { DiseaseSearchParams, DiseaseSearchResult, autocompleteIcdCodes } from '@/lib/api/search';
 import { getLocalizedDiseaseName } from '@/lib/api/users';
+import { useAuth0 } from '@auth0/auth0-react';
 import {
   getSearchHistory,
   addToSearchHistory,
@@ -38,9 +39,19 @@ export function DiseaseSearch({
   preferredLanguage = 'ja',
 }: DiseaseSearchProps) {
   const t = useTranslations('diseaseSearch');
+  const { getAccessTokenSilently } = useAuth0();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategories, setSelectedCategories] = useState<number[]>([]);
   const [icdCode, setIcdCode] = useState('');
+  const [useRangeSearch, setUseRangeSearch] = useState(false);
+  const [icdCodeFrom, setIcdCodeFrom] = useState('');
+  const [icdCodeTo, setIcdCodeTo] = useState('');
+  const [icdCodeSuggestions, setIcdCodeSuggestions] = useState<string[]>([]);
+  const [icdCodeFromSuggestions, setIcdCodeFromSuggestions] = useState<string[]>([]);
+  const [icdCodeToSuggestions, setIcdCodeToSuggestions] = useState<string[]>([]);
+  const [showAutocomplete, setShowAutocomplete] = useState(false);
+  const [showAutocompleteFrom, setShowAutocompleteFrom] = useState(false);
+  const [showAutocompleteTo, setShowAutocompleteTo] = useState(false);
   const [sortBy, setSortBy] = useState<'name' | 'disease_code' | 'created_at'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [results, setResults] = useState<DiseaseSearchResult[]>([]);
@@ -66,7 +77,12 @@ export function DiseaseSearch({
       if (selectedCategories.length > 0) {
         params.category_ids = selectedCategories.join(',');
       }
-      if (icdCode) params.icd_code = icdCode;
+      if (useRangeSearch) {
+        if (icdCodeFrom) params.icd_code_from = icdCodeFrom;
+        if (icdCodeTo) params.icd_code_to = icdCodeTo;
+      } else {
+        if (icdCode) params.icd_code = icdCode;
+      }
 
       const searchResults = await onSearch(params);
       setResults(searchResults);
@@ -106,6 +122,84 @@ export function DiseaseSearch({
       if (savedSettings.sortOrder) setSortOrder(savedSettings.sortOrder);
     }
   }, []);
+
+  // Autocomplete ICD codes for single code input
+  useEffect(() => {
+    if (useRangeSearch) return; // Skip if range search is enabled
+    
+    const fetchAutocomplete = async () => {
+      if (icdCode && icdCode.length >= 1) {
+        try {
+          const token = await getAccessTokenSilently().catch(() => undefined);
+          const suggestions = await autocompleteIcdCodes(icdCode, 10, token);
+          setIcdCodeSuggestions(suggestions);
+          setShowAutocomplete(suggestions.length > 0);
+        } catch (err) {
+          // Silently fail autocomplete
+          setIcdCodeSuggestions([]);
+          setShowAutocomplete(false);
+        }
+      } else {
+        setIcdCodeSuggestions([]);
+        setShowAutocomplete(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchAutocomplete, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [icdCode, useRangeSearch, getAccessTokenSilently]);
+
+  // Autocomplete ICD codes for range search - From
+  useEffect(() => {
+    if (!useRangeSearch) return; // Skip if range search is disabled
+    
+    const fetchAutocomplete = async () => {
+      if (icdCodeFrom && icdCodeFrom.length >= 1) {
+        try {
+          const token = await getAccessTokenSilently().catch(() => undefined);
+          const suggestions = await autocompleteIcdCodes(icdCodeFrom, 10, token);
+          setIcdCodeFromSuggestions(suggestions);
+          setShowAutocompleteFrom(suggestions.length > 0);
+        } catch (err) {
+          // Silently fail autocomplete
+          setIcdCodeFromSuggestions([]);
+          setShowAutocompleteFrom(false);
+        }
+      } else {
+        setIcdCodeFromSuggestions([]);
+        setShowAutocompleteFrom(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchAutocomplete, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [icdCodeFrom, useRangeSearch, getAccessTokenSilently]);
+
+  // Autocomplete ICD codes for range search - To
+  useEffect(() => {
+    if (!useRangeSearch) return; // Skip if range search is disabled
+    
+    const fetchAutocomplete = async () => {
+      if (icdCodeTo && icdCodeTo.length >= 1) {
+        try {
+          const token = await getAccessTokenSilently().catch(() => undefined);
+          const suggestions = await autocompleteIcdCodes(icdCodeTo, 10, token);
+          setIcdCodeToSuggestions(suggestions);
+          setShowAutocompleteTo(suggestions.length > 0);
+        } catch (err) {
+          // Silently fail autocomplete
+          setIcdCodeToSuggestions([]);
+          setShowAutocompleteTo(false);
+        }
+      } else {
+        setIcdCodeToSuggestions([]);
+        setShowAutocompleteTo(false);
+      }
+    };
+
+    const debounceTimer = setTimeout(fetchAutocomplete, 300);
+    return () => clearTimeout(debounceTimer);
+  }, [icdCodeTo, useRangeSearch, getAccessTokenSilently]);
 
   // Save filter settings when they change
   useEffect(() => {
@@ -265,6 +359,9 @@ export function DiseaseSearch({
               onClick={() => {
                 setSelectedCategories([]);
                 setIcdCode('');
+                setIcdCodeFrom('');
+                setIcdCodeTo('');
+                setUseRangeSearch(false);
                 setSortBy('name');
                 setSortOrder('asc');
                 clearDiseaseSearchFilterSettings();
@@ -275,17 +372,138 @@ export function DiseaseSearch({
             </button>
           </div>
           {/* ICD-10 Code Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('icdCodeLabel')}
-            </label>
-            <input
-              type="text"
-              value={icdCode}
-              onChange={(e) => setIcdCode(e.target.value)}
-              placeholder={t('icdCodePlaceholder')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+          <div className="space-y-3">
+            <div>
+              <label className="flex items-center gap-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={useRangeSearch}
+                  onChange={(e) => {
+                    setUseRangeSearch(e.target.checked);
+                    if (!e.target.checked) {
+                      setIcdCodeFrom('');
+                      setIcdCodeTo('');
+                    }
+                  }}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm font-medium text-gray-700">
+                  {t('useRangeSearch')}
+                </span>
+              </label>
+            </div>
+
+            {useRangeSearch ? (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('icdCodeFromLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    value={icdCodeFrom}
+                    onChange={(e) => {
+                      setIcdCodeFrom(e.target.value);
+                    }}
+                    onFocus={() => setShowAutocompleteFrom(icdCodeFrom.length >= 1 && icdCodeFromSuggestions.length > 0)}
+                    onBlur={() => setTimeout(() => setShowAutocompleteFrom(false), 200)}
+                    placeholder={t('icdCodeFromPlaceholder')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {showAutocompleteFrom && icdCodeFromSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      <div className="p-2 text-xs text-gray-500 border-b">
+                        {t('autocompleteSuggestions')}
+                      </div>
+                      {icdCodeFromSuggestions.map((code) => (
+                        <button
+                          key={code}
+                          onClick={() => {
+                            setIcdCodeFrom(code);
+                            setShowAutocompleteFrom(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                        >
+                          {code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('icdCodeToLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    value={icdCodeTo}
+                    onChange={(e) => {
+                      setIcdCodeTo(e.target.value);
+                    }}
+                    onFocus={() => setShowAutocompleteTo(icdCodeTo.length >= 1 && icdCodeToSuggestions.length > 0)}
+                    onBlur={() => setTimeout(() => setShowAutocompleteTo(false), 200)}
+                    placeholder={t('icdCodeToPlaceholder')}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {showAutocompleteTo && icdCodeToSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      <div className="p-2 text-xs text-gray-500 border-b">
+                        {t('autocompleteSuggestions')}
+                      </div>
+                      {icdCodeToSuggestions.map((code) => (
+                        <button
+                          key={code}
+                          onClick={() => {
+                            setIcdCodeTo(code);
+                            setShowAutocompleteTo(false);
+                          }}
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                        >
+                          {code}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="relative">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('icdCodeLabel')}
+                </label>
+                <input
+                  type="text"
+                  value={icdCode}
+                  onChange={(e) => {
+                    setIcdCode(e.target.value);
+                    setShowAutocomplete(e.target.value.length >= 1);
+                  }}
+                  onFocus={() => setShowAutocomplete(icdCode.length >= 1 && icdCodeSuggestions.length > 0)}
+                  onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
+                  placeholder={t('icdCodePlaceholder')}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {showAutocomplete && icdCodeSuggestions.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    <div className="p-2 text-xs text-gray-500 border-b">
+                      {t('autocompleteSuggestions')}
+                    </div>
+                    {icdCodeSuggestions.map((code) => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setIcdCode(code);
+                          setShowAutocomplete(false);
+                        }}
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                      >
+                        {code}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Category Filter */}

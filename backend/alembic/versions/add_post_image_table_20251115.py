@@ -45,3 +45,4 @@ def downgrade() -> None:
     # Drop tables
     op.drop_table('post_images')
 
+
