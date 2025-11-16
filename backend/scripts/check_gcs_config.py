@@ -16,11 +16,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from dotenv import load_dotenv
 
 # Load environment variables from .env file (ignore if file doesn't exist)
-try:
-    load_dotenv(override=False)
-except Exception:
-    # Ignore errors if .env file doesn't exist
-    pass
+import warnings
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    try:
+        load_dotenv(override=False, verbose=False)
+    except Exception:
+        # Ignore errors if .env file doesn't exist
+        pass
 
 
 def check_environment_variables():
