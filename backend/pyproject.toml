@@ -1,6 +1,7 @@
-[tool.black]
-line-length = 88
-target-version = ['py311']
+# Black configuration removed - Black is no longer used
+# [tool.black]
+# line-length = 88
+# target-version = ['py311']
 
 [tool.isort]
 profile = "black"
