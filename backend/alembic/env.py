@@ -8,14 +8,17 @@ from alembic import context
 
 # Load environment variables from .env file (ignore if file doesn't exist)
 import warnings
+from pathlib import Path
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    try:
-        load_dotenv(override=False, verbose=False)
-    except Exception:
-        # Ignore errors if .env file doesn't exist
-        pass
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            load_dotenv(dotenv_path=env_file, override=False, verbose=False)
+        except Exception:
+            # Ignore errors if .env file cannot be loaded
+            pass
 
 # add your model's MetaData object here
 # for 'autogenerate' support

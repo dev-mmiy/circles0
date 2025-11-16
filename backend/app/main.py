@@ -34,14 +34,17 @@ from app.middleware.market import MarketMiddleware
 
 # Load environment variables from .env if present (ignore if file doesn't exist)
 import warnings
+from pathlib import Path
 
-with warnings.catch_warnings():
-    warnings.simplefilter("ignore")
-    try:
-        load_dotenv(override=False, verbose=False)
-    except Exception:
-        # Ignore errors if .env file doesn't exist
-        pass
+env_file = Path(__file__).parent.parent / ".env"
+if env_file.exists():
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        try:
+            load_dotenv(dotenv_path=env_file, override=False, verbose=False)
+        except Exception:
+            # Ignore errors if .env file cannot be loaded
+            pass
 
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
