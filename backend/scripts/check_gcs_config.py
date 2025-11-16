@@ -25,8 +25,18 @@ if env_file.exists() and env_file.is_file():
         warnings.simplefilter("ignore")
         try:
             import logging
-            logging.getLogger("dotenv").setLevel(logging.ERROR)
-            load_dotenv(dotenv_path=env_file, override=False, verbose=False)
+            import sys
+            import os
+            # Suppress dotenv logger and stderr temporarily
+            logging.getLogger("dotenv").setLevel(logging.CRITICAL)
+            # Redirect stderr temporarily to suppress error messages
+            old_stderr = sys.stderr
+            try:
+                sys.stderr = open(os.devnull, 'w')
+                load_dotenv(dotenv_path=str(env_file.resolve()), override=False, verbose=False)
+            finally:
+                sys.stderr.close()
+                sys.stderr = old_stderr
         except Exception:
             # Ignore errors if .env file cannot be loaded
             pass
