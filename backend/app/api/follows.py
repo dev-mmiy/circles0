@@ -2,7 +2,7 @@
 Follow/Follower API endpoints.
 """
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -20,7 +20,6 @@ from app.schemas.follow import (
 from app.services.follow_service import FollowService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
-from typing import Optional
 
 router = APIRouter(prefix="/follows", tags=["follows"])
 

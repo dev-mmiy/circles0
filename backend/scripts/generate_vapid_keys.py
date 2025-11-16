@@ -10,8 +10,9 @@ needed for environment variables.
 """
 
 import base64
-from cryptography.hazmat.primitives.asymmetric import ec
+
 from cryptography.hazmat.primitives import serialization
+from cryptography.hazmat.primitives.asymmetric import ec
 
 
 def generate_vapid_keys():

@@ -129,6 +129,7 @@ class NotificationService:
                 return
 
             import os
+
             from app.database import SessionLocal
 
             vapid_private_key = os.getenv("VAPID_PRIVATE_KEY")

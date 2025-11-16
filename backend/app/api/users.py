@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.models.disease import Disease
+from app.models.user import User
 from app.schemas.disease import (
     DiseaseResponse,
     UserDiseaseCreate,
@@ -32,7 +33,6 @@ from app.schemas.user import (
 from app.services.user_field_visibility_service import UserFieldVisibilityService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
-from app.models.user import User
 
 router = APIRouter()
 
@@ -207,7 +207,7 @@ async def search_users(
     - Filter by country and language
     - Sort by created_at, last_login_at, or nickname
     """
-    from sqlalchemy import or_, desc, asc, func
+    from sqlalchemy import asc, desc, func, or_
     from sqlalchemy.orm import joinedload
 
     # Start with base query (only active users)

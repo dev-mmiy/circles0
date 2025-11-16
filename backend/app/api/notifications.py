@@ -11,12 +11,12 @@ from sqlalchemy.orm import Session
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.schemas.notification import (
+    CommentSummary,
     NotificationListResponse,
     NotificationResponse,
+    PostSummary,
     UnreadCountResponse,
     UserSummary,
-    PostSummary,
-    CommentSummary,
 )
 from app.services.notification_service import NotificationService
 from app.services.user_service import UserService

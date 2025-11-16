@@ -4,6 +4,7 @@ SQLAlchemy models package.
 
 from app.database import Base
 
+from .block import Block
 from .disease import (
     Disease,
     DiseaseCategory,
@@ -14,7 +15,6 @@ from .disease import (
     DiseaseTranslation,
     UserDisease,
 )
-from .block import Block
 from .follow import Follow
 from .group import Group, GroupMember, GroupMessage, GroupMessageRead
 from .hashtag import Hashtag, PostHashtag

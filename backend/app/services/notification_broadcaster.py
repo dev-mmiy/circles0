@@ -7,9 +7,9 @@ It maintains a registry of active connections and broadcasts notification events
 
 import asyncio
 import json
+import logging
 from typing import Dict, Set
 from uuid import UUID
-import logging
 
 logger = logging.getLogger(__name__)
 

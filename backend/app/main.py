@@ -30,12 +30,12 @@ except ImportError:
     PUSH_SUBSCRIPTIONS_AVAILABLE = False
     push_subscriptions_router = None
 
-# from app.auth.router import router as session_auth_router  # Temporarily disabled
-from app.middleware.market import MarketMiddleware
-
 # Load environment variables from .env if present (ignore if file doesn't exist)
 import warnings
 from pathlib import Path
+
+# from app.auth.router import router as session_auth_router  # Temporarily disabled
+from app.middleware.market import MarketMiddleware
 
 env_file = Path(__file__).parent.parent / ".env"
 if env_file.exists():

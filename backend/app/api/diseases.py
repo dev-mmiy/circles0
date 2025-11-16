@@ -111,9 +111,10 @@ async def search_diseases(
     - Sort by name, disease_code, or created_at
     - Returns diseases with translations eager-loaded
     """
-    from sqlalchemy import or_, desc, asc, func
+    from sqlalchemy import asc, desc, func, or_
     from sqlalchemy.orm import joinedload
-    from app.models.disease import DiseaseTranslation, DiseaseCategoryMapping
+
+    from app.models.disease import DiseaseCategoryMapping, DiseaseTranslation
 
     # Start with base query
     query = (

@@ -14,8 +14,8 @@ from app.models.message import Conversation, Message, MessageRead
 from app.models.user import User
 from app.schemas.message import MessageCreate
 from app.services.block_service import BlockService
-from app.services.notification_service import NotificationService
 from app.services.notification_broadcaster import broadcaster
+from app.services.notification_service import NotificationService
 
 
 class MessageService:

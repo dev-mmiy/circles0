@@ -13,11 +13,11 @@ from pathlib import Path
 # Add parent directory to path to import app modules
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from dotenv import load_dotenv
-
 # Load environment variables from .env file (ignore if file doesn't exist)
 import warnings
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 env_file = Path(__file__).parent.parent / ".env"
 if env_file.exists():

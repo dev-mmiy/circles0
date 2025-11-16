@@ -5,7 +5,7 @@ Push subscription model for Web Push API.
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, JSON, String, Text
+from sqlalchemy import JSON, Column, DateTime, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 

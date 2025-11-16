@@ -8,8 +8,8 @@ from datetime import datetime
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request
-from sse_starlette.sse import EventSourceResponse
 from sqlalchemy.orm import Session
+from sse_starlette.sse import EventSourceResponse
 
 from app.auth.dependencies import get_current_user_from_query
 from app.database import get_db

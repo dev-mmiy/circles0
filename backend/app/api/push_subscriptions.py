@@ -57,8 +57,9 @@ async def register_push_subscription(
     This endpoint registers a browser/device to receive push notifications.
     """
     try:
-        from app.config import settings
         import os
+
+        from app.config import settings
 
         # Get VAPID keys from environment variables
         vapid_private_key = os.getenv("VAPID_PRIVATE_KEY")

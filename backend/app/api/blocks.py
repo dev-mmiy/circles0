@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.schemas.block import BlockResponse, BlockStats, BlockedUserSummary
+from app.schemas.block import BlockedUserSummary, BlockResponse, BlockStats
 from app.services.block_service import BlockService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id

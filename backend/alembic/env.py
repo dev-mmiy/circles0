@@ -1,14 +1,14 @@
 import os
-from logging.config import fileConfig
-
-from sqlalchemy import engine_from_config, pool
-from dotenv import load_dotenv
-
-from alembic import context
 
 # Load environment variables from .env file (ignore if file doesn't exist)
 import warnings
+from logging.config import fileConfig
 from pathlib import Path
+
+from dotenv import load_dotenv
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 
 env_file = Path(__file__).parent.parent / ".env"
 if env_file.exists():

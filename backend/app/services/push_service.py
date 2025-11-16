@@ -7,7 +7,7 @@ import logging
 from typing import Optional
 from uuid import UUID
 
-from pywebpush import webpush, WebPushException
+from pywebpush import WebPushException, webpush
 from sqlalchemy.orm import Session
 
 from app.models.push_subscription import PushSubscription
