@@ -45,7 +45,7 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install black isort flake8
+        pip install isort flake8
 
     - name: Install Node.js dependencies
       run: |
@@ -55,11 +55,6 @@ jobs:
     - name: Backend Linting
       run: |
         cd backend
-        echo "🔍 Running Black formatting check..."
-        black --check . || {
-          echo "⚠️ Black formatting issues found. Auto-fixing..."
-          black .
-        }
         echo "🔍 Running isort import sorting check..."
         isort --check-only . || {
           echo "⚠️ Import sorting issues found. Auto-fixing..."

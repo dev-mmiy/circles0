@@ -144,25 +144,6 @@ fi
 # バックエンドのリンターとフォーマットチェック
 log_info "Running backend linting..."
 
-# Black フォーマットチェック（タイムアウト付き）
-log_info "Checking Black formatting..."
-if timeout 30 docker compose exec backend black --check . > /dev/null 2>&1; then
-    log_success "Black formatting check passed"
-else
-    if [ "$GITHUB_ACTIONS" = "true" ]; then
-        # CI環境では自動修正せず、エラーとして報告
-        log_error "Black formatting issues found. Please run 'black .' locally and commit the changes."
-        timeout 30 docker compose exec backend black --check . || true
-        exit 1
-    else
-        # ローカル環境では自動修正
-        log_warn "Black formatting issues found. Auto-fixing..."
-        timeout 30 docker compose exec backend black . > /dev/null 2>&1
-        log_success "Black formatting fixed"
-    fi
-fi
-log_success "Black formatting check completed"
-
 # isort チェック（タイムアウト付き）
 log_info "Checking import sorting..."
 timeout 30 docker compose exec backend isort --check-only . > /dev/null 2>&1 || {

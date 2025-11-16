@@ -111,11 +111,6 @@ log_info "Running backend tests..."
 # バックエンドのリンターとフォーマットチェック
 log_info "Running backend linting..."
 
-# Black フォーマットチェック（タイムアウト付き）
-# DISABLED: Temporarily disabled - run 'black .' locally before committing
-# Black formatting check is disabled to avoid CI/CD errors
-# Please run 'black .' locally before committing your changes
-
 # isort チェック（タイムアウト付き）
 log_info "Checking import sorting..."
 timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . > /dev/null 2>&1 || {

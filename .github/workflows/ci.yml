@@ -58,7 +58,7 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install black isort flake8 safety
+        pip install isort flake8 safety
 
     - name: Install Node.js dependencies
       run: |

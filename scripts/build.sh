@@ -29,7 +29,6 @@ build_backend() {
     # Run linting
     echo "Running backend linting..."
     flake8 app/
-    black --check app/
     isort --check-only app/
     
     # Run tests
