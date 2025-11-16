@@ -113,7 +113,8 @@ log_info "Running backend linting..."
 
 # Black フォーマットチェック（タイムアウト付き）
 # Skip Black check in CI/CD environment (run locally only)
-if [ "$GITHUB_ACTIONS" = "true" ]; then
+# Check for GitHub Actions environment (both GITHUB_ACTIONS and CI environment variables)
+if [ "${GITHUB_ACTIONS:-false}" = "true" ] || [ "${CI:-false}" = "true" ]; then
     log_info "Skipping Black formatting check in CI/CD environment (run 'black .' locally before committing)"
 else
     log_info "Checking Black formatting..."

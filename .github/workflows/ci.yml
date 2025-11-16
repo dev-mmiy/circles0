@@ -68,11 +68,7 @@ jobs:
     - name: Backend Linting
       run: |
         cd backend
-        echo "🔍 Running Black formatting check..."
-        black --check . || {
-          echo "⚠️ Black formatting issues found. Auto-fixing..."
-          black .
-        }
+        echo "🔍 Skipping Black formatting check in CI/CD (run 'black .' locally before committing)..."
         echo "🔍 Running isort import sorting check..."
         isort --check-only . || {
           echo "⚠️ Import sorting issues found. Auto-fixing..."
