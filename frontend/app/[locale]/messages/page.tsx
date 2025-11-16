@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -37,11 +37,24 @@ export default function MessagesPage() {
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
 
   const CONVERSATIONS_PER_PAGE = 20;
+  const conversationsRef = useRef<Conversation[]>([]);
+  const currentUserRef = useRef(currentUser);
+  const pageRef = useRef(page);
+  const loadConversationsRef = useRef<((reset: boolean) => Promise<void>) | null>(null);
+
+  // currentUserとpageの参照を更新
+  useEffect(() => {
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
+
+  useEffect(() => {
+    pageRef.current = page;
+  }, [page]);
 
   // 会話を取得
-  const loadConversations = async (reset: boolean = false) => {
+  const loadConversations = useCallback(async (reset: boolean = false) => {
     try {
-      const currentPage = reset ? 0 : page;
+      const currentPage = reset ? 0 : pageRef.current;
       setIsLoading(reset);
       setIsLoadingMore(!reset);
 
@@ -65,9 +78,13 @@ export default function MessagesPage() {
 
       if (reset) {
         setConversations(response.conversations);
+        conversationsRef.current = response.conversations;
         setPage(0);
+        pageRef.current = 0;
       } else {
-        setConversations([...conversations, ...response.conversations]);
+        const newConversations = [...conversationsRef.current, ...response.conversations];
+        setConversations(newConversations);
+        conversationsRef.current = newConversations;
       }
 
       setHasMore(response.conversations.length === CONVERSATIONS_PER_PAGE);
@@ -80,24 +97,34 @@ export default function MessagesPage() {
       setIsLoading(false);
       setIsLoadingMore(false);
     }
-  };
+  }, [isAuthenticated, getAccessTokenSilently]);
+
+  // loadConversationsの参照を更新
+  useEffect(() => {
+    loadConversationsRef.current = loadConversations;
+  }, [loadConversations]);
 
   // リアルタイムメッセージ更新
-  const handleNewMessage = (messageEvent: MessageEvent) => {
+  const handleNewMessage = useCallback((messageEvent: MessageEvent) => {
     // 会話リストを更新（該当する会話のlast_messageとunread_countを更新）
     setConversations(prev => {
       const conversationIndex = prev.findIndex(conv => conv.id === messageEvent.conversation_id);
       
       // 会話が存在しない場合（新しい会話）、リストを再読み込み
       if (conversationIndex === -1) {
-        loadConversations(true);
+        // 非同期で再読み込み（無限ループを防ぐ）
+        setTimeout(() => {
+          if (loadConversationsRef.current) {
+            loadConversationsRef.current(true);
+          }
+        }, 100);
         return prev;
       }
 
       const updated = prev.map(conv => {
         if (conv.id === messageEvent.conversation_id) {
           // 自分のメッセージでない場合は未読数を増やす
-          const isOwnMessage = messageEvent.sender_id === currentUser?.id;
+          const isOwnMessage = messageEvent.sender_id === currentUserRef.current?.id;
           const newUnreadCount = isOwnMessage 
             ? conv.unread_count 
             : conv.unread_count + 1;
@@ -129,14 +156,22 @@ export default function MessagesPage() {
       const messageConversation = updated.find(c => c.id === messageEvent.conversation_id);
       if (messageConversation) {
         const filtered = updated.filter(c => c.id !== messageEvent.conversation_id);
-        return [messageConversation, ...filtered];
+        const result = [messageConversation, ...filtered];
+        conversationsRef.current = result;
+        return result;
       }
 
+      conversationsRef.current = updated;
       return updated;
     });
-  };
+  }, []);
 
   const { isConnected: isMessageStreamConnected } = useMessageStream(handleNewMessage);
+
+  // conversationsの参照を更新
+  useEffect(() => {
+    conversationsRef.current = conversations;
+  }, [conversations]);
 
   // 認証チェックと初期読み込み
   useEffect(() => {

@@ -176,5 +176,28 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # Group relationships
+    # Groups created by this user
+    groups_created = relationship(
+        "Group",
+        foreign_keys="Group.creator_id",
+        back_populates="creator",
+        cascade="all, delete-orphan",
+    )
+    # Group memberships
+    group_memberships = relationship(
+        "GroupMember",
+        foreign_keys="GroupMember.user_id",
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    # Group messages sent by this user
+    group_messages_sent = relationship(
+        "GroupMessage",
+        foreign_keys="GroupMessage.sender_id",
+        back_populates="sender",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"

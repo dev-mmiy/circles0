@@ -87,16 +87,15 @@ export default function Home() {
             ) : (
               <div className="space-y-4">
                 {posts.map((post) => (
-                  <I18nLink
+                  <div
                     key={post.id}
-                    href="/feed"
                     className="block cursor-pointer hover:opacity-90 transition-opacity"
                   >
                     <PostCard
                       post={post}
                       showFullContent={false}
                     />
-                  </I18nLink>
+                  </div>
                 ))}
                 <div className="text-center pt-4">
                   <I18nLink

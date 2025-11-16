@@ -115,6 +115,12 @@ export default function Header() {
               >
                 {t('messages')}
               </Link>
+              <Link
+                href="/groups"
+                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+              >
+                {t('groups')}
+              </Link>
             </nav>
           )}
 
@@ -192,6 +198,13 @@ export default function Header() {
                 className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
               >
                 {t('messages')}
+              </Link>
+              <Link
+                href="/groups"
+                onClick={handleMobileMenuClose}
+                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
+              >
+                {t('groups')}
               </Link>
             </nav>
           </div>

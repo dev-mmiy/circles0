@@ -18,6 +18,7 @@ import {
   NotificationEvent,
 } from '@/lib/hooks/useNotificationStream';
 import { getUnreadCount } from '@/lib/api/notifications';
+import { setAuthToken } from '@/lib/api/client';
 
 interface NotificationContextValue {
   // Real-time connection status
@@ -55,7 +56,7 @@ interface NotificationProviderProps {
 }
 
 export function NotificationProvider({ children }: NotificationProviderProps) {
-  const { isAuthenticated } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const [unreadCount, setUnreadCount] = useState(0);
 
   // Handle incoming real-time notifications
@@ -124,18 +125,26 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   // Fetch initial unread count on mount
   useEffect(() => {
     if (isAuthenticated) {
-      getUnreadCount()
-        .then((count) => {
+      const fetchUnreadCount = async () => {
+        try {
+          // Get and set authentication token
+          const token = await getAccessTokenSilently();
+          setAuthToken(token);
+          
+          const count = await getUnreadCount();
           console.log('[NotificationContext] Initial unread count:', count);
           setUnreadCount(count);
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error('[NotificationContext] Failed to fetch unread count:', error);
-        });
+          setUnreadCount(0);
+        }
+      };
+      
+      fetchUnreadCount();
     } else {
       setUnreadCount(0);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, getAccessTokenSilently]);
 
   const incrementUnreadCount = useCallback(() => {
     setUnreadCount((prev) => prev + 1);

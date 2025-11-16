@@ -16,6 +16,7 @@ from .disease import (
 )
 from .block import Block
 from .follow import Follow
+from .group import Group, GroupMember, GroupMessage, GroupMessageRead
 from .hashtag import Hashtag, PostHashtag
 from .mention import CommentMention, PostMention
 from .message import Conversation, Message, MessageRead
@@ -51,4 +52,8 @@ __all__ = [
     "Conversation",
     "Message",
     "MessageRead",
+    "Group",
+    "GroupMember",
+    "GroupMessage",
+    "GroupMessageRead",
 ]
