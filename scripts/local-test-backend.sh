@@ -113,15 +113,17 @@ log_info "Running backend linting..."
 
 # Black フォーマットチェック（タイムアウト付き）
 log_info "Checking Black formatting..."
-BLACK_OUTPUT=$(timeout 30 docker compose -f $COMPOSE_FILE exec backend black --check . 2>&1)
-BLACK_EXIT_CODE=$?
+# Suppress .env file errors from python-dotenv by redirecting stderr
+BLACK_OUTPUT=$(timeout 30 docker compose -f $COMPOSE_FILE exec backend bash -c "black --check . 2>&1 | grep -v 'env file.*not found' || true")
+BLACK_EXIT_CODE=$(timeout 30 docker compose -f $COMPOSE_FILE exec backend black --check . > /dev/null 2>&1; echo $?)
 if [ $BLACK_EXIT_CODE -eq 0 ]; then
     log_success "Black formatting check passed"
 else
     if [ "$GITHUB_ACTIONS" = "true" ]; then
         # CI環境では自動修正せず、エラーとして報告
         log_error "Black formatting issues found. Please run 'black .' locally and commit the changes."
-        echo "$BLACK_OUTPUT"
+        # Show Black output without .env errors
+        timeout 30 docker compose -f $COMPOSE_FILE exec backend black --check . 2>&1 | grep -v 'env file.*not found' || true
         exit 1
     else
         # ローカル環境では自動修正
