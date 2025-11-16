@@ -20,10 +20,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 env_file = Path(__file__).parent.parent / ".env"
-if env_file.exists():
+if env_file.exists() and env_file.is_file():
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
+            import logging
+            logging.getLogger("dotenv").setLevel(logging.ERROR)
             load_dotenv(dotenv_path=env_file, override=False, verbose=False)
         except Exception:
             # Ignore errors if .env file cannot be loaded
