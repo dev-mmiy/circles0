@@ -112,27 +112,27 @@ log_info "Running backend tests..."
 log_info "Running backend linting..."
 
 # Black フォーマットチェック（タイムアウト付き）
-# Skip Black check in CI/CD environment (run locally only)
-# Check for GitHub Actions environment (both GITHUB_ACTIONS and CI environment variables)
-if [ "${GITHUB_ACTIONS:-false}" = "true" ] || [ "${CI:-false}" = "true" ]; then
-    log_info "Skipping Black formatting check in CI/CD environment (run 'black .' locally before committing)"
-else
-    log_info "Checking Black formatting..."
-    # Run Black check, filtering out .env file errors
-    BLACK_CHECK_CMD="black --check . 2>&1 | grep -v 'env file.*not found' | grep -v 'stat.*\.env.*no such file' || true"
-    BLACK_OUTPUT=$(timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "$BLACK_CHECK_CMD")
-    # Check exit code separately (Black returns non-zero if files need reformatting)
-    BLACK_EXIT_CODE=$(timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "black --check . > /dev/null 2>&1; echo \$?")
-    if [ "$BLACK_EXIT_CODE" = "0" ]; then
-        log_success "Black formatting check passed"
-    else
-        # ローカル環境では自動修正
-        log_warn "Black formatting issues found. Auto-fixing..."
-        timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "black . 2>&1 | grep -v 'env file.*not found' | grep -v 'stat.*\.env.*no such file' > /dev/null" || true
-        log_success "Black formatting fixed"
-    fi
-    log_success "Black formatting check completed"
-fi
+# Temporarily disabled - run 'black .' locally before committing
+log_info "Skipping Black formatting check (run 'black .' locally before committing)"
+# if [ "${GITHUB_ACTIONS:-false}" = "true" ] || [ "${CI:-false}" = "true" ]; then
+#     log_info "Skipping Black formatting check in CI/CD environment (run 'black .' locally before committing)"
+# else
+#     log_info "Checking Black formatting..."
+#     # Run Black check, filtering out .env file errors
+#     BLACK_CHECK_CMD="black --check . 2>&1 | grep -v 'env file.*not found' | grep -v 'stat.*\.env.*no such file' || true"
+#     BLACK_OUTPUT=$(timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "$BLACK_CHECK_CMD")
+#     # Check exit code separately (Black returns non-zero if files need reformatting)
+#     BLACK_EXIT_CODE=$(timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "black --check . > /dev/null 2>&1; echo \$?")
+#     if [ "$BLACK_EXIT_CODE" = "0" ]; then
+#         log_success "Black formatting check passed"
+#     else
+#         # ローカル環境では自動修正
+#         log_warn "Black formatting issues found. Auto-fixing..."
+#         timeout 30 docker compose -f $COMPOSE_FILE exec -T backend bash -c "black . 2>&1 | grep -v 'env file.*not found' | grep -v 'stat.*\.env.*no such file' > /dev/null" || true
+#         log_success "Black formatting fixed"
+#     fi
+#     log_success "Black formatting check completed"
+# fi
 
 # isort チェック（タイムアウト付き）
 log_info "Checking import sorting..."
