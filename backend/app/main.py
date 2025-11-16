@@ -32,8 +32,8 @@ except ImportError:
 # from app.auth.router import router as session_auth_router  # Temporarily disabled
 from app.middleware.market import MarketMiddleware
 
-# Load environment variables from .env if present
-load_dotenv()
+# Load environment variables from .env if present (ignore if file doesn't exist)
+load_dotenv(override=False)
 
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
