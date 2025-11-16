@@ -33,7 +33,11 @@ except ImportError:
 from app.middleware.market import MarketMiddleware
 
 # Load environment variables from .env if present (ignore if file doesn't exist)
-load_dotenv(override=False)
+try:
+    load_dotenv(override=False)
+except Exception:
+    # Ignore errors if .env file doesn't exist
+    pass
 
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
