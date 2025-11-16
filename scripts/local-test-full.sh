@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# リファクタリングされたローカルテストスクリプト
-# フロントエンド待機問題を解決し、より堅牢なテストを実現
+# Refactored local testing script
+# Resolves frontend waiting issues and provides more robust testing
 
 set -e
 
 echo "🚀 Starting refactored local testing process..."
 
-# 環境検出
+# Environment detection
 if [ "$GITHUB_ACTIONS" = "true" ]; then
     COMPOSE_FILE="docker-compose.ci.yml"
     echo "🔧 Detected GitHub Actions environment, using CI Docker Compose"
@@ -16,7 +16,7 @@ else
     echo "🔧 Using local Docker Compose"
 fi
 
-# 色付きログ関数
+# Colored log functions
 log_info() {
     echo -e "\033[0;34m[INFO]\033[0m $1"
 }
@@ -33,7 +33,7 @@ log_warn() {
     echo -e "\033[0;33m[WARN]\033[0m $1"
 }
 
-# プログレス表示関数
+# Progress display function
 show_progress() {
     local step=$1
     local total=$2
@@ -41,7 +41,7 @@ show_progress() {
     echo -e "\033[0;36m[STEP $step/$total]\033[0m $description"
 }
 
-# タイムアウト付き待機関数
+# Timeout-based wait function
 wait_for_service() {
     local url=$1
     local service_name=$2
@@ -64,7 +64,7 @@ wait_for_service() {
     return 1
 }
 
-# エラーハンドリング
+# Error handling
 cleanup() {
     log_info "Cleaning up..."
     docker compose -f $COMPOSE_FILE down > /dev/null 2>&1 || true
@@ -73,7 +73,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-# 1. 環境チェック
+# 1. Environment check
 show_progress 1 8 "Checking Docker status..."
 if ! docker info > /dev/null 2>&1; then
     log_error "Docker is not running. Please start Docker and try again."
@@ -81,7 +81,7 @@ if ! docker info > /dev/null 2>&1; then
 fi
 log_success "Docker is running"
 
-# 2. 依存関係チェック
+# 2. Dependency check
 show_progress 2 8 "Checking dependencies..."
 if [ ! -f "docker-compose.yml" ]; then
     log_error "docker-compose.yml not found. Please run from project root."
@@ -89,12 +89,12 @@ if [ ! -f "docker-compose.yml" ]; then
 fi
 log_success "All dependencies are installed"
 
-# 3. サービス起動
+# 3. Start services
 show_progress 3 8 "Starting local services..."
 docker compose -f $COMPOSE_FILE up -d postgres
 sleep 5
 
-# データベースの準備を待つ
+# Wait for database to be ready
 log_info "Waiting for database to be ready..."
 max_attempts=15
 attempt=0
@@ -141,46 +141,56 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# バックエンドのリンターとフォーマットチェック
+# Backend linting and format checks
 log_info "Running backend linting..."
 
-# isort チェック（タイムアウト付き）
+# isort check (with timeout)
 log_info "Checking import sorting..."
-timeout 30 docker compose exec backend isort --check-only . > /dev/null 2>&1 || {
-    log_warn "Import sorting issues found. Auto-fixing..."
-    timeout 30 docker compose exec backend isort . > /dev/null 2>&1
-    log_success "Import sorting fixed"
-}
+if timeout 30 docker compose exec backend isort --check-only . > /dev/null 2>&1; then
+    log_success "Import sorting check passed"
+else
+    if [ "$GITHUB_ACTIONS" = "true" ]; then
+        # In CI environment, fail instead of auto-fixing
+        log_error "Import sorting issues found. Please run 'isort .' locally and commit the changes."
+        timeout 30 docker compose exec backend isort --check-only . || true
+        exit 1
+    else
+        # In local environment, auto-fix
+        log_warn "Import sorting issues found. Auto-fixing..."
+        timeout 30 docker compose exec backend isort . > /dev/null 2>&1
+        log_success "Import sorting fixed"
+    fi
+fi
 log_success "Import sorting check completed"
 
-# flake8 チェック（タイムアウト付き）
+# flake8 check (with timeout)
 log_info "Running flake8 linting..."
 timeout 30 docker compose exec backend flake8 app/ || {
     log_warn "Flake8 found some issues, but continuing..."
 }
 log_success "Backend linting completed"
 
-# バックエンドテスト実行
+# Run backend tests
 log_info "Running backend unit tests..."
 timeout 180 docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html || {
     log_warn "Some backend tests failed, but continuing..."
 }
 log_success "Backend tests completed"
 
-# 5. フロントエンドテスト（改善された待機ロジック）
+# 5. Frontend tests (improved waiting logic)
 show_progress 5 8 "Starting frontend container for testing..."
 docker compose -f $COMPOSE_FILE up -d frontend
 sleep 5
 
-# フロントエンドの準備を待つ（改善された待機ロジック）
+# Wait for frontend to be ready (improved waiting logic)
 log_info "Waiting for frontend to be ready..."
 max_attempts=30
 attempt=0
 
 while [ $attempt -lt $max_attempts ]; do
-    # フロントエンドコンテナの状態をチェック
+    # Check frontend container status
     if docker compose ps frontend | grep -q "Up"; then
-        # フロントエンドが起動している場合、HTTPレスポンスをチェック
+        # If frontend is running, check HTTP response
         if curl -f http://localhost:3000 > /dev/null 2>&1; then
             log_success "Frontend is ready"
             break
@@ -194,22 +204,22 @@ done
 
 if [ $attempt -eq $max_attempts ]; then
     log_warn "Frontend took longer than expected to start, but continuing..."
-    # フロントエンドのログを確認
+    # Check frontend logs
     log_info "Checking frontend logs..."
     docker compose logs frontend --tail=20
 fi
 
-# フロントエンドのリンターとフォーマットチェック
+# Frontend linting and format checks
 log_info "Running frontend linting..."
 
-# ESLint チェック（タイムアウト付き）
+# ESLint check (with timeout)
 log_info "Running ESLint..."
 timeout 60 docker compose exec frontend npm run lint > /dev/null 2>&1 || {
     log_warn "ESLint issues found, but continuing..."
 }
 log_success "ESLint check completed"
 
-# Prettier チェック（タイムアウト付き）
+# Prettier check (with timeout)
 log_info "Checking Prettier formatting..."
 timeout 60 docker compose exec frontend npm run format:check > /dev/null 2>&1 || {
     log_warn "Prettier formatting issues found. Auto-fixing..."
@@ -220,31 +230,31 @@ log_success "Prettier formatting check completed"
 
 log_success "Frontend linting completed"
 
-# フロントエンドテスト実行
+# Run frontend tests
 log_info "Running frontend tests..."
 timeout 180 docker compose exec frontend npm test || {
     log_warn "Some frontend tests failed, but continuing..."
 }
 log_success "Frontend tests completed"
 
-# 6. 統合テスト
+# 6. Integration tests
 show_progress 6 8 "Running integration tests..."
 timeout 120 docker compose exec backend python -m pytest tests/integration/ -v || {
     log_warn "Some integration tests failed, but continuing..."
 }
 log_success "Integration tests completed"
 
-# 7. APIエンドポイントテスト
+# 7. API endpoint tests
 show_progress 7 8 "Testing API endpoints..."
 
-# ヘルスチェック
+# Health check
 curl -f http://localhost:8000/health > /dev/null || {
     log_error "Backend health check failed"
     exit 1
 }
 log_success "Backend health check passed"
 
-# データベースの状態確認
+# Check database status
 log_info "Checking database status..."
 DB_STATUS=$(curl -s http://localhost:8000/health | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
 if [ "$DB_STATUS" = "healthy" ]; then
@@ -254,8 +264,8 @@ else
     exit 1
 fi
 
-# ユーザーAPI
-# データベースのテーブル状況を確認
+# Users API
+# Check database tables
 log_info "Checking database tables..."
 docker compose exec backend python -c "
 from app.database import get_db
@@ -303,7 +313,7 @@ else
     log_info "Disease data already exists (count: $DISEASE_COUNT)"
 fi
 
-# 疾患API
+# Diseases API
 log_info "Testing diseases API..."
 DISEASES_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/diseases/)
 HTTP_CODE="${DISEASES_RESPONSE: -3}"
@@ -315,9 +325,9 @@ else
     exit 1
 fi
 
-# ユーザー登録テスト
+# User registration test
 log_info "Testing user creation..."
-# 一意のIDを生成
+# Generate unique ID
 UNIQUE_ID=$(date +%s)_$$_$RANDOM
 USER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/users/ \
   -H "Content-Type: application/json" \
@@ -344,7 +354,7 @@ if echo "$USER_RESPONSE" | grep -q "id"; then
     PROFILE_VISIBILITY=$(echo "$USER_RESPONSE" | grep -o '"profile_visibility":"[^"]*"' | cut -d'"' -f4)
     log_info "User profile_visibility: $PROFILE_VISIBILITY"
     
-    # 公開プロフィール取得テスト
+    # Public profile retrieval test
     log_info "Testing public profile retrieval..."
     PROFILE_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8000/api/v1/users/$USER_ID)
     PROFILE_HTTP_CODE=$(echo "$PROFILE_RESPONSE" | tail -1)
@@ -361,16 +371,16 @@ else
     exit 1
 fi
 
-# 8. フロントエンドページテスト
+# 8. Frontend page tests
 show_progress 8 8 "Testing frontend pages..."
 
-# フロントエンドの詳細なヘルスチェック
+# Detailed frontend health check
 log_info "Checking frontend container health..."
 docker compose ps frontend
 log_info "Checking frontend container logs (last 20 lines)..."
 docker compose logs frontend --tail=20
 
-# フロントエンドのポート確認
+# Check frontend port
 log_info "Checking if frontend port 3000 is accessible..."
 if curl -f http://localhost:3000 > /dev/null 2>&1; then
     log_success "Frontend port 3000 is accessible"
@@ -385,18 +395,18 @@ else
     exit 1
 fi
 
-# ホームページ（next-intlのリダイレクトを考慮）
+# Home page (considering next-intl redirect)
 log_info "Testing home page..."
-# ルートパスは/jaにリダイレクトされるため、リダイレクトを許可してテスト
+# Root path redirects to /ja, so allow redirects for testing
 HOME_RESPONSE=$(curl -s -L -w "HTTP_CODE:%{http_code}" http://localhost:3000)
 HTTP_CODE=$(echo "$HOME_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
 if [ "$HTTP_CODE" = "200" ]; then
     log_success "Home page working"
 else
-    # 307リダイレクトも正常な動作として扱う（next-intlのミドルウェアによる）
+    # Treat 307 redirects as normal behavior (next-intl middleware)
     if [ "$HTTP_CODE" = "307" ] || [ "$HTTP_CODE" = "308" ]; then
         log_info "Home page redirects to /ja (expected behavior)"
-        # リダイレクト先を直接テスト
+        # Test redirect destination directly
         JA_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/ja)
         JA_HTTP_CODE=$(echo "$JA_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
         if [ "$JA_HTTP_CODE" = "200" ]; then
@@ -417,13 +427,13 @@ else
     fi
 fi
 
-# プロフィールページ（動的ルート、next-intlのロケールプレフィックスを考慮）
+# Profile page (dynamic route, considering next-intl locale prefix)
 log_info "Testing profile page..."
-# ロケールプレフィックスが必要なため/ja/profile/...をテスト
+# Locale prefix is required, so test /ja/profile/...
 PROFILE_RESPONSE=$(curl -s -w "HTTP_CODE:%{http_code}" http://localhost:3000/ja/profile/test-user)
 HTTP_CODE=$(echo "$PROFILE_RESPONSE" | grep -o "HTTP_CODE:[0-9]*" | cut -d: -f2)
 if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "404" ]; then
-    # 404も正常（ユーザーが存在しない場合）
+    # 404 is also normal (if user doesn't exist)
     log_success "Profile page working (HTTP $HTTP_CODE)"
 else
     log_error "Profile page failed with HTTP $HTTP_CODE"
@@ -431,7 +441,7 @@ else
     exit 1
 fi
 
-# 9. 最終レポート
+# 9. Final report
 log_success "🎉 All local tests completed successfully!"
 echo ""
 echo "📊 Test Summary:"
@@ -448,5 +458,5 @@ echo "   API Docs: http://localhost:8000/docs"
 echo ""
 echo "🚀 Ready for deployment!"
 
-# クリーンアップ
+# Cleanup
 cleanup

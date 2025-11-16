@@ -1,13 +1,13 @@
 #!/bin/bash
 
-# バックエンドのみのローカルテストスクリプト
-# フロントエンドの問題を回避し、バックエンドのテストに集中
+# Backend-only local testing script
+# Avoids frontend issues and focuses on backend testing
 
 set -e
 
 echo "🚀 Starting backend-only local testing process..."
 
-# 環境検出
+# Environment detection
 if [ "$GITHUB_ACTIONS" = "true" ]; then
     COMPOSE_FILE="docker-compose.ci.yml"
     echo "🔧 Detected GitHub Actions environment, using CI Docker Compose"
@@ -16,7 +16,7 @@ else
     echo "🔧 Using local Docker Compose"
 fi
 
-# 色付きログ関数
+# Colored log functions
 log_info() {
     echo -e "\033[0;34m[INFO]\033[0m $1"
 }
@@ -33,7 +33,7 @@ log_warn() {
     echo -e "\033[0;33m[WARN]\033[0m $1"
 }
 
-# エラーハンドリング
+# Error handling
 cleanup() {
     log_info "Cleaning up..."
     docker compose -f $COMPOSE_FILE down > /dev/null 2>&1 || true
@@ -42,7 +42,7 @@ cleanup() {
 
 trap cleanup EXIT
 
-# 1. 環境チェック
+# 1. Environment check
 log_info "Checking Docker status..."
 if ! docker info > /dev/null 2>&1; then
     log_error "Docker is not running. Please start Docker and try again."
@@ -50,7 +50,7 @@ if ! docker info > /dev/null 2>&1; then
 fi
 log_success "Docker is running"
 
-# 2. 依存関係チェック
+# 2. Dependency check
 log_info "Checking dependencies..."
 if [ ! -f "docker-compose.yml" ]; then
     log_error "docker-compose.yml not found. Please run from project root."
@@ -58,12 +58,12 @@ if [ ! -f "docker-compose.yml" ]; then
 fi
 log_success "All dependencies are installed"
 
-# 3. サービス起動（バックエンドのみ）
+# 3. Start services (backend only)
 log_info "Starting backend services..."
 docker compose -f $COMPOSE_FILE up -d postgres backend
 sleep 10
 
-# データベースの準備を待つ
+# Wait for database to be ready
 log_info "Waiting for database to be ready..."
 max_attempts=15
 attempt=0
@@ -82,7 +82,7 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# バックエンドの準備を待つ（マイグレーションは起動時に自動実行）
+# Wait for backend to be ready (migrations run automatically on startup)
 log_info "Waiting for backend to be ready (migrations will run automatically)..."
 max_attempts=30
 attempt=0
@@ -105,53 +105,63 @@ if [ $attempt -eq $max_attempts ]; then
     exit 1
 fi
 
-# 4. バックエンドテスト
+# 4. Backend tests
 log_info "Running backend tests..."
 
-# バックエンドのリンターとフォーマットチェック
+# Backend linting and format checks
 log_info "Running backend linting..."
 
-# isort チェック（タイムアウト付き）
+# isort check (with timeout)
 log_info "Checking import sorting..."
-timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . > /dev/null 2>&1 || {
-    log_warn "Import sorting issues found. Auto-fixing..."
-    timeout 30 docker compose -f $COMPOSE_FILE exec backend isort . > /dev/null 2>&1
-    log_success "Import sorting fixed"
-}
+if timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . > /dev/null 2>&1; then
+    log_success "Import sorting check passed"
+else
+    if [ "$GITHUB_ACTIONS" = "true" ]; then
+        # In CI environment, fail instead of auto-fixing
+        log_error "Import sorting issues found. Please run 'isort .' locally and commit the changes."
+        timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . || true
+        exit 1
+    else
+        # In local environment, auto-fix
+        log_warn "Import sorting issues found. Auto-fixing..."
+        timeout 30 docker compose -f $COMPOSE_FILE exec backend isort . > /dev/null 2>&1
+        log_success "Import sorting fixed"
+    fi
+fi
 log_success "Import sorting check completed"
 
-# flake8 チェック（タイムアウト付き）
+# flake8 check (with timeout)
 log_info "Running flake8 linting..."
 timeout 30 docker compose -f $COMPOSE_FILE exec backend flake8 app/ || {
     log_warn "Flake8 found some issues, but continuing..."
 }
 log_success "Backend linting completed"
 
-# バックエンドテスト実行
+# Run backend unit tests
 log_info "Running backend unit tests..."
 timeout 180 docker compose -f $COMPOSE_FILE exec backend python -m pytest tests/ -v --cov=app --cov-report=html || {
     log_warn "Some backend tests failed, but continuing..."
 }
 log_success "Backend tests completed"
 
-# 5. 統合テスト
+# 5. Integration tests
 log_info "Running integration tests..."
 timeout 120 docker compose -f $COMPOSE_FILE exec backend python -m pytest tests/integration/ -v || {
     log_warn "Some integration tests failed, but continuing..."
 }
 log_success "Integration tests completed"
 
-# 6. APIエンドポイントテスト
+# 6. API endpoint tests
 log_info "Testing API endpoints..."
 
-# ヘルスチェック
+# Health check
 curl -f http://localhost:8000/health > /dev/null || {
     log_error "Backend health check failed"
     exit 1
 }
 log_success "Backend health check passed"
 
-# データベースの状態確認
+# Check database status
 log_info "Checking database status..."
 DB_STATUS=$(curl -s http://localhost:8000/health | grep -o '"status":"[^"]*"' | cut -d'"' -f4)
 if [ "$DB_STATUS" = "healthy" ]; then
@@ -161,7 +171,7 @@ else
     exit 1
 fi
 
-# データベースのテーブル状況を確認
+# Check database tables
 log_info "Checking database tables..."
 docker compose -f $COMPOSE_FILE exec backend python -c "
 from app.database import get_db
@@ -209,7 +219,7 @@ else
     log_info "Disease data already exists (count: $DISEASE_COUNT)"
 fi
 
-# 疾患API
+# Diseases API
 log_info "Testing diseases API..."
 DISEASES_RESPONSE=$(curl -s -w "%{http_code}" http://localhost:8000/api/v1/diseases/)
 HTTP_CODE="${DISEASES_RESPONSE: -3}"
@@ -221,9 +231,9 @@ else
     exit 1
 fi
 
-# ユーザー作成テスト（Auth0統合）
+# User creation test (Auth0 integration)
 log_info "Testing user creation..."
-# 一意のIDを生成
+# Generate unique ID
 UNIQUE_ID=$(date +%s)_$$_$RANDOM
 USER_RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/users/ \
   -H "Content-Type: application/json" \
@@ -250,7 +260,7 @@ if echo "$USER_RESPONSE" | grep -q "id"; then
     PROFILE_VISIBILITY=$(echo "$USER_RESPONSE" | grep -o '"profile_visibility":"[^"]*"' | cut -d'"' -f4)
     log_info "User profile_visibility: $PROFILE_VISIBILITY"
     
-    # 公開プロフィール取得テスト
+    # Public profile retrieval test
     log_info "Testing public profile retrieval..."
     PROFILE_RESPONSE=$(curl -s -w "\n%{http_code}" http://localhost:8000/api/v1/users/$USER_ID)
     PROFILE_HTTP_CODE=$(echo "$PROFILE_RESPONSE" | tail -1)
@@ -267,7 +277,7 @@ else
     exit 1
 fi
 
-# 7. 最終レポート
+# 7. Final report
 log_success "🎉 Backend-only local tests completed successfully!"
 echo ""
 echo "📊 Test Summary:"

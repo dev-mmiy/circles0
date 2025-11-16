@@ -68,11 +68,10 @@ jobs:
     - name: Backend Linting
       run: |
         cd backend
-        echo "🔍 Skipping Black formatting check in CI/CD (run 'black .' locally before committing)..."
         echo "🔍 Running isort import sorting check..."
         isort --check-only . || {
-          echo "⚠️ Import sorting issues found. Auto-fixing..."
-          isort .
+          echo "❌ Import sorting issues found. Please run 'isort .' locally and commit the changes."
+          exit 1
         }
         echo "🔍 Running flake8 linting..."
         flake8 . --max-line-length=88 --extend-ignore=E203,W503 || {
