@@ -25,8 +25,9 @@ if env_file.exists() and env_file.is_file():
         warnings.simplefilter("ignore")
         try:
             import logging
-            import sys
             import os
+            import sys
+
             # Suppress dotenv logger and stderr temporarily
             logging.getLogger("dotenv").setLevel(logging.CRITICAL)
             # Redirect stderr temporarily to suppress error messages
