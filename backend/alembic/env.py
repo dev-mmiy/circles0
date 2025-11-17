@@ -10,33 +10,34 @@ from sqlalchemy import engine_from_config, pool
 
 from alembic import context
 
-env_file = Path(__file__).parent.parent / ".env"
-# Only load .env file if it exists and is a file
+# Load .env file only if it exists and is not empty
 # Skip loading in CI/CD environments where .env file is not needed
+env_file = Path(__file__).parent.parent / ".env"
 try:
-    file_exists = env_file.exists() and env_file.is_file()
-    file_size = env_file.stat().st_size if file_exists else 0
+    # Check if file exists and has content before attempting to load
+    if env_file.exists() and env_file.is_file():
+        file_size = env_file.stat().st_size
+        if file_size > 0:
+            # File exists and has content, load it with all output suppressed
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    import contextlib
+                    import logging
+                    import sys
+
+                    # Suppress dotenv logger completely
+                    logging.getLogger("dotenv").setLevel(logging.CRITICAL)
+                    # Redirect both stderr and stdout to /dev/null to suppress all messages
+                    with open(os.devnull, 'w') as devnull:
+                        with contextlib.redirect_stderr(devnull), contextlib.redirect_stdout(devnull):
+                            load_dotenv(dotenv_path=str(env_file.resolve()), override=False, verbose=False)
+                except (FileNotFoundError, OSError, Exception):
+                    # Silently ignore errors if .env file cannot be loaded
+                    pass
 except (FileNotFoundError, OSError):
-    file_exists = False
-    file_size = 0
-
-if file_exists and file_size > 0:
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore")
-        try:
-            import contextlib
-            import logging
-            import sys
-
-            # Suppress dotenv logger, stderr, and stdout temporarily
-            logging.getLogger("dotenv").setLevel(logging.CRITICAL)
-            # Redirect both stderr and stdout to /dev/null to suppress all messages
-            with open(os.devnull, 'w') as devnull:
-                with contextlib.redirect_stderr(devnull), contextlib.redirect_stdout(devnull):
-                    load_dotenv(dotenv_path=str(env_file.resolve()), override=False, verbose=False)
-        except (FileNotFoundError, OSError, Exception):
-            # Ignore errors if .env file cannot be loaded (e.g., in CI/CD environments)
-            pass
+    # File doesn't exist or cannot be accessed - this is normal in CI/CD environments
+    pass
 
 # add your model's MetaData object here
 # for 'autogenerate' support
