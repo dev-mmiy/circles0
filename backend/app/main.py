@@ -39,7 +39,8 @@ from app.middleware.market import MarketMiddleware
 
 env_file = Path(__file__).parent.parent / ".env"
 # Only load .env file if it exists and is a file
-if env_file.exists() and env_file.is_file():
+# Skip loading in CI/CD environments where .env file is not needed
+if env_file.exists() and env_file.is_file() and env_file.stat().st_size > 0:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
@@ -53,8 +54,8 @@ if env_file.exists() and env_file.is_file():
             with open(os.devnull, 'w') as devnull:
                 with contextlib.redirect_stderr(devnull), contextlib.redirect_stdout(devnull):
                     load_dotenv(dotenv_path=str(env_file.resolve()), override=False, verbose=False)
-        except Exception:
-            # Ignore errors if .env file cannot be loaded
+        except (FileNotFoundError, OSError, Exception):
+            # Ignore errors if .env file cannot be loaded (e.g., in CI/CD environments)
             pass
 
 # Environment variables
