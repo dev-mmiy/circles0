@@ -13,7 +13,14 @@ from alembic import context
 env_file = Path(__file__).parent.parent / ".env"
 # Only load .env file if it exists and is a file
 # Skip loading in CI/CD environments where .env file is not needed
-if env_file.exists() and env_file.is_file() and env_file.stat().st_size > 0:
+try:
+    file_exists = env_file.exists() and env_file.is_file()
+    file_size = env_file.stat().st_size if file_exists else 0
+except (FileNotFoundError, OSError):
+    file_exists = False
+    file_size = 0
+
+if file_exists and file_size > 0:
     with warnings.catch_warnings():
         warnings.simplefilter("ignore")
         try:
