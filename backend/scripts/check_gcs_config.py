@@ -28,45 +28,52 @@ except ImportError:
 
 # Load .env file only if it exists and is not empty
 # Skip loading in CI/CD environments where .env file is not needed
+# Disable python-dotenv's automatic .env file discovery to prevent error messages
+os.environ.setdefault("DOTENV_SILENT", "1")
 env_file = Path(__file__).parent.parent / ".env"
 # Use absolute path to avoid path resolution issues
-env_file_abs = env_file.resolve()
 try:
-    # Check if file exists and has content before attempting to load
-    # Use try-except around exists() and stat() to prevent any error messages
-    file_exists = False
-    file_size = 0
+    env_file_abs = env_file.resolve()
+except (FileNotFoundError, OSError, RuntimeError):
+    # Path resolution failed, skip .env loading
+    env_file_abs = None
+
+if env_file_abs:
     try:
-        if env_file_abs.exists() and env_file_abs.is_file():
-            file_exists = True
-            file_size = env_file_abs.stat().st_size
-    except (FileNotFoundError, OSError, PermissionError):
-        # File doesn't exist or cannot be accessed - this is normal in CI/CD environments
+        # Check if file exists and has content before attempting to load
+        # Use try-except around exists() and stat() to prevent any error messages
         file_exists = False
         file_size = 0
-    
-    if file_exists and file_size > 0:
-        # File exists and has content, load it with all output suppressed
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            try:
-                import contextlib
-                import logging
-                import os
-                import sys
+        try:
+            if env_file_abs.exists() and env_file_abs.is_file():
+                file_exists = True
+                file_size = env_file_abs.stat().st_size
+        except (FileNotFoundError, OSError, PermissionError):
+            # File doesn't exist or cannot be accessed - this is normal in CI/CD environments
+            file_exists = False
+            file_size = 0
+        
+        if file_exists and file_size > 0:
+            # File exists and has content, load it with all output suppressed
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                try:
+                    import contextlib
+                    import logging
+                    import sys
 
-                # Suppress dotenv logger completely
-                logging.getLogger("dotenv").setLevel(logging.CRITICAL)
-                # Redirect both stderr and stdout to /dev/null to suppress all messages
-                with open(os.devnull, 'w') as devnull:
-                    with contextlib.redirect_stderr(devnull), contextlib.redirect_stdout(devnull):
-                        load_dotenv(dotenv_path=str(env_file_abs), override=False, verbose=False)
-            except (FileNotFoundError, OSError, PermissionError, Exception):
-                # Silently ignore errors if .env file cannot be loaded
-                pass
-except Exception:
-    # Silently ignore any other errors
-    pass
+                    # Suppress dotenv logger completely
+                    logging.getLogger("dotenv").setLevel(logging.CRITICAL)
+                    # Redirect both stderr and stdout to /dev/null to suppress all messages
+                    with open(os.devnull, 'w') as devnull:
+                        with contextlib.redirect_stderr(devnull), contextlib.redirect_stdout(devnull):
+                            load_dotenv(dotenv_path=str(env_file_abs), override=False, verbose=False)
+                except (FileNotFoundError, OSError, PermissionError, Exception):
+                    # Silently ignore errors if .env file cannot be loaded
+                    pass
+    except Exception:
+        # Silently ignore any other errors
+        pass
 
 
 def check_environment_variables():
