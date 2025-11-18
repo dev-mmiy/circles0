@@ -3,7 +3,8 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { useRouter, useParams } from '@/i18n/routing';
+import { useParams as useNextParams } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -29,7 +30,7 @@ export default function GroupChatPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
-  const params = useParams();
+  const params = useNextParams();
   const locale = useLocale();
   const groupId = params.groupId as string;
   const t = useTranslations('groups');
