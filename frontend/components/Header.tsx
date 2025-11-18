@@ -86,12 +86,6 @@ export default function Header() {
           {isAuthenticated && (
             <nav className="hidden md:flex items-center space-x-6">
               <Link
-                href="/"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                {t('home')}
-              </Link>
-              <Link
                 href="/feed"
                 className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
               >
@@ -164,13 +158,6 @@ export default function Header() {
             className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 md:hidden"
           >
             <nav className="flex flex-col py-2">
-              <Link
-                href="/"
-                onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
-              >
-                {t('home')}
-              </Link>
               <Link
                 href="/feed"
                 onClick={handleMobileMenuClose}
