@@ -4,6 +4,7 @@
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { extractErrorInfo, requiresAuthRedirect, ErrorType } from '../utils/errorHandler';
+import { addLocalePrefix } from '../utils/locale';
 
 // API base URL from environment variable
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
@@ -63,14 +64,18 @@ apiClient.interceptors.response.use(
           
           // Store the current URL to redirect back after login
           const currentPath = window.location.pathname;
-          if (currentPath !== '/') {
+          // Check if current path is not just a locale prefix (e.g., /ja or /en)
+          const isLocaleOnly = /^\/[a-z]{2}\/?$/.test(currentPath);
+          if (currentPath && !isLocaleOnly) {
             sessionStorage.setItem('redirectAfterLogin', currentPath);
           }
           
           // Redirect to home page (which will show login button)
           // In a real app, you might want to redirect to a dedicated login page
-          if (currentPath !== '/') {
-            window.location.href = '/';
+          // Add locale prefix to home URL
+          const homeUrl = addLocalePrefix('/');
+          if (!isLocaleOnly) {
+            window.location.href = homeUrl;
           }
         }
       }

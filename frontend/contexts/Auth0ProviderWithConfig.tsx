@@ -2,6 +2,7 @@
 
 import { Auth0Provider } from '@auth0/auth0-react';
 import { ReactNode } from 'react';
+import { addLocalePrefix, getLocaleFromPathname } from '@/lib/utils/locale';
 
 interface Auth0ProviderWithConfigProps {
   children: ReactNode;
@@ -56,8 +57,15 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
         skipRedirectCallback={false}
         onRedirectCallback={appState => {
           console.log('Auth0 redirect callback:', appState);
-          // Handle redirect after login - use push instead of replace to avoid state issues
-          window.location.href = appState?.returnTo || '/';
+          // Handle redirect after login - add locale prefix to URL
+          let redirectUrl = '/';
+          if (appState?.returnTo) {
+            // addLocalePrefix will handle existing locale prefix
+            redirectUrl = addLocalePrefix(appState.returnTo);
+          } else {
+            redirectUrl = addLocalePrefix('/');
+          }
+          window.location.href = redirectUrl;
         }}
       >
         {children}

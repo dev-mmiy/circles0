@@ -808,7 +808,8 @@
     "server": "A server error occurred. Please try again later.",
     "general": "An error occurred.",
     "statusCode": "Status Code",
-    "retry": "Retry"
+    "retry": "Retry",
+    "backToHome": "Back to Home"
   },
   "messages": {
     "title": "Messages",

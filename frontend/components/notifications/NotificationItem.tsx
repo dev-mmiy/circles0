@@ -43,8 +43,9 @@ export default function NotificationItem({
         onRead?.();
       }
 
-      // 遷移先URLへ移動
+      // 遷移先URLへ移動（next-intlのrouterは自動的にロケールプレフィックスを追加するが、念のため明示的に追加）
       const link = getNotificationLink(notification);
+      // next-intlのrouter.pushは自動的にロケールプレフィックスを追加するので、そのまま使用
       router.push(link);
     } catch (error) {
       console.error('Failed to mark notification as read:', error);

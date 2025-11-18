@@ -19,6 +19,7 @@ import {
 } from '@/lib/hooks/useNotificationStream';
 import { getUnreadCount } from '@/lib/api/notifications';
 import { setAuthToken } from '@/lib/api/client';
+import { addLocalePrefix } from '@/lib/utils/locale';
 
 interface NotificationContextValue {
   // Real-time connection status
@@ -83,13 +84,16 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
       const message = messages[notification.type] || { title: 'New Notification', body: 'You have a new notification' };
       
-      // Build notification URL
+      // Build notification URL with locale prefix
       let url = '/notifications';
       if (notification.type === 'message') {
         url = '/messages';
       } else if (notification.post_id) {
         url = `/posts/${notification.post_id}`;
       }
+      
+      // Add locale prefix to URL
+      const localizedUrl = addLocalePrefix(url);
 
       // Show browser notification
       const browserNotification = new Notification(message.title, {
@@ -100,14 +104,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         data: {
           notification_id: notification.id,
           type: notification.type,
-          url: url,
+          url: localizedUrl,
         },
       });
 
       // Handle notification click
       browserNotification.onclick = () => {
         window.focus();
-        window.location.href = url;
+        window.location.href = localizedUrl;
         browserNotification.close();
       };
     }

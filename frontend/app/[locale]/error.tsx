@@ -53,7 +53,7 @@ export default function Error({
             href="/"
             className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors"
           >
-            ホームに戻る
+            {t('backToHome')}
           </Link>
         </div>
       </div>

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/i18n/routing';
 
 export default function CallbackPage() {
   const { handleRedirectCallback, isLoading, error } = useAuth0();
