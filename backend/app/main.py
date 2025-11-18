@@ -1,7 +1,14 @@
 import os
 from datetime import datetime
 
-from dotenv import load_dotenv
+# Import dotenv but don't call load_dotenv automatically
+# We'll handle .env loading manually to prevent error messages
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    # dotenv not available, define a dummy function
+    def load_dotenv(*args, **kwargs):
+        pass
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

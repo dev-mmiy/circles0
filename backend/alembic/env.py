@@ -5,7 +5,14 @@ import warnings
 from logging.config import fileConfig
 from pathlib import Path
 
-from dotenv import load_dotenv
+# Import dotenv but don't call load_dotenv automatically
+# We'll handle .env loading manually to prevent error messages
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    # dotenv not available, define a dummy function
+    def load_dotenv(*args, **kwargs):
+        pass
 from sqlalchemy import engine_from_config, pool
 
 from alembic import context

@@ -17,7 +17,14 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import warnings
 from pathlib import Path
 
-from dotenv import load_dotenv
+# Import dotenv but don't call load_dotenv automatically
+# We'll handle .env loading manually to prevent error messages
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    # dotenv not available, define a dummy function
+    def load_dotenv(*args, **kwargs):
+        pass
 
 # Load .env file only if it exists and is not empty
 # Skip loading in CI/CD environments where .env file is not needed
