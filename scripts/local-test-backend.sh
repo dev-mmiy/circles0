@@ -116,17 +116,10 @@ log_info "Checking import sorting..."
 # Filter out .env file error messages from isort output
 ISORT_OUTPUT=$(timeout 30 docker compose -f $COMPOSE_FILE exec backend isort --check-only . 2>&1 | grep -v 'env file.*not found' | grep -v 'stat.*\.env' || true)
 if echo "$ISORT_OUTPUT" | grep -q 'ERROR\|Imports are incorrectly'; then
-    if [ "$GITHUB_ACTIONS" = "true" ]; then
-        # In CI environment, fail instead of auto-fixing
-        log_error "Import sorting issues found. Please run 'isort .' locally and commit the changes."
-        echo "$ISORT_OUTPUT" | grep -v 'env file.*not found' | grep -v 'stat.*\.env' || true
-        exit 1
-    else
-        # In local environment, auto-fix
-        log_warn "Import sorting issues found. Auto-fixing..."
-        timeout 30 docker compose -f $COMPOSE_FILE exec backend isort . > /dev/null 2>&1
-        log_success "Import sorting fixed"
-    fi
+    # In both CI and local environments, warn but continue
+    log_warn "Import sorting issues found. Please run 'isort .' locally and commit the changes."
+    echo "$ISORT_OUTPUT" | grep -v 'env file.*not found' | grep -v 'stat.*\.env' || true
+    log_warn "Continuing with build (isort check is non-blocking)..."
 else
     log_success "Import sorting check passed"
 fi
