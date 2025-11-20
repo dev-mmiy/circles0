@@ -103,7 +103,7 @@ export interface MarkGroupMessagesReadResponse {
  * Create a new group
  */
 export async function createGroup(data: CreateGroupData): Promise<Group> {
-  const response = await apiClient.post<Group>('/groups', data);
+  const response = await apiClient.post<Group>('/api/v1/groups', data);
   return response.data;
 }
 
@@ -123,7 +123,7 @@ export async function getGroups(
   });
 
   const response = await apiClient.get<GroupListResponse>(
-    `/groups?${params.toString()}`
+    `/api/v1/groups?${params.toString()}`
   );
   return response.data;
 }
@@ -143,7 +143,7 @@ export async function searchGroups(
   });
 
   const response = await apiClient.get<GroupListResponse>(
-    `/groups/search?${params.toString()}`
+    `/api/v1/groups/search?${params.toString()}`
   );
   return response.data;
 }
@@ -152,7 +152,7 @@ export async function searchGroups(
  * Get a specific group by ID
  */
 export async function getGroup(groupId: string): Promise<Group> {
-  const response = await apiClient.get<Group>(`/groups/${groupId}`);
+  const response = await apiClient.get<Group>(`/api/v1/groups/${groupId}`);
   return response.data;
 }
 
@@ -163,7 +163,7 @@ export async function updateGroup(
   groupId: string,
   data: UpdateGroupData
 ): Promise<Group> {
-  const response = await apiClient.put<Group>(`/groups/${groupId}`, data);
+  const response = await apiClient.put<Group>(`/api/v1/groups/${groupId}`, data);
   return response.data;
 }
 
@@ -171,7 +171,7 @@ export async function updateGroup(
  * Delete a group (soft delete)
  */
 export async function deleteGroup(groupId: string): Promise<void> {
-  await apiClient.delete(`/groups/${groupId}`);
+  await apiClient.delete(`/api/v1/groups/${groupId}`);
 }
 
 /**
@@ -182,7 +182,7 @@ export async function addMembers(
   data: AddMemberData
 ): Promise<Group> {
   const response = await apiClient.post<Group>(
-    `/groups/${groupId}/members`,
+    `/api/v1/groups/${groupId}/members`,
     data
   );
   return response.data;
@@ -195,7 +195,7 @@ export async function removeMember(
   groupId: string,
   userId: string
 ): Promise<void> {
-  await apiClient.delete(`/groups/${groupId}/members/${userId}`);
+  await apiClient.delete(`/api/v1/groups/${groupId}/members/${userId}`);
 }
 
 /**
@@ -207,7 +207,7 @@ export async function updateMemberRole(
   data: UpdateMemberRoleData
 ): Promise<Group> {
   const response = await apiClient.put<Group>(
-    `/groups/${groupId}/members/${userId}/role`,
+    `/api/v1/groups/${groupId}/members/${userId}/role`,
     data
   );
   return response.data;
@@ -221,7 +221,7 @@ export async function sendGroupMessage(
   data: CreateGroupMessageData
 ): Promise<GroupMessage> {
   const response = await apiClient.post<GroupMessage>(
-    `/groups/${groupId}/messages`,
+    `/api/v1/groups/${groupId}/messages`,
     data
   );
   return response.data;
@@ -241,7 +241,7 @@ export async function getGroupMessages(
   });
 
   const response = await apiClient.get<GroupMessageListResponse>(
-    `/groups/${groupId}/messages?${params.toString()}`
+    `/api/v1/groups/${groupId}/messages?${params.toString()}`
   );
   return response.data;
 }
@@ -254,7 +254,7 @@ export async function markGroupMessagesAsRead(
   messageIds?: string[] | null
 ): Promise<MarkGroupMessagesReadResponse> {
   const response = await apiClient.put<MarkGroupMessagesReadResponse>(
-    `/groups/${groupId}/messages/read`,
+    `/api/v1/groups/${groupId}/messages/read`,
     { message_ids: messageIds }
   );
   return response.data;
@@ -267,7 +267,7 @@ export async function deleteGroupMessage(
   groupId: string,
   messageId: string
 ): Promise<void> {
-  await apiClient.delete(`/groups/${groupId}/messages/${messageId}`);
+  await apiClient.delete(`/api/v1/groups/${groupId}/messages/${messageId}`);
 }
 
 /**
@@ -275,8 +275,9 @@ export async function deleteGroupMessage(
  */
 export async function getGroupUnreadCount(groupId: string): Promise<number> {
   const response = await apiClient.get<{ unread_count: number }>(
-    `/groups/${groupId}/unread-count`
+    `/api/v1/groups/${groupId}/unread-count`
   );
   return response.data.unread_count;
 }
+
 

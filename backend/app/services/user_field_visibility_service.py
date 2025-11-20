@@ -192,3 +192,4 @@ class UserFieldVisibilityService:
             return bool(set(owner_disease_ids) & set(viewer_disease_ids))
 
         return False
+

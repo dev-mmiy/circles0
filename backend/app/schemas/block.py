@@ -38,3 +38,4 @@ class BlockStats(BaseModel):
     """Statistics about blocking relationships."""
 
     blocked_count: int = Field(..., description="Number of users blocked by this user")
+

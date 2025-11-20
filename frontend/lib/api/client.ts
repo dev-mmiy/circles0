@@ -5,9 +5,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { extractErrorInfo, requiresAuthRedirect, ErrorType } from '../utils/errorHandler';
 import { addLocalePrefix } from '../utils/locale';
+import { getApiBaseUrl } from '../config';
 
-// API base URL from environment variable
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// API base URL - use getApiBaseUrl() for consistency with other API clients
+// Note: This does NOT include /api/v1 - each endpoint should include it in the path
+const API_BASE_URL = getApiBaseUrl();
 
 /**
  * Axios instance for API calls

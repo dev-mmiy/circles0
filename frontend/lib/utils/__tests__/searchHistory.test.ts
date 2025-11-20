@@ -193,3 +193,4 @@ describe('searchHistory utilities', () => {
   });
 });
 
+

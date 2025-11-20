@@ -175,3 +175,4 @@ class MarkGroupMessagesReadResponse(BaseModel):
     marked_count: int
     message_ids: List[UUID]
 
+

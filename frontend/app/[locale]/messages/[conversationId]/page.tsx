@@ -166,15 +166,27 @@ export default function ConversationPage() {
 
   // リアルタイムメッセージ更新
   const handleNewMessage = (messageEvent: MessageEvent) => {
+    console.log('[handleNewMessage] Received message event:', {
+      messageId: messageEvent.id,
+      conversationId: messageEvent.conversation_id,
+      currentConversationId: conversationId,
+      senderId: messageEvent.sender_id,
+      currentUserId: currentUser?.id,
+    });
+
     // 現在の会話のメッセージのみ処理
     if (messageEvent.conversation_id !== conversationId) {
+      console.log('[handleNewMessage] Skipping message - conversation_id mismatch');
       return;
     }
 
     // 既に存在するメッセージは追加しない
     if (messages.some(m => m.id === messageEvent.id)) {
+      console.log('[handleNewMessage] Skipping message - already exists');
       return;
     }
+
+    console.log('[handleNewMessage] Processing new message');
 
     // メッセージをMessage形式に変換
     const newMessage: Message = {
@@ -192,7 +204,14 @@ export default function ConversationPage() {
     };
 
     // メッセージを追加
-    setMessages(prev => [...prev, newMessage]);
+    setMessages(prev => {
+      const updated = [...prev, newMessage];
+      // メッセージ追加後にスクロール
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+      return updated;
+    });
 
     // 会話情報を更新
     loadConversation();
@@ -256,40 +275,89 @@ export default function ConversationPage() {
     }
 
     try {
+      console.log('[handleSendMessage] Starting message send...');
+      
       // 認証トークンを設定
       if (isAuthenticated) {
         try {
+          console.log('[handleSendMessage] Getting access token...');
           const token = await getAccessTokenSilently();
           setAuthToken(token);
+          console.log('[handleSendMessage] Access token obtained');
         } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
+          console.warn('[handleSendMessage] Failed to get access token:', tokenError);
           setAuthToken(null);
+          throw new Error('Failed to get access token');
         }
+      }
+
+      // Ensure content is not empty (backend requires min_length=1)
+      // If content is empty but image_url exists, use a placeholder
+      const trimmedContent = messageContent.trim();
+      const trimmedImageUrl = imageUrl.trim() || null;
+      
+      if (!trimmedContent && !trimmedImageUrl) {
+        // This should not happen due to earlier validation, but just in case
+        throw new Error('Message content or image URL is required');
       }
 
       const messageData: CreateMessageData = {
         recipient_id: conversation.other_user.id,
-        content: messageContent.trim() || '',
-        image_url: imageUrl.trim() || null,
+        content: trimmedContent || ' ', // Use single space if empty (image only message)
+        image_url: trimmedImageUrl,
       };
 
+      console.log('[handleSendMessage] Sending message:', messageData);
       const newMessage = await sendMessage(messageData);
+      console.log('[handleSendMessage] Message sent successfully:', {
+        id: newMessage.id,
+        conversation_id: newMessage.conversation_id,
+        currentConversationId: conversationId,
+        sender_id: newMessage.sender_id,
+      });
       
       // 新しいメッセージをリストに追加
-      setMessages([...messages, newMessage]);
+      // Note: SSEストリームからも同じメッセージが来る可能性があるが、
+      // handleNewMessageで重複チェックされる
+      setMessages(prev => {
+        // 重複チェック
+        if (prev.some(m => m.id === newMessage.id)) {
+          console.log('[handleSendMessage] Message already in list, skipping');
+          return prev;
+        }
+        console.log('[handleSendMessage] Adding message to list');
+        const updated = [...prev, newMessage];
+        // メッセージ追加後にスクロール
+        setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+        return updated;
+      });
       
       // フォームをクリア
       setMessageContent('');
       setImageUrl('');
+      console.log('[handleSendMessage] Form cleared');
       
-      // 会話情報を更新
-      await loadConversation();
+      // 会話情報を更新（SSEで自動更新されるので、非同期で実行）
+      // メッセージ送信のレスポンスを待たないようにする
+      console.log('[handleSendMessage] Updating conversation (async)...');
+      loadConversation().catch((err) => {
+        console.error('[handleSendMessage] Failed to load conversation:', err);
+      });
+      console.log('[handleSendMessage] Message send completed');
     } catch (err: any) {
-      console.error('Failed to send message:', err);
+      console.error('[handleSendMessage] Failed to send message:', err);
+      console.error('[handleSendMessage] Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status,
+      });
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
-      alert(tConv('errorSending'));
+      alert(tConv('errorSending') + ': ' + errorInfo.message);
     } finally {
+      console.log('[handleSendMessage] Finally block - setting isSending to false');
       setIsSending(false);
     }
   };

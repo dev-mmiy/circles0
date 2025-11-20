@@ -12,6 +12,7 @@ from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models.user import User
 from app.schemas.message import (
+    ConversationCreate,
     ConversationListResponse,
     ConversationResponse,
     MarkReadRequest,
@@ -135,6 +136,37 @@ def _build_conversation_response(
 
 
 # ========== Conversation Endpoints ==========
+
+
+@router.post(
+    "/conversations",
+    response_model=ConversationResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new conversation",
+)
+async def create_conversation(
+    conversation_data: ConversationCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Create a new conversation with another user.
+
+    If a conversation already exists, returns the existing conversation.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+
+    try:
+        conversation = MessageService.get_or_create_conversation(
+            db, user_id, conversation_data.recipient_id
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    return _build_conversation_response(db, conversation, user_id)
 
 
 @router.get(

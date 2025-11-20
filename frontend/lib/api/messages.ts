@@ -65,6 +65,10 @@ export interface CreateMessageData {
   image_url?: string | null;
 }
 
+export interface CreateConversationData {
+  recipient_id: string;
+}
+
 export interface MarkReadRequest {
   message_ids?: string[] | null;
 }
@@ -87,9 +91,40 @@ export async function getConversations(
   });
 
   const response = await apiClient.get<ConversationListResponse>(
-    `/messages/conversations?${params.toString()}`
+    `/api/v1/messages/conversations?${params.toString()}`
   );
   return response.data;
+}
+
+/**
+ * Get total unread message count across all conversations
+ */
+export async function getTotalUnreadCount(): Promise<number> {
+  try {
+    // Get all conversations (up to 100) to calculate total unread count
+    let totalUnread = 0;
+    let skip = 0;
+    const limit = 100;
+
+    while (true) {
+      const response = await getConversations(skip, limit);
+      
+      // Sum up unread counts from all conversations
+      totalUnread += response.conversations.reduce((sum, conv) => sum + conv.unread_count, 0);
+
+      // If we got fewer results than requested, we've reached the end
+      if (response.conversations.length < limit) {
+        break;
+      }
+
+      skip += limit;
+    }
+
+    return totalUnread;
+  } catch (error) {
+    console.error('Failed to get total unread count:', error);
+    return 0;
+  }
 }
 
 /**
@@ -97,7 +132,7 @@ export async function getConversations(
  */
 export async function getConversation(conversationId: string): Promise<Conversation> {
   const response = await apiClient.get<Conversation>(
-    `/messages/conversations/${conversationId}`
+    `/api/v1/messages/conversations/${conversationId}`
   );
   return response.data;
 }
@@ -106,15 +141,27 @@ export async function getConversation(conversationId: string): Promise<Conversat
  * Delete a conversation (soft delete)
  */
 export async function deleteConversation(conversationId: string): Promise<void> {
-  await apiClient.delete(`/messages/conversations/${conversationId}`);
+  await apiClient.delete(`/api/v1/messages/conversations/${conversationId}`);
 }
 
 /**
  * Send a message to another user
  */
 export async function sendMessage(data: CreateMessageData): Promise<Message> {
-  const response = await apiClient.post<Message>('/messages', data);
-  return response.data;
+  console.log('[sendMessage] API call:', {
+    url: '/api/v1/messages',
+    data,
+    baseURL: apiClient.defaults.baseURL,
+  });
+  
+  try {
+    const response = await apiClient.post<Message>('/api/v1/messages', data);
+    console.log('[sendMessage] API response:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[sendMessage] API error:', error);
+    throw error;
+  }
 }
 
 /**
@@ -131,7 +178,7 @@ export async function getMessages(
   });
 
   const response = await apiClient.get<MessageListResponse>(
-    `/messages/conversations/${conversationId}/messages?${params.toString()}`
+    `/api/v1/messages/conversations/${conversationId}/messages?${params.toString()}`
   );
   return response.data;
 }
@@ -144,7 +191,7 @@ export async function markMessagesAsRead(
   messageIds?: string[] | null
 ): Promise<MarkReadResponse> {
   const response = await apiClient.put<MarkReadResponse>(
-    `/messages/conversations/${conversationId}/read`,
+    `/api/v1/messages/conversations/${conversationId}/read`,
     { message_ids: messageIds }
   );
   return response.data;
@@ -154,6 +201,59 @@ export async function markMessagesAsRead(
  * Delete a message (soft delete)
  */
 export async function deleteMessage(messageId: string): Promise<void> {
-  await apiClient.delete(`/messages/${messageId}`);
+  await apiClient.delete(`/api/v1/messages/${messageId}`);
 }
+
+/**
+ * Create a new conversation with a specific user
+ * Returns the conversation (creates if doesn't exist)
+ */
+export async function createConversation(
+  data: CreateConversationData
+): Promise<Conversation> {
+  const response = await apiClient.post<Conversation>(
+    '/api/v1/messages/conversations',
+    data
+  );
+  return response.data;
+}
+
+/**
+ * Find or create a conversation with a specific user
+ * Returns the conversation ID
+ */
+export async function findOrCreateConversation(recipientId: string): Promise<string> {
+  // First, try to find existing conversation
+  // Get all conversations (up to 100) to search for existing one
+  let skip = 0;
+  const limit = 100;
+  let foundConversation: Conversation | undefined;
+
+  // Search through conversations in batches
+  while (true) {
+    const conversationsResponse = await getConversations(skip, limit);
+    foundConversation = conversationsResponse.conversations.find(
+      (conv) => conv.other_user?.id === recipientId
+    );
+
+    if (foundConversation) {
+      return foundConversation.id;
+    }
+
+    // If we got fewer results than requested, we've reached the end
+    if (conversationsResponse.conversations.length < limit) {
+      break;
+    }
+
+    skip += limit;
+  }
+
+  // If no conversation exists, create one using the create conversation endpoint
+  const conversation = await createConversation({
+    recipient_id: recipientId,
+  });
+
+  return conversation.id;
+}
+
 

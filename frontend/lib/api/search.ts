@@ -148,15 +148,19 @@ export async function searchUsers(
 
   if (accessToken) {
     headers['Authorization'] = `Bearer ${accessToken}`;
+    console.log('[searchUsers] Authorization header added');
+  } else {
+    console.warn('[searchUsers] No access token provided');
   }
 
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/users/search?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      headers,
-    }
-  );
+  const url = `${getApiBaseUrl()}/api/v1/users/search?${queryParams.toString()}`;
+  console.log('[searchUsers] Request URL:', url);
+  console.log('[searchUsers] Request headers:', Object.keys(headers));
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers,
+  });
 
   if (!response.ok) {
     let errorMessage = 'Failed to search users';

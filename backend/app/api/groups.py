@@ -665,3 +665,4 @@ async def get_unread_count(
 
     return {"unread_count": unread_count}
 
+

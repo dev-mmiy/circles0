@@ -46,7 +46,8 @@ export interface UseMessageStreamReturn {
 }
 
 export function useMessageStream(
-  onMessage?: (message: MessageEvent) => void
+  onMessage?: (message: MessageEvent) => void,
+  enabled: boolean = true
 ): UseMessageStreamReturn {
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const [isConnected, setIsConnected] = useState(false);
@@ -55,24 +56,41 @@ export function useMessageStream(
   const eventSourceRef = useRef<EventSource | null>(null);
   const retryDelayRef = useRef(INITIAL_RETRY_DELAY);
   const scheduleReconnectRef = useRef<(() => void) | null>(null);
+  const wasConnectedRef = useRef(false);
+  // Keep onMessage callback in a ref to avoid recreating connection when it changes
+  const onMessageRef = useRef(onMessage);
+  
+  // Update the ref when onMessage changes
+  useEffect(() => {
+    onMessageRef.current = onMessage;
+  }, [onMessage]);
 
   const closeConnection = () => {
     if (eventSourceRef.current) {
-      console.log('[Message SSE] Closing connection');
+      // Only log if we were connected (not just cleanup)
+      if (wasConnectedRef.current) {
+        console.log('[Message SSE] Closing connection');
+      }
       eventSourceRef.current.close();
       eventSourceRef.current = null;
       setIsConnected(false);
+      wasConnectedRef.current = false;
     }
   };
 
   const connect = useCallback(async () => {
+    if (!enabled) {
+      // Connection disabled, skip
+      return;
+    }
+
     if (!isAuthenticated) {
       console.log('[Message SSE] Not authenticated, skipping connection');
       return;
     }
 
     if (eventSourceRef.current) {
-      console.log('[Message SSE] Connection already exists');
+      // Connection already exists, skip
       return;
     }
 
@@ -92,6 +110,7 @@ export function useMessageStream(
       eventSource.addEventListener('connected', (event) => {
         console.log('[Message SSE] Connected:', event.data);
         setIsConnected(true);
+        wasConnectedRef.current = true;
         setError(null);
         // Reset retry delay on successful connection
         retryDelayRef.current = INITIAL_RETRY_DELAY;
@@ -104,8 +123,8 @@ export function useMessageStream(
           console.log('[Message SSE] New message:', message);
           setLastMessage(message);
 
-          if (onMessage) {
-            onMessage(message);
+          if (onMessageRef.current) {
+            onMessageRef.current(message);
           }
         } catch (error) {
           console.error('[Message SSE] Failed to parse message:', error);
@@ -119,8 +138,8 @@ export function useMessageStream(
           console.log('[Message SSE] New group message:', message);
           setLastMessage(message);
 
-          if (onMessage) {
-            onMessage(message);
+          if (onMessageRef.current) {
+            onMessageRef.current(message);
           }
         } catch (error) {
           console.error('[Message SSE] Failed to parse group message:', error);
@@ -129,7 +148,7 @@ export function useMessageStream(
 
       // Heartbeat (keep-alive ping)
       eventSource.addEventListener('ping', (event) => {
-        console.log('[Message SSE] Heartbeat received');
+        // Heartbeat received - no need to log every ping
       });
 
       // Server requests reconnection (before timeout)
@@ -141,9 +160,31 @@ export function useMessageStream(
 
       // Error event
       eventSource.addEventListener('error', (errorEvent) => {
-        console.error('[Message SSE] Error event:', errorEvent);
-        setError(new Error('SSE connection error'));
+        const eventSource = errorEvent.target as EventSource;
+        const readyState = eventSource.readyState;
+        
+        // EventSource readyState:
+        // 0 = CONNECTING
+        // 1 = OPEN
+        // 2 = CLOSED
+        
+        // Connection closed - check if it was a normal disconnect or an error
+        if (readyState === EventSource.CLOSED) {
+          // Only log if we were previously connected (unexpected disconnect)
+          if (wasConnectedRef.current) {
+            console.log('[Message SSE] Connection closed, will reconnect');
+          } else {
+            // Connection failed to establish - log as warning, not error
+            // This is common during initial connection attempts
+            console.warn('[Message SSE] Connection failed to establish, will retry');
+          }
+        } else {
+          // Unexpected state
+          console.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
+        }
+        
         setIsConnected(false);
+        wasConnectedRef.current = false;
         closeConnection();
 
         // Schedule reconnection with exponential backoff
@@ -155,7 +196,7 @@ export function useMessageStream(
 
         console.log(`[Message SSE] Scheduling reconnection in ${delay}ms`);
         setTimeout(() => {
-          if (!eventSourceRef.current) {
+          if (!eventSourceRef.current && isAuthenticated) {
             connect();
           }
         }, delay);
@@ -165,24 +206,27 @@ export function useMessageStream(
       setError(err instanceof Error ? err : new Error('Failed to connect'));
       setIsConnected(false);
     }
-  }, [isAuthenticated, getAccessTokenSilently, onMessage]);
+  }, [isAuthenticated, getAccessTokenSilently, enabled]);
 
   // Schedule reconnect function
   useEffect(() => {
     scheduleReconnectRef.current = () => {
+      if (!enabled) {
+        return;
+      }
       const delay = INITIAL_RETRY_DELAY;
       console.log(`[Message SSE] Scheduling reconnection in ${delay}ms`);
       setTimeout(() => {
-        if (!eventSourceRef.current && isAuthenticated) {
+        if (!eventSourceRef.current && isAuthenticated && enabled) {
           connect();
         }
       }, delay);
     };
-  }, [connect, isAuthenticated]);
+  }, [connect, isAuthenticated, enabled]);
 
   // Connect on mount and when authentication changes
   useEffect(() => {
-    if (isAuthenticated) {
+    if (enabled && isAuthenticated) {
       connect();
     } else {
       closeConnection();
@@ -192,7 +236,7 @@ export function useMessageStream(
     return () => {
       closeConnection();
     };
-  }, [isAuthenticated, connect]);
+  }, [enabled, isAuthenticated, connect]);
 
   return {
     isConnected,

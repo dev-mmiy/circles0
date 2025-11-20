@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { useAuth0 } from '@auth0/auth0-react';
 import { X, UserPlus, Trash2, Shield, ShieldAlert, LogOut } from 'lucide-react';
 import { Group, GroupMember, updateGroup, addMembers, removeMember, updateMemberRole, deleteGroup } from '@/lib/api/groups';
 import { searchUsers, UserSearchParams } from '@/lib/api/search';
@@ -10,6 +11,7 @@ import { useUser } from '@/contexts/UserContext';
 import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useRouter } from '@/i18n/routing';
+import { setAuthToken } from '@/lib/api/client';
 
 interface GroupSettingsModalProps {
     group: Group;
@@ -22,6 +24,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
     const t = useTranslations('groups');
     const { user: currentUser } = useUser();
     const router = useRouter();
+    const { isAuthenticated, getAccessTokenSilently } = useAuth0();
 
     const [activeTab, setActiveTab] = useState<'general' | 'members' | 'danger'>('general');
     const [name, setName] = useState(group.name);
@@ -59,16 +62,50 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
     };
 
     const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            return;
+        }
 
         setIsSearching(true);
+        setError(null);
         try {
-            const results = await searchUsers({ q: searchQuery, limit: 10 });
+            // 認証トークンを取得して設定
+            let accessToken: string | undefined;
+            if (isAuthenticated) {
+                try {
+                    const token = await getAccessTokenSilently();
+                    setAuthToken(token);
+                    accessToken = token;
+                    console.log('Token obtained for search');
+                } catch (tokenError) {
+                    console.warn('Failed to get access token:', tokenError);
+                    setAuthToken(null);
+                }
+            } else {
+                console.warn('User is not authenticated');
+            }
+
+            console.log('Searching for users with query:', searchQuery);
+            console.log('Access token available:', !!accessToken);
+            if (accessToken) {
+                console.log('Access token length:', accessToken.length);
+            }
+            const results = await searchUsers({ q: searchQuery, limit: 10 }, accessToken);
+            console.log('Search results received:', results.length, 'users');
+            console.log('Search results:', results);
+            
             // Filter out existing members
             const memberIds = new Set(group.members.map(m => m.user_id));
-            setSearchResults(results.filter(u => !memberIds.has(u.id)));
+            const filteredResults = results.filter(u => !memberIds.has(u.id));
+            console.log('Filtered results (excluding existing members):', filteredResults.length, 'users');
+            
+            setSearchResults(filteredResults);
         } catch (err) {
-            console.error(err);
+            console.error('Search error:', err);
+            const errorInfo = extractErrorInfo(err);
+            setError(errorInfo);
+            setSearchResults([]);
         } finally {
             setIsSearching(false);
         }
@@ -218,11 +255,25 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                         <button
                                             onClick={handleSearch}
                                             disabled={isSearching || !searchQuery.trim()}
-                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                                            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                                         >
-                                            {t('search')}
+                                            {isSearching ? (
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
+                                            ) : (
+                                                t('search')
+                                            )}
                                         </button>
                                     </div>
+                                    {isSearching && (
+                                        <div className="text-sm text-gray-500 text-center py-2">
+                                            {t('searching') || 'Searching...'}
+                                        </div>
+                                    )}
+                                    {!isSearching && searchQuery.trim() && searchResults.length === 0 && (
+                                        <div className="text-sm text-gray-500 text-center py-2">
+                                            {t('noSearchResults') || 'No users found'}
+                                        </div>
+                                    )}
                                     {searchResults.length > 0 && (
                                         <div className="border rounded-lg divide-y max-h-40 overflow-y-auto">
                                             {searchResults.map(user => (
@@ -232,10 +283,10 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                                             {user.avatar_url ? (
                                                                 <img src={user.avatar_url} alt="" className="w-8 h-8 rounded-full" />
                                                             ) : (
-                                                                <span className="text-sm font-medium">{user.nickname[0]}</span>
+                                                                <span className="text-sm font-medium">{user.nickname?.[0] || '?'}</span>
                                                             )}
                                                         </div>
-                                                        <span>{user.nickname}</span>
+                                                        <span>{user.nickname || 'Unknown'}</span>
                                                     </div>
                                                     <button
                                                         onClick={() => handleAddMember(user.id)}

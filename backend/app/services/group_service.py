@@ -928,3 +928,4 @@ class GroupService:
 
         return len(all_message_ids) - len(read_message_ids)
 
+

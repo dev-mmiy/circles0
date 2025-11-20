@@ -129,12 +129,31 @@ class MessageService:
             .first()
         )
 
-        # Create notification for the recipient
-        NotificationService.create_message_notification(
-            db=db,
-            sender_id=sender_id,
-            recipient_id=message_data.recipient_id,
-        )
+        # Create notification for the recipient in a separate transaction
+        # Don't fail message sending if notification creation fails
+        # Use a separate database session to avoid transaction conflicts
+        def create_notification_in_background():
+            from app.database import SessionLocal
+            notification_db = SessionLocal()
+            try:
+                NotificationService.create_message_notification(
+                    db=notification_db,
+                    sender_id=sender_id,
+                    recipient_id=message_data.recipient_id,
+                )
+            except Exception as e:
+                # Log error but don't fail the message sending
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to create message notification: {e}", exc_info=True)
+            finally:
+                notification_db.close()
+        
+        # Run notification creation in background thread to not block response
+        import threading
+        thread = threading.Thread(target=create_notification_in_background)
+        thread.daemon = True
+        thread.start()
 
         # Broadcast message to both sender and recipient via SSE
         # Run in background to not block the response

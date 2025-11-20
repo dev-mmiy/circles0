@@ -56,18 +56,33 @@ class NotificationService:
 
         recent_threshold = datetime.utcnow() - timedelta(hours=24)
 
+        # Build filter conditions
+        # Convert enum to its string value for database comparison
+        # SQLAlchemy with native_enum=False should handle this, but we ensure it's the value
+        notification_type_value = notification_type.value if isinstance(notification_type, NotificationType) else str(notification_type)
+        
+        filters = [
+            Notification.recipient_id == recipient_id,
+            Notification.actor_id == actor_id,
+            Notification.type == notification_type_value,
+            Notification.created_at >= recent_threshold,
+        ]
+        
+        # Add post_id filter if provided
+        if post_id is not None:
+            filters.append(Notification.post_id == post_id)
+        else:
+            filters.append(Notification.post_id.is_(None))
+        
+        # Add comment_id filter if provided
+        if comment_id is not None:
+            filters.append(Notification.comment_id == comment_id)
+        else:
+            filters.append(Notification.comment_id.is_(None))
+
         existing = (
             db.query(Notification)
-            .filter(
-                and_(
-                    Notification.recipient_id == recipient_id,
-                    Notification.actor_id == actor_id,
-                    Notification.type == notification_type,
-                    Notification.post_id == post_id if post_id else True,
-                    Notification.comment_id == comment_id if comment_id else True,
-                    Notification.created_at >= recent_threshold,
-                )
-            )
+            .filter(and_(*filters))
             .first()
         )
 
@@ -75,17 +90,59 @@ class NotificationService:
             return existing
 
         # Create notification
-        notification = Notification(
-            recipient_id=recipient_id,
-            actor_id=actor_id,
-            type=notification_type,
-            post_id=post_id,
-            comment_id=comment_id,
-        )
-
-        db.add(notification)
-        db.commit()
-        db.refresh(notification)
+        # Ensure enum value is used as string for database compatibility
+        # SQLAlchemy SQLEnum with native_enum=False should handle this, but we need to ensure
+        # the value is the enum's string value, not the enum name
+        if isinstance(notification_type, NotificationType):
+            notification_type_value = notification_type.value  # Get the string value (e.g., "message")
+        else:
+            notification_type_value = str(notification_type)
+        
+        # Log the value being set for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Creating notification with type value: {notification_type_value} (type: {type(notification_type_value)})")
+        
+        # Create notification using raw SQL to avoid SQLAlchemy enum name conversion issues
+        # SQLAlchemy SQLEnum may convert enum names instead of values, so we use raw SQL
+        from sqlalchemy import text
+        from uuid import uuid4
+        
+        notification_id = uuid4()
+        
+        # Build SQL with proper enum value (lowercase string)
+        insert_sql = text("""
+            INSERT INTO notifications (id, recipient_id, actor_id, type, post_id, comment_id, is_read, created_at)
+            VALUES (:id, :recipient_id, :actor_id, :type::notificationtype, :post_id, :comment_id, false, NOW())
+            RETURNING id
+        """)
+        
+        try:
+            result = db.execute(
+                insert_sql,
+                {
+                    "id": notification_id,
+                    "recipient_id": recipient_id,
+                    "actor_id": actor_id,
+                    "type": notification_type_value,  # Use string value directly
+                    "post_id": post_id,
+                    "comment_id": comment_id,
+                }
+            )
+            db.commit()
+            
+            # Fetch the created notification
+            notification = db.query(Notification).filter(Notification.id == notification_id).first()
+            if notification:
+                db.refresh(notification)
+        except Exception as e:
+            # Rollback on error
+            db.rollback()
+            # Log the error with more details
+            logger.error(f"Failed to create notification: {e}", exc_info=True)
+            logger.error(f"Notification type value was: {notification_type_value}")
+            # Re-raise to let caller handle
+            raise
 
         # Broadcast notification to SSE connections
         # Run in background to not block the response

@@ -71,7 +71,7 @@ export async function getNotifications(
   });
 
   const response = await apiClient.get<NotificationListResponse>(
-    `/notifications?${params.toString()}`
+    `/api/v1/notifications?${params.toString()}`
   );
   return response.data;
 }
@@ -82,29 +82,36 @@ export async function getNotifications(
 export async function getUnreadCount(): Promise<number> {
   console.log('[getUnreadCount] Calling API with baseURL:', apiClient.defaults.baseURL);
   console.log('[getUnreadCount] Full URL will be:', `${apiClient.defaults.baseURL}/notifications/unread-count`);
-  const response = await apiClient.get<UnreadCountResponse>('/notifications/unread-count');
-  return response.data.unread_count;
+  try {
+    const response = await apiClient.get<UnreadCountResponse>('/api/v1/notifications/unread-count');
+    return response.data.unread_count;
+  } catch (error: any) {
+    console.error('[getUnreadCount] Error details:', error);
+    console.error('[getUnreadCount] Request URL:', error.config?.url);
+    console.error('[getUnreadCount] Base URL:', apiClient.defaults.baseURL);
+    throw error;
+  }
 }
 
 /**
  * 通知を既読にする
  */
 export async function markNotificationAsRead(notificationId: string): Promise<void> {
-  await apiClient.put(`/notifications/${notificationId}/read`);
+  await apiClient.put(`/api/v1/notifications/${notificationId}/read`);
 }
 
 /**
  * 全ての通知を既読にする
  */
 export async function markAllNotificationsAsRead(): Promise<void> {
-  await apiClient.put('/notifications/mark-all-read');
+  await apiClient.put('/api/v1/notifications/mark-all-read');
 }
 
 /**
  * 通知を削除
  */
 export async function deleteNotification(notificationId: string): Promise<void> {
-  await apiClient.delete(`/notifications/${notificationId}`);
+  await apiClient.delete(`/api/v1/notifications/${notificationId}`);
 }
 
 /**

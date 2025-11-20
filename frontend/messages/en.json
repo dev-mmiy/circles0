@@ -84,7 +84,14 @@
       "imageUrlTooLong": "Image URL must be 500 characters or less",
       "deletedMessage": "Deleted message"
     },
-    "backToConversations": "Back to conversations"
+    "backToConversations": "Back to conversations",
+    "sendMessage": "Send Message",
+    "newMessage": "New Message",
+    "selectUser": "Select User",
+    "selectUserPlaceholder": "Search by username or nickname...",
+    "noUserSelected": "Please select a user",
+    "creatingConversation": "Creating conversation...",
+    "errorCreatingConversation": "Failed to create conversation"
   },
   "validation": {
     "required": "This field is required",
@@ -357,7 +364,10 @@
     "saveChanges": "Save Changes",
     "addMembers": "Add Members",
     "searchUsersPlaceholder": "Search users...",
+    "searchPlaceholder": "Search groups...",
     "search": "Search",
+    "searching": "Searching...",
+    "noSearchResults": "No users found",
     "removeAdmin": "Remove Admin",
     "makeAdmin": "Make Admin",
     "removeMember": "Remove Member",

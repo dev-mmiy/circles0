@@ -54,11 +54,13 @@ export default function NewGroupPage() {
     setError(null);
 
     try {
-      // 認証トークンを設定
+      // 認証トークンを取得して設定
+      let accessToken: string | undefined;
       if (isAuthenticated) {
         try {
           const token = await getAccessTokenSilently();
           setAuthToken(token);
+          accessToken = token;
         } catch (tokenError) {
           console.warn('Failed to get access token:', tokenError);
           setAuthToken(null);
@@ -70,7 +72,7 @@ export default function NewGroupPage() {
         limit: 20,
       };
 
-      const results = await searchUsers(params);
+      const results = await searchUsers(params, accessToken);
       // 既に選択されているユーザーと自分を除外
       const selectedIds = new Set([
         ...selectedMembers.map(m => m.id),
@@ -351,4 +353,5 @@ export default function NewGroupPage() {
     </>
   );
 }
+
 

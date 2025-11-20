@@ -1434,21 +1434,21 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コードベース
 - **総行数**: 約18,000行以上
-- **バックエンド（Python）**: 約10,000行（60ファイル以上）
-- **フロントエンド（TypeScript/TSX）**: 約8,000行（50ファイル以上）
+- **バックエンド（Python）**: 約10,000行（72ファイル以上）
+- **フロントエンド（TypeScript/TSX）**: 約8,000行（91ファイル以上）
 
 ### コミット履歴（最近10件）
 ```
+6dc9906 - feat: Implement group search and fix translation lints (2025-11-20)
 6b2f1d0 - refactor: Remove duplicate Home link from Header navigation (2025-11-15)
 997f170 - fix: Fix useParams import error in groups and messages pages (2025-11-15)
 18c4322 - fix: Make isort check non-blocking and refactor CI/CD pipeline (2025-11-15)
 fe0f4ae - fix: Add i18n locale prefix support and make isort check non-blocking (2025-11-15)
-4c58a60 - docs: Archive outdated markdown files to docs/archive (2025-11-15)
-02f1d83 - feat: Add follower-only post filter and fix CI/CD tests (2025-11-15)
-b615f74 - feat: Add mobile hamburger menu to Header component (2025-11-15)
-25efeae - feat: Expand internationalization support and implement search page (2025-11-15)
-e156d6f - feat: add i18n support to Header component (2025-11-13)
-6a166ca - feat: add home link to header navigation (2025-11-13)
+f7dbef8 - Add DOTENV_SILENT environment variable and improve path resolution (2025-11-15)
+887f4e8 - Improve .env file loading error handling (2025-11-15)
+cfd185c - Add error handling for dotenv import and filter .env errors from isort (2025-11-15)
+2d71c2a - Refactor .env loading to prevent error messages completely (2025-11-15)
+eec5fc8 - Wrap stat() call in try-except to prevent error messages (2025-11-15)
 ```
 
 ---

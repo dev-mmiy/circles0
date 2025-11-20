@@ -16,10 +16,13 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Plus, X, Search } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useUser } from '@/contexts/UserContext';
+import { findOrCreateConversation } from '@/lib/api/messages';
+import { searchUsers, UserSearchParams } from '@/lib/api/search';
+import { UserPublicProfile } from '@/lib/api/users';
 
 export default function MessagesPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -35,6 +38,13 @@ export default function MessagesPage() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
+  
+  // New message modal state
+  const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<UserPublicProfile[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const CONVERSATIONS_PER_PAGE = 20;
   const conversationsRef = useRef<Conversation[]>([]);
@@ -235,6 +245,54 @@ export default function MessagesPage() {
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
   };
 
+  // Handle new message modal
+  const handleSearchUsers = async () => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+
+      const params: UserSearchParams = {
+        q: searchQuery,
+        limit: 20,
+      };
+
+      const results = await searchUsers(params, token);
+      // Exclude current user
+      const filteredResults = results.filter(u => u.id !== currentUser?.id);
+      setSearchResults(filteredResults);
+    } catch (err) {
+      console.error('Search error:', err);
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSelectUser = async (user: UserPublicProfile) => {
+    setIsCreatingConversation(true);
+    try {
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+
+      const conversationId = await findOrCreateConversation(user.id);
+      router.push(`/messages/${conversationId}`);
+    } catch (err) {
+      console.error('Failed to create conversation:', err);
+      alert(t('errorCreatingConversation'));
+    } finally {
+      setIsCreatingConversation(false);
+      setShowNewMessageModal(false);
+      setSearchQuery('');
+      setSearchResults([]);
+    }
+  };
+
   if (authLoading || isLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
@@ -253,9 +311,18 @@ export default function MessagesPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-            <p className="text-gray-600 mt-2">{t('conversations')}</p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+              <p className="text-gray-600 mt-2">{t('conversations')}</p>
+            </div>
+            <button
+              onClick={() => setShowNewMessageModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              {t('newMessage')}
+            </button>
           </div>
 
           {/* Error message */}
@@ -424,6 +491,159 @@ export default function MessagesPage() {
           </div>
         </div>
       </div>
+
+      {/* New Message Modal */}
+      {showNewMessageModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            {/* Background overlay */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => {
+                setShowNewMessageModal(false);
+                setSearchQuery('');
+                setSearchResults([]);
+              }}
+            />
+
+            {/* Modal panel */}
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900">{t('newMessage')}</h3>
+                  <button
+                    onClick={() => {
+                      setShowNewMessageModal(false);
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    className="text-gray-400 hover:text-gray-500"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Search input */}
+                <div className="mb-4">
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleSearchUsers();
+                        }
+                      }}
+                      placeholder={t('selectUserPlaceholder')}
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                  </div>
+                  <button
+                    onClick={handleSearchUsers}
+                    disabled={isSearching || !searchQuery.trim()}
+                    className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {isSearching ? (
+                      <div className="flex items-center justify-center">
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t('loading')}
+                      </div>
+                    ) : (
+                      t('selectUser')
+                    )}
+                  </button>
+                </div>
+
+                {/* Search results */}
+                {searchResults.length > 0 && (
+                  <div className="max-h-96 overflow-y-auto border-t border-gray-200">
+                    <div className="py-2">
+                      {searchResults.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => handleSelectUser(user)}
+                          disabled={isCreatingConversation}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {user.avatar_url ? (
+                            <img
+                              src={user.avatar_url}
+                              alt={user.nickname}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-gray-600 font-medium">
+                                {user.nickname?.[0]?.toUpperCase() || '?'}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900">{user.nickname}</p>
+                            {user.username && (
+                              <p className="text-xs text-gray-500">@{user.username}</p>
+                            )}
+                          </div>
+                          {isCreatingConversation && (
+                            <svg
+                              className="animate-spin h-5 w-5 text-blue-600"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                            >
+                              <circle
+                                className="opacity-25"
+                                cx="12"
+                                cy="12"
+                                r="10"
+                                stroke="currentColor"
+                                strokeWidth="4"
+                              ></circle>
+                              <path
+                                className="opacity-75"
+                                fill="currentColor"
+                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                              ></path>
+                            </svg>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {searchQuery && searchResults.length === 0 && !isSearching && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>{t('noUserSelected')}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -110,3 +110,10 @@ class MarkReadResponse(BaseModel):
 
     marked_count: int
     message_ids: List[UUID]
+
+
+class ConversationCreate(BaseModel):
+    """Schema for creating a new conversation."""
+
+    recipient_id: UUID = Field(..., description="ID of the conversation recipient")
+

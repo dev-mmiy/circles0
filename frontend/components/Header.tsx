@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/routing';
@@ -9,17 +9,64 @@ import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
 import LanguageSwitcher from './LanguageSwitcher';
+import { getTotalUnreadCount } from '@/lib/api/messages';
+import { setAuthToken } from '@/lib/api/client';
+import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 
 /**
  * Application Header Component with i18n support and mobile hamburger menu
  */
 export default function Header() {
-  const { isAuthenticated } = useAuth0();
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
   const t = useTranslations('navigation');
   const pathname = usePathname();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Load unread message count
+  const loadUnreadCount = useCallback(async () => {
+    if (!isAuthenticated) {
+      setUnreadMessageCount(0);
+      return;
+    }
+
+    try {
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+      const count = await getTotalUnreadCount();
+      setUnreadMessageCount(count);
+    } catch (error) {
+      console.error('Failed to load unread message count:', error);
+      setUnreadMessageCount(0);
+    }
+  }, [isAuthenticated, getAccessTokenSilently]);
+
+  // Handle new messages from SSE
+  const handleNewMessage = useCallback((message: MessageEvent) => {
+    // Increment unread count if message is not from current user
+    // Note: We can't determine current user ID here, so we'll reload the count
+    loadUnreadCount();
+  }, [loadUnreadCount]);
+
+  // Use message stream for real-time updates
+  // Skip connection in conversation detail page to avoid duplicate connections
+  // The conversation page will handle its own connection
+  const isConversationPage = pathname?.match(/\/messages\/[^/]+$/);
+  useMessageStream(handleNewMessage, !isConversationPage);
+
+  // Load unread count on mount and when authentication state changes
+  useEffect(() => {
+    loadUnreadCount();
+    
+    // Refresh unread count every 30 seconds
+    const interval = setInterval(() => {
+      loadUnreadCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [loadUnreadCount]);
 
   // Close mobile menu when clicking outside
   useEffect(() => {
@@ -109,12 +156,15 @@ export default function Header() {
               </Link>
               <Link
                 href="/messages"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/messages')
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium relative ${pathname.startsWith('/messages')
                   ? 'border-blue-500 text-gray-900'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                   }`}
               >
                 {t('messages')}
+                {unreadMessageCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
+                )}
               </Link>
             </nav>
           )}
@@ -177,9 +227,12 @@ export default function Header() {
               <Link
                 href="/messages"
                 onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
+                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors relative"
               >
                 {t('messages')}
+                {unreadMessageCount > 0 && (
+                  <span className="absolute top-2 right-4 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
+                )}
               </Link>
               <Link
                 href="/groups"

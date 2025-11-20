@@ -15,14 +15,21 @@ import FollowersList from '@/components/FollowersList';
 import FollowingList from '@/components/FollowingList';
 import PostCard from '@/components/PostCard';
 import { useUser } from '@/contexts/UserContext';
+import { findOrCreateConversation } from '@/lib/api/messages';
+import { setAuthToken } from '@/lib/api/client';
+import { MessageCircle } from 'lucide-react';
+import { useRouter } from '@/i18n/routing';
 
 export default function PublicProfilePage() {
   const t = useTranslations('publicProfilePage');
+  const tMessages = useTranslations('messages');
   const locale = useLocale();
   const params = useParams();
   const userId = params.id as string;
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user: currentUser } = useUser();
+  const router = useRouter();
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   const [profile, setProfile] = useState<UserPublicProfile | null>(null);
   const [followStats, setFollowStats] = useState<FollowStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,6 +174,27 @@ export default function PublicProfilePage() {
     loadPosts(true);
   };
 
+  // Handle sending message
+  const handleSendMessage = async () => {
+    if (!isAuthenticated || !profile || isOwnProfile) {
+      return;
+    }
+
+    setIsCreatingConversation(true);
+    try {
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+
+      const conversationId = await findOrCreateConversation(profile.id);
+      router.push(`/messages/${conversationId}`);
+    } catch (err) {
+      console.error('Failed to create conversation:', err);
+      alert(tMessages('errorCreatingConversation'));
+    } finally {
+      setIsCreatingConversation(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -245,6 +273,41 @@ export default function PublicProfilePage() {
                 {/* Action Buttons */}
                 {!isOwnProfile && profile && isAuthenticated && (
                   <div className="flex items-center space-x-3">
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={isCreatingConversation}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isCreatingConversation ? (
+                        <>
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          {tMessages('creatingConversation')}
+                        </>
+                      ) : (
+                        <>
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          {tMessages('sendMessage')}
+                        </>
+                      )}
+                    </button>
                     <FollowButton
                       userId={profile.id}
                       initialIsFollowing={followStats?.is_following ?? false}

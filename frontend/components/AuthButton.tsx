@@ -56,7 +56,7 @@ export default function AuthButton() {
         });
 
         setUserCreated(true);
-        console.log('User profile created/retrieved successfully');
+        // User profile created/retrieved successfully
       } catch (err) {
         console.error('Failed to create user profile:', err);
       }
@@ -77,7 +77,7 @@ export default function AuthButton() {
     } else if (error && !isAuthenticated) {
       // エラーが認証フロー中（isLoading中）の場合は無視
       if (error.message && error.message.includes('Invalid state')) {
-        console.log('Auth0 temporary state error (ignoring):', error.message);
+        // Auth0 temporary state error (ignoring) - this is normal during auth flow
         setAuthState('loading'); // 一時的なエラーはローディング状態として扱う
       } else {
         setAuthState('error');
@@ -87,25 +87,16 @@ export default function AuthButton() {
     }
   }, [isLoading, isAuthenticated, user, error]);
 
-  // デバッグ用ログ
-  console.log('AuthButton state:', {
-    isLoading,
-    isAuthenticated,
-    user,
-    error,
-    authState,
-    loginWithRedirect: typeof loginWithRedirect,
-    logout: typeof logout,
-  });
-
-  // エラー状態の詳細ログ
-  if (error) {
-    console.log('Auth0 Error Details:', {
-      message: error.message,
-      name: error.name,
-      stack: error.stack,
-      timestamp: new Date().toISOString(),
-    });
+  // デバッグ用ログ（開発環境のみ）
+  if (process.env.NODE_ENV === 'development') {
+    // Only log in development mode
+    if (error) {
+      console.log('[AuthButton] Error state:', {
+        message: error.message,
+        name: error.name,
+        authState,
+      });
+    }
   }
 
   // 関数の定義
@@ -216,7 +207,7 @@ export default function AuthButton() {
   if (authState === 'error') {
     // 認証フロー中や一時的なエラーは表示しない
     if (isLoading || (error?.message && error.message.includes('Invalid state'))) {
-      console.log('Auth0 temporary error during authentication flow (ignoring)');
+      // Auth0 temporary error during authentication flow (ignoring)
       return (
         <div className="flex items-center space-x-2">
           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
