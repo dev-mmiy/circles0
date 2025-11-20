@@ -97,23 +97,24 @@ export default function Header() {
               >
                 {t('userSearch')}
               </Link>
+
               <Link
-                href="/profile/me"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                href="/groups"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/groups')
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
               >
-                {t('myPage')}
+                {t('groups')}
               </Link>
               <Link
                 href="/messages"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/messages')
+                  ? 'border-blue-500 text-gray-900'
+                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                  }`}
               >
                 {t('messages')}
-              </Link>
-              <Link
-                href="/groups"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
-              >
-                {t('groups')}
               </Link>
             </nav>
           )}
@@ -172,13 +173,7 @@ export default function Header() {
               >
                 {t('userSearch')}
               </Link>
-              <Link
-                href="/profile/me"
-                onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
-              >
-                {t('myPage')}
-              </Link>
+
               <Link
                 href="/messages"
                 onClick={handleMobileMenuClose}

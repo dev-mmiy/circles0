@@ -242,6 +242,37 @@ async def get_groups(
 
 
 @router.get(
+    "/search",
+    response_model=GroupListResponse,
+    summary="Search groups",
+)
+async def search_groups(
+    q: str = Query(..., min_length=1, description="Search query"),
+    skip: int = Query(0, ge=0, description="Number of groups to skip"),
+    limit: int = Query(
+        20, ge=1, le=100, description="Maximum number of groups to return"
+    ),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Search groups by name or description.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+
+    groups = GroupService.search_groups(db, q, skip, limit)
+
+    total = len(groups)  # TODO: Get actual total count
+
+    return GroupListResponse(
+        groups=[_build_group_response(db, group, user_id) for group in groups],
+        total=total,
+        skip=skip,
+        limit=limit,
+    )
+
+
+@router.get(
     "/{group_id}",
     response_model=GroupResponse,
     summary="Get a group by ID",

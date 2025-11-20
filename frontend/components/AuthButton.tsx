@@ -18,6 +18,27 @@ export default function AuthButton() {
   >('loading');
   const [userCreated, setUserCreated] = useState(false);
 
+  // Dropdown state (Must be at top level)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
+
   // ユーザー作成（初回ログイン時）
   React.useEffect(() => {
     const createUser = async () => {
@@ -140,16 +161,20 @@ export default function AuthButton() {
     );
   }
 
+
+
   if (authState === 'authenticated' && user) {
     // Display nickname from UserContext if available, fallback to Auth0 user data
     const displayName = currentUser?.nickname || user.name || user.email || 'User';
     const avatarUrl = currentUser?.avatar_url || user.picture;
 
     return (
-      <div className="flex items-center space-x-4">
-        <Link
-          href="/profile/me"
-          className="flex items-center space-x-2 hover:opacity-80 transition-opacity"
+      <div className="relative" ref={dropdownRef}>
+        <button
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="flex items-center space-x-2 hover:opacity-80 transition-opacity focus:outline-none"
+          aria-expanded={isDropdownOpen}
+          aria-haspopup="true"
         >
           {avatarUrl && (
             <Image
@@ -160,15 +185,30 @@ export default function AuthButton() {
               className="w-8 h-8 rounded-full"
             />
           )}
-          <span className="text-sm text-gray-700">{displayName}</span>
-        </Link>
-        <button
-          onClick={handleLogout}
-          disabled={isLoggingOut}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isLoggingOut ? t('loggingOut') : t('logout')}
+          <span className="text-sm text-gray-700 font-medium">{displayName}</span>
         </button>
+
+        {isDropdownOpen && (
+          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 ring-1 ring-black ring-opacity-5">
+            <Link
+              href="/profile/me"
+              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+              onClick={() => setIsDropdownOpen(false)}
+            >
+              {t('profile') || 'Profile'} {/* Fallback string if key missing */}
+            </Link>
+            <button
+              onClick={() => {
+                setIsDropdownOpen(false);
+                handleLogout();
+              }}
+              disabled={isLoggingOut}
+              className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left disabled:opacity-50"
+            >
+              {isLoggingOut ? t('loggingOut') : t('logout')}
+            </button>
+          </div>
+        )}
       </div>
     );
   }

@@ -10,13 +10,14 @@ import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import {
   getGroups,
+  searchGroups,
   deleteGroup,
   Group,
 } from '@/lib/api/groups';
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Search } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
 import { useUser } from '@/contexts/UserContext';
 
@@ -35,10 +36,13 @@ export default function GroupsPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+
   const GROUPS_PER_PAGE = 20;
 
   // グループを取得
-  const loadGroups = async (reset: boolean = false) => {
+  const loadGroups = async (reset: boolean = false, query: string = '') => {
     try {
       const currentPage = reset ? 0 : page;
       setIsLoading(reset);
@@ -57,10 +61,21 @@ export default function GroupsPage() {
         setAuthToken(null);
       }
 
-      const response = await getGroups(
-        currentPage * GROUPS_PER_PAGE,
-        GROUPS_PER_PAGE
-      );
+      let response;
+      if (query.trim()) {
+        setIsSearching(true);
+        response = await searchGroups(
+          query,
+          currentPage * GROUPS_PER_PAGE,
+          GROUPS_PER_PAGE
+        );
+      } else {
+        setIsSearching(false);
+        response = await getGroups(
+          currentPage * GROUPS_PER_PAGE,
+          GROUPS_PER_PAGE
+        );
+      }
 
       if (reset) {
         setGroups(response.groups);
@@ -84,7 +99,7 @@ export default function GroupsPage() {
   // 認証チェックと初期読み込み
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
       if (!isRedirecting) {
@@ -93,16 +108,29 @@ export default function GroupsPage() {
       }
       return;
     }
-    
-    loadGroups(true);
+
+    loadGroups(true, searchQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated]);
+
+  // 検索ハンドラー
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const query = e.target.value;
+    setSearchQuery(query);
+
+    // デバウンス処理（簡易実装）
+    const timeoutId = setTimeout(() => {
+      loadGroups(true, query);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
 
   // さらに読み込む
   const handleLoadMore = () => {
     setIsLoadingMore(true);
     setPage(page + 1);
-    loadGroups(false);
+    loadGroups(false, searchQuery);
   };
 
   // グループを削除
@@ -161,18 +189,34 @@ export default function GroupsPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
-          <div className="mb-6 flex items-center justify-between">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
               <p className="text-gray-600 mt-2">{t('groups')}</p>
             </div>
             <Link
               href="/groups/new"
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               <Plus className="w-5 h-5 mr-2" />
               {t('createGroup')}
             </Link>
+          </div>
+
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-5 w-5 text-gray-400" />
+              </div>
+              <input
+                type="text"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder={t('searchPlaceholder') || 'Search groups...'}
+                value={searchQuery}
+                onChange={handleSearch}
+              />
+            </div>
           </div>
 
           {/* Error message */}
@@ -277,24 +321,24 @@ export default function GroupsPage() {
                         </Link>
 
                         {/* Delete button (only for creator or admin) */}
-                        {(group.creator_id === currentUser?.id || 
+                        {(group.creator_id === currentUser?.id ||
                           group.members.find(m => m.user_id === currentUser?.id && m.is_admin)) && (
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              handleDeleteGroup(group.id);
-                            }}
-                            disabled={deletingGroupId === group.id}
-                            className="ml-4 p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
-                            title={t('deleteGroup')}
-                          >
-                            {deletingGroupId === group.id ? (
-                              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
-                            ) : (
-                              <Trash2 className="w-5 h-5" />
-                            )}
-                          </button>
-                        )}
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDeleteGroup(group.id);
+                              }}
+                              disabled={deletingGroupId === group.id}
+                              className="ml-4 p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                              title={t('deleteGroup')}
+                            >
+                              {deletingGroupId === group.id ? (
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                              ) : (
+                                <Trash2 className="w-5 h-5" />
+                              )}
+                            </button>
+                          )}
                       </div>
                     </div>
                   ))}
@@ -306,11 +350,10 @@ export default function GroupsPage() {
                     <button
                       onClick={handleLoadMore}
                       disabled={isLoadingMore}
-                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
-                        isLoadingMore
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                      }`}
+                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${isLoadingMore
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                        }`}
                     >
                       {isLoadingMore ? (
                         <span className="flex items-center">

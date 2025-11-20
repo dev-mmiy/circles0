@@ -1,0 +1,120 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-8.4.2, pluggy-1.6.0 -- /home/mmiy/workspace/circles0/backend/venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/mmiy/workspace/circles0/backend
+configfile: pyproject.toml
+plugins: asyncio-0.21.1, anyio-4.11.0, cov-4.1.0, timeout-2.3.1
+asyncio: mode=Mode.STRICT
+timeout: 30.0s
+timeout method: thread
+timeout func_only: False
+collecting ... collected 1 item
+
+backend/tests/api/test_groups_search.py::test_search_groups ERROR        [100%]
+
+==================================== ERRORS ====================================
+_____________________ ERROR at setup of test_search_groups _____________________
+file /home/mmiy/workspace/circles0/backend/tests/api/test_groups_search.py, line 9
+  @pytest.mark.asyncio
+  async def test_search_groups(db_session: Session, client: AsyncClient, test_user: User):
+      # Create test groups
+      group1 = Group(name="Test Group 1", description="Description for group 1", creator_id=test_user.id)
+      group2 = Group(name="Another Group", description="Description for another group", creator_id=test_user.id)
+      db_session.add(group1)
+      db_session.add(group2)
+      db_session.commit()
+
+      # Add user as member
+      member1 = GroupMember(group_id=group1.id, user_id=test_user.id, is_admin=True)
+      member2 = GroupMember(group_id=group2.id, user_id=test_user.id, is_admin=True)
+      db_session.add(member1)
+      db_session.add(member2)
+      db_session.commit()
+
+      # Mock current user
+      app.dependency_overrides[get_current_user] = lambda: {"sub": test_user.auth0_id}
+
+      try:
+          # Test search by name
+          response = await client.get("/api/v1/groups/search?q=Test")
+          assert response.status_code == 200
+          data = response.json()
+          assert len(data["groups"]) == 1
+          assert data["groups"][0]["name"] == "Test Group 1"
+
+          # Test search by description
+          response = await client.get("/api/v1/groups/search?q=another")
+          assert response.status_code == 200
+          data = response.json()
+          assert len(data["groups"]) == 1
+          assert data["groups"][0]["name"] == "Another Group"
+
+          # Test no results
+          response = await client.get("/api/v1/groups/search?q=NonExistent")
+          assert response.status_code == 200
+          data = response.json()
+          assert len(data["groups"]) == 0
+      finally:
+          app.dependency_overrides = {}
+E       fixture 'client' not found
+>       available fixtures: anyio_backend, anyio_backend_name, anyio_backend_options, cache, capfd, capfdbinary, caplog, capsys, capsysbinary, capteesys, cov, db_session, doctest_namespace, event_loop, free_tcp_port, free_tcp_port_factory, free_udp_port, free_udp_port_factory, mock_notification_broadcast, monkeypatch, no_cover, pytestconfig, record_property, record_testsuite_property, record_xml_attribute, recwarn, reset_db, setup_test_db, test_disease, test_user, tmp_path, tmp_path_factory, tmpdir, tmpdir_factory, unused_tcp_port, unused_tcp_port_factory, unused_udp_port, unused_udp_port_factory
+>       use 'pytest --fixtures [testpath]' for help on them.
+
+/home/mmiy/workspace/circles0/backend/tests/api/test_groups_search.py:9
+=============================== warnings summary ===============================
+backend/app/api/users.py:189
+  /home/mmiy/workspace/circles0/backend/app/api/users.py:189: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    sort_by: str = Query(
+
+backend/app/api/users.py:194
+  /home/mmiy/workspace/circles0/backend/app/api/users.py:194: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    sort_order: str = Query(
+
+backend/app/schemas/block.py:11
+  /home/mmiy/workspace/circles0/backend/app/schemas/block.py:11: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BlockResponse(BaseModel):
+
+backend/app/schemas/block.py:24
+  /home/mmiy/workspace/circles0/backend/app/schemas/block.py:24: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class BlockedUserSummary(BaseModel):
+
+backend/app/api/diseases.py:94
+  /home/mmiy/workspace/circles0/backend/app/api/diseases.py:94: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    sort_by: str = Query(
+
+backend/app/api/diseases.py:99
+  /home/mmiy/workspace/circles0/backend/app/api/diseases.py:99: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    sort_order: str = Query(
+
+backend/app/schemas/group.py:152
+  /home/mmiy/workspace/circles0/backend/app/schemas/group.py:152: PydanticDeprecatedSince20: `min_items` is deprecated and will be removed, use `min_length` instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    user_ids: List[UUID] = Field(
+
+backend/app/schemas/notification.py:30
+  /home/mmiy/workspace/circles0/backend/app/schemas/notification.py:30: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserSummary(BaseModel):
+
+backend/app/schemas/notification.py:43
+  /home/mmiy/workspace/circles0/backend/app/schemas/notification.py:43: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PostSummary(BaseModel):
+
+backend/app/schemas/notification.py:53
+  /home/mmiy/workspace/circles0/backend/app/schemas/notification.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class CommentSummary(BaseModel):
+
+backend/app/schemas/notification.py:64
+  /home/mmiy/workspace/circles0/backend/app/schemas/notification.py:64: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class NotificationResponse(NotificationBase):
+
+backend/app/api/posts.py:109
+  /home/mmiy/workspace/circles0/backend/app/api/posts.py:109: DeprecationWarning: `regex` has been deprecated, please use `pattern` instead
+    filter_type: str = Query(
+
+backend/app/api/push_subscriptions.py:32
+  /home/mmiy/workspace/circles0/backend/app/api/push_subscriptions.py:32: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class PushSubscriptionResponse(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+ERROR backend/tests/api/test_groups_search.py::test_search_groups
+======================== 13 warnings, 1 error in 1.25s =========================

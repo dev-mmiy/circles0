@@ -23,8 +23,10 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { ArrowLeft, Trash2, Send, Image as ImageIcon, Users } from 'lucide-react';
+import { ArrowLeft, Trash2, Send, Image as ImageIcon, Users, Settings } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
+import GroupSettingsModal from '@/components/GroupSettingsModal';
+import { useMessageStream } from '@/lib/hooks/useMessageStream';
 
 export default function GroupChatPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -35,7 +37,7 @@ export default function GroupChatPage() {
   const groupId = params.groupId as string;
   const t = useTranslations('groups');
   const tChat = useTranslations('groups.chat');
-  
+
   const [group, setGroup] = useState<Group | null>(null);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,17 +46,37 @@ export default function GroupChatPage() {
   const [hasMore, setHasMore] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
-  
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
   // Message form state
   const [messageContent, setMessageContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const MESSAGES_PER_PAGE = 50;
+
+  // Real-time updates
+  const { lastMessage } = useMessageStream();
+
+  useEffect(() => {
+    if (lastMessage && lastMessage.group_id === groupId) {
+      // Check if message already exists
+      if (!messages.find(m => m.id === lastMessage.id)) {
+        // Convert MessageEvent to GroupMessage (they are compatible)
+        const newMessage = lastMessage as unknown as GroupMessage;
+        setMessages(prev => [...prev, newMessage]);
+
+        // Mark as read if it's not our own message
+        if (newMessage.sender_id !== currentUser?.id) {
+          markGroupMessagesAsRead(groupId, [newMessage.id]).catch(console.error);
+        }
+      }
+    }
+  }, [lastMessage, groupId, messages, currentUser?.id]);
 
   // スクロールを最下部に移動
   const scrollToBottom = () => {
@@ -149,7 +171,7 @@ export default function GroupChatPage() {
   // 認証チェックと初期読み込み
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!isAuthenticated) {
       if (!isRedirecting) {
         setIsRedirecting(true);
@@ -157,7 +179,7 @@ export default function GroupChatPage() {
       }
       return;
     }
-    
+
     loadGroup();
     loadMessages(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -215,17 +237,19 @@ export default function GroupChatPage() {
         image_url: imageUrl.trim() || null,
       };
 
+      // Send message - SSE will handle the update for us, but we can optimistically add it or wait for SSE
+      // For now, let's wait for the response to ensure it's sent, but rely on SSE for the list update to avoid duplicates if we're not careful
+      // Actually, the existing logic adds it manually. Let's keep it but be careful with duplicates in the SSE effect.
       const newMessage = await sendGroupMessage(groupId, messageData);
-      
-      // 新しいメッセージをリストに追加
-      setMessages([...messages, newMessage]);
-      
+
+      setMessages(prev => [...prev, newMessage]);
+
       // フォームをクリア
       setMessageContent('');
       setImageUrl('');
-      
-      // グループ情報を更新
-      await loadGroup();
+
+      // グループ情報を更新 (last_message_at etc)
+      loadGroup();
     } catch (err: any) {
       console.error('Failed to send message:', err);
       const errorInfo = extractErrorInfo(err);
@@ -308,29 +332,38 @@ export default function GroupChatPage() {
         <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1">
           {/* Header */}
           <div className="py-4 border-b border-gray-200 bg-white sticky top-16 z-10">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/groups"
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Link
+                  href="/groups"
+                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Link>
+                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                  <span className="text-blue-600 font-bold text-lg">
+                    {group?.name[0]?.toUpperCase() || 'G'}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <h2 className="text-lg font-semibold text-gray-900 truncate">
+                    {group?.name || t('group')}
+                  </h2>
+                  {group && (
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Users className="w-4 h-4" />
+                      <span>{group.member_count} {t('members')}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => setIsSettingsOpen(true)}
                 className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                title={t('groupSettings')}
               >
-                <ArrowLeft className="w-5 h-5" />
-              </Link>
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                <span className="text-blue-600 font-bold text-lg">
-                  {group?.name[0]?.toUpperCase() || 'G'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-semibold text-gray-900 truncate">
-                  {group?.name || t('group')}
-                </h2>
-                {group && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <Users className="w-4 h-4" />
-                    <span>{group.member_count} {t('members')}</span>
-                  </div>
-                )}
-              </div>
+                <Settings className="w-5 h-5" />
+              </button>
             </div>
           </div>
 
@@ -357,7 +390,7 @@ export default function GroupChatPage() {
               const showDate =
                 index === 0 ||
                 new Date(message.created_at).toDateString() !==
-                  new Date(messages[index - 1].created_at).toDateString();
+                new Date(messages[index - 1].created_at).toDateString();
 
               return (
                 <div key={message.id}>
@@ -374,9 +407,8 @@ export default function GroupChatPage() {
                     </div>
                   )}
                   <div
-                    className={`flex gap-3 ${
-                      isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                    }`}
+                    className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'
+                      }`}
                   >
                     {showAvatar && !isOwnMessage && (
                       <div className="flex-shrink-0">
@@ -397,9 +429,8 @@ export default function GroupChatPage() {
                     )}
                     {showAvatar && isOwnMessage && <div className="w-8 h-8" />}
                     <div
-                      className={`flex-1 max-w-[70%] ${
-                        isOwnMessage ? 'items-end' : 'items-start'
-                      } flex flex-col`}
+                      className={`flex-1 max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'
+                        } flex flex-col`}
                     >
                       {showAvatar && !isOwnMessage && (
                         <span className="text-xs text-gray-500 mb-1">
@@ -407,11 +438,10 @@ export default function GroupChatPage() {
                         </span>
                       )}
                       <div
-                        className={`rounded-lg px-4 py-2 ${
-                          isOwnMessage
+                        className={`rounded-lg px-4 py-2 ${isOwnMessage
                             ? 'bg-blue-600 text-white'
                             : 'bg-white border border-gray-200 text-gray-900'
-                        }`}
+                          }`}
                       >
                         {message.is_deleted ? (
                           <span className="italic text-gray-500">
@@ -438,9 +468,8 @@ export default function GroupChatPage() {
                         )}
                       </div>
                       <div
-                        className={`text-xs text-gray-500 mt-1 ${
-                          isOwnMessage ? 'text-right' : 'text-left'
-                        }`}
+                        className={`text-xs text-gray-500 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'
+                          }`}
                       >
                         {formatTime(message.created_at)}
                       </div>
@@ -510,6 +539,15 @@ export default function GroupChatPage() {
           </div>
         </div>
       </div>
+
+      {group && (
+        <GroupSettingsModal
+          group={group}
+          isOpen={isSettingsOpen}
+          onClose={() => setIsSettingsOpen(false)}
+          onUpdate={loadGroup}
+        />
+      )}
     </>
   );
 }

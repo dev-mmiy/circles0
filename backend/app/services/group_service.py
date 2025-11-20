@@ -146,6 +146,48 @@ class GroupService:
         return groups
 
     @staticmethod
+    def search_groups(
+        db: Session,
+        query: str,
+        skip: int = 0,
+        limit: int = 20,
+    ) -> List[Group]:
+        """
+        Search groups by name or description.
+
+        Args:
+            db: Database session
+            query: Search query string
+            skip: Number of groups to skip
+            limit: Maximum number of groups to return
+
+        Returns:
+            List of matching groups
+        """
+        search_query = f"%{query}%"
+        
+        groups = (
+            db.query(Group)
+            .options(
+                joinedload(Group.creator),
+                joinedload(Group.members).joinedload(GroupMember.user),
+            )
+            .filter(
+                or_(
+                    Group.name.ilike(search_query),
+                    Group.description.ilike(search_query),
+                ),
+                Group.is_deleted == False,
+            )
+            .order_by(desc(Group.created_at))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        return groups
+
+    @staticmethod
     def get_group_by_id(
         db: Session, group_id: UUID, user_id: UUID
     ) -> Optional[Group]:

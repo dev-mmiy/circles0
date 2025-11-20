@@ -10,6 +10,7 @@ from sqlalchemy import create_engine, delete
 from sqlalchemy.orm import Session, sessionmaker
 
 from app.database import Base
+from app.main import app
 
 # Import all models to ensure they're registered with Base.metadata
 from app.models import (  # noqa: F401

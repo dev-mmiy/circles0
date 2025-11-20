@@ -110,6 +110,9 @@ export async function createGroup(data: CreateGroupData): Promise<Group> {
 /**
  * Get all groups for the current user
  */
+/**
+ * Get all groups for the current user
+ */
 export async function getGroups(
   skip: number = 0,
   limit: number = 20
@@ -121,6 +124,26 @@ export async function getGroups(
 
   const response = await apiClient.get<GroupListResponse>(
     `/groups?${params.toString()}`
+  );
+  return response.data;
+}
+
+/**
+ * Search groups by name or description
+ */
+export async function searchGroups(
+  query: string,
+  skip: number = 0,
+  limit: number = 20
+): Promise<GroupListResponse> {
+  const params = new URLSearchParams({
+    q: query,
+    skip: skip.toString(),
+    limit: limit.toString(),
+  });
+
+  const response = await apiClient.get<GroupListResponse>(
+    `/groups/search?${params.toString()}`
   );
   return response.data;
 }

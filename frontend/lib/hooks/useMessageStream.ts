@@ -23,7 +23,8 @@ const RETRY_BACKOFF_MULTIPLIER = 1.5;
 
 export interface MessageEvent {
   id: string;
-  conversation_id: string;
+  conversation_id?: string;
+  group_id?: string;
   sender_id: string;
   content: string;
   image_url: string | null;
@@ -108,6 +109,21 @@ export function useMessageStream(
           }
         } catch (error) {
           console.error('[Message SSE] Failed to parse message:', error);
+        }
+      });
+
+      // New group message received
+      eventSource.addEventListener('group_message', (event) => {
+        try {
+          const message: MessageEvent = JSON.parse(event.data);
+          console.log('[Message SSE] New group message:', message);
+          setLastMessage(message);
+
+          if (onMessage) {
+            onMessage(message);
+          }
+        } catch (error) {
+          console.error('[Message SSE] Failed to parse group message:', error);
         }
       });
 
