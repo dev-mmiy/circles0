@@ -568,12 +568,12 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### Phase 6: モバイル・通知（優先度：低）
 
-#### 6.1 プッシュ通知
-- [ ] **Web Push Notifications**
-  - [ ] 新規フォロワー通知
-  - [ ] コメント・リアクション通知
-  - [ ] DM通知
-  - [ ] 服薬リマインダー
+#### 6.1 プッシュ通知 ✅ 完了（2025-11-21）
+- [x] **Web Push Notifications** ✅ 完了
+  - [x] 新規フォロワー通知
+  - [x] コメント・リアクション通知
+  - [x] DM通知
+  - [ ] 服薬リマインダー（今後実装予定）
 
 #### 6.2 モバイルアプリ
 - [ ] **React Native / Flutter アプリ**
@@ -1432,6 +1432,40 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/lib/utils/filterSettings.ts](frontend/lib/utils/filterSettings.ts:9-55) - フィルター設定更新
     - [frontend/app/[locale]/groups/new/page.tsx](frontend/app/[locale]/groups/new/page.tsx:283-285) - 表示フィールド変更
 
+- **Web Push Notifications機能のUI実装** ✅ 完了
+  - **フロントエンド実装**:
+    - `PushNotificationToggle`コンポーネントの作成
+      - トグルスイッチ（switch）とボタン（button）の2種類のバリアント
+      - 購読状態の表示
+      - 権限未許可時のエラーメッセージ
+      - ローディング状態の表示
+    - 通知設定ページの作成（`/notifications/settings`）
+      - Push通知の有効/無効切り替え
+      - ブラウザサポート状況の表示
+      - 通知権限のステータス表示
+      - 購読状態の表示
+      - 権限拒否時のヘルプテキスト
+    - 多言語対応（日本語・英語）
+      - `pushNotifications`名前空間の追加
+      - 18個の翻訳キーを追加
+  - **バックエンド改善**:
+    - `PushSubscription`モデルにUserリレーションシップを追加
+    - `User`モデルにpush_subscriptionsリレーションシップを追加
+    - `PushSubscription`モデルにto_dict()メソッドを追加
+    - PushSubscriptionスキーマを新規作成
+  - **実装ファイル**:
+    - [frontend/components/notifications/PushNotificationToggle.tsx](frontend/components/notifications/PushNotificationToggle.tsx) - トグルコンポーネント
+    - [frontend/app/[locale]/notifications/settings/page.tsx](frontend/app/[locale]/notifications/settings/page.tsx) - 設定ページ
+    - [frontend/messages/ja.json](frontend/messages/ja.json) - 日本語翻訳追加
+    - [frontend/messages/en.json](frontend/messages/en.json) - 英語翻訳追加
+    - [backend/app/models/push_subscription.py](backend/app/models/push_subscription.py) - リレーションシップ追加
+    - [backend/app/models/user.py](backend/app/models/user.py) - リレーションシップ追加
+    - [backend/app/schemas/push_subscription.py](backend/app/schemas/push_subscription.py) - スキーマ新規作成
+  - **注意事項**:
+    - 本番環境で使用するにはVAPID鍵の設定が必要
+    - `scripts/generate_vapid_keys.py`でVAPID鍵を生成
+    - 生成した鍵を`.env`ファイルに追加（VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, VAPID_EMAIL）
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1513,4 +1547,4 @@ eec5fc8 - Wrap stat() call in try-except to prevent error messages (2025-11-15)
 
 **最終更新日**: 2025-11-21
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了

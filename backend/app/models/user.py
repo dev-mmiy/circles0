@@ -199,5 +199,12 @@ class User(Base):
         cascade="all, delete-orphan",
     )
 
+    # Push subscriptions for Web Push notifications
+    push_subscriptions = relationship(
+        "PushSubscription",
+        foreign_keys="PushSubscription.user_id",
+        cascade="all, delete-orphan",
+    )
+
     def __repr__(self) -> str:
         return f"<User(id={self.id}, member_id={self.member_id}, email={self.email}, nickname={self.nickname})>"

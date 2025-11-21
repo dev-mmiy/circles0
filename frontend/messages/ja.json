@@ -232,6 +232,24 @@
       "delete": "削除"
     }
   },
+  "pushNotifications": {
+    "pushNotifications": "プッシュ通知",
+    "enable": "プッシュ通知を有効にする",
+    "disable": "プッシュ通知を無効にする",
+    "enabled": "通知オン",
+    "disabled": "通知オフ",
+    "notSupported": "このブラウザはプッシュ通知に対応していません",
+    "permissionDenied": "通知が拒否されています",
+    "enableDescription": "ブラウザを閉じていても重要な通知を受け取れます",
+    "settingsTitle": "通知設定",
+    "settingsDescription": "どの通知を受け取るか設定できます",
+    "newFollower": "新しいフォロワー",
+    "newComment": "コメント",
+    "newReply": "返信",
+    "newLike": "いいね",
+    "newMessage": "メッセージ",
+    "newGroupMessage": "グループメッセージ"
+  },
   "feed": {
     "title": "コミュニティフィード",
     "subtitle": "みんなの経験や気持ちをシェアしましょう",

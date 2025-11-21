@@ -5,7 +5,7 @@ Push subscription model for Web Push API.
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Column, DateTime, String, Text
+from sqlalchemy import JSON, Column, DateTime, ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
@@ -27,9 +27,10 @@ class PushSubscription(Base):
     )
     user_id = Column(
         PostgreSQLUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
-    )  # Foreign key to users table (no FK constraint for flexibility)
+    )
 
     # Push subscription endpoint (unique per browser/device)
     endpoint = Column(String(500), nullable=False, unique=True, index=True)
@@ -58,5 +59,18 @@ class PushSubscription(Base):
         DateTime(timezone=True), nullable=True
     )  # Last successful push
 
+    # Relationships
+    user = relationship("User", back_populates="push_subscriptions")
+
     def __repr__(self) -> str:
         return f"<PushSubscription(id={self.id}, user_id={self.user_id}, endpoint={self.endpoint[:50]}...)>"
+
+    def to_dict(self):
+        """Convert to dictionary format for pywebpush."""
+        return {
+            "endpoint": self.endpoint,
+            "keys": {
+                "p256dh": self.p256dh,
+                "auth": self.auth,
+            },
+        }

@@ -232,6 +232,24 @@
       "delete": "Delete"
     }
   },
+  "pushNotifications": {
+    "pushNotifications": "Push Notifications",
+    "enable": "Enable push notifications",
+    "disable": "Disable push notifications",
+    "enabled": "Notifications On",
+    "disabled": "Notifications Off",
+    "notSupported": "This browser does not support push notifications",
+    "permissionDenied": "Notifications are blocked",
+    "enableDescription": "Receive important notifications even when the browser is closed",
+    "settingsTitle": "Notification Settings",
+    "settingsDescription": "Configure which notifications you want to receive",
+    "newFollower": "New follower",
+    "newComment": "Comments",
+    "newReply": "Replies",
+    "newLike": "Likes",
+    "newMessage": "Messages",
+    "newGroupMessage": "Group messages"
+  },
   "feed": {
     "title": "Community Feed",
     "subtitle": "Share your experiences and feelings with everyone",

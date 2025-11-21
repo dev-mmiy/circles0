@@ -22,6 +22,7 @@ from .mention import CommentMention, PostMention
 from .message import Conversation, Message, MessageRead
 from .notification import Notification, NotificationType
 from .post import Post, PostComment, PostImage, PostLike
+from .push_subscription import PushSubscription
 from .user import User
 from .user_field_visibility import UserFieldVisibility
 
@@ -56,4 +57,5 @@ __all__ = [
     "GroupMember",
     "GroupMessage",
     "GroupMessageRead",
+    "PushSubscription",
 ]
