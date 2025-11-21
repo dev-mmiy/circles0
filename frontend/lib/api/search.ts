@@ -45,11 +45,10 @@ export interface DiseaseSearchParams {
 }
 
 export interface UserSearchParams {
-  q?: string; // Search by nickname or username
+  q?: string; // Search by nickname or bio
   disease_ids?: string; // Comma-separated disease IDs
   country?: string; // Filter by country code
   language?: string; // Filter by preferred language
-  member_id?: string; // Search by exact member ID
   sort_by?: 'created_at' | 'last_login_at' | 'nickname'; // Sort field
   sort_order?: 'asc' | 'desc'; // Sort order
   limit?: number; // Maximum results
@@ -137,7 +136,6 @@ export async function searchUsers(
   if (params.disease_ids) queryParams.append('disease_ids', params.disease_ids);
   if (params.country) queryParams.append('country', params.country);
   if (params.language) queryParams.append('language', params.language);
-  if (params.member_id) queryParams.append('member_id', params.member_id);
   if (params.sort_by) queryParams.append('sort_by', params.sort_by);
   if (params.sort_order) queryParams.append('sort_order', params.sort_order);
   if (params.limit) queryParams.append('limit', params.limit.toString());

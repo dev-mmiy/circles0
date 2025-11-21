@@ -612,24 +612,29 @@ class GroupService:
         group.updated_at = datetime.utcnow()
         db.commit()
 
-        # Load sender information for broadcast
-        db.refresh(message)
-        message = (
-            db.query(GroupMessage)
-            .options(joinedload(GroupMessage.sender))
-            .filter(GroupMessage.id == message.id)
-            .first()
-        )
-
-        # Broadcast message to all group members via SSE
-        # Run in background to not block the response
-        import asyncio
-
-        asyncio.create_task(
-            GroupService._broadcast_group_message(message, group_id)
-        )
-
         return message
+
+    @staticmethod
+    async def broadcast_group_message_async(message: GroupMessage, group_id: UUID):
+        """
+        Broadcast a group message to real-time SSE connections.
+        
+        This is a wrapper for BackgroundTasks that handles the async broadcast.
+        
+        Args:
+            message: The message object to broadcast (should have sender loaded)
+            group_id: Group ID
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        try:
+            await GroupService._broadcast_group_message(message, group_id)
+        except Exception as e:
+            logger.error(
+                f"Failed to broadcast group message {message.id} to group {group_id}: {e}",
+                exc_info=True
+            )
 
     @staticmethod
     async def _broadcast_group_message(message: GroupMessage, group_id: UUID):
@@ -665,7 +670,9 @@ class GroupService:
 
         # Get all group members
         from app.database import SessionLocal
+        import logging
 
+        logger = logging.getLogger(__name__)
         db = SessionLocal()
         try:
             members = (
@@ -677,11 +684,32 @@ class GroupService:
                 .all()
             )
 
+            logger.info(
+                f"Broadcasting group message {message.id} to {len(members)} members in group {group_id}"
+            )
+
             # Broadcast to all members
+            broadcast_count = 0
             for member in members:
-                await broadcaster.broadcast_to_user(
-                    member.user_id, "group_message", message_data
-                )
+                try:
+                    await broadcaster.broadcast_to_user(
+                        member.user_id, "group_message", message_data
+                    )
+                    broadcast_count += 1
+                except Exception as e:
+                    logger.error(
+                        f"Failed to broadcast to user {member.user_id}: {e}",
+                        exc_info=True
+                    )
+
+            logger.info(
+                f"Successfully broadcasted group message {message.id} to {broadcast_count}/{len(members)} members"
+            )
+        except Exception as e:
+            logger.error(
+                f"Error broadcasting group message {message.id}: {e}",
+                exc_info=True
+            )
         finally:
             db.close()
 

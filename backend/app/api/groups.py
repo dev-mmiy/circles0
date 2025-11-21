@@ -5,7 +5,7 @@ Groups API endpoints for group chat.
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
 
 from app.auth.dependencies import get_current_user
@@ -516,6 +516,7 @@ async def update_member_role(
 async def send_group_message(
     group_id: UUID,
     message_data: GroupMessageCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -534,7 +535,7 @@ async def send_group_message(
             detail=str(e),
         )
 
-    # Fetch message with relationships
+    # Fetch message with relationships for response
     message_with_data = (
         db.query(GroupMessage)
         .options(
@@ -543,6 +544,14 @@ async def send_group_message(
         )
         .filter(GroupMessage.id == message.id)
         .first()
+    )
+
+    # Schedule background task to broadcast message to all group members
+    # This ensures the API response is not blocked by the broadcast operation
+    background_tasks.add_task(
+        GroupService.broadcast_group_message_async,
+        message_with_data,
+        group_id,
     )
 
     return _build_group_message_response(db, message_with_data, sender_id)

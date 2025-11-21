@@ -7,7 +7,6 @@ const USER_SEARCH_FILTER_KEY = 'user_search_filter_settings';
 const DISEASE_SEARCH_FILTER_KEY = 'disease_search_filter_settings';
 
 export interface UserSearchFilterSettings {
-  memberId?: string;
   diseaseIds?: number[];
   sortBy?: 'created_at' | 'last_login_at' | 'nickname';
   sortOrder?: 'asc' | 'desc';
@@ -46,7 +45,6 @@ export function saveUserSearchFilterSettings(settings: UserSearchFilterSettings)
   try {
     // Only save non-empty settings
     const filtered: UserSearchFilterSettings = {};
-    if (settings.memberId?.trim()) filtered.memberId = settings.memberId.trim();
     if (settings.diseaseIds && settings.diseaseIds.length > 0) filtered.diseaseIds = settings.diseaseIds;
     if (settings.sortBy) filtered.sortBy = settings.sortBy;
     if (settings.sortOrder) filtered.sortOrder = settings.sortOrder;

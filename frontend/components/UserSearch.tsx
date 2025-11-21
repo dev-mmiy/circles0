@@ -40,7 +40,6 @@ export function UserSearch({
 }: UserSearchProps) {
   const t = useTranslations('userSearch');
   const [searchQuery, setSearchQuery] = useState('');
-  const [memberId, setMemberId] = useState('');
   const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at' | 'nickname'>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
@@ -63,7 +62,6 @@ export function UserSearch({
       };
 
       if (searchQuery) params.q = searchQuery;
-      if (memberId) params.member_id = memberId;
       if (selectedDiseases.length > 0) {
         params.disease_ids = selectedDiseases.join(',');
       }
@@ -74,7 +72,6 @@ export function UserSearch({
       // Save to search history if query exists
       if (searchQuery.trim()) {
         addToSearchHistory('user', searchQuery, {
-          member_id: memberId || undefined,
           disease_ids: selectedDiseases.length > 0 ? selectedDiseases.join(',') : undefined,
           sort_by: sortBy,
           sort_order: sortOrder,
@@ -100,7 +97,6 @@ export function UserSearch({
     // Restore saved filter settings
     const savedSettings = getUserSearchFilterSettings();
     if (savedSettings) {
-      if (savedSettings.memberId) setMemberId(savedSettings.memberId);
       if (savedSettings.diseaseIds && savedSettings.diseaseIds.length > 0) {
         setSelectedDiseases(savedSettings.diseaseIds);
       }
@@ -112,13 +108,12 @@ export function UserSearch({
   // Save filter settings when they change
   useEffect(() => {
     const settings: UserSearchFilterSettings = {
-      memberId: memberId || undefined,
       diseaseIds: selectedDiseases.length > 0 ? selectedDiseases : undefined,
       sortBy,
       sortOrder,
     };
     saveUserSearchFilterSettings(settings);
-  }, [memberId, selectedDiseases, sortBy, sortOrder]);
+  }, [selectedDiseases, sortBy, sortOrder]);
 
   const toggleDisease = (diseaseId: number) => {
     setSelectedDiseases((prev) =>
@@ -134,7 +129,6 @@ export function UserSearch({
     setShowHistory(false);
     // Optionally restore params if stored
     if (historyItem.params) {
-      if (historyItem.params.member_id) setMemberId(historyItem.params.member_id);
       if (historyItem.params.disease_ids) {
         setSelectedDiseases(historyItem.params.disease_ids.split(',').map(Number));
       }
@@ -248,7 +242,6 @@ export function UserSearch({
           <div className="flex justify-end">
             <button
               onClick={() => {
-                setMemberId('');
                 setSelectedDiseases([]);
                 setSortBy('created_at');
                 setSortOrder('desc');
@@ -258,20 +251,6 @@ export function UserSearch({
             >
               {t('clearFilters')}
             </button>
-          </div>
-          {/* Member ID Search */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('memberIdLabel')}
-            </label>
-            <input
-              type="text"
-              value={memberId}
-              onChange={(e) => setMemberId(e.target.value)}
-              placeholder={t('memberIdPlaceholder')}
-              maxLength={12}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
           </div>
 
           {/* Disease Filter */}
@@ -384,7 +363,6 @@ export function UserSearch({
                     {user.username && (
                       <p className="text-sm text-gray-600">@{user.username}</p>
                     )}
-                    <p className="text-xs text-gray-500 mt-1">{t('memberId')}: {user.member_id}</p>
 
                     {user.bio && <p className="text-sm text-gray-700 mt-2">{user.bio}</p>}
 
@@ -422,7 +400,7 @@ export function UserSearch({
       )}
 
       {/* No Results */}
-      {!loading && results.length === 0 && (searchQuery || memberId || selectedDiseases.length > 0) && (
+      {!loading && results.length === 0 && (searchQuery || selectedDiseases.length > 0) && (
         <div className="text-center py-8 text-gray-500">{t('noResults')}</div>
       )}
     </div>

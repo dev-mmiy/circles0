@@ -32,7 +32,7 @@ async def event_generator(user_id: UUID, request: Request):
     This generator:
     1. Registers the connection with the broadcaster
     2. Sends periodic heartbeats to keep the connection alive
-    3. Sends message events when they occur
+    3. Sends message events when they occur (both direct messages and group messages)
     4. Handles disconnection gracefully
 
     Args:
@@ -41,6 +41,9 @@ async def event_generator(user_id: UUID, request: Request):
 
     Yields:
         dict: SSE event dictionaries with 'event' and 'data' keys
+        - 'message' event: Direct message (1-on-1 conversation)
+        - 'group_message' event: Group message (group chat)
+        - 'ping' event: Heartbeat to keep connection alive
     """
     queue = await broadcaster.connect(user_id)
     logger.info(f"SSE connection established for user {user_id} (messages)")
@@ -83,11 +86,15 @@ async def event_generator(user_id: UUID, request: Request):
                 # Wait for message event with timeout (for heartbeat)
                 event = await asyncio.wait_for(queue.get(), timeout=HEARTBEAT_INTERVAL)
 
-                # Only forward message events (filter out notification events)
-                if event.get("event") == "message":
+                # Forward message events (both direct messages and group messages)
+                # Filter out notification events
+                event_type = event.get("event")
+                if event_type == "message":
+                    yield event
+                elif event_type == "group_message":
                     yield event
                 # Also forward ping events for heartbeat
-                elif event.get("event") == "ping":
+                elif event_type == "ping":
                     yield event
 
             except asyncio.TimeoutError:
@@ -122,13 +129,14 @@ async def message_stream(
 
     This endpoint establishes a persistent connection that sends:
     - Initial 'connected' event when connection is established
-    - 'message' events when new messages are received or sent
+    - 'message' events when new direct messages are received or sent
+    - 'group_message' events when new group messages are received or sent
     - 'ping' events every 30 seconds (heartbeat)
     - 'reconnect' event after 9 minutes (before Cloud Run timeout)
 
     The client should:
     - Connect using EventSource API
-    - Listen for 'message' events to update UI
+    - Listen for 'message' events (direct messages) and 'group_message' events (group messages) to update UI
     - Automatically reconnect on 'reconnect' event or connection loss
 
     Authentication:

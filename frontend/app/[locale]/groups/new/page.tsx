@@ -281,8 +281,8 @@ export default function NewGroupPage() {
                         )}
                         <div>
                           <div className="font-medium text-gray-900">{user.nickname}</div>
-                          {user.member_id && (
-                            <div className="text-sm text-gray-500">ID: {user.member_id}</div>
+                          {user.username && (
+                            <div className="text-sm text-gray-500">@{user.username}</div>
                           )}
                         </div>
                       </div>

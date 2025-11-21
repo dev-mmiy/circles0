@@ -179,8 +179,7 @@ async def create_or_get_user(user_data: UserCreate, db: Session = Depends(get_db
 
 @router.get("/search")
 async def search_users(
-    q: Optional[str] = Query(None, description="Search query (nickname or member_id)"),
-    member_id: Optional[str] = Query(None, description="Member ID (exact match)"),
+    q: Optional[str] = Query(None, description="Search query (nickname or bio)"),
     disease_ids: Optional[str] = Query(
         None, description="Comma-separated disease IDs to filter by"
     ),
@@ -201,30 +200,25 @@ async def search_users(
     """
     Search for users with various filters.
 
-    - Search by nickname or member_id (q parameter)
-    - Filter by member_id (exact match)
+    - Search by nickname or bio (q parameter)
     - Filter by disease IDs (comma-separated)
     - Filter by country and language
     - Sort by created_at, last_login_at, or nickname
     """
-    from sqlalchemy import asc, desc, func, or_
+    from sqlalchemy import asc, desc, func, or_, and_
     from sqlalchemy.orm import joinedload
 
     # Start with base query (only active users)
     query = db.query(User).filter(User.is_active == True)
 
-    # Search by query string (nickname or member_id)
+    # Search by query string (nickname or bio)
     if q:
         query = query.filter(
             or_(
                 User.nickname.ilike(f"%{q}%"),
-                User.member_id.ilike(f"%{q}%"),
+                and_(User.bio.isnot(None), User.bio.ilike(f"%{q}%")),
             )
         )
-
-    # Filter by member_id (exact match)
-    if member_id:
-        query = query.filter(User.member_id == member_id)
 
     # Filter by disease IDs
     if disease_ids:
