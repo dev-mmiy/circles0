@@ -156,3 +156,4 @@ class HashtagService:
         """
         db.query(PostHashtag).filter(PostHashtag.post_id == post_id).delete()
 
+

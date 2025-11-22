@@ -1,10 +1,9 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
-import { Link } from '@/i18n/routing';
 import PostCard from '@/components/PostCard';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
@@ -42,11 +41,21 @@ export default function FeedPage() {
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
 
   const POSTS_PER_PAGE = 20;
+  const isMountedRef = useRef(true);
+
+  // コンポーネントのマウント状態を追跡
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // Load initial posts
   const loadPosts = useCallback(async (reset: boolean = false, currentPageOverride?: number) => {
     console.log('[FeedPage] loadPosts called', { reset, currentPageOverride, isAuthenticated, filterType, selectedDiseaseId });
     try {
+      if (!isMountedRef.current) return;
       setIsLoading(reset);
       setIsLoadingMore(!reset);
       
@@ -85,6 +94,8 @@ export default function FeedPage() {
 
       console.log('[FeedPage] Posts fetched:', fetchedPosts.length);
 
+      if (!isMountedRef.current) return;
+
       if (reset) {
         setPosts(fetchedPosts);
         setPage(0);
@@ -96,6 +107,7 @@ export default function FeedPage() {
       setError(null);
       console.log('[FeedPage] loadPosts completed successfully');
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('[FeedPage] Failed to load posts:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
@@ -103,21 +115,25 @@ export default function FeedPage() {
       setIsLoading(false);
       setIsLoadingMore(false);
     } finally {
-      console.log('[FeedPage] loadPosts finally block - setting loading to false');
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      if (isMountedRef.current) {
+        console.log('[FeedPage] loadPosts finally block - setting loading to false');
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   }, [isAuthenticated, getAccessTokenSilently, filterType, selectedDiseaseId]);
 
   // Initial load and reload when filter changes
   useEffect(() => {
     console.log('[FeedPage] useEffect triggered', { authLoading, filterType, selectedDiseaseId, isAuthenticated });
-    if (!authLoading) {
-      console.log('[FeedPage] Calling loadPosts(true)');
-      loadPosts(true);
-    } else {
+    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
+    // （クライアントサイドナビゲーションで状態が維持されている場合）
+    if (authLoading && !isAuthenticated) {
       console.log('[FeedPage] Auth still loading, skipping loadPosts');
+      return;
     }
+    console.log('[FeedPage] Calling loadPosts(true)');
+    loadPosts(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, filterType, selectedDiseaseId, isAuthenticated]);
 
@@ -164,12 +180,12 @@ export default function FeedPage() {
     return translation?.translated_name || userDisease.disease.name;
   };
 
-  if (authLoading || isLoading) {
+  if ((authLoading && !isAuthenticated) || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </div>

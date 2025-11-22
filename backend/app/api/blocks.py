@@ -207,3 +207,4 @@ async def get_block_stats(
     blocked_count = BlockService.get_blocked_users_count(db, current_user_id)
 
     return BlockStats(blocked_count=blocked_count)
+

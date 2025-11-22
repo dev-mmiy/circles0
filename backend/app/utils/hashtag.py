@@ -63,3 +63,4 @@ def normalize_hashtag(hashtag: str) -> str:
         hashtag = hashtag[1:]
     return hashtag.lower()
 
+

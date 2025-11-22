@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -40,10 +40,20 @@ export default function GroupsPage() {
   const [isSearching, setIsSearching] = useState(false);
 
   const GROUPS_PER_PAGE = 20;
+  const isMountedRef = useRef(true);
+
+  // コンポーネントのマウント状態を追跡
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // グループを取得
   const loadGroups = async (reset: boolean = false, query: string = '') => {
     try {
+      if (!isMountedRef.current) return;
       const currentPage = reset ? 0 : page;
       setIsLoading(reset);
       setIsLoadingMore(!reset);
@@ -52,9 +62,11 @@ export default function GroupsPage() {
       if (isAuthenticated) {
         try {
           const token = await getAccessTokenSilently();
+          if (!isMountedRef.current) return;
           setAuthToken(token);
         } catch (tokenError) {
           console.warn('Failed to get access token:', tokenError);
+          if (!isMountedRef.current) return;
           setAuthToken(null);
         }
       } else {
@@ -77,6 +89,8 @@ export default function GroupsPage() {
         );
       }
 
+      if (!isMountedRef.current) return;
+
       if (reset) {
         setGroups(response.groups);
         setPage(0);
@@ -87,18 +101,23 @@ export default function GroupsPage() {
       setHasMore(response.groups.length === GROUPS_PER_PAGE);
       setError(null);
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('Failed to load groups:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   };
 
   // 認証チェックと初期読み込み
   useEffect(() => {
-    if (authLoading) return;
+    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
+    // （クライアントサイドナビゲーションで状態が維持されている場合）
+    if (authLoading && !isAuthenticated) return;
 
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
@@ -171,12 +190,12 @@ export default function GroupsPage() {
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
   };
 
-  if (authLoading || isLoading || isRedirecting) {
+  if ((authLoading && !isAuthenticated) || isLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </div>
@@ -399,5 +418,6 @@ export default function GroupsPage() {
     </>
   );
 }
+
 
 

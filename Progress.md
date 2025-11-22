@@ -476,7 +476,7 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] フォロワー限定投稿フィルター ✅ 完了（既に実装済み）
 - [x] **通知機能** ✅ 完了（2025-11-11）
   - [x] 通知データモデル（Notification テーブル）
-  - [x] 通知タイプ（FOLLOW、COMMENT、REPLY、LIKE、COMMENT_LIKE）
+  - [x] 通知タイプ（FOLLOW、COMMENT、REPLY、LIKE、COMMENT_LIKE、MESSAGE）
   - [x] 通知サービス（重複防止、24時間ウィンドウ）
   - [x] 通知API（一覧、既読、未読カウント、削除）
   - [x] 既存サービスへの統合（フォロー/コメント/いいね時の通知作成）

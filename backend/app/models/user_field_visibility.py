@@ -51,3 +51,4 @@ class UserFieldVisibility(Base):
     def __repr__(self) -> str:
         return f"<UserFieldVisibility(user_id={self.user_id}, field={self.field_name}, visibility={self.visibility})>"
 
+

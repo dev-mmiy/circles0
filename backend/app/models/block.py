@@ -67,3 +67,4 @@ class Block(Base):
     def __repr__(self):
         return f"<Block {self.blocker_id} -> {self.blocked_id}>"
 
+

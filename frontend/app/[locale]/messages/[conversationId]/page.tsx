@@ -23,7 +23,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { ArrowLeft, Trash2, Send, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, Trash2, Send } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 
@@ -100,12 +100,14 @@ export default function ConversationPage() {
     }
   };
 
-  const loadMessages = async (reset: boolean = false) => {
+  const loadMessages = async (reset: boolean = false, skipLoadingState: boolean = false) => {
     try {
       const currentPage = reset ? 0 : page;
-      setIsLoadingMore(!reset);
-      if (reset) {
-        setIsLoading(true);
+      if (!skipLoadingState) {
+        setIsLoadingMore(!reset);
+        if (reset) {
+          setIsLoading(true);
+        }
       }
 
       // 認証トークンを設定
@@ -161,7 +163,7 @@ export default function ConversationPage() {
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
-      if (isMountedRef.current) {
+      if (isMountedRef.current && !skipLoadingState) {
         setIsLoading(false);
         setIsLoadingMore(false);
       }
@@ -183,8 +185,24 @@ export default function ConversationPage() {
       return;
     }
 
-    loadConversation();
-    loadMessages(true);
+    // 両方の読み込みを並行して実行し、どちらかが失敗してもローディングを解除する
+    const loadData = async () => {
+      try {
+        setIsLoading(true);
+        await Promise.all([
+          loadConversation(),
+          loadMessages(true, true), // skipLoadingState: true
+        ]);
+      } catch (err) {
+        console.error('Failed to load data:', err);
+      } finally {
+        if (isMountedRef.current) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, conversationId]);
 
@@ -256,7 +274,7 @@ export default function ConversationPage() {
     }
   };
 
-  const { isConnected: isMessageStreamConnected } = useMessageStream(handleNewMessage);
+  useMessageStream(handleNewMessage);
 
   // メッセージ送信後にスクロール
   useEffect(() => {
@@ -434,7 +452,7 @@ export default function ConversationPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </div>

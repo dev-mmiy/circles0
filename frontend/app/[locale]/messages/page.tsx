@@ -51,12 +51,17 @@ export default function MessagesPage() {
   const currentUserRef = useRef(currentUser);
   const pageRef = useRef(page);
   const loadConversationsRef = useRef<((reset: boolean) => Promise<void>) | null>(null);
+  // コンポーネントのマウント状態を追跡
+  // 初期値をtrueにすることで、最初のレンダリングからマウント済みとして扱う
   const isMountedRef = useRef(true);
 
-  // コンポーネントのマウント状態を追跡
   useEffect(() => {
+    // マウント時に確実にtrueにする（初期値がtrueなので冗長だが明示的に）
     isMountedRef.current = true;
+    console.log('[MessagesPage] Component mounted');
+
     return () => {
+      console.log('[MessagesPage] Component unmounting');
       isMountedRef.current = false;
     };
   }, []);
@@ -72,7 +77,12 @@ export default function MessagesPage() {
 
   // 会話を取得
   const loadConversations = useCallback(async (reset: boolean = false) => {
+    console.log('[MessagesPage] loadConversations called', { reset, isMounted: isMountedRef.current, isAuthenticated });
     try {
+      if (!isMountedRef.current) {
+        console.log('[MessagesPage] loadConversations - not mounted, returning');
+        return;
+      }
       const currentPage = reset ? 0 : pageRef.current;
       setIsLoading(reset);
       setIsLoadingMore(!reset);
@@ -112,12 +122,17 @@ export default function MessagesPage() {
 
       setHasMore(response.conversations.length === CONVERSATIONS_PER_PAGE);
       setError(null);
+      console.log('[MessagesPage] loadConversations completed successfully');
     } catch (err: any) {
-      if (!isMountedRef.current) return;
-      console.error('Failed to load conversations:', err);
+      if (!isMountedRef.current) {
+        console.log('[MessagesPage] loadConversations catch - not mounted, returning');
+        return;
+      }
+      console.error('[MessagesPage] Failed to load conversations:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
+      console.log('[MessagesPage] loadConversations finally', { isMounted: isMountedRef.current });
       if (isMountedRef.current) {
         setIsLoading(false);
         setIsLoadingMore(false);
@@ -201,12 +216,18 @@ export default function MessagesPage() {
 
   // 認証チェックと初期読み込み
   useEffect(() => {
+    console.log('[MessagesPage] Auth check useEffect', { authLoading, isAuthenticated, isRedirecting, isMounted: isMountedRef.current });
+
     // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
     // （クライアントサイドナビゲーションで状態が維持されている場合）
-    if (authLoading && !isAuthenticated) return;
+    if (authLoading && !isAuthenticated) {
+      console.log('[MessagesPage] Auth still loading, skipping');
+      return;
+    }
 
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
+      console.log('[MessagesPage] Not authenticated, redirecting');
       if (!isRedirecting) {
         setIsRedirecting(true);
         router.push('/');
@@ -214,6 +235,7 @@ export default function MessagesPage() {
       return;
     }
 
+    console.log('[MessagesPage] Calling loadConversations(true)');
     loadConversations(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated]);
@@ -316,7 +338,7 @@ export default function MessagesPage() {
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         </div>
       </div>

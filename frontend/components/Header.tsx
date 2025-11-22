@@ -17,7 +17,7 @@ import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
  * Application Header Component with i18n support and mobile hamburger menu
  */
 export default function Header() {
-  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading, user, getAccessTokenSilently } = useAuth0();
   const t = useTranslations('navigation');
   const pathname = usePathname();
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
@@ -25,8 +25,23 @@ export default function Header() {
   const [unreadMessageCount, setUnreadMessageCount] = useState(0);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
 
+  // 認証状態をチェック（authLoadingがtrueでもuserが存在すれば認証済みとみなす）
+  // Edgeなど一部ブラウザでisAuthenticatedがfalseのままになる問題への対策
+  const showAuthenticatedUI = isAuthenticated || (!!user && !authLoading);
+
+  // デバッグログ（開発環境のみ）
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Header] Auth state:', { authLoading, isAuthenticated, hasUser: !!user, showAuthenticatedUI });
+    }
+  }, [authLoading, isAuthenticated, user, showAuthenticatedUI]);
+
   // Load unread message count
   const loadUnreadCount = useCallback(async () => {
+    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行
+    if (authLoading && !isAuthenticated) {
+      return;
+    }
     if (!isAuthenticated) {
       setUnreadMessageCount(0);
       return;
@@ -41,10 +56,10 @@ export default function Header() {
       console.error('Failed to load unread message count:', error);
       setUnreadMessageCount(0);
     }
-  }, [isAuthenticated, getAccessTokenSilently]);
+  }, [authLoading, isAuthenticated, getAccessTokenSilently]);
 
   // Handle new messages from SSE
-  const handleNewMessage = useCallback((message: MessageEvent) => {
+  const handleNewMessage = useCallback((_message: MessageEvent) => {
     // Increment unread count if message is not from current user
     // Note: We can't determine current user ID here, so we'll reload the count
     loadUnreadCount();
@@ -109,7 +124,7 @@ export default function Header() {
           {/* 左側: ハンバーガーメニュー + ロゴ */}
           <div className="flex items-center gap-4">
             {/* ハンバーガーメニューボタン（モバイルのみ） */}
-            {isAuthenticated && (
+            {showAuthenticatedUI && (
               <button
                 onClick={handleMobileMenuToggle}
                 className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
@@ -131,7 +146,7 @@ export default function Header() {
           </div>
 
           {/* Navigation (デスクトップ) */}
-          {isAuthenticated && (
+          {showAuthenticatedUI && (
             <nav className="hidden md:flex items-center space-x-6">
               <Link
                 href="/feed"
@@ -176,7 +191,7 @@ export default function Header() {
             <LanguageSwitcher />
 
             {/* 通知ベル */}
-            {isAuthenticated && (
+            {showAuthenticatedUI && (
               <div className="relative">
                 <NotificationBell
                   onClick={() => setIsNotificationOpen(!isNotificationOpen)}
@@ -196,7 +211,7 @@ export default function Header() {
       </div>
 
       {/* モバイルメニュー */}
-      {isAuthenticated && isMobileMenuOpen && (
+      {showAuthenticatedUI && isMobileMenuOpen && (
         <>
           {/* オーバーレイ */}
           <div

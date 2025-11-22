@@ -188,3 +188,4 @@ def downgrade() -> None:
     op.drop_table("group_members")
     op.drop_table("groups")
 
+

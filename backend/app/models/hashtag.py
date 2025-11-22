@@ -64,3 +64,4 @@ class PostHashtag(Base):
         UniqueConstraint("post_id", "hashtag_id", name="uq_post_hashtag"),
     )
 
+

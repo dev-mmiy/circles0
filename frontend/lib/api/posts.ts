@@ -241,20 +241,42 @@ export async function getUserPosts(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/user/${userId}?skip=${skip}&limit=${limit}`,
-    {
+  const url = `${getApiBaseUrl()}/api/v1/posts/user/${userId}?skip=${skip}&limit=${limit}`;
+  console.log('[getUserPosts] Fetching from:', url);
+
+  // Add timeout to fetch request
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    controller.abort();
+  }, 10000); // 10 second timeout
+
+  try {
+    const response = await fetch(url, {
       method: 'GET',
       headers,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
+      console.error('[getUserPosts] Error response:', error);
+      throw new Error(error.detail || 'Failed to fetch user posts');
     }
-  );
 
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to fetch user posts');
+    const data = await response.json();
+    console.log('[getUserPosts] Success, received', Array.isArray(data) ? data.length : 'non-array', 'items');
+    return data;
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    if (err.name === 'AbortError') {
+      console.error('[getUserPosts] Request timeout after 10 seconds');
+      throw new Error('Request timeout: The server took too long to respond. Please check if the backend is running.');
+    }
+    console.error('[getUserPosts] Fetch error:', err);
+    throw err;
   }
-
-  return response.json();
 }
 
 /**
