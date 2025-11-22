@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth0 } from '@auth0/auth0-react';
 import Header from '@/components/Header';
@@ -17,12 +17,15 @@ export default function Home() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
   const [postsError, setPostsError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
   // Load recent posts
   useEffect(() => {
-    const loadRecentPosts = async () => {
-      if (authLoading) return;
+    // Prevent multiple calls on re-renders
+    if (hasLoadedRef.current || authLoading) return;
 
+    const loadRecentPosts = async () => {
+      hasLoadedRef.current = true;
       setIsLoadingPosts(true);
       setPostsError(null);
 
@@ -30,9 +33,15 @@ export default function Home() {
         let accessToken: string | undefined = undefined;
         if (isAuthenticated) {
           try {
-            accessToken = await getAccessTokenSilently();
+            // Add timeout for token retrieval (5 seconds)
+            const tokenPromise = getAccessTokenSilently();
+            const timeoutPromise = new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Token retrieval timeout')), 5000)
+            );
+            accessToken = await Promise.race([tokenPromise, timeoutPromise]);
           } catch (tokenError) {
             console.warn('Failed to get access token:', tokenError);
+            // Continue without token - API will return public posts
           }
         }
 
@@ -41,13 +50,16 @@ export default function Home() {
       } catch (err) {
         console.error('Failed to load recent posts:', err);
         setPostsError(err instanceof Error ? err.message : 'Failed to load posts');
+        // Reset hasLoadedRef on error so user can retry
+        hasLoadedRef.current = false;
       } finally {
         setIsLoadingPosts(false);
       }
     };
 
     loadRecentPosts();
-  }, [authLoading, isAuthenticated, getAccessTokenSilently]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authLoading, isAuthenticated]);
 
   return (
     <>

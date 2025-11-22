@@ -265,3 +265,51 @@ async def config_check():
         },
         "timestamp": datetime.utcnow().isoformat(),
     }
+
+
+@app.on_event("startup")
+async def startup_event():
+    """Run database migrations and seed data in background on startup."""
+    def run_migrations_and_seed():
+        """Run migrations and seed data in background thread."""
+        import subprocess
+        import sys
+        
+        try:
+            # Run migrations
+            print("🔄 Running database migrations in background...")
+            result = subprocess.run(
+                ["alembic", "upgrade", "head"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+            )
+            if result.returncode == 0:
+                print("✅ Database migrations completed successfully")
+            else:
+                print(f"⚠️ Migration warnings: {result.stderr}")
+            
+            # Run seed data script
+            print("🌱 Seeding master data in background...")
+            seed_result = subprocess.run(
+                [sys.executable, "scripts/seed_final_master_data.py"],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+            )
+            if seed_result.returncode == 0:
+                print("✅ Master data seeding completed successfully")
+            else:
+                print(f"⚠️ Seed data warnings: {seed_result.stderr}")
+                
+        except subprocess.TimeoutExpired:
+            print("⚠️ Migrations or seeding timed out, but continuing...")
+        except Exception as e:
+            print(f"⚠️ Error during migrations/seeding: {e}")
+            # Don't fail startup - app can still serve requests
+    
+    # Run migrations and seeding in background thread (non-blocking)
+    import threading
+    thread = threading.Thread(target=run_migrations_and_seed, daemon=True)
+    thread.start()
+    print("🚀 Application started, migrations and seeding running in background...")
