@@ -46,7 +46,12 @@ class Notification(Base):
         nullable=False,
     )
     type = Column(
-        SQLEnum(NotificationType, create_type=False, native_enum=False),
+        SQLEnum(
+            NotificationType,
+            create_type=False,
+            native_enum=False,
+            values_callable=lambda obj: [e.value for e in obj],
+        ),
         nullable=False,
         index=True,
     )
