@@ -103,12 +103,11 @@ class PostService:
         limit: int = 20,
     ) -> List[Post]:
         """Get posts by a specific user, respecting visibility settings."""
+        # Optimize: Only load user and images (likes/comments counts are fetched separately)
         query = (
             db.query(Post)
             .options(
                 joinedload(Post.user),
-                joinedload(Post.likes),
-                joinedload(Post.comments),
                 joinedload(Post.images),
             )
             .filter(Post.user_id == user_id, Post.is_active == True)
@@ -132,16 +131,31 @@ class PostService:
 
         posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
 
-        # Filter out posts from blocked users if current_user_id exists and viewing another user's posts
-        if current_user_id and current_user_id != user_id:
-            from app.services.block_service import BlockService
+        # Optimize: Filter out blocked users in a single query instead of N+1
+        if current_user_id and current_user_id != user_id and posts:
+            from app.models.block import Block
 
-            filtered_posts = []
-            for post in posts:
-                # Check if current user has blocked the post author or vice versa
-                if not BlockService.are_blocked(db, current_user_id, post.user_id):
-                    filtered_posts.append(post)
-            posts = filtered_posts
+            # Get all blocked user IDs (both directions) in one query
+            blocked_user_ids = set()
+            blocked_relationships = (
+                db.query(Block)
+                .filter(
+                    or_(
+                        Block.blocker_id == current_user_id,
+                        Block.blocked_id == current_user_id,
+                    ),
+                    Block.is_active == True,
+                )
+                .all()
+            )
+            for block in blocked_relationships:
+                if block.blocker_id == current_user_id:
+                    blocked_user_ids.add(block.blocked_id)
+                else:
+                    blocked_user_ids.add(block.blocker_id)
+
+            # Filter posts in memory (much faster than N queries)
+            posts = [post for post in posts if post.user_id not in blocked_user_ids]
 
         return posts
 
@@ -170,12 +184,11 @@ class PostService:
         """
         from app.models.follow import Follow
 
+        # Optimize: Only load user and images (likes/comments counts are fetched separately)
         query = (
             db.query(Post)
             .options(
                 joinedload(Post.user),
-                joinedload(Post.likes),
-                joinedload(Post.comments),
                 joinedload(Post.images),
             )
             .filter(Post.is_active == True)
@@ -203,12 +216,11 @@ class PostService:
             # Filter posts to only those from users with this disease
             query = query.filter(Post.user_id.in_(disease_user_ids))
 
+        # Optimize: Get following user IDs once if needed
+        following_user_ids = []
         if current_user_id:
-            if filter_type == "my_posts":
-                # Show only posts from current user (all visibility levels)
-                query = query.filter(Post.user_id == current_user_id)
-            elif filter_type == "following":
-                # Get list of user IDs that current user is following
+            if filter_type in ("following", "all", "disease"):
+                # Get list of user IDs that current user is following (once)
                 following_ids = (
                     db.query(Follow.following_id)
                     .filter(
@@ -219,6 +231,11 @@ class PostService:
                 )
                 following_user_ids = [f[0] for f in following_ids]
 
+        if current_user_id:
+            if filter_type == "my_posts":
+                # Show only posts from current user (all visibility levels)
+                query = query.filter(Post.user_id == current_user_id)
+            elif filter_type == "following":
                 if following_user_ids:
                     # Show posts from followed users only (public + followers_only)
                     query = query.filter(
@@ -233,17 +250,6 @@ class PostService:
                     return []
             else:
                 # filter_type="all" or "disease": show public posts + followers_only posts from followed users
-                # Get list of user IDs that current user is following
-                following_ids = (
-                    db.query(Follow.following_id)
-                    .filter(
-                        Follow.follower_id == current_user_id,
-                        Follow.is_active == True,
-                    )
-                    .all()
-                )
-                following_user_ids = [f[0] for f in following_ids]
-
                 # Show public posts OR followers_only posts from followed users
                 query = query.filter(
                     or_(
@@ -260,16 +266,31 @@ class PostService:
 
         posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
 
-        # Filter out posts from blocked users if current_user_id exists
-        if current_user_id:
-            from app.services.block_service import BlockService
+        # Optimize: Filter out blocked users in a single query instead of N+1
+        if current_user_id and posts:
+            from app.models.block import Block
 
-            filtered_posts = []
-            for post in posts:
-                # Check if current user has blocked the post author or vice versa
-                if not BlockService.are_blocked(db, current_user_id, post.user_id):
-                    filtered_posts.append(post)
-            posts = filtered_posts
+            # Get all blocked user IDs (both directions) in one query
+            blocked_user_ids = set()
+            blocked_relationships = (
+                db.query(Block)
+                .filter(
+                    or_(
+                        Block.blocker_id == current_user_id,
+                        Block.blocked_id == current_user_id,
+                    ),
+                    Block.is_active == True,
+                )
+                .all()
+            )
+            for block in blocked_relationships:
+                if block.blocker_id == current_user_id:
+                    blocked_user_ids.add(block.blocked_id)
+                else:
+                    blocked_user_ids.add(block.blocker_id)
+
+            # Filter posts in memory (much faster than N queries)
+            posts = [post for post in posts if post.user_id not in blocked_user_ids]
 
         return posts
 
