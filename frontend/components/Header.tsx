@@ -51,10 +51,11 @@ export default function Header() {
   }, [loadUnreadCount]);
 
   // Use message stream for real-time updates
-  // Skip connection in conversation detail page to avoid duplicate connections
-  // The conversation page will handle its own connection
-  const isConversationPage = pathname?.match(/\/messages\/[^/]+$/);
-  useMessageStream(handleNewMessage, !isConversationPage);
+  // Skip connection in pages that have their own useMessageStream to avoid duplicate connections
+  const isMessagePage = pathname?.startsWith('/messages');
+  const isGroupPage = pathname?.match(/\/groups\/[^/]+$/);
+  const skipMessageStream = isMessagePage || isGroupPage;
+  useMessageStream(handleNewMessage, !skipMessageStream);
 
   // Load unread count on mount and when authentication state changes
   useEffect(() => {
