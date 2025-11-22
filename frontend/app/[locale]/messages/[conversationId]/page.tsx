@@ -148,8 +148,10 @@ export default function ConversationPage() {
 
   // 認証チェックと初期読み込み
   useEffect(() => {
-    if (authLoading) return;
-    
+    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
+    // （クライアントサイドナビゲーションで状態が維持されている場合）
+    if (authLoading && !isAuthenticated) return;
+
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
       if (!isRedirecting) {
@@ -158,7 +160,7 @@ export default function ConversationPage() {
       }
       return;
     }
-    
+
     loadConversation();
     loadMessages(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -405,7 +407,7 @@ export default function ConversationPage() {
     });
   };
 
-  if (authLoading || isLoading || isRedirecting) {
+  if ((authLoading && !isAuthenticated) || isLoading || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
