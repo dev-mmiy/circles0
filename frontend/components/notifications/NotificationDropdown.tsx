@@ -3,12 +3,14 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Link } from '@/i18n/routing';
 import {
   getNotifications,
   markAllNotificationsAsRead,
   Notification,
 } from '@/lib/api/notifications';
+import { setAuthToken } from '@/lib/api/client';
 import { useNotificationContext } from '@/contexts/NotificationContext';
 import NotificationItem from './NotificationItem';
 
@@ -23,6 +25,7 @@ interface NotificationDropdownProps {
  */
 export default function NotificationDropdown({ isOpen, onClose }: NotificationDropdownProps) {
   const t = useTranslations('notifications');
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
@@ -33,8 +36,17 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
 
   // 通知を取得
   const fetchNotifications = useCallback(async () => {
+    if (!isAuthenticated) {
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
+      // Ensure auth token is set before making API call
+      const token = await getAccessTokenSilently();
+      setAuthToken(token);
+
       const response = await getNotifications(0, 20, false);
       setNotifications(response.notifications);
       // Contextの未読数を更新
@@ -44,7 +56,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
     } finally {
       setIsLoading(false);
     }
-  }, [setUnreadCount]);
+  }, [setUnreadCount, getAccessTokenSilently, isAuthenticated]);
 
   // ドロップダウンが開いたら通知を取得
   useEffect(() => {
