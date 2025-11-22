@@ -54,8 +54,17 @@ export default function ConversationPage() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const isMountedRef = useRef(true);
 
   const MESSAGES_PER_PAGE = 50;
+
+  // コンポーネントのマウント状態を追跡
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // スクロールを最下部に移動
   const scrollToBottom = () => {
@@ -69,9 +78,11 @@ export default function ConversationPage() {
       if (isAuthenticated) {
         try {
           const token = await getAccessTokenSilently();
+          if (!isMountedRef.current) return;
           setAuthToken(token);
         } catch (tokenError) {
           console.warn('Failed to get access token:', tokenError);
+          if (!isMountedRef.current) return;
           setAuthToken(null);
         }
       } else {
@@ -79,8 +90,10 @@ export default function ConversationPage() {
       }
 
       const conv = await getConversation(conversationId);
+      if (!isMountedRef.current) return;
       setConversation(conv);
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('Failed to load conversation:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
@@ -99,9 +112,11 @@ export default function ConversationPage() {
       if (isAuthenticated) {
         try {
           const token = await getAccessTokenSilently();
+          if (!isMountedRef.current) return;
           setAuthToken(token);
         } catch (tokenError) {
           console.warn('Failed to get access token:', tokenError);
+          if (!isMountedRef.current) return;
           setAuthToken(null);
         }
       } else {
@@ -114,14 +129,18 @@ export default function ConversationPage() {
         MESSAGES_PER_PAGE
       );
 
+      if (!isMountedRef.current) return;
+
       if (reset) {
         setMessages(response.messages);
         setPage(0);
         // メッセージ読み込み後、既読にする
         setTimeout(async () => {
+          if (!isMountedRef.current) return;
           try {
             if (isAuthenticated) {
               const token = await getAccessTokenSilently();
+              if (!isMountedRef.current) return;
               setAuthToken(token);
             }
             await markMessagesAsRead(conversationId, null);
@@ -137,12 +156,15 @@ export default function ConversationPage() {
       setHasMore(response.messages.length === MESSAGES_PER_PAGE);
       setError(null);
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('Failed to load messages:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   };
 

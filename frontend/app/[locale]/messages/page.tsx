@@ -51,6 +51,15 @@ export default function MessagesPage() {
   const currentUserRef = useRef(currentUser);
   const pageRef = useRef(page);
   const loadConversationsRef = useRef<((reset: boolean) => Promise<void>) | null>(null);
+  const isMountedRef = useRef(true);
+
+  // コンポーネントのマウント状態を追跡
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   // currentUserとpageの参照を更新
   useEffect(() => {
@@ -72,9 +81,11 @@ export default function MessagesPage() {
       if (isAuthenticated) {
         try {
           const token = await getAccessTokenSilently();
+          if (!isMountedRef.current) return;
           setAuthToken(token);
         } catch (tokenError) {
           console.warn('Failed to get access token:', tokenError);
+          if (!isMountedRef.current) return;
           setAuthToken(null);
         }
       } else {
@@ -85,6 +96,8 @@ export default function MessagesPage() {
         currentPage * CONVERSATIONS_PER_PAGE,
         CONVERSATIONS_PER_PAGE
       );
+
+      if (!isMountedRef.current) return;
 
       if (reset) {
         setConversations(response.conversations);
@@ -100,12 +113,15 @@ export default function MessagesPage() {
       setHasMore(response.conversations.length === CONVERSATIONS_PER_PAGE);
       setError(null);
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       console.error('Failed to load conversations:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+        setIsLoadingMore(false);
+      }
     }
   }, [isAuthenticated, getAccessTokenSilently]);
 
