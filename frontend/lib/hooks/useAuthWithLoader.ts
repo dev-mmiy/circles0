@@ -139,8 +139,9 @@ export function useAuthWithLoader(
         // Only get token if not already set to avoid redundant calls
         if (isAuthenticated) {
           const currentToken = apiClient.defaults.headers.common['Authorization'];
-          debugLog.log('[useAuthWithLoader] Checking token', { hasToken: !!currentToken, tokenPrefix: currentToken?.substring(0, 20) });
-          if (!currentToken || !currentToken.startsWith('Bearer ')) {
+          const tokenString = typeof currentToken === 'string' ? currentToken : '';
+          debugLog.log('[useAuthWithLoader] Checking token', { hasToken: !!currentToken, tokenPrefix: tokenString ? tokenString.substring(0, 20) : 'none' });
+          if (!tokenString || !tokenString.startsWith('Bearer ')) {
             try {
               debugLog.log('[useAuthWithLoader] Token not set, getting token...', { timestamp: new Date().toISOString() });
               const tokenStartTime = Date.now();
