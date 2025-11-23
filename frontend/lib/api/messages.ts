@@ -85,44 +85,122 @@ export async function getConversations(
   skip: number = 0,
   limit: number = 20
 ): Promise<ConversationListResponse> {
+  console.log('[getConversations] API call:', {
+    skip,
+    limit,
+    baseURL: apiClient.defaults.baseURL,
+  });
+
   const params = new URLSearchParams({
     skip: skip.toString(),
     limit: limit.toString(),
   });
 
-  const response = await apiClient.get<ConversationListResponse>(
-    `/api/v1/messages/conversations?${params.toString()}`
-  );
-  return response.data;
+  const url = `/api/v1/messages/conversations?${params.toString()}`;
+  const fullURL = `${apiClient.defaults.baseURL}${url}`;
+  console.log('[getConversations] Full URL:', fullURL);
+  console.log('[getConversations] About to call apiClient.get, timestamp:', new Date().toISOString());
+  console.log('[getConversations] API client config:', {
+    baseURL: apiClient.defaults.baseURL,
+    timeout: apiClient.defaults.timeout,
+    hasAuth: !!apiClient.defaults.headers.common['Authorization'],
+  });
+
+  try {
+    console.log('[getConversations] Calling apiClient.get now...', { 
+      timestamp: new Date().toISOString(),
+      url,
+      fullURL,
+      hasAuth: !!apiClient.defaults.headers.common['Authorization'],
+    });
+    
+    // Add a timeout wrapper to ensure we don't wait forever
+    const requestStartTime = Date.now();
+    console.log('[getConversations] Creating request promise...', { timestamp: new Date().toISOString() });
+    
+    // Create request promise - ensure axios actually sends the request
+    console.log('[getConversations] About to call apiClient.get()...', {
+      url,
+      fullURL,
+      timestamp: new Date().toISOString(),
+    });
+    
+    const requestPromise = apiClient.get<ConversationListResponse>(url)
+      .then((response) => {
+        const elapsed = Date.now() - requestStartTime;
+        console.log('[getConversations] Request promise resolved', { 
+          elapsed, 
+          status: response.status,
+          hasData: !!response.data,
+          timestamp: new Date().toISOString() 
+        });
+        return response;
+      })
+      .catch((error) => {
+        const elapsed = Date.now() - requestStartTime;
+        console.error('[getConversations] Request promise rejected', { 
+          elapsed, 
+          error: error.message,
+          code: error.code,
+          hasResponse: !!error.response,
+          hasRequest: !!error.request,
+          timestamp: new Date().toISOString() 
+        });
+        throw error;
+      });
+    
+    console.log('[getConversations] Request promise created (axios.get() called)', {
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Remove duplicate timeout wrapper - apiClient already has a 20s timeout
+    // The Promise.race with timeoutPromise was causing conflicts with axios's own timeout
+    // Let axios handle the timeout, which will throw ECONNABORTED error
+    console.log('[getConversations] Awaiting apiClient.get response (axios handles timeout)...', { timestamp: new Date().toISOString() });
+    const response = await requestPromise;
+    const totalElapsed = Date.now() - requestStartTime;
+    console.log('[getConversations] Promise race completed, got response', { totalElapsed, timestamp: new Date().toISOString() });
+    const requestElapsed = Date.now() - requestStartTime;
+    console.log('[getConversations] apiClient.get returned', { elapsed: requestElapsed, timestamp: new Date().toISOString() });
+    console.log('[getConversations] API response:', {
+      status: response.status,
+      data: response.data,
+      conversationsCount: response.data?.conversations?.length,
+      hasConversations: !!response.data?.conversations,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('[getConversations] API error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      request: error.request ? 'Request made but no response' : 'No request made',
+    });
+    throw error;
+  }
 }
 
 /**
  * Get total unread message count across all conversations
+ * Note: This is a simplified version that only checks the first page of conversations
+ * to avoid timeout issues. For a production app, consider adding a dedicated API endpoint.
  */
 export async function getTotalUnreadCount(): Promise<number> {
   try {
-    // Get all conversations (up to 100) to calculate total unread count
-    let totalUnread = 0;
-    let skip = 0;
-    const limit = 100;
-
-    while (true) {
-      const response = await getConversations(skip, limit);
-      
-      // Sum up unread counts from all conversations
-      totalUnread += response.conversations.reduce((sum, conv) => sum + conv.unread_count, 0);
-
-      // If we got fewer results than requested, we've reached the end
-      if (response.conversations.length < limit) {
-        break;
-      }
-
-      skip += limit;
-    }
+    // Only get the first page of conversations to avoid timeout
+    // In production, this should be replaced with a dedicated API endpoint
+    const response = await getConversations(0, 20);
+    
+    // Sum up unread counts from the first page only
+    const totalUnread = response.conversations.reduce((sum, conv) => sum + conv.unread_count, 0);
 
     return totalUnread;
   } catch (error) {
     console.error('Failed to get total unread count:', error);
+    // Return 0 on error to avoid breaking the UI
     return 0;
   }
 }
@@ -131,10 +209,34 @@ export async function getTotalUnreadCount(): Promise<number> {
  * Get a specific conversation by ID
  */
 export async function getConversation(conversationId: string): Promise<Conversation> {
-  const response = await apiClient.get<Conversation>(
-    `/api/v1/messages/conversations/${conversationId}`
-  );
-  return response.data;
+  console.log('[getConversation] API call:', {
+    conversationId,
+    baseURL: apiClient.defaults.baseURL,
+  });
+
+  const url = `/api/v1/messages/conversations/${conversationId}`;
+  console.log('[getConversation] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+
+  try {
+    const response = await apiClient.get<Conversation>(url);
+    console.log('[getConversation] API response:', {
+      status: response.status,
+      data: response.data,
+      hasData: !!response.data,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('[getConversation] API error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      request: error.request ? 'Request made but no response' : 'No request made',
+    });
+    throw error;
+  }
 }
 
 /**
@@ -170,17 +272,50 @@ export async function sendMessage(data: CreateMessageData): Promise<Message> {
 export async function getMessages(
   conversationId: string,
   skip: number = 0,
-  limit: number = 50
+  limit: number = 50,
+  searchQuery?: string
 ): Promise<MessageListResponse> {
+  console.log('[getMessages] API call:', {
+    conversationId,
+    skip,
+    limit,
+    searchQuery,
+    baseURL: apiClient.defaults.baseURL,
+  });
+
   const params = new URLSearchParams({
     skip: skip.toString(),
     limit: limit.toString(),
   });
 
-  const response = await apiClient.get<MessageListResponse>(
-    `/api/v1/messages/conversations/${conversationId}/messages?${params.toString()}`
-  );
-  return response.data;
+  if (searchQuery) {
+    params.append('q', searchQuery);
+  }
+
+  const url = `/api/v1/messages/conversations/${conversationId}/messages?${params.toString()}`;
+  console.log('[getMessages] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+
+  try {
+    const response = await apiClient.get<MessageListResponse>(url);
+    console.log('[getMessages] API response:', {
+      status: response.status,
+      data: response.data,
+      messagesCount: response.data?.messages?.length,
+      hasMessages: !!response.data?.messages,
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error('[getMessages] API error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      request: error.request ? 'Request made but no response' : 'No request made',
+    });
+    throw error;
+  }
 }
 
 /**

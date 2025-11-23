@@ -26,6 +26,7 @@ import {
   updateUserDisease,
   removeUserDisease,
 } from '@/lib/api/users';
+import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
 
 interface DiseaseContextType {
   // Master data
@@ -113,7 +114,8 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       setLoadingUserDiseases(true);
       setError(null);
 
-      const accessToken = await getAccessTokenSilently();
+      // Use tokenManager to prevent duplicate token requests
+      const accessToken = await getAccessTokenFromManager(getAccessTokenSilently);
 
       // Fetch user diseases with detailed information
       const diseases = await getUserDiseasesDetailed(accessToken);
@@ -133,9 +135,13 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
   }, []);
 
   // Load user diseases when authenticated
+  // Add a small delay to avoid conflicts with other initial API calls
   useEffect(() => {
     if (isAuthenticated) {
-      fetchUserDiseases();
+      const timeoutId = setTimeout(() => {
+        fetchUserDiseases();
+      }, 200); // Delay to let UserProvider finish first
+      return () => clearTimeout(timeoutId);
     } else {
       setUserDiseases([]);
     }
@@ -164,7 +170,8 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
   // Add disease to user profile
   const addDisease = async (data: UserDiseaseCreate): Promise<UserDiseaseDetailed> => {
     try {
-      const accessToken = await getAccessTokenSilently();
+      // Use tokenManager to prevent duplicate token requests
+      const accessToken = await getAccessTokenFromManager(getAccessTokenSilently);
       const newDisease = await addUserDiseaseDetailed(accessToken, data);
 
       // Update local state
@@ -183,7 +190,8 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
     data: UserDiseaseUpdate
   ): Promise<UserDiseaseDetailed> => {
     try {
-      const accessToken = await getAccessTokenSilently();
+      // Use tokenManager to prevent duplicate token requests
+      const accessToken = await getAccessTokenFromManager(getAccessTokenSilently);
       const updatedDisease = await updateUserDisease(accessToken, userDiseaseId, data);
 
       // Update local state
@@ -199,7 +207,8 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
   // Remove disease from user profile
   const removeDiseaseFromProfile = async (diseaseId: number): Promise<void> => {
     try {
-      const accessToken = await getAccessTokenSilently();
+      // Use tokenManager to prevent duplicate token requests
+      const accessToken = await getAccessTokenFromManager(getAccessTokenSilently);
       await removeUserDisease(accessToken, diseaseId);
 
       // Update local state

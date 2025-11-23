@@ -7,8 +7,9 @@
 
 import React, { useState, FormEvent, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { UserProfile, UserProfileUpdate, getFieldVisibilities, setFieldVisibility, AllFieldVisibilityResponse } from '@/lib/api/users';
+import { COUNTRIES, getCountryName } from '@/lib/utils/countries';
 
 interface UserProfileEditFormProps {
   user: UserProfile;
@@ -19,6 +20,7 @@ interface UserProfileEditFormProps {
 export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('userProfileEdit');
+  const locale = useLocale();
   const [formData, setFormData] = useState<UserProfileUpdate>({
     nickname: user.nickname,
     first_name: user.first_name,
@@ -212,15 +214,20 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1">
               {t('fields.country')}
             </label>
-            <input
-              type="text"
+            <select
               id="country"
               name="country"
               value={formData.country || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder={t('placeholders.country')}
-            />
+            >
+              <option value="">{t('country.select')}</option>
+              {COUNTRIES.map((country) => (
+                <option key={country.code} value={country.code}>
+                  {locale === 'ja' ? country.nameJa : country.nameEn}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

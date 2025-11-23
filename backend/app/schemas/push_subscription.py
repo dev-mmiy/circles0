@@ -2,11 +2,11 @@
 Pydantic schemas for Web Push subscriptions.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class PushSubscriptionKeys(BaseModel):
@@ -47,6 +47,17 @@ class PushSubscriptionResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @field_serializer("created_at", "last_used_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class PushSubscriptionStatus(BaseModel):

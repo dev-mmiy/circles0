@@ -1,6 +1,5 @@
 'use client';
 
-import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
@@ -11,6 +10,8 @@ import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { getFeed, type Post } from '@/lib/api/posts';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useLocale } from 'next-intl';
+import { useDataLoader } from '@/lib/hooks/useDataLoader';
+import { useAuth0 } from '@auth0/auth0-react';
 
 // Dynamically import PostForm to reduce initial bundle size
 const PostForm = dynamic(() => import('@/components/PostForm'), {
@@ -27,132 +28,78 @@ const PostForm = dynamic(() => import('@/components/PostForm'), {
 });
 
 export default function FeedPage() {
-  const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const t = useTranslations('feed');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [filterType, setFilterType] = useState<'all' | 'following' | 'disease' | 'my_posts'>('all');
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
 
-  const POSTS_PER_PAGE = 20;
-  const isMountedRef = useRef(true);
-
-  // コンポーネントのマウント状態を追跡
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // Load initial posts
-  const loadPosts = useCallback(async (reset: boolean = false, currentPageOverride?: number) => {
-    console.log('[FeedPage] loadPosts called', { reset, currentPageOverride, isAuthenticated, filterType, selectedDiseaseId });
-    try {
-      if (!isMountedRef.current) return;
-      setIsLoading(reset);
-      setIsLoadingMore(!reset);
-      
-      // resetの場合は0から、そうでない場合は現在のpageまたは指定されたpageを使用
-      const currentPage = reset ? 0 : (currentPageOverride ?? 0);
-      let accessToken: string | undefined = undefined;
-      
-      // 認証済みの場合のみトークンを取得
-      if (isAuthenticated) {
-        console.log('[FeedPage] Getting access token...');
-        try {
-          accessToken = await getAccessTokenSilently();
-          console.log('[FeedPage] Access token obtained');
-        } catch (tokenError: any) {
-          console.warn('[FeedPage] Failed to get access token:', tokenError);
-          // トークン取得に失敗しても続行（未認証として扱う）
-        }
-      } else {
-        console.log('[FeedPage] Not authenticated, proceeding without token');
-      }
-
-      console.log('[FeedPage] Fetching posts...', {
-        skip: currentPage * POSTS_PER_PAGE,
-        limit: POSTS_PER_PAGE,
-        filterType,
-        diseaseId: filterType === 'disease' ? (selectedDiseaseId ?? undefined) : undefined
-      });
-
+  // Unified data loader for posts
+  const {
+    items: posts,
+    isLoading,
+    isLoadingMore,
+    isRefreshing,
+    error,
+    hasMore,
+    load,
+    loadMore,
+    refresh,
+    retry,
+    clearError,
+  } = useDataLoader<Post>({
+    loadFn: useCallback(async (skip, limit) => {
       const fetchedPosts = await getFeed(
-        currentPage * POSTS_PER_PAGE,
-        POSTS_PER_PAGE,
-        accessToken,
+        skip,
+        limit,
+        undefined, // Token is handled by useDataLoader
         filterType,
         filterType === 'disease' ? (selectedDiseaseId ?? undefined) : undefined
       );
+      return {
+        items: fetchedPosts,
+      };
+    }, [filterType, selectedDiseaseId]),
+    pageSize: 20,
+    autoLoad: true,
+    requireAuth: false,
+    retryConfig: {
+      maxRetries: 3,
+      retryDelay: 1000,
+      autoRetry: true,
+    },
+    cacheConfig: {
+      enabled: true,
+      ttl: 5 * 60 * 1000, // 5 minutes
+    },
+  });
 
-      console.log('[FeedPage] Posts fetched:', fetchedPosts.length);
-
-      if (!isMountedRef.current) return;
-
-      if (reset) {
-        setPosts(fetchedPosts);
-        setPage(0);
-      } else {
-        setPosts((prevPosts) => [...prevPosts, ...fetchedPosts]);
-      }
-
-      setHasMore(fetchedPosts.length === POSTS_PER_PAGE);
-      setError(null);
-      console.log('[FeedPage] loadPosts completed successfully');
-    } catch (err: any) {
-      if (!isMountedRef.current) return;
-      console.error('[FeedPage] Failed to load posts:', err);
-      const errorInfo = extractErrorInfo(err);
-      setError(errorInfo);
-      // エラーが発生してもローディング状態を解除
-      setIsLoading(false);
-      setIsLoadingMore(false);
-    } finally {
-      if (isMountedRef.current) {
-        console.log('[FeedPage] loadPosts finally block - setting loading to false');
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
-    }
-  }, [isAuthenticated, getAccessTokenSilently, filterType, selectedDiseaseId]);
-
-  // Initial load and reload when filter changes
+  // Reload when filter changes (with debounce)
+  const filterChangeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    console.log('[FeedPage] useEffect triggered', { authLoading, filterType, selectedDiseaseId, isAuthenticated });
-    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
-    // （クライアントサイドナビゲーションで状態が維持されている場合）
-    if (authLoading && !isAuthenticated) {
-      console.log('[FeedPage] Auth still loading, skipping loadPosts');
-      return;
+    if (authLoading) return;
+    
+    // Clear previous timeout
+    if (filterChangeTimeoutRef.current) {
+      clearTimeout(filterChangeTimeoutRef.current);
     }
-    console.log('[FeedPage] Calling loadPosts(true)');
-    loadPosts(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, filterType, selectedDiseaseId, isAuthenticated]);
+    
+    // Debounce filter changes
+    filterChangeTimeoutRef.current = setTimeout(() => {
+      load(true);
+    }, 300); // 300ms debounce
 
-  // Load more posts
-  const handleLoadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    loadPosts(false, nextPage);
-  };
+    return () => {
+      if (filterChangeTimeoutRef.current) {
+        clearTimeout(filterChangeTimeoutRef.current);
+      }
+    };
+  }, [filterType, selectedDiseaseId, authLoading, load]);
 
   // Refresh feed after creating a post
-  const handlePostCreated = () => {
-    loadPosts(true);
-  };
-
-  // Refresh feed after liking a post
-  const handleLikeToggle = () => {
-    // Optionally refresh or update state
-    // For now, the PostCard handles like state internally
+  const handlePostCreated = async () => {
+    await refresh();
   };
 
   // Handle filter type change
@@ -180,7 +127,8 @@ export default function FeedPage() {
     return translation?.translated_name || userDisease.disease.name;
   };
 
-  if ((authLoading && !isAuthenticated) || isLoading) {
+  // Full page loading only for initial auth or redirect
+  if (authLoading && !isAuthenticated) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -314,12 +262,12 @@ export default function FeedPage() {
           </div>
         )}
 
-        {/* Error message */}
+        {/* Error message - shown even when data exists (optimistic UI) */}
         {error && (
           <div className="mb-6">
             <ErrorDisplay
               error={error}
-              onRetry={() => loadPosts(true)}
+              onRetry={retry}
               showDetails={false}
             />
           </div>
@@ -327,7 +275,25 @@ export default function FeedPage() {
 
         {/* Posts list */}
         <div className="space-y-6">
-          {posts.length === 0 ? (
+          {/* Show refresh indicator if refreshing */}
+          {isRefreshing && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-center text-blue-600">
+                <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
+                <span className="text-sm">{t('refreshing') || '更新中...'}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Partial loading for posts list */}
+          {isLoading && posts.length === 0 ? (
+            <div className="bg-white rounded-lg shadow p-12 text-center">
+              <div className="flex justify-center items-center">
+                <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+              <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+            </div>
+          ) : posts.length === 0 ? (
             <div className="bg-white rounded-lg shadow p-12 text-center">
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
@@ -367,7 +333,9 @@ export default function FeedPage() {
                 <PostCard
                   key={post.id}
                   post={post}
-                  onLikeToggle={handleLikeToggle}
+                  onLikeToggle={() => {
+                    // PostCard handles like state internally, optionally refresh
+                  }}
                   onPostUpdated={handlePostCreated}
                   onPostDeleted={handlePostCreated}
                 />
@@ -377,7 +345,7 @@ export default function FeedPage() {
               {hasMore && (
                 <div className="flex justify-center pt-6">
                   <button
-                    onClick={handleLoadMore}
+                    onClick={loadMore}
                     disabled={isLoadingMore}
                     className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                       isLoadingMore

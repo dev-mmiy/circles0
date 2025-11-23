@@ -2,10 +2,10 @@
 Block schema definitions for API requests and responses.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class BlockResponse(BaseModel):
@@ -20,6 +20,15 @@ class BlockResponse(BaseModel):
     class Config:
         from_attributes = True
 
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
 
 class BlockedUserSummary(BaseModel):
     """Summary of a blocked user."""
@@ -32,6 +41,15 @@ class BlockedUserSummary(BaseModel):
 
     class Config:
         from_attributes = True
+
+    @field_serializer("blocked_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class BlockStats(BaseModel):

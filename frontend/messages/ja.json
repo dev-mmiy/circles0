@@ -63,6 +63,9 @@
     "deleteConversation": "会話を削除",
     "deleteConversationConfirm": "この会話を削除してもよろしいですか？",
     "deleting": "削除中...",
+    "searchConversations": "会話を検索...",
+    "noSearchResults": "検索結果が見つかりませんでした",
+    "noSearchResultsMessage": "検索条件に一致する会話が見つかりませんでした。別のキーワードで検索してください。",
     "conversation": {
       "title": "会話",
       "sendMessage": "メッセージを送信",
@@ -82,7 +85,10 @@
       "messageRequired": "メッセージを入力してください",
       "messageTooLong": "メッセージは5000文字以内で入力してください",
       "imageUrlTooLong": "画像URLは500文字以内で入力してください",
-      "deletedMessage": "削除されたメッセージ"
+      "deletedMessage": "削除されたメッセージ",
+      "searchMessages": "メッセージを検索...",
+      "noSearchResults": "検索結果が見つかりませんでした",
+      "noSearchResultsMessage": "検索条件に一致するメッセージが見つかりませんでした。別のキーワードで検索してください。"
     },
     "backToConversations": "会話一覧に戻る",
     "sendMessage": "メッセージを送る",
@@ -174,6 +180,7 @@
     "registration_failed": "登録に失敗しました。もう一度お試しください。",
     "network_error": "ネットワークエラーです。接続を確認してください。",
     "network": "ネットワークエラーが発生しました。インターネット接続を確認してください。",
+    "timeout": "サーバーからの応答がタイムアウトしました。しばらく待ってから再試行してください。",
     "unauthorized": "認証が必要です。ログインしてください。",
     "forbidden": "この操作を実行する権限がありません。",
     "notFound": "リソースが見つかりませんでした。",
@@ -469,6 +476,9 @@
       "bio": "あなたについて教えてください",
       "country": "例: 日本",
       "phone": "+81-90-1234-5678"
+    },
+    "country": {
+      "select": "選択してください"
     },
     "gender": {
       "select": "選択してください",

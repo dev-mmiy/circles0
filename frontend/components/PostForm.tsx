@@ -178,9 +178,12 @@ export default function PostForm({
       setImagePreviews([]);
       setNewImageUrl('');
 
-      // Notify parent component
+      // Notify parent component (await if it's async)
       if (onPostCreated) {
-        onPostCreated();
+        const result = onPostCreated();
+        if (result instanceof Promise) {
+          await result;
+        }
       }
     } catch (err: any) {
       console.error('Failed to create post:', err);

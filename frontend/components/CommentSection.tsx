@@ -4,8 +4,10 @@ import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link as I18nLink } from '@/i18n/routing';
+import { useUser } from '@/contexts/UserContext';
+import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import {
   createComment,
   getCommentReplies,
@@ -176,6 +178,8 @@ function CommentItem({
   isReply = false,
 }: CommentItemProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { user } = useUser();
+  const locale = useLocale();
   const t = useTranslations('commentSection');
   const [showReplyForm, setShowReplyForm] = useState(false);
   const [replyContent, setReplyContent] = useState('');
@@ -184,25 +188,29 @@ function CommentItem({
   const [showReplies, setShowReplies] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
 
-  // Format date
+  // Format date using user's timezone
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    const userTimezone = user ? getUserTimezone(user.timezone, user.country) : 'UTC';
+    const relative = formatRelativeTime(dateString, locale, user?.timezone, user?.country);
 
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor(
-        (now.getTime() - date.getTime()) / (1000 * 60)
-      );
-      return diffInMinutes < 1 ? t('time.justNow') : t('time.minutesAgo', { minutes: diffInMinutes });
-    } else if (diffInHours < 24) {
-      return t('time.hoursAgo', { hours: diffInHours });
+    if (relative.minutes < 1) {
+      return t('time.justNow');
+    } else if (relative.minutes < 60) {
+      return t('time.minutesAgo', { minutes: relative.minutes });
+    } else if (relative.hours < 24) {
+      return t('time.hoursAgo', { hours: relative.hours });
     } else {
-      return date.toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
+      return formatDateInTimezone(
+        dateString,
+        locale,
+        user?.timezone,
+        user?.country,
+        {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }
+      );
     }
   };
 

@@ -13,6 +13,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { getApiBaseUrl } from '@/lib/config';
+import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
 
 const SSE_ENDPOINT = `${getApiBaseUrl()}/api/v1/messages/stream`;
 
@@ -95,8 +96,27 @@ export function useMessageStream(
     }
 
     try {
-      // Get authentication token
-      const token = await getAccessTokenSilently();
+      // Get authentication token using tokenManager to prevent conflicts with other API calls
+      console.log('[Message SSE] Getting token for SSE connection...', { timestamp: new Date().toISOString() });
+      const tokenStartTime = Date.now();
+      
+      let token: string;
+      try {
+        token = await getAccessTokenFromManager(getAccessTokenSilently);
+        const tokenElapsed = Date.now() - tokenStartTime;
+        console.log('[Message SSE] Token retrieved successfully', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
+      } catch (tokenError: any) {
+        const tokenElapsed = Date.now() - tokenStartTime;
+        console.error('[Message SSE] Failed to get token for SSE connection:', tokenError, {
+          elapsed: tokenElapsed,
+          timestamp: new Date().toISOString()
+        });
+        
+        // Don't throw - just set error and return
+        // The connection will be retried automatically by the error handler
+        setError(tokenError instanceof Error ? tokenError : new Error('Failed to get token'));
+        return;
+      }
 
       // EventSource doesn't support custom headers natively
       // We'll append the token as a query parameter
@@ -225,17 +245,21 @@ export function useMessageStream(
   }, [connect, isAuthenticated, enabled]);
 
   // Connect on mount and when authentication changes
+  // Add a delay to avoid conflicts with other initial API calls (UserProvider, etc.)
   useEffect(() => {
     if (enabled && isAuthenticated) {
-      connect();
+      // Delay SSE connection to let other critical API calls complete first
+      const timeoutId = setTimeout(() => {
+        connect();
+      }, 500); // 500ms delay to let UserProvider and other providers initialize first
+      
+      return () => {
+        clearTimeout(timeoutId);
+        closeConnection();
+      };
     } else {
       closeConnection();
     }
-
-    // Cleanup on unmount
-    return () => {
-      closeConnection();
-    };
   }, [enabled, isAuthenticated, connect]);
 
   return {

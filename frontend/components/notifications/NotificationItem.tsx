@@ -5,6 +5,8 @@ import { useLocale, useTranslations } from 'next-intl';
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { X } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { getUserTimezone } from '@/lib/utils/timezone';
 import {
   Notification,
   getNotificationText,
@@ -31,6 +33,7 @@ export default function NotificationItem({
 }: NotificationItemProps) {
   const router = useRouter();
   const locale = useLocale();
+  const { user } = useUser();
   const t = useTranslations('notificationItem');
   const [isDeleting, setIsDeleting] = useState(false);
 

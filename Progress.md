@@ -491,7 +491,7 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### Phase 3: メッセージング・コミュニケーション（優先度：中）
 
-#### 3.1 ダイレクトメッセージ (DM) ✅ 完了（2025-11-15）
+#### 3.1 ダイレクトメッセージ (DM) ✅ 完了（2025-11-15、検索機能は2025-11-21完了）
 - [x] **1対1メッセージ** ✅ 完了
   - [x] テキストメッセージ送受信 ✅ 完了
   - [x] 画像送信 ✅ 完了（画像URL対応）
@@ -500,7 +500,9 @@ Auth0を使用したOAuth2.0認証システム。
 - [x] **メッセージ一覧** ✅ 完了
   - [x] 会話スレッド一覧 ✅ 完了
   - [x] 未読バッジ表示 ✅ 完了（APIレスポンスに含まれる）
-  - [ ] 検索機能（今後実装予定）
+  - [x] 検索機能 ✅ 完了（2025-11-21）
+    - [x] 会話一覧の検索機能（相手のユーザー名、最後のメッセージ内容で検索）
+    - [x] 会話内のメッセージ検索機能（メッセージ内容で検索）
 - [x] **フロントエンド実装** ✅ 完了（2025-11-15）
   - [x] メッセージ一覧ページ ✅ 完了
   - [x] 会話画面 ✅ 完了
@@ -1466,6 +1468,38 @@ Auth0を使用したOAuth2.0認証システム。
     - `scripts/generate_vapid_keys.py`でVAPID鍵を生成
     - 生成した鍵を`.env`ファイルに追加（VAPID_PRIVATE_KEY, VAPID_PUBLIC_KEY, VAPID_EMAIL）
 
+- **ダイレクトメッセージ検索機能の実装** ✅ 完了（2025-11-21）
+  - **会話一覧の検索機能**:
+    - フロントエンドで会話をフィルタリングする機能を実装
+    - 検索対象: 相手のユーザー名（nickname）、username、最後のメッセージ内容
+    - 検索入力フィールドを追加（検索アイコン、クリアボタン付き）
+    - 検索結果が0件の場合のメッセージ表示
+  - **会話内のメッセージ検索機能**:
+    - バックエンド実装:
+      - `MessageService.search_messages`メソッドを追加（メッセージ内容の部分一致検索）
+      - `GET /api/v1/messages/conversations/{conversation_id}/messages`エンドポイントに`q`パラメータを追加
+      - 大文字小文字を区別しない検索（ILIKE使用）
+    - フロントエンド実装:
+      - 会話画面に検索入力フィールドを追加
+      - 検索クエリに基づいてメッセージをフィルタリング（300msデバウンス）
+      - 検索結果が0件の場合のメッセージ表示
+      - 検索中は「もっと見る」ボタンを非表示
+    - 多言語対応（日本語・英語）:
+      - `messages.searchConversations` - 会話一覧の検索プレースホルダー
+      - `messages.noSearchResults` - 検索結果なしタイトル
+      - `messages.noSearchResultsMessage` - 検索結果なしメッセージ
+      - `messages.conversation.searchMessages` - 会話内のメッセージ検索プレースホルダー
+      - `messages.conversation.noSearchResults` - 会話内の検索結果なしタイトル
+      - `messages.conversation.noSearchResultsMessage` - 会話内の検索結果なしメッセージ
+  - **実装ファイル**:
+    - [backend/app/services/message_service.py](backend/app/services/message_service.py) - メッセージ検索メソッド追加
+    - [backend/app/api/messages.py](backend/app/api/messages.py) - 検索パラメータ追加
+    - [frontend/lib/api/messages.ts](frontend/lib/api/messages.ts) - 検索クエリパラメータ追加
+    - [frontend/app/[locale]/messages/page.tsx](frontend/app/[locale]/messages/page.tsx) - 会話一覧の検索機能
+    - [frontend/app/[locale]/messages/[conversationId]/page.tsx](frontend/app/[locale]/messages/[conversationId]/page.tsx) - 会話内のメッセージ検索機能
+    - [frontend/messages/ja.json](frontend/messages/ja.json) - 日本語翻訳追加
+    - [frontend/messages/en.json](frontend/messages/en.json) - 英語翻訳追加
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1547,4 +1581,4 @@ eec5fc8 - Wrap stat() call in try-except to prevent error messages (2025-11-15)
 
 **最終更新日**: 2025-11-21
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了

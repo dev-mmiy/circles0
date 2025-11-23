@@ -3,6 +3,7 @@
  */
 
 import { getApiBaseUrl } from '../config';
+import { apiClient } from './client';
 
 // ========== Types ==========
 
@@ -136,18 +137,10 @@ export async function createPost(
 export async function getFeed(
   skip: number = 0,
   limit: number = 20,
-  accessToken?: string,
+  accessToken?: string, // Kept for backward compatibility, but not used (apiClient handles auth)
   filterType: 'all' | 'following' | 'disease' | 'my_posts' = 'all',
   diseaseId?: number
 ): Promise<Post[]> {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-
   const queryParams = new URLSearchParams();
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
@@ -156,43 +149,38 @@ export async function getFeed(
     queryParams.append('disease_id', diseaseId.toString());
   }
 
-  const url = `${getApiBaseUrl()}/api/v1/posts?${queryParams.toString()}`;
-  console.log('[getFeed] Fetching from:', url);
-  console.log('[getFeed] Headers:', { ...headers, Authorization: accessToken ? 'Bearer ***' : undefined });
-
-  // Add timeout to fetch request
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 10000); // 10 second timeout
+  const url = `/api/v1/posts?${queryParams.toString()}`;
+  const fullURL = `${apiClient.defaults.baseURL}${url}`;
+  
+  console.log('[getFeed] API call:', {
+    skip,
+    limit,
+    filterType,
+    diseaseId,
+    baseURL: apiClient.defaults.baseURL,
+    fullURL,
+    hasAuth: !!apiClient.defaults.headers.common['Authorization'],
+    timestamp: new Date().toISOString(),
+  });
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-      signal: controller.signal,
+    const response = await apiClient.get<Post[]>(url);
+    console.log('[getFeed] API response received:', {
+      status: response.status,
+      itemsCount: Array.isArray(response.data) ? response.data.length : 0,
+      timestamp: new Date().toISOString(),
     });
-
-    clearTimeout(timeoutId);
-    console.log('[getFeed] Response status:', response.status, response.statusText);
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
-      console.error('[getFeed] Error response:', error);
-      throw new Error(error.detail || 'Failed to fetch feed');
-    }
-
-    const data = await response.json();
-    console.log('[getFeed] Success, received', Array.isArray(data) ? data.length : 'non-array', 'items');
-    return data;
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
-      console.error('[getFeed] Request timeout after 10 seconds');
-      throw new Error('Request timeout: The server took too long to respond. Please check if the backend is running.');
-    }
-    console.error('[getFeed] Fetch error:', err);
-    throw err;
+    return response.data;
+  } catch (error: any) {
+    console.error('[getFeed] API error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      timestamp: new Date().toISOString(),
+    });
+    throw error;
   }
 }
 
@@ -231,51 +219,38 @@ export async function getUserPosts(
   userId: string,
   skip: number = 0,
   limit: number = 20,
-  accessToken?: string
+  accessToken?: string // Kept for backward compatibility, but not used (apiClient handles auth)
 ): Promise<Post[]> {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-  };
-
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
-  }
-
-  const url = `${getApiBaseUrl()}/api/v1/posts/user/${userId}?skip=${skip}&limit=${limit}`;
-  console.log('[getUserPosts] Fetching from:', url);
-
-  // Add timeout to fetch request
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => {
-    controller.abort();
-  }, 10000); // 10 second timeout
+  const url = `/api/v1/posts/user/${userId}?skip=${skip}&limit=${limit}`;
+  const fullURL = `${apiClient.defaults.baseURL}${url}`;
+  
+  console.log('[getUserPosts] API call:', {
+    userId,
+    skip,
+    limit,
+    fullURL,
+    hasAuth: !!apiClient.defaults.headers.common['Authorization'],
+    timestamp: new Date().toISOString(),
+  });
 
   try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers,
-      signal: controller.signal,
+    const response = await apiClient.get<Post[]>(url);
+    console.log('[getUserPosts] API response received:', {
+      status: response.status,
+      itemsCount: Array.isArray(response.data) ? response.data.length : 0,
+      timestamp: new Date().toISOString(),
     });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
-      console.error('[getUserPosts] Error response:', error);
-      throw new Error(error.detail || 'Failed to fetch user posts');
-    }
-
-    const data = await response.json();
-    console.log('[getUserPosts] Success, received', Array.isArray(data) ? data.length : 'non-array', 'items');
-    return data;
-  } catch (err: any) {
-    clearTimeout(timeoutId);
-    if (err.name === 'AbortError') {
-      console.error('[getUserPosts] Request timeout after 10 seconds');
-      throw new Error('Request timeout: The server took too long to respond. Please check if the backend is running.');
-    }
-    console.error('[getUserPosts] Fetch error:', err);
-    throw err;
+    return response.data;
+  } catch (error: any) {
+    console.error('[getUserPosts] API error:', {
+      message: error.message,
+      code: error.code,
+      response: error.response?.data,
+      status: error.response?.status,
+      isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      timestamp: new Date().toISOString(),
+    });
+    throw error;
   }
 }
 

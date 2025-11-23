@@ -131,7 +131,15 @@ async def get_feed(
     - "disease": Show posts from users who have the specified disease (requires disease_id parameter)
     - "my_posts": Show only posts from the current user (requires authentication)
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"[get_feed] Request received: skip={skip}, limit={limit}, filter_type={filter_type}, disease_id={disease_id}")
+    print(f"[get_feed] Request received: skip={skip}, limit={limit}, filter_type={filter_type}, disease_id={disease_id}")  # Force print
+    
     user_id = get_user_id_from_token(db, current_user)
+    logger.info(f"[get_feed] User ID: {user_id}")
+    print(f"[get_feed] User ID: {user_id}")  # Force print
 
     # If filter_type is "following" but user is not authenticated, return empty
     if filter_type == "following" and not user_id:
@@ -143,11 +151,23 @@ async def get_feed(
 
     # If filter_type is "disease" but disease_id is not provided, return empty
     if filter_type == "disease" and disease_id is None:
+        logger.info("[get_feed] Disease filter selected but no disease_id provided, returning empty")
+        print("[get_feed] Disease filter selected but no disease_id provided, returning empty")  # Force print
         return []
 
+    logger.info(f"[get_feed] Calling PostService.get_feed")
+    print(f"[get_feed] Calling PostService.get_feed")  # Force print
     posts = PostService.get_feed(db, user_id, skip, limit, filter_type, disease_id)
+    logger.info(f"[get_feed] Posts retrieved: count={len(posts)}")
+    print(f"[get_feed] Posts retrieved: count={len(posts)}")  # Force print
 
-    return [_build_post_response(db, post, user_id) for post in posts]
+    logger.info(f"[get_feed] Building response for {len(posts)} posts")
+    print(f"[get_feed] Building response for {len(posts)} posts")  # Force print
+    response = [_build_post_response(db, post, user_id) for post in posts]
+    logger.info(f"[get_feed] Response built successfully, returning {len(response)} posts")
+    print(f"[get_feed] Response built successfully, returning {len(response)} posts")  # Force print
+    
+    return response
 
 
 @router.get(

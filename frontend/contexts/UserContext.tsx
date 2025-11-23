@@ -47,7 +47,9 @@ export function UserProvider({ children }: UserProviderProps) {
     try {
       setLoading(true);
       setError(null);
-      const accessToken = await getAccessTokenSilently();
+      // Use centralized token manager to prevent duplicate requests
+      const { getAccessToken } = await import('@/lib/utils/tokenManager');
+      const accessToken = await getAccessToken(getAccessTokenSilently);
       const userProfile = await getCurrentUserProfile(accessToken);
       setUser(userProfile);
     } catch (err) {
@@ -120,7 +122,9 @@ export function UserProvider({ children }: UserProviderProps) {
       setUser({ ...user, ...updates });
 
       // Call API to update profile
-      const accessToken = await getAccessTokenSilently();
+      // Use centralized token manager to prevent duplicate requests
+      const { getAccessToken } = await import('@/lib/utils/tokenManager');
+      const accessToken = await getAccessToken(getAccessTokenSilently);
       const updatedUser = await updateCurrentUserProfile(accessToken, updates);
 
       // Update with actual response from server

@@ -16,13 +16,14 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import { getUserTimezone } from '@/lib/utils/timezone';
 import { Trash2, Plus, X, Search } from 'lucide-react';
-import { setAuthToken } from '@/lib/api/client';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useUser } from '@/contexts/UserContext';
 import { findOrCreateConversation } from '@/lib/api/messages';
 import { searchUsers, UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile } from '@/lib/api/users';
+import { useDataLoader } from '@/lib/hooks/useDataLoader';
 
 export default function MessagesPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -30,12 +31,42 @@ export default function MessagesPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('messages');
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  
+  // Unified data loader for conversations
+  const {
+    items: conversations,
+    isLoading,
+    isLoadingMore,
+    isRefreshing,
+    error,
+    hasMore,
+    load,
+    loadMore,
+    refresh,
+    retry,
+    clearError,
+  } = useDataLoader<Conversation>({
+    loadFn: async (skip, limit) => {
+      const response = await getConversations(skip, limit);
+      return {
+        items: response.conversations,
+        total: response.total,
+      };
+    },
+    pageSize: 20,
+    autoLoad: true,
+    requireAuth: true,
+    retryConfig: {
+      maxRetries: 3,
+      retryDelay: 1000,
+      autoRetry: true,
+    },
+    cacheConfig: {
+      enabled: true,
+      ttl: 5 * 60 * 1000, // 5 minutes
+    },
+  });
+  
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
   
@@ -45,243 +76,82 @@ export default function MessagesPage() {
   const [searchResults, setSearchResults] = useState<UserPublicProfile[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
+  
+  // Conversation list search state
+  const [conversationSearchQuery, setConversationSearchQuery] = useState('');
 
-  const CONVERSATIONS_PER_PAGE = 20;
   const conversationsRef = useRef<Conversation[]>([]);
   const currentUserRef = useRef(currentUser);
-  const pageRef = useRef(page);
-  const loadConversationsRef = useRef<((reset: boolean) => Promise<void>) | null>(null);
-  // コンポーネントのマウント状態を追跡
-  // 初期値をtrueにすることで、最初のレンダリングからマウント済みとして扱う
-  const isMountedRef = useRef(true);
 
-  useEffect(() => {
-    // マウント時に確実にtrueにする（初期値がtrueなので冗長だが明示的に）
-    isMountedRef.current = true;
-    console.log('[MessagesPage] Component mounted');
-
-    return () => {
-      console.log('[MessagesPage] Component unmounting');
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // currentUserとpageの参照を更新
-  useEffect(() => {
-    currentUserRef.current = currentUser;
-  }, [currentUser]);
-
-  useEffect(() => {
-    pageRef.current = page;
-  }, [page]);
-
-  // 会話を取得
-  const loadConversations = useCallback(async (reset: boolean = false) => {
-    console.log('[MessagesPage] loadConversations called', { reset, isMounted: isMountedRef.current, isAuthenticated });
-    try {
-      if (!isMountedRef.current) {
-        console.log('[MessagesPage] loadConversations - not mounted, returning');
-        return;
-      }
-      const currentPage = reset ? 0 : pageRef.current;
-      setIsLoading(reset);
-      setIsLoadingMore(!reset);
-
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          if (!isMountedRef.current) return;
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          if (!isMountedRef.current) return;
-          setAuthToken(null);
-        }
-      } else {
-        setAuthToken(null);
-      }
-
-      const response = await getConversations(
-        currentPage * CONVERSATIONS_PER_PAGE,
-        CONVERSATIONS_PER_PAGE
-      );
-
-      if (!isMountedRef.current) return;
-
-      if (reset) {
-        setConversations(response.conversations);
-        conversationsRef.current = response.conversations;
-        setPage(0);
-        pageRef.current = 0;
-      } else {
-        const newConversations = [...conversationsRef.current, ...response.conversations];
-        setConversations(newConversations);
-        conversationsRef.current = newConversations;
-      }
-
-      setHasMore(response.conversations.length === CONVERSATIONS_PER_PAGE);
-      setError(null);
-      console.log('[MessagesPage] loadConversations completed successfully');
-    } catch (err: any) {
-      if (!isMountedRef.current) {
-        console.log('[MessagesPage] loadConversations catch - not mounted, returning');
-        return;
-      }
-      console.error('[MessagesPage] Failed to load conversations:', err);
-      const errorInfo = extractErrorInfo(err);
-      setError(errorInfo);
-    } finally {
-      console.log('[MessagesPage] loadConversations finally', { isMounted: isMountedRef.current });
-      if (isMountedRef.current) {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
-    }
-  }, [isAuthenticated, getAccessTokenSilently]);
-
-  // loadConversationsの参照を更新
-  useEffect(() => {
-    loadConversationsRef.current = loadConversations;
-  }, [loadConversations]);
-
-  // リアルタイムメッセージ更新
-  const handleNewMessage = useCallback((messageEvent: MessageEvent) => {
-    // 会話リストを更新（該当する会話のlast_messageとunread_countを更新）
-    setConversations(prev => {
-      const conversationIndex = prev.findIndex(conv => conv.id === messageEvent.conversation_id);
-      
-      // 会話が存在しない場合（新しい会話）、リストを再読み込み
-      if (conversationIndex === -1) {
-        // 非同期で再読み込み（無限ループを防ぐ）
-        setTimeout(() => {
-          if (loadConversationsRef.current) {
-            loadConversationsRef.current(true);
-          }
-        }, 100);
-        return prev;
-      }
-
-      const updated = prev.map(conv => {
-        if (conv.id === messageEvent.conversation_id) {
-          // 自分のメッセージでない場合は未読数を増やす
-          const isOwnMessage = messageEvent.sender_id === currentUserRef.current?.id;
-          const newUnreadCount = isOwnMessage 
-            ? conv.unread_count 
-            : conv.unread_count + 1;
-
-          // 会話情報を更新
-          return {
-            ...conv,
-            last_message_at: messageEvent.created_at,
-            last_message: {
-              id: messageEvent.id,
-              conversation_id: messageEvent.conversation_id,
-              sender_id: messageEvent.sender_id,
-              content: messageEvent.content,
-              image_url: messageEvent.image_url,
-              is_deleted: messageEvent.is_deleted,
-              created_at: messageEvent.created_at,
-              updated_at: messageEvent.updated_at,
-              sender: messageEvent.sender,
-              is_read: false,
-              read_at: null,
-            },
-            unread_count: newUnreadCount,
-          };
-        }
-        return conv;
-      });
-
-      // メッセージが来た会話を先頭に移動
-      const messageConversation = updated.find(c => c.id === messageEvent.conversation_id);
-      if (messageConversation) {
-        const filtered = updated.filter(c => c.id !== messageEvent.conversation_id);
-        const result = [messageConversation, ...filtered];
-        conversationsRef.current = result;
-        return result;
-      }
-
-      conversationsRef.current = updated;
-      return updated;
-    });
-  }, []);
-
-  const { isConnected: isMessageStreamConnected } = useMessageStream(handleNewMessage);
-
-  // conversationsの参照を更新
+  // Update refs
   useEffect(() => {
     conversationsRef.current = conversations;
   }, [conversations]);
 
-  // 認証チェックと初期読み込み
   useEffect(() => {
-    console.log('[MessagesPage] Auth check useEffect', { authLoading, isAuthenticated, isRedirecting, isMounted: isMountedRef.current });
+    currentUserRef.current = currentUser;
+  }, [currentUser]);
 
-    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
-    // （クライアントサイドナビゲーションで状態が維持されている場合）
-    if (authLoading && !isAuthenticated) {
-      console.log('[MessagesPage] Auth still loading, skipping');
+  // リアルタイムメッセージ更新
+  const handleNewMessage = useCallback((messageEvent: MessageEvent) => {
+    // 会話リストを更新（該当する会話のlast_messageとunread_countを更新）
+    // Note: useDataLoader manages conversations state, so we need to update it directly
+    // For now, refresh the list to get updated data
+    const conversationIndex = conversationsRef.current.findIndex(conv => conv.id === messageEvent.conversation_id);
+    
+    // 会話が存在しない場合（新しい会話）、リストを再読み込み
+    if (conversationIndex === -1) {
+      // 非同期で再読み込み（無限ループを防ぐ）
+      setTimeout(() => {
+        refresh();
+      }, 100);
       return;
     }
 
-    if (!isAuthenticated) {
-      // 未認証の場合はホームにリダイレクト
-      console.log('[MessagesPage] Not authenticated, redirecting');
-      if (!isRedirecting) {
-        setIsRedirecting(true);
-        router.push('/');
-      }
-      return;
+    // Note: For real-time updates, we refresh the list to get the latest data
+    // This ensures consistency with the backend state
+    refresh();
+  }, [refresh]);
+
+  useMessageStream(handleNewMessage, isAuthenticated);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && !isRedirecting) {
+      setIsRedirecting(true);
+      router.push('/');
     }
-
-    console.log('[MessagesPage] Calling loadConversations(true)');
-    loadConversations(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated]);
-
-  // さらに読み込む
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    setPage(page + 1);
-    loadConversations(false);
-  };
+  }, [authLoading, isAuthenticated, isRedirecting, router]);
 
   // 会話を削除
   const handleDeleteConversation = async (conversationId: string) => {
-    if (!confirm(t('deleteConversationConfirm'))) {
+    if (!confirm(t('deleteConversationConfirm') || t('confirmDeleteConversation'))) {
       return;
     }
 
+    setDeletingConversationId(conversationId);
+    
     try {
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          setAuthToken(null);
-        }
-      }
-
-      setDeletingConversationId(conversationId);
       await deleteConversation(conversationId);
-      // 削除後、リストから除外
-      setConversations(conversations.filter(c => c.id !== conversationId));
+      // Refresh list to remove deleted conversation
+      await refresh();
     } catch (err: any) {
       console.error('Failed to delete conversation:', err);
-      alert(t('errorLoading'));
+      alert(t('errorLoading') || t('errorDeletingConversation'));
     } finally {
       setDeletingConversationId(null);
     }
   };
 
-  // 時間表示のフォーマット
+  // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';
+    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
     const date = new Date(dateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
+    
+    // Use Intl.DateTimeFormat to format in user's timezone for relative time calculation
+    // formatDistanceToNow already handles relative time, but we need to ensure it's calculated correctly
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
   };
 
@@ -295,14 +165,13 @@ export default function MessagesPage() {
     setIsSearching(true);
     try {
       const token = await getAccessTokenSilently();
-      setAuthToken(token);
-
       const params: UserSearchParams = {
         q: searchQuery,
         limit: 20,
       };
 
       const results = await searchUsers(params, token);
+
       // Exclude current user
       const filteredResults = results.filter(u => u.id !== currentUser?.id);
       setSearchResults(filteredResults);
@@ -317,11 +186,10 @@ export default function MessagesPage() {
   const handleSelectUser = async (user: UserPublicProfile) => {
     setIsCreatingConversation(true);
     try {
-      const token = await getAccessTokenSilently();
-      setAuthToken(token);
-
       const conversationId = await findOrCreateConversation(user.id);
-      router.push(`/messages/${conversationId}`);
+      if (conversationId) {
+        router.push(`/messages/${conversationId}`);
+      }
     } catch (err) {
       console.error('Failed to create conversation:', err);
       alert(t('errorCreatingConversation'));
@@ -333,7 +201,8 @@ export default function MessagesPage() {
     }
   };
 
-  if ((authLoading && !isAuthenticated) || isLoading || isRedirecting) {
+  // 認証チェック中またはリダイレクト中のみページ全体をローディング
+  if ((authLoading && !isAuthenticated) || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -370,15 +239,47 @@ export default function MessagesPage() {
             <div className="mb-6">
               <ErrorDisplay
                 error={error}
-                onRetry={() => loadConversations(true)}
-                showDetails={false}
+                onRetry={retry}
+                showDetails={true}
               />
+            </div>
+          )}
+
+          {/* Conversation search */}
+          {(!isLoading || conversations.length > 0) && (
+            <div className="mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <input
+                  type="text"
+                  value={conversationSearchQuery}
+                  onChange={(e) => setConversationSearchQuery(e.target.value)}
+                  placeholder={t('searchConversations')}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                {conversationSearchQuery && (
+                  <button
+                    onClick={() => setConversationSearchQuery('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
             </div>
           )}
 
           {/* Conversations list */}
           <div className="bg-white rounded-lg shadow">
-            {conversations.length === 0 ? (
+            {/* ローディング状態 */}
+            {isLoading && conversations.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="flex justify-center items-center">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+              </div>
+            ) : conversations.length === 0 ? (
               <div className="p-12 text-center">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
@@ -402,8 +303,37 @@ export default function MessagesPage() {
               </div>
             ) : (
               <>
-                <div className="divide-y divide-gray-100">
-                  {conversations.map((conversation) => (
+                {(() => {
+                  const filteredConversations = conversations.filter((conversation) => {
+                    if (!conversationSearchQuery.trim()) return true;
+                    const query = conversationSearchQuery.toLowerCase();
+                    const nickname = conversation.other_user?.nickname?.toLowerCase() || '';
+                    const username = conversation.other_user?.username?.toLowerCase() || '';
+                    const lastMessage = conversation.last_message?.content?.toLowerCase() || '';
+                    return (
+                      nickname.includes(query) ||
+                      username.includes(query) ||
+                      lastMessage.includes(query)
+                    );
+                  });
+
+                  if (filteredConversations.length === 0 && conversationSearchQuery.trim()) {
+                    return (
+                      <div className="p-12 text-center">
+                        <Search className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-4 text-lg font-medium text-gray-900">
+                          {t('noSearchResults')}
+                        </h3>
+                        <p className="mt-2 text-gray-500">
+                          {t('noSearchResultsMessage')}
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="divide-y divide-gray-100">
+                      {filteredConversations.map((conversation) => (
                     <div
                       key={conversation.id}
                       className="p-4 hover:bg-gray-50 transition-colors"
@@ -475,14 +405,16 @@ export default function MessagesPage() {
                         </button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                      ))}
+                    </div>
+                  );
+                })()}
 
                 {/* Load more button */}
-                {hasMore && (
+                {hasMore && !conversationSearchQuery.trim() && (
                   <div className="flex justify-center p-6 border-t border-gray-200">
                     <button
-                      onClick={handleLoadMore}
+                      onClick={loadMore}
                       disabled={isLoadingMore}
                       className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                         isLoadingMore

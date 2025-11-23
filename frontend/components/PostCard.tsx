@@ -2,11 +2,12 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { likePost, unlikePost, deletePost, type Post } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
+import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import EditPostModal from './EditPostModal';
 
 interface PostCardProps {
@@ -26,6 +27,7 @@ export default function PostCard({
 }: PostCardProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user } = useUser();
+  const locale = useLocale();
   const t = useTranslations('post');
   const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
   const [likeCount, setLikeCount] = useState(post.like_count);
@@ -37,29 +39,33 @@ export default function PostCard({
   // Check if current user is the author
   const isAuthor = user && user.id === post.user_id;
 
-  // Format date
+  // Format date using user's timezone
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    // Use user's timezone if available, otherwise use browser's local timezone
+    const userTimezone = user ? getUserTimezone(user.timezone, user.country) : undefined;
+    const relative = formatRelativeTime(dateString, locale, user?.timezone, user?.country);
 
-    if (diffInHours < 1) {
-      const diffInMinutes = Math.floor(
-        (now.getTime() - date.getTime()) / (1000 * 60)
-      );
-      return diffInMinutes < 1 ? t('time.justNow') : t('time.minutesAgo', { minutes: diffInMinutes });
-    } else if (diffInHours < 24) {
-      return t('time.hoursAgo', { hours: diffInHours });
-    } else if (diffInHours < 168) {
-      // 7 days
-      const diffInDays = Math.floor(diffInHours / 24);
-      return t('time.daysAgo', { days: diffInDays });
+    if (relative.minutes < 1) {
+      return t('time.justNow');
+    } else if (relative.minutes < 60) {
+      return t('time.minutesAgo', { minutes: relative.minutes });
+    } else if (relative.hours < 24) {
+      return t('time.hoursAgo', { hours: relative.hours });
+    } else if (relative.days < 7) {
+      return t('time.daysAgo', { days: relative.days });
     } else {
-      return date.toLocaleDateString(t('time.locale'), {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      });
+      // Format date in user's timezone (or browser's local timezone if user not logged in)
+      return formatDateInTimezone(
+        dateString,
+        locale,
+        user?.timezone,
+        user?.country,
+        {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        }
+      );
     }
   };
 

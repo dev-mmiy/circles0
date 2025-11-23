@@ -10,6 +10,7 @@ import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { UserProfile } from '@/lib/api/users';
+import { getCountryName } from '@/lib/utils/countries';
 
 interface UserProfileCardProps {
   user: UserProfile;
@@ -93,7 +94,7 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
           {user.country && (
             <div>
               <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('country')}</h3>
-              <p className="text-gray-700">{user.country}</p>
+              <p className="text-gray-700">{getCountryName(user.country, locale)}</p>
             </div>
           )}
           {user.preferred_language && (

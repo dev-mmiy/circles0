@@ -23,6 +23,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import { getUserTimezone, formatDateInTimezone } from '@/lib/utils/timezone';
 import { ArrowLeft, Trash2, Send, Image as ImageIcon, Users, Settings } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
 import GroupSettingsModal from '@/components/GroupSettingsModal';
@@ -101,21 +102,23 @@ export default function GroupChatPage() {
 
       const grp = await getGroup(groupId);
       setGroup(grp);
+      setError(null);
     } catch (err: any) {
       console.error('Failed to load group:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
+      // グループの読み込みに失敗した場合でも、メッセージの読み込みは続行する
     }
   };
 
   const loadMessages = async (reset: boolean = false) => {
-    try {
-      const currentPage = reset ? 0 : page;
-      setIsLoadingMore(!reset);
-      if (reset) {
-        setIsLoading(true);
-      }
+    const currentPage = reset ? 0 : page;
+    setIsLoadingMore(!reset);
+    if (reset) {
+      setIsLoading(true);
+    }
 
+    try {
       // 認証トークンを設定
       if (isAuthenticated) {
         try {
@@ -155,6 +158,7 @@ export default function GroupChatPage() {
             await markGroupMessagesAsRead(groupId, unreadMessages.map(m => m.id));
           } catch (err) {
             console.error('Failed to mark messages as read:', err);
+            // 既読マークの失敗はローディング状態に影響しない
           }
         }
       }
@@ -163,6 +167,7 @@ export default function GroupChatPage() {
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
     } finally {
+      // 必ずローディング状態を解除
       setIsLoading(false);
       setIsLoadingMore(false);
     }
@@ -286,8 +291,9 @@ export default function GroupChatPage() {
     }
   };
 
-  // 時間表示のフォーマット
+  // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string) => {
+    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
     const date = new Date(dateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
@@ -387,17 +393,33 @@ export default function GroupChatPage() {
             {messages.map((message, index) => {
               const isOwnMessage = message.sender_id === currentUser?.id;
               const showAvatar = index === 0 || messages[index - 1].sender_id !== message.sender_id;
-              const showDate =
-                index === 0 ||
-                new Date(message.created_at).toDateString() !==
-                new Date(messages[index - 1].created_at).toDateString();
+              // Compare dates in user's timezone
+              const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : undefined;
+              const currentDate = formatDateInTimezone(
+                message.created_at,
+                locale,
+                currentUser?.timezone,
+                currentUser?.country,
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              );
+              const prevDate = index > 0 ? formatDateInTimezone(
+                messages[index - 1].created_at,
+                locale,
+                currentUser?.timezone,
+                currentUser?.country,
+                { year: 'numeric', month: 'long', day: 'numeric' }
+              ) : '';
+              const showDate = index === 0 || currentDate !== prevDate;
 
               return (
                 <div key={message.id}>
                   {showDate && (
                     <div className="text-center text-xs text-gray-500 py-2">
-                      {new Date(message.created_at).toLocaleDateString(
-                        locale === 'ja' ? 'ja-JP' : 'en-US',
+                      {formatDateInTimezone(
+                        message.created_at,
+                        locale,
+                        currentUser?.timezone,
+                        currentUser?.country,
                         {
                           year: 'numeric',
                           month: 'long',

@@ -2,11 +2,11 @@
 User schemas for profile management with Auth0 integration.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_serializer, field_validator
 
 
 class UserBase(BaseModel):
@@ -150,6 +150,17 @@ class UserResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+    @field_serializer("created_at", "updated_at", "last_login_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
 
 class UserPublicResponse(BaseModel):
     """Schema for public user profile (limited information)."""
@@ -167,6 +178,15 @@ class UserPublicResponse(BaseModel):
     diseases: List[UserDiseaseResponse] = []  # Only public diseases
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class FieldVisibilityUpdate(BaseModel):

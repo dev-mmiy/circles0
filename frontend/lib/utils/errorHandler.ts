@@ -51,7 +51,19 @@ export function extractErrorInfo(error: any): ErrorInfo {
         originalError: error,
       };
     } else if (axiosError.request) {
-      // Request made but no response received (network error)
+      // Request made but no response received (network error or timeout)
+      const isTimeout = axiosError.code === 'ECONNABORTED' || 
+                       axiosError.message?.includes('timeout') ||
+                       axiosError.message?.includes('exceeded');
+      
+      if (isTimeout) {
+        return {
+          type: ErrorType.NETWORK,
+          message: 'Request timeout: The server is taking too long to respond. Please try again.',
+          originalError: error,
+        };
+      }
+      
       return {
         type: ErrorType.NETWORK,
         message: 'Network error: Unable to connect to the server',
@@ -121,6 +133,18 @@ export function requiresAuthRedirect(error: ErrorInfo): boolean {
  * Note: This returns the key without the namespace prefix since ErrorDisplay uses useTranslations('errors')
  */
 export function getErrorMessageKey(error: ErrorInfo): string {
+  // Check if it's a timeout error
+  if (error.type === ErrorType.NETWORK) {
+    const isTimeout = error.originalError?.code === 'ECONNABORTED' || 
+                     error.originalError?.message?.includes('timeout') ||
+                     error.originalError?.message?.includes('exceeded') ||
+                     error.message?.includes('timeout') ||
+                     error.message?.includes('taking too long');
+    if (isTimeout) {
+      return 'timeout';
+    }
+  }
+  
   switch (error.type) {
     case ErrorType.NETWORK:
       return 'network';

@@ -63,6 +63,9 @@
     "deleteConversation": "Delete conversation",
     "deleteConversationConfirm": "Are you sure you want to delete this conversation?",
     "deleting": "Deleting...",
+    "searchConversations": "Search conversations...",
+    "noSearchResults": "No search results found",
+    "noSearchResultsMessage": "No conversations match your search. Try different keywords.",
     "conversation": {
       "title": "Conversation",
       "sendMessage": "Send a message",
@@ -82,7 +85,10 @@
       "messageRequired": "Please enter a message",
       "messageTooLong": "Message must be 5000 characters or less",
       "imageUrlTooLong": "Image URL must be 500 characters or less",
-      "deletedMessage": "Deleted message"
+      "deletedMessage": "Deleted message",
+      "searchMessages": "Search messages...",
+      "noSearchResults": "No search results found",
+      "noSearchResultsMessage": "No messages match your search. Try different keywords."
     },
     "backToConversations": "Back to conversations",
     "sendMessage": "Send Message",
@@ -174,6 +180,7 @@
     "registration_failed": "Registration failed. Please try again.",
     "network_error": "Network error. Please check your connection.",
     "network": "A network error occurred. Please check your internet connection.",
+    "timeout": "Request timeout: The server is taking too long to respond. Please try again later.",
     "unauthorized": "Authentication required. Please log in.",
     "forbidden": "You don't have permission to perform this action.",
     "notFound": "The requested resource was not found.",
@@ -470,6 +477,9 @@
       "bio": "Tell us about yourself",
       "country": "e.g. Japan",
       "phone": "+1-555-1234"
+    },
+    "country": {
+      "select": "Please select"
     },
     "gender": {
       "select": "Please select",

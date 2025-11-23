@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -17,139 +17,96 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
+import { getUserTimezone } from '@/lib/utils/timezone';
 import { Trash2, Plus, Search } from 'lucide-react';
-import { setAuthToken } from '@/lib/api/client';
 import { useUser } from '@/contexts/UserContext';
+import { useDataLoader } from '@/lib/hooks/useDataLoader';
 
 export default function GroupsPage() {
-  const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('groups');
-  const [groups, setGroups] = useState<Group[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
-
   const [searchQuery, setSearchQuery] = useState('');
-  const [isSearching, setIsSearching] = useState(false);
 
-  const GROUPS_PER_PAGE = 20;
-  const isMountedRef = useRef(true);
-
-  // コンポーネントのマウント状態を追跡
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
-
-  // グループを取得
-  const loadGroups = async (reset: boolean = false, query: string = '') => {
-    try {
-      if (!isMountedRef.current) return;
-      const currentPage = reset ? 0 : page;
-      setIsLoading(reset);
-      setIsLoadingMore(!reset);
-
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          if (!isMountedRef.current) return;
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          if (!isMountedRef.current) return;
-          setAuthToken(null);
-        }
-      } else {
-        setAuthToken(null);
-      }
-
+  // Unified data loader for groups
+  const {
+    items: groups,
+    isLoading,
+    isLoadingMore,
+    isRefreshing,
+    error,
+    hasMore,
+    load,
+    loadMore,
+    refresh,
+    retry,
+    clearError,
+  } = useDataLoader<Group>({
+    loadFn: useCallback(async (skip, limit) => {
       let response;
-      if (query.trim()) {
-        setIsSearching(true);
-        response = await searchGroups(
-          query,
-          currentPage * GROUPS_PER_PAGE,
-          GROUPS_PER_PAGE
-        );
+      if (searchQuery.trim()) {
+        response = await searchGroups(searchQuery, skip, limit);
       } else {
-        setIsSearching(false);
-        response = await getGroups(
-          currentPage * GROUPS_PER_PAGE,
-          GROUPS_PER_PAGE
-        );
+        response = await getGroups(skip, limit);
       }
+      return {
+        items: response.groups,
+        total: response.total,
+      };
+    }, [searchQuery]),
+    pageSize: 20,
+    autoLoad: true,
+    requireAuth: true,
+    retryConfig: {
+      maxRetries: 3,
+      retryDelay: 1000,
+      autoRetry: true,
+    },
+    cacheConfig: {
+      enabled: true,
+      ttl: 5 * 60 * 1000, // 5 minutes
+    },
+  });
 
-      if (!isMountedRef.current) return;
-
-      if (reset) {
-        setGroups(response.groups);
-        setPage(0);
-      } else {
-        setGroups([...groups, ...response.groups]);
-      }
-
-      setHasMore(response.groups.length === GROUPS_PER_PAGE);
-      setError(null);
-    } catch (err: any) {
-      if (!isMountedRef.current) return;
-      console.error('Failed to load groups:', err);
-      const errorInfo = extractErrorInfo(err);
-      setError(errorInfo);
-    } finally {
-      if (isMountedRef.current) {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
-    }
-  };
-
-  // 認証チェックと初期読み込み
+  // Reload when search query changes (with debounce)
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
-    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
-    // （クライアントサイドナビゲーションで状態が維持されている場合）
-    if (authLoading && !isAuthenticated) return;
-
-    if (!isAuthenticated) {
-      // 未認証の場合はホームにリダイレクト
-      if (!isRedirecting) {
-        setIsRedirecting(true);
-        router.push('/');
-      }
-      return;
+    if (authLoading || !isAuthenticated) return;
+    
+    // Clear previous timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+    
+    // Debounce search queries
+    searchTimeoutRef.current = setTimeout(() => {
+      load(true);
+    }, 500); // 500ms debounce for search
 
-    loadGroups(true, searchQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated]);
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, authLoading, isAuthenticated, load]);
 
-  // 検索ハンドラー
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated && !isRedirecting) {
+      setIsRedirecting(true);
+      router.push('/');
+    }
+  }, [authLoading, isAuthenticated, isRedirecting, router]);
+
+  // 検索ハンドラー（デバウンス処理付き）
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
     setSearchQuery(query);
-
-    // デバウンス処理（簡易実装）
-    const timeoutId = setTimeout(() => {
-      loadGroups(true, query);
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  };
-
-  // さらに読み込む
-  const handleLoadMore = () => {
-    setIsLoadingMore(true);
-    setPage(page + 1);
-    loadGroups(false, searchQuery);
+    // useEffectで自動的に再読み込みされる
   };
 
   // グループを削除
@@ -158,39 +115,31 @@ export default function GroupsPage() {
       return;
     }
 
+    setDeletingGroupId(groupId);
+    setDeletingGroupId(groupId);
     try {
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          setAuthToken(null);
-        }
-      }
-
-      setDeletingGroupId(groupId);
       await deleteGroup(groupId);
-      // 削除後、リストから除外
-      setGroups(groups.filter(g => g.id !== groupId));
+      // Refresh list to remove deleted group
+      await refresh();
     } catch (err: any) {
       console.error('Failed to delete group:', err);
-      alert(t('errorLoading'));
+      alert(t('errorDeletingGroup') || t('errorLoading'));
     } finally {
       setDeletingGroupId(null);
     }
   };
 
-  // 時間表示のフォーマット
+  // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';
+    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
     const date = new Date(dateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
   };
 
-  if ((authLoading && !isAuthenticated) || isLoading || isRedirecting) {
+  // Full page loading only for initial auth or redirect
+  if ((authLoading && !isAuthenticated) || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -238,12 +187,12 @@ export default function GroupsPage() {
             </div>
           </div>
 
-          {/* Error message */}
+          {/* Error message - shown even when data exists (optimistic UI) */}
           {error && (
             <div className="mb-6">
               <ErrorDisplay
                 error={error}
-                onRetry={() => loadGroups(true)}
+                onRetry={retry}
                 showDetails={false}
               />
             </div>
@@ -251,7 +200,25 @@ export default function GroupsPage() {
 
           {/* Groups list */}
           <div className="bg-white rounded-lg shadow">
-            {groups.length === 0 ? (
+            {/* Show refresh indicator if refreshing */}
+            {isRefreshing && (
+              <div className="p-4 border-b border-gray-200 bg-blue-50">
+                <div className="flex items-center justify-center text-blue-600">
+                  <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-2" />
+                  <span className="text-sm">{t('refreshing') || '更新中...'}</span>
+                </div>
+              </div>
+            )}
+
+            {/* Loading state - only show spinner if no data exists */}
+            {isLoading && groups.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="flex justify-center items-center">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                </div>
+                <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+              </div>
+            ) : groups.length === 0 ? (
               <div className="p-12 text-center">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
@@ -367,7 +334,7 @@ export default function GroupsPage() {
                 {hasMore && (
                   <div className="flex justify-center p-6 border-t border-gray-200">
                     <button
-                      onClick={handleLoadMore}
+                      onClick={loadMore}
                       disabled={isLoadingMore}
                       className={`px-6 py-3 rounded-lg font-medium transition-colors ${isLoadingMore
                         ? 'bg-gray-300 text-gray-500 cursor-not-allowed'

@@ -2,11 +2,11 @@
 Post schemas for API request/response validation.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class PostBase(BaseModel):
@@ -27,6 +27,15 @@ class PostImageResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class PostCreate(PostBase):
@@ -65,22 +74,6 @@ class PostAuthor(BaseModel):
     model_config = {"from_attributes": True}
 
 
-class PostResponse(PostBase):
-    """Schema for post responses."""
-
-    id: UUID
-    user_id: UUID
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
-    author: Optional[PostAuthor] = None
-    like_count: int = 0
-    comment_count: int = 0
-    is_liked_by_current_user: bool = False
-
-    model_config = {"from_attributes": True}
-
-
 class PostLikeCreate(BaseModel):
     """Schema for creating a post like."""
 
@@ -98,6 +91,15 @@ class PostLikeResponse(BaseModel):
     user: Optional[PostAuthor] = None
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class PostCommentBase(BaseModel):
@@ -134,6 +136,15 @@ class PostCommentResponse(PostCommentBase):
 
     model_config = {"from_attributes": True}
 
+    @field_serializer("created_at", "updated_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
 
 class HashtagResponse(BaseModel):
     """Schema for hashtag responses."""
@@ -143,6 +154,15 @@ class HashtagResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class MentionResponse(BaseModel):
@@ -173,6 +193,15 @@ class PostResponse(PostBase):
     images: List[PostImageResponse] = []
 
     model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", "updated_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class PostDetailResponse(PostResponse):

@@ -20,6 +20,7 @@ import {
 import { getUnreadCount } from '@/lib/api/notifications';
 import { setAuthToken } from '@/lib/api/client';
 import { addLocalePrefix } from '@/lib/utils/locale';
+import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
 
 interface NotificationContextValue {
   // Real-time connection status
@@ -131,8 +132,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
     if (isAuthenticated) {
       const fetchUnreadCount = async () => {
         try {
-          // Get and set authentication token
-          const token = await getAccessTokenSilently();
+          // Use tokenManager to prevent duplicate token requests
+          const token = await getAccessTokenFromManager(getAccessTokenSilently);
           setAuthToken(token);
           
           const count = await getUnreadCount();
@@ -144,7 +145,11 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
         }
       };
       
-      fetchUnreadCount();
+      // Add a small delay to avoid conflicts with other initial API calls
+      const timeoutId = setTimeout(() => {
+        fetchUnreadCount();
+      }, 100);
+      return () => clearTimeout(timeoutId);
     } else {
       setUnreadCount(0);
     }

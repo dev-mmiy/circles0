@@ -2,11 +2,11 @@
 Pydantic schemas for notifications.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_serializer
 
 from app.models.notification import NotificationType
 
@@ -80,6 +80,15 @@ class NotificationResponse(NotificationBase):
 
     class Config:
         from_attributes = True
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
 class NotificationListResponse(BaseModel):

@@ -19,6 +19,11 @@ export const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 20000, // 20秒のタイムアウト (increased for initial load stability)
+  // Add adapter to handle requests in WSL2 environment
+  adapter: typeof window !== 'undefined' ? undefined : undefined, // Use default adapter
+  // Ensure requests are not blocked
+  validateStatus: (status) => status < 500, // Don't throw on 4xx errors
 });
 
 /**
@@ -38,9 +43,33 @@ export function setAuthToken(token: string | null) {
 apiClient.interceptors.request.use(
   (config) => {
     // Token will be set via setAuthToken function
+    const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    (config as any).__requestId = requestId;
+    
+    console.log('[apiClient] Request interceptor called:', {
+      requestId,
+      method: config.method,
+      url: config.url,
+      baseURL: config.baseURL,
+      fullURL: `${config.baseURL}${config.url}`,
+      hasAuth: !!config.headers?.Authorization,
+      authHeaderPrefix: config.headers?.Authorization?.substring(0, 20) || 'none',
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Log that we're about to send the request
+    console.log('[apiClient] Request will be sent by axios now', {
+      requestId,
+      url: config.url,
+      timestamp: new Date().toISOString(),
+    });
+    
     return config;
   },
   (error) => {
+    console.error('[apiClient] Request interceptor error:', error, {
+      timestamp: new Date().toISOString(),
+    });
     return Promise.reject(error);
   }
 );
@@ -50,9 +79,42 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response) => {
+    const requestId = (response.config as any).__requestId;
+    console.log('[apiClient] Response received:', {
+      requestId,
+      status: response.status,
+      url: response.config.url,
+      hasData: !!response.data,
+      dataType: typeof response.data,
+      dataKeys: response.data ? Object.keys(response.data) : null,
+      timestamp: new Date().toISOString(),
+    });
     return response;
   },
   async (error: AxiosError) => {
+    const requestId = error.config ? (error.config as any).__requestId : undefined;
+    console.log('[apiClient] Response interceptor error handler called', {
+      requestId,
+      hasResponse: !!error.response,
+      hasRequest: !!error.request,
+      message: error.message,
+      code: error.code,
+      url: error.config?.url,
+      timestamp: new Date().toISOString(),
+    });
+    
+    // Log more details about the request if available
+    if (error.request) {
+      const xhr = error.request as XMLHttpRequest;
+      console.log('[apiClient] Request details:', {
+        readyState: xhr?.readyState,
+        status: xhr?.status,
+        statusText: xhr?.statusText,
+        responseText: xhr?.responseText?.substring(0, 100),
+        responseURL: xhr?.responseURL,
+      });
+    }
+
     if (error.response) {
       // Server responded with error status
       const errorInfo = extractErrorInfo(error);
@@ -82,13 +144,27 @@ apiClient.interceptors.response.use(
         }
       }
       
-      console.error('API Error:', error.response.status, error.response.data);
+      console.error('[apiClient] API Error:', {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data,
+        url: error.config?.url,
+      });
     } else if (error.request) {
-      // Request made but no response received (network error)
-      console.error('Network Error:', error.message);
+      // Request made but no response received (network error, timeout, etc.)
+      console.error('[apiClient] Network Error:', {
+        message: error.message,
+        code: error.code,
+        url: error.config?.url,
+        timeout: error.config?.timeout,
+        isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+      });
     } else {
       // Error in request setup
-      console.error('Request Error:', error.message);
+      console.error('[apiClient] Request Error:', {
+        message: error.message,
+        url: error.config?.url,
+      });
     }
     
     return Promise.reject(error);

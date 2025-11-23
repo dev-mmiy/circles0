@@ -226,12 +226,13 @@ class MessageService:
         """
         # Get conversations where user is user1 or user2
         # Exclude conversations that user has deleted
+        # Note: We don't use joinedload for messages here to avoid loading all messages
+        # Instead, we load the last message separately for each conversation
         query = (
             db.query(Conversation)
             .options(
                 joinedload(Conversation.user1),
                 joinedload(Conversation.user2),
-                joinedload(Conversation.messages).joinedload(Message.sender),
             )
             .filter(
                 or_(
@@ -252,10 +253,14 @@ class MessageService:
 
         conversations = query.all()
 
-        # Load last message for each conversation
+        # Load last message for each conversation with sender and reads information
         for conversation in conversations:
             last_message = (
                 db.query(Message)
+                .options(
+                    joinedload(Message.sender),
+                    joinedload(Message.reads),
+                )
                 .filter(
                     Message.conversation_id == conversation.id,
                     Message.is_deleted == False,
@@ -347,6 +352,56 @@ class MessageService:
             .filter(
                 Message.conversation_id == conversation_id,
                 Message.is_deleted == False,
+            )
+            .order_by(desc(Message.created_at))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+        # Reverse to show oldest first
+        messages.reverse()
+
+        return messages
+
+    @staticmethod
+    def search_messages(
+        db: Session,
+        conversation_id: UUID,
+        user_id: UUID,
+        query: str,
+        skip: int = 0,
+        limit: int = 50,
+    ) -> List[Message]:
+        """
+        Search messages in a conversation by content.
+
+        Args:
+            db: Database session
+            conversation_id: Conversation ID
+            user_id: User ID (must be a participant)
+            query: Search query string
+            skip: Number of messages to skip
+            limit: Maximum number of messages to return
+
+        Returns:
+            List of messages matching the query
+        """
+        # Verify user is a participant
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
+        if not conversation:
+            return []
+
+        # Search messages by content (case-insensitive partial match)
+        messages = (
+            db.query(Message)
+            .options(joinedload(Message.sender), joinedload(Message.reads))
+            .filter(
+                Message.conversation_id == conversation_id,
+                Message.is_deleted == False,
+                Message.content.ilike(f"%{query}%"),
             )
             .order_by(desc(Message.created_at))
             .offset(skip)
@@ -503,37 +558,42 @@ class MessageService:
         Returns:
             Number of unread messages
         """
-        # Verify user is a participant
-        conversation = MessageService.get_conversation_by_id(
-            db, conversation_id, user_id
+        # Verify user is a participant (optimized - just check if conversation exists)
+        conversation = (
+            db.query(Conversation)
+            .filter(
+                Conversation.id == conversation_id,
+                or_(
+                    Conversation.user1_id == user_id,
+                    Conversation.user2_id == user_id,
+                ),
+            )
+            .first()
         )
         if not conversation:
             return 0
 
-        # Get all messages in conversation that are not from the user
-        all_message_ids = [
-            m.id
-            for m in db.query(Message)
+        # Optimized: Use COUNT with LEFT JOIN instead of loading all message IDs
+        # Count messages that are not from the user and not deleted
+        # and don't have a corresponding MessageRead record
+        # Note: Using subquery for better performance
+        unread_count = (
+            db.query(func.count(Message.id))
+            .select_from(Message)
+            .outerjoin(
+                MessageRead,
+                and_(
+                    MessageRead.message_id == Message.id,
+                    MessageRead.reader_id == user_id,
+                ),
+            )
             .filter(
                 Message.conversation_id == conversation_id,
                 Message.sender_id != user_id,
                 Message.is_deleted == False,
+                MessageRead.id.is_(None),  # Messages that haven't been read
             )
-            .all()
-        ]
+            .scalar()
+        )
 
-        if not all_message_ids:
-            return 0
-
-        # Get read message IDs
-        read_message_ids = {
-            mr.message_id
-            for mr in db.query(MessageRead)
-            .filter(
-                MessageRead.reader_id == user_id,
-                MessageRead.message_id.in_(all_message_ids),
-            )
-            .all()
-        }
-
-        return len(all_message_ids) - len(read_message_ids)
+        return unread_count or 0

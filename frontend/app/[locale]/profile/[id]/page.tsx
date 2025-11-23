@@ -19,6 +19,7 @@ import { findOrCreateConversation } from '@/lib/api/messages';
 import { setAuthToken } from '@/lib/api/client';
 import { MessageCircle } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
+import { getCountryName } from '@/lib/utils/countries';
 
 export default function PublicProfilePage() {
   const t = useTranslations('publicProfilePage');
@@ -347,7 +348,7 @@ export default function PublicProfilePage() {
               )}
 
               <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
-                {profile.country && <span>📍 {profile.country.toUpperCase()}</span>}
+                {profile.country && <span>📍 {getCountryName(profile.country, locale)}</span>}
                 <span>📅 {t('registered')} {new Date(profile.created_at).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US')}</span>
               </div>
             </div>
