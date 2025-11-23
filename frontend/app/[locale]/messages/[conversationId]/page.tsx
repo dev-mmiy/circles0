@@ -83,10 +83,10 @@ export default function ConversationPage() {
 
   // 会話を取得
   const loadConversation = async () => {
-    console.log('[ConversationPage] loadConversation called', { conversationId });
+    debugLog.log('[ConversationPage] loadConversation called', { conversationId });
     
     if (!isMountedRef.current) {
-      console.log('[ConversationPage] Not mounted, returning');
+      debugLog.log('[ConversationPage] Not mounted, returning');
       return null;
     }
 
@@ -96,7 +96,7 @@ export default function ConversationPage() {
         { reset: false, skipLoadingState: true }
       );
       
-      console.log('[ConversationPage] loadConversation response', { conversation: !!conv, isMounted: isMountedRef.current });
+      debugLog.log('[ConversationPage] loadConversation response', { conversation: !!conv, isMounted: isMountedRef.current });
       
       if (conv && isMountedRef.current) {
         setConversation(conv);
@@ -104,16 +104,16 @@ export default function ConversationPage() {
       }
       return conv;
     } catch (err) {
-      console.error('[ConversationPage] loadConversation error:', err);
+      debugLog.error('[ConversationPage] loadConversation error:', err);
       return null;
     }
   };
 
   const loadMessages = async (reset: boolean = false, skipLoadingState: boolean = false) => {
-    console.log('[ConversationPage] loadMessages called', { reset, skipLoadingState, conversationId });
+    debugLog.log('[ConversationPage] loadMessages called', { reset, skipLoadingState, conversationId });
     
     if (!isMountedRef.current) {
-      console.log('[ConversationPage] Not mounted, returning');
+      debugLog.log('[ConversationPage] Not mounted, returning');
       return;
     }
 
@@ -130,7 +130,7 @@ export default function ConversationPage() {
         { reset, skipLoadingState }
       );
 
-      console.log('[ConversationPage] loadMessages response', { 
+      debugLog.log('[ConversationPage] loadMessages response', { 
         response: !!response, 
         messagesCount: response?.messages?.length, 
         isMounted: isMountedRef.current,
@@ -139,7 +139,7 @@ export default function ConversationPage() {
       });
 
       if (!response) {
-        console.warn('[ConversationPage] No response received from executeWithLoading');
+        debugLog.warn('[ConversationPage] No response received from executeWithLoading');
         // エラーが発生した場合でもinitialLoadingを解除する
         if (reset) {
           setInitialLoading(false);
@@ -148,14 +148,14 @@ export default function ConversationPage() {
       }
 
       if (!isMountedRef.current) {
-        console.log('[ConversationPage] Not mounted, returning');
+        debugLog.log('[ConversationPage] Not mounted, returning');
         return;
       }
 
       if (reset) {
         setMessages(response.messages);
         setPage(0);
-        console.log('[ConversationPage] Messages reset, count:', response.messages.length);
+        debugLog.log('[ConversationPage] Messages reset, count:', response.messages.length);
         // メッセージ読み込み後、既読にする
         setTimeout(async () => {
           if (!isMountedRef.current) return;
@@ -165,35 +165,35 @@ export default function ConversationPage() {
               { reset: false, skipLoadingState: true }
             );
           } catch (err) {
-            console.error('Failed to mark messages as read:', err);
+            debugLog.error('Failed to mark messages as read:', err);
           }
         }, 500);
       } else {
         // 古いメッセージを先頭に追加
         setMessages([...response.messages, ...messages]);
-        console.log('[ConversationPage] Messages appended, total count:', response.messages.length + messages.length);
+        debugLog.log('[ConversationPage] Messages appended, total count:', response.messages.length + messages.length);
       }
 
       setHasMore(response.messages.length === MESSAGES_PER_PAGE);
       clearError();
     } catch (err) {
-      console.error('[ConversationPage] loadMessages error:', err);
+      debugLog.error('[ConversationPage] loadMessages error:', err);
       // エラーが発生してもローディング状態はexecuteWithLoading内で解除される
     }
   };
 
   // 認証チェックと初期読み込み
   useEffect(() => {
-    console.log('[ConversationPage] Auth check useEffect', { authLoading, isAuthenticated, conversationId, isRedirecting });
+    debugLog.log('[ConversationPage] Auth check useEffect', { authLoading, isAuthenticated, conversationId, isRedirecting });
     
     if (authLoading && !isAuthenticated) {
-      console.log('[ConversationPage] Auth still loading, skipping');
+      debugLog.log('[ConversationPage] Auth still loading, skipping');
       return;
     }
 
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
-      console.log('[ConversationPage] Not authenticated, redirecting');
+      debugLog.log('[ConversationPage] Not authenticated, redirecting');
       setInitialLoading(false);
       if (!isRedirecting) {
         setIsRedirecting(true);
@@ -206,7 +206,7 @@ export default function ConversationPage() {
     let isCancelled = false;
     
     const loadData = async () => {
-      console.log('[ConversationPage] Starting loadData', { conversationId, isMounted: isMountedRef.current });
+      debugLog.log('[ConversationPage] Starting loadData', { conversationId, isMounted: isMountedRef.current });
       try {
         // Promise.allSettledを使用して、どちらかが失敗しても続行する
         const results = await Promise.allSettled([
@@ -214,7 +214,7 @@ export default function ConversationPage() {
           loadMessages(true, false), // skipLoadingState: false に変更してローディング状態を管理
         ]);
         
-        console.log('[ConversationPage] loadData results', results.map(r => ({ 
+        debugLog.log('[ConversationPage] loadData results', results.map(r => ({ 
           status: r.status, 
           hasValue: r.status === 'fulfilled' && !!r.value,
           valueType: r.status === 'fulfilled' ? typeof r.value : 'N/A',
@@ -225,12 +225,12 @@ export default function ConversationPage() {
         results.forEach((result, index) => {
           const name = index === 0 ? 'conversation' : 'messages';
           if (result.status === 'rejected') {
-            console.error(`[ConversationPage] Failed to load ${name}:`, result.reason);
+            debugLog.error(`[ConversationPage] Failed to load ${name}:`, result.reason);
           } else if (result.status === 'fulfilled') {
             if (!result.value) {
-              console.warn(`[ConversationPage] ${name} returned null/undefined`);
+              debugLog.warn(`[ConversationPage] ${name} returned null/undefined`);
             } else {
-              console.log(`[ConversationPage] ${name} loaded successfully`, {
+              debugLog.log(`[ConversationPage] ${name} loaded successfully`, {
                 type: typeof result.value,
                 keys: typeof result.value === 'object' && result.value ? Object.keys(result.value) : null,
                 messagesCount: index === 1 ? (result.value as any)?.messages?.length : undefined,
@@ -241,11 +241,11 @@ export default function ConversationPage() {
         
         // 必ずinitialLoadingをfalseにする（成功・失敗に関わらず）
         if (!isCancelled) {
-          console.log('[ConversationPage] Setting initialLoading to false');
+          debugLog.log('[ConversationPage] Setting initialLoading to false');
           setInitialLoading(false);
         }
       } catch (err) {
-        console.error('[ConversationPage] Failed to load data:', err);
+        debugLog.error('[ConversationPage] Failed to load data:', err);
         // エラーが発生してもinitialLoadingをfalseにする
         if (!isCancelled) {
           setInitialLoading(false);
@@ -263,7 +263,7 @@ export default function ConversationPage() {
 
   // リアルタイムメッセージ更新
   const handleNewMessage = (messageEvent: MessageEvent) => {
-    console.log('[handleNewMessage] Received message event:', {
+    debugLog.log('[handleNewMessage] Received message event:', {
       messageId: messageEvent.id,
       conversationId: messageEvent.conversation_id,
       currentConversationId: conversationId,
@@ -273,7 +273,7 @@ export default function ConversationPage() {
 
     // 現在の会話のメッセージのみ処理
     if (messageEvent.conversation_id !== conversationId) {
-      console.log('[handleNewMessage] Skipping message - conversation_id mismatch');
+      debugLog.log('[handleNewMessage] Skipping message - conversation_id mismatch');
       return;
     }
 
@@ -297,10 +297,10 @@ export default function ConversationPage() {
     setMessages(prev => {
       // 重複チェック（最新の状態を参照）
       if (prev.some(m => m.id === newMessage.id)) {
-        console.log('[handleNewMessage] Message already exists, skipping duplicate');
+        debugLog.log('[handleNewMessage] Message already exists, skipping duplicate');
         return prev;
       }
-      console.log('[handleNewMessage] Adding new message');
+      debugLog.log('[handleNewMessage] Adding new message');
       const updated = [...prev, newMessage];
       // メッセージ追加後にスクロール
       setTimeout(() => {
@@ -321,7 +321,7 @@ export default function ConversationPage() {
             { reset: false, skipLoadingState: true }
           );
         } catch (err) {
-          console.error('Failed to mark message as read:', err);
+          debugLog.error('Failed to mark message as read:', err);
         }
       }, 500);
     }
@@ -409,7 +409,7 @@ export default function ConversationPage() {
       if (!newMessage) {
         throw new Error('Failed to send message');
       }
-      console.log('[handleSendMessage] Message sent successfully:', {
+      debugLog.log('[handleSendMessage] Message sent successfully:', {
         id: newMessage.id,
         conversation_id: newMessage.conversation_id,
         currentConversationId: conversationId,
@@ -424,10 +424,10 @@ export default function ConversationPage() {
         setMessages(prev => {
           // 重複チェック（SSE経由で既に追加されている可能性がある）
           if (prev.some(m => m.id === newMessage.id)) {
-            console.log('[handleSendMessage] Message already exists (added via SSE), skipping');
+            debugLog.log('[handleSendMessage] Message already exists (added via SSE), skipping');
             return prev;
           }
-          console.log('[handleSendMessage] Adding message (SSE may have been delayed)');
+          debugLog.log('[handleSendMessage] Adding message (SSE may have been delayed)');
           const updated = [...prev, newMessage];
           // メッセージ追加後にスクロール
           setTimeout(() => {
@@ -443,10 +443,10 @@ export default function ConversationPage() {
       
       // 会話情報を更新（非同期で実行）
       loadConversation().catch((err) => {
-        console.error('Failed to load conversation:', err);
+        debugLog.error('Failed to load conversation:', err);
       });
     } catch (err: any) {
-      console.error('Failed to send message:', err);
+      debugLog.error('Failed to send message:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
       alert(tConv('errorSending') + ': ' + errorInfo.message);
@@ -469,7 +469,7 @@ export default function ConversationPage() {
         setMessages(prev => prev.filter(m => m.id !== messageId));
       }
     } catch (err: any) {
-      console.error('Failed to delete message:', err);
+      debugLog.error('Failed to delete message:', err);
       alert(tConv('errorLoading'));
     } finally {
       setDeletingMessageId(null);
