@@ -28,6 +28,7 @@ import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib
 import { ArrowLeft, Trash2, Send, Search, X } from 'lucide-react';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useAuthWithLoader } from '@/lib/hooks/useAuthWithLoader';
+import { debugLog } from '@/lib/utils/debug';
 
 export default function ConversationPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
