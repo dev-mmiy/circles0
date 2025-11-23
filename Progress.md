@@ -373,6 +373,8 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### 優先度: 中
 1. **パフォーマンス最適化の確認** ⏳ 進行中
+   - [x] get_feedのN+1クエリ問題の修正 ✅ 完了（2025-11-21）
+   - [x] get_conversationsのN+1クエリ問題の修正 ✅ 完了
    - [ ] 未読数計算のパフォーマンス測定（本番環境）
    - [ ] 必要に応じてキャッシュ導入
    - [ ] データベースクエリのプロファイリング
@@ -1652,6 +1654,28 @@ Auth0を使用したOAuth2.0認証システム。
   - **実装ファイル**:
     - [frontend/components/PostForm.tsx](frontend/components/PostForm.tsx) - 型定義とPromise判定の修正
 
+- **バックエンドインポートエラーの修正** ✅ 完了
+  - **問題**: ローカル環境でメッセージAPIにアクセスすると「name 'Message' is not defined」エラーが発生
+  - **原因**: `backend/app/api/messages.py`で`Message`と`MessageRead`モデルのインポートが不足していた
+  - **解決策**:
+    - `app.models.message`から`Message`と`MessageRead`をインポート
+    - `sqlalchemy`の`and_`と`func`のインポートをファイル先頭に移動（ローカルインポートを削除）
+  - **実装ファイル**:
+    - [backend/app/api/messages.py](backend/app/api/messages.py) - インポート文の追加と整理
+
+- **get_feedのN+1クエリ問題の修正** ✅ 完了
+  - **問題**: `get_feed`エンドポイントで各投稿に対して個別にクエリを実行しており、N+1クエリが発生していた
+  - **原因**: `_build_post_response`関数内で各投稿ごとに`get_like_count`, `get_comment_count`, `is_liked_by_user`, `get_hashtags_for_post`, `get_mentions_for_post`を呼び出していた
+  - **解決策**:
+    - すべての投稿のlike_count、comment_count、liked status、hashtags、mentionsを一括取得するクエリを追加
+    - `_build_post_response_optimized`関数を作成し、事前取得したデータを使用するように変更
+    - `get_feed`, `get_user_posts`, `get_posts_by_hashtag`エンドポイントに最適化を適用
+  - **効果**:
+    - 20件の投稿の場合、データベースクエリ数が101回以上から6回に大幅削減
+    - レスポンス時間の短縮が期待される
+  - **実装ファイル**:
+    - [backend/app/api/posts.py](backend/app/api/posts.py) - 一括取得クエリと最適化されたレスポンス構築関数の追加
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1704,6 +1728,8 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+aab0af4 - Optimize get_feed to eliminate N+1 queries (2025-11-21)
+d2b0a44 - fix: Fix missing imports in messages.py (2025-11-21)
 14a4e02 - fix: Fix TypeScript error in PostForm.tsx (2025-11-21)
 c52827e - refactor: Clean up debug logs and disable in production (2025-11-21)
 6dc9906 - feat: Implement group search and fix translation lints (2025-11-20)
@@ -1731,6 +1757,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-21（デバッグログ整理完了）
+**最終更新日**: 2025-11-21（get_feedのN+1クエリ最適化完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了
