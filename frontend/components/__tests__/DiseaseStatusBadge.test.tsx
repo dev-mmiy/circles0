@@ -26,8 +26,10 @@ describe('DiseaseStatusBadge', () => {
   const mockStatus: DiseaseStatus = {
     id: 1,
     status_code: 'ACTIVE',
-    name: 'Active',
-    description: 'Active disease',
+    display_order: 1,
+    is_active: true,
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z',
     translations: [],
   };
 
@@ -104,7 +106,7 @@ describe('DiseaseStatusBadge', () => {
     const statusWithCode: DiseaseStatus = {
       ...mockStatus,
       status_code: 'CURED',
-    };
+    } as DiseaseStatus;
     render(
       <DiseaseStatusBadge status={statusWithCode} statusCode="ACTIVE" />
     );
