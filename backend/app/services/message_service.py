@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
 
-from sqlalchemy import and_, desc, func, or_
+from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.block import Block
@@ -253,23 +253,60 @@ class MessageService:
 
         conversations = query.all()
 
-        # Load last message for each conversation with sender and reads information
-        for conversation in conversations:
-            last_message = (
+        if not conversations:
+            return conversations
+
+        # Optimize: Load all last messages in a single query using window function
+        # This avoids N+1 query problem
+        conversation_ids = [conv.id for conv in conversations]
+        
+        # Get latest message per conversation using window function approach
+        # First, get all messages for these conversations, ordered by created_at desc
+        # Then use a subquery to get only the first (latest) message per conversation
+        latest_messages_subquery = (
+            db.query(
+                Message.id,
+                Message.conversation_id,
+                func.row_number()
+                .over(
+                    partition_by=Message.conversation_id,
+                    order_by=desc(Message.created_at)
+                )
+                .label('rn')
+            )
+            .filter(
+                Message.conversation_id.in_(conversation_ids),
+                Message.is_deleted == False,
+            )
+            .subquery()
+        )
+        
+        # Get only the latest message (rn=1) for each conversation
+        latest_message_ids = (
+            db.query(latest_messages_subquery.c.id)
+            .filter(latest_messages_subquery.c.rn == 1)
+            .all()
+        )
+        
+        if latest_message_ids:
+            message_ids = [row[0] for row in latest_message_ids]
+            
+            # Load all latest messages with relationships in a single query
+            last_messages = (
                 db.query(Message)
                 .options(
                     joinedload(Message.sender),
                     joinedload(Message.reads),
                 )
-                .filter(
-                    Message.conversation_id == conversation.id,
-                    Message.is_deleted == False,
-                )
-                .order_by(desc(Message.created_at))
-                .first()
+                .filter(Message.id.in_(message_ids))
+                .all()
             )
-            if last_message:
-                conversation.messages = [last_message]
+            
+            # Map messages to conversations
+            messages_by_conversation = {msg.conversation_id: msg for msg in last_messages}
+            for conversation in conversations:
+                if conversation.id in messages_by_conversation:
+                    conversation.messages = [messages_by_conversation[conversation.id]]
 
         return conversations
 

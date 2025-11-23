@@ -116,7 +116,7 @@ def _build_message_response(
 
 
 def _build_conversation_response(
-    db: Session, conversation, current_user_id: UUID
+    db: Session, conversation, current_user_id: UUID, unread_count: int = None
 ) -> ConversationResponse:
     """Build conversation response with other user information and unread count."""
     # Determine other user
@@ -140,10 +140,11 @@ def _build_conversation_response(
         last_message_data = conversation.messages[-1]
         last_message = _build_message_response(db, last_message_data, current_user_id)
 
-    # Get unread count (re-enabled after performance optimization)
-    logger.debug(f"[_build_conversation_response] Getting unread count for conversation {conversation.id}")
-    unread_count = MessageService.get_unread_count(db, conversation.id, current_user_id)
-    logger.debug(f"[_build_conversation_response] Unread count: {unread_count}")
+    # Use provided unread_count or fetch it if not provided (for backward compatibility)
+    if unread_count is None:
+        logger.debug(f"[_build_conversation_response] Getting unread count for conversation {conversation.id}")
+        unread_count = MessageService.get_unread_count(db, conversation.id, current_user_id)
+        logger.debug(f"[_build_conversation_response] Unread count: {unread_count}")
 
     return ConversationResponse(
         id=conversation.id,
@@ -219,9 +220,42 @@ async def get_conversations(
 
     total = len(conversations)  # TODO: Get actual total count
 
+    # Optimize: Get all unread counts in a single query
+    conversation_ids = [conv.id for conv in conversations]
+    unread_counts = {}
+    if conversation_ids:
+        from app.models.message import MessageRead
+        from sqlalchemy import and_, func
+        
+        # Count unread messages per conversation in a single query
+        unread_counts_query = (
+            db.query(
+                Message.conversation_id,
+                func.count(Message.id).label('count')
+            )
+            .outerjoin(
+                MessageRead,
+                and_(
+                    MessageRead.message_id == Message.id,
+                    MessageRead.reader_id == user_id,
+                )
+            )
+            .filter(
+                Message.conversation_id.in_(conversation_ids),
+                Message.sender_id != user_id,
+                Message.is_deleted == False,
+                MessageRead.id.is_(None),
+            )
+            .group_by(Message.conversation_id)
+            .all()
+        )
+        unread_counts = {conv_id: count for conv_id, count in unread_counts_query}
+
+    # Build responses with pre-fetched unread counts
     response = ConversationListResponse(
         conversations=[
-            _build_conversation_response(db, conv, user_id) for conv in conversations
+            _build_conversation_response(db, conv, user_id, unread_counts.get(conv.id, 0))
+            for conv in conversations
         ],
         total=total,
         skip=skip,

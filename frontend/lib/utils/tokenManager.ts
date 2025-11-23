@@ -9,7 +9,7 @@ import { debugLog } from './debug';
 let tokenPromise: Promise<string> | null = null;
 let tokenCache: string | null = null;
 let tokenExpiry: number | null = null;
-const TOKEN_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const TOKEN_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes (increased for better caching in production)
 
 /**
  * Get the current token from cache if available and not expired
@@ -107,9 +107,9 @@ export async function getAccessToken(
   // Start new token request with retry logic
   debugLog.log('[tokenManager] Starting new token request', { timestamp: new Date().toISOString() });
   const newTokenPromise = (async () => {
-    const maxRetries = 2; // Reduced from 3 to 2 to fail faster
-    const retryDelay = 1000; // 1 second
-    const TOKEN_TIMEOUT = 12000; // 12 seconds per attempt (increased from 10s for better reliability)
+    const maxRetries = 2; // 2 retries = 3 total attempts (balanced: reliability vs server load)
+    const initialRetryDelay = 1000; // 1 second for first retry
+    const TOKEN_TIMEOUT = 20000; // 20 seconds per attempt (increased for production network latency)
     let lastError: any = null;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -136,23 +136,32 @@ export async function getAccessToken(
         });
         
         // Add timeout wrapper as fallback (in case Auth0 doesn't respect timeout)
+        // Use AbortController for better timeout handling
+        let timeoutId: NodeJS.Timeout | null = null;
         const timeoutPromise = new Promise<never>((_, reject) => {
-          const timeoutId = setTimeout(() => {
+          timeoutId = setTimeout(() => {
             const elapsed = Date.now() - startTime;
             debugLog.error('[tokenManager] Token retrieval timeout', { 
               elapsed, 
               attempt,
               maxRetries,
               timeout: TOKEN_TIMEOUT,
-              timestamp: new Date().toISOString() 
+              timestamp: new Date().toISOString(),
+              willRetry: attempt < maxRetries
             });
-            reject(new Error(`Token retrieval timeout after ${TOKEN_TIMEOUT}ms`));
+            reject(new Error(`Token retrieval timeout after ${TOKEN_TIMEOUT}ms (attempt ${attempt}/${maxRetries})`));
           }, TOKEN_TIMEOUT);
-          // Store timeout ID for potential cleanup
-          (auth0TokenPromise as any).__timeoutId = timeoutId;
         });
         
-        const token = await Promise.race([auth0TokenPromise, timeoutPromise]);
+        let token: string;
+        try {
+          token = await Promise.race([auth0TokenPromise, timeoutPromise]);
+        } finally {
+          // Clean up timeout
+          if (timeoutId) {
+            clearTimeout(timeoutId);
+          }
+        }
         const elapsed = Date.now() - startTime;
         debugLog.log('[tokenManager] Token retrieved successfully', { 
           elapsed, 
@@ -180,8 +189,8 @@ export async function getAccessToken(
           throw error;
         }
         
-        // Wait before retrying (exponential backoff)
-        const delay = retryDelay * attempt;
+        // Wait before retrying (exponential backoff: 1s, 2s)
+        const delay = initialRetryDelay * attempt; // 1s for first retry, 2s for second retry
         debugLog.log(`[tokenManager] Retrying token retrieval in ${delay}ms...`, {
           attempt: attempt + 1,
           maxRetries,
