@@ -79,6 +79,26 @@ apiClient.interceptors.response.use(
     const requestStartTime = (response.config as any).__requestStartTime;
     const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
     
+    // Log performance metrics for optimized endpoints
+    const url = response.config.url || '';
+    const isPerformanceEndpoint = 
+      url.includes('/api/v1/posts?') || 
+      url.includes('/api/v1/messages/conversations?');
+    
+    if (isPerformanceEndpoint && elapsed) {
+      debugLog.log('[apiClient] Performance metrics:', {
+        requestId,
+        endpoint: url,
+        status: response.status,
+        elapsed: `${elapsed}ms`,
+        dataSize: response.data ? JSON.stringify(response.data).length : 0,
+        itemsCount: Array.isArray(response.data) ? response.data.length : 
+                   (response.data?.conversations ? response.data.conversations.length : 
+                    response.data?.items ? response.data.items.length : undefined),
+        timestamp: new Date().toISOString(),
+      });
+    }
+    
     debugLog.log('[apiClient] Response received:', {
       requestId,
       status: response.status,

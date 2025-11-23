@@ -152,11 +152,15 @@ async def get_feed(
         logger.info("[get_feed] Disease filter selected but no disease_id provided, returning empty")
         return []
 
+    import time
+    feed_start_time = time.time()
     posts = PostService.get_feed(db, user_id, skip, limit, filter_type, disease_id)
-    logger.debug(f"[get_feed] Posts retrieved: count={len(posts)}")
+    feed_elapsed = time.time() - feed_start_time
+    logger.debug(f"[get_feed] Posts retrieved: count={len(posts)} (took {feed_elapsed:.3f}s)")
 
     # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     post_ids = [post.id for post in posts]
+    bulk_fetch_start_time = time.time()
     
     # Get like counts for all posts in a single query
     from app.models.post import PostLike
@@ -224,9 +228,11 @@ async def get_feed(
             mentions_by_post[post_id] = []
         mentions_by_post[post_id].append(user)
     
-    logger.debug(f"[get_feed] Pre-fetched data: like_counts={len(like_counts)}, comment_counts={len(comment_counts)}, liked_posts={len(liked_post_ids)}, hashtags={len(hashtags_by_post)}, mentions={len(mentions_by_post)}")
+    bulk_fetch_elapsed = time.time() - bulk_fetch_start_time
+    logger.debug(f"[get_feed] Pre-fetched data: like_counts={len(like_counts)}, comment_counts={len(comment_counts)}, liked_posts={len(liked_post_ids)}, hashtags={len(hashtags_by_post)}, mentions={len(mentions_by_post)} (took {bulk_fetch_elapsed:.3f}s)")
     
     # Build responses with pre-fetched data
+    response_build_start_time = time.time()
     response = [
         _build_post_response_optimized(
             db, post, user_id,
@@ -238,7 +244,13 @@ async def get_feed(
         )
         for post in posts
     ]
-    logger.info(f"[get_feed] Response built successfully, returning {len(response)} posts")
+    response_build_elapsed = time.time() - response_build_start_time
+    total_elapsed = time.time() - feed_start_time
+    logger.info(
+        f"[get_feed] Response built successfully: {len(response)} posts "
+        f"(feed: {feed_elapsed:.3f}s, bulk_fetch: {bulk_fetch_elapsed:.3f}s, "
+        f"response_build: {response_build_elapsed:.3f}s, total: {total_elapsed:.3f}s)"
+    )
     
     return response
 

@@ -213,18 +213,22 @@ async def get_conversations(
 
     Returns conversations ordered by last message time (most recent first).
     """
+    import time
     logger.info(f"[get_conversations] Request received: skip={skip}, limit={limit}")
     user_id = get_user_id_from_token(db, current_user)
     logger.debug(f"[get_conversations] User ID: {user_id}")
 
+    conversations_start_time = time.time()
     conversations = MessageService.get_conversations(db, user_id, skip, limit)
-    logger.debug(f"[get_conversations] Conversations retrieved: count={len(conversations)}")
+    conversations_elapsed = time.time() - conversations_start_time
+    logger.debug(f"[get_conversations] Conversations retrieved: count={len(conversations)} (took {conversations_elapsed:.3f}s)")
 
     total = len(conversations)  # TODO: Get actual total count
 
     # Optimize: Get all unread counts in a single query
     conversation_ids = [conv.id for conv in conversations]
     unread_counts = {}
+    unread_counts_start_time = time.time()
     if conversation_ids:
         # Count unread messages per conversation in a single query
         unread_counts_query = (
@@ -249,8 +253,11 @@ async def get_conversations(
             .all()
         )
         unread_counts = {conv_id: count for conv_id, count in unread_counts_query}
+    unread_counts_elapsed = time.time() - unread_counts_start_time
+    logger.debug(f"[get_conversations] Unread counts fetched: {len(unread_counts)} conversations (took {unread_counts_elapsed:.3f}s)")
 
     # Build responses with pre-fetched unread counts
+    response_build_start_time = time.time()
     response = ConversationListResponse(
         conversations=[
             _build_conversation_response(db, conv, user_id, unread_counts.get(conv.id, 0))
@@ -260,7 +267,13 @@ async def get_conversations(
         skip=skip,
         limit=limit,
     )
-    logger.info(f"[get_conversations] Response built successfully: {len(conversations)} conversations")
+    response_build_elapsed = time.time() - response_build_start_time
+    total_elapsed = time.time() - conversations_start_time
+    logger.info(
+        f"[get_conversations] Response built successfully: {len(conversations)} conversations "
+        f"(conversations: {conversations_elapsed:.3f}s, unread_counts: {unread_counts_elapsed:.3f}s, "
+        f"response_build: {response_build_elapsed:.3f}s, total: {total_elapsed:.3f}s)"
+    )
     
     return response
 
