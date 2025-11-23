@@ -400,9 +400,9 @@ Auth0を使用したOAuth2.0認証システム。
    - [ ] 本番環境でのログ設定ガイド
 
 2. **コード品質の向上**
-   - [ ] ESLint警告の解消（`<img>`タグの`<Image />`への置換）
+   - [x] ESLint警告の解消（`<img>`タグの`<Image />`への置換） ✅ 完了（既に置換済み）
+   - [x] 型定義の改善 ✅ 完了（2025-11-23）
    - [ ] 未使用コードの削除
-   - [ ] 型定義の改善
    - [ ] コメントの充実
 
 ---
@@ -1703,6 +1703,30 @@ Auth0を使用したOAuth2.0認証システム。
 - **パフォーマンス測定と検証機能の追加** ✅ 完了
 
 - **テストの追加（useDataLoader、tokenManager）** ✅ 完了
+
+- **コード品質の向上（型定義の改善）** ✅ 完了
+  - **実装内容**:
+    - **TypeScript型エラーの修正**:
+      - `DiseaseStatusBadge.test.tsx`: `DiseaseStatus`型の定義を修正（不足していた必須フィールドを追加）
+      - `tsconfig.json`: `@testing-library/jest-dom`の型定義を追加
+      - `types/jest-dom.d.ts`: Jest DOM matcherの型定義ファイルを作成
+    - **効果**:
+      - すべてのTypeScript型エラーが解消された
+      - テストファイルの型安全性が向上
+      - IDEでの型補完が改善された
+  - **実装ファイル**:
+    - [frontend/components/__tests__/DiseaseStatusBadge.test.tsx](frontend/components/__tests__/DiseaseStatusBadge.test.tsx) - DiseaseStatus型の修正
+    - [frontend/tsconfig.json](frontend/tsconfig.json) - 型定義の追加
+    - [frontend/types/jest-dom.d.ts](frontend/types/jest-dom.d.ts) - Jest DOM型定義ファイル
+
+- **.nextディレクトリの権限問題とbuild-manifest.jsonエラーの修正** ✅ 完了
+  - **問題**: メッセージページで`build-manifest.json`が見つからないエラーが発生
+  - **原因**: `.next`ディレクトリのファイルが`root`ユーザーで作成されていたため、通常ユーザーがアクセスできない
+  - **解決策**:
+    - `.next`ディレクトリの所有権を`mmiy:mmiy`に変更
+    - フロントエンドを再ビルドして`build-manifest.json`を再生成
+  - **効果**: メッセージページが正常に動作するようになった
+  - **実装ファイル**: 権限修正のみ（コード変更なし）
   - **実装内容**:
     - **tokenManagerのユニットテスト**:
       - トークンキャッシュと取得のテスト
@@ -1809,6 +1833,8 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+[最新] - Fix TypeScript type errors in test files (2025-11-23)
+[最新] - Fix .next directory permissions and build-manifest.json error (2025-11-23)
 2c2fcb8 - Fix useDataLoader tests - simplify and adjust expectations (2025-11-21)
 2c2fcb8 - Add unit tests for tokenManager and useDataLoader (2025-11-21)
 cb03d6b - Add performance measurement and monitoring (2025-11-21)
@@ -1842,6 +1868,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-21（パフォーマンス測定機能追加完了）
+**最終更新日**: 2025-11-23（コード品質向上と型定義改善完了）
 **最終更新者**: Claude Code
 **ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了
