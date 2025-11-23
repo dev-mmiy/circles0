@@ -10,7 +10,7 @@ import { extractMentions } from '@/lib/utils/mention';
 import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
 
 interface PostFormProps {
-  onPostCreated?: () => void;
+  onPostCreated?: () => void | Promise<void>;
   placeholder?: string;
 }
 
@@ -181,7 +181,8 @@ export default function PostForm({
       // Notify parent component (await if it's async)
       if (onPostCreated) {
         const result = onPostCreated();
-        if (result instanceof Promise) {
+        // Check if result is a Promise-like object
+        if (result && typeof result === 'object' && 'then' in result && typeof (result as any).then === 'function') {
           await result;
         }
       }
