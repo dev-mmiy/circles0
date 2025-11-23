@@ -2,11 +2,14 @@
 Messages API endpoints for direct messaging between users.
 """
 
+import logging
 from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session, joinedload
+
+logger = logging.getLogger(__name__)
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
@@ -72,12 +75,30 @@ def _build_message_response(
     is_read = False
     read_at = None
     if message.sender_id != current_user_id:
-        read_record = next(
-            (r for r in message.reads if r.reader_id == current_user_id), None
-        )
-        if read_record:
-            is_read = True
-            read_at = read_record.read_at
+        # Access message.reads - this should be eagerly loaded via joinedload
+        try:
+            reads_list = list(message.reads) if hasattr(message, 'reads') else []
+            read_record = next(
+                (r for r in reads_list if r.reader_id == current_user_id), None
+            )
+            if read_record:
+                is_read = True
+                read_at = read_record.read_at
+        except Exception as e:
+            print(f"[_build_message_response] Error accessing message.reads: {e}")  # Force print to stdout
+            # Fallback: query the database directly
+            from app.models.message import MessageRead
+            read_record = (
+                db.query(MessageRead)
+                .filter(
+                    MessageRead.message_id == message.id,
+                    MessageRead.reader_id == current_user_id,
+                )
+                .first()
+            )
+            if read_record:
+                is_read = True
+                read_at = read_record.read_at
 
     return MessageResponse(
         id=message.id,
@@ -117,10 +138,14 @@ def _build_conversation_response(
     last_message = None
     if conversation.messages:
         last_message_data = conversation.messages[-1]
+        print(f"[_build_conversation_response] Building message response for conversation {conversation.id}")  # Force print to stdout
         last_message = _build_message_response(db, last_message_data, current_user_id)
+        print(f"[_build_conversation_response] Message response built for conversation {conversation.id}")  # Force print to stdout
 
-    # Get unread count
+    # Get unread count (re-enabled after performance optimization)
+    logger.debug(f"[_build_conversation_response] Getting unread count for conversation {conversation.id}")
     unread_count = MessageService.get_unread_count(db, conversation.id, current_user_id)
+    logger.debug(f"[_build_conversation_response] Unread count: {unread_count}")
 
     return ConversationResponse(
         id=conversation.id,
@@ -187,13 +212,19 @@ async def get_conversations(
 
     Returns conversations ordered by last message time (most recent first).
     """
+    logger.info(f"[get_conversations] Request received: skip={skip}, limit={limit}")
+    print(f"[get_conversations] Request received: skip={skip}, limit={limit}")  # Force print to stdout
     user_id = get_user_id_from_token(db, current_user)
+    logger.info(f"[get_conversations] User ID: {user_id}")
 
+    logger.info(f"[get_conversations] Calling MessageService.get_conversations")
     conversations = MessageService.get_conversations(db, user_id, skip, limit)
+    logger.info(f"[get_conversations] Conversations retrieved: count={len(conversations)}")
 
     total = len(conversations)  # TODO: Get actual total count
 
-    return ConversationListResponse(
+    logger.info(f"[get_conversations] Building response for {len(conversations)} conversations")
+    response = ConversationListResponse(
         conversations=[
             _build_conversation_response(db, conv, user_id) for conv in conversations
         ],
@@ -201,6 +232,20 @@ async def get_conversations(
         skip=skip,
         limit=limit,
     )
+    logger.info(f"[get_conversations] Response built successfully")
+    print(f"[get_conversations] Response built successfully, returning response")  # Force print to stdout
+    
+    # Try to serialize the response to check if there's an issue
+    try:
+        import json
+        from fastapi.encoders import jsonable_encoder
+        serialized = jsonable_encoder(response)
+        print(f"[get_conversations] Response serialized successfully, size: {len(json.dumps(serialized))} bytes")  # Force print to stdout
+    except Exception as e:
+        print(f"[get_conversations] Error serializing response: {e}")  # Force print to stdout
+        logger.error(f"[get_conversations] Error serializing response: {e}")
+    
+    return response
 
 
 @router.get(
@@ -218,17 +263,24 @@ async def get_conversation(
 
     User must be a participant in the conversation.
     """
+    logger.info(f"[get_conversation] Request received: conversation_id={conversation_id}")
     user_id = get_user_id_from_token(db, current_user)
+    logger.info(f"[get_conversation] User ID: {user_id}")
 
     conversation = MessageService.get_conversation_by_id(db, conversation_id, user_id)
+    logger.info(f"[get_conversation] Conversation found: {conversation is not None}")
 
     if not conversation:
+        logger.warning(f"[get_conversation] Conversation not found or not accessible: conversation_id={conversation_id}, user_id={user_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Conversation not found or not accessible",
         )
 
-    return _build_conversation_response(db, conversation, user_id)
+    logger.info(f"[get_conversation] Building response for conversation_id={conversation_id}")
+    response = _build_conversation_response(db, conversation, user_id)
+    logger.info(f"[get_conversation] Response built successfully for conversation_id={conversation_id}")
+    return response
 
 
 @router.delete(
@@ -313,6 +365,7 @@ async def get_messages(
     limit: int = Query(
         50, ge=1, le=100, description="Maximum number of messages to return"
     ),
+    q: Optional[str] = Query(None, description="Search query to filter messages by content"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
@@ -321,20 +374,32 @@ async def get_messages(
 
     User must be a participant in the conversation.
     Messages are returned in chronological order (oldest first).
+    If q parameter is provided, only messages matching the search query are returned.
     """
+    logger.info(f"[get_messages] Request received: conversation_id={conversation_id}, skip={skip}, limit={limit}, q={q}")
     user_id = get_user_id_from_token(db, current_user)
+    logger.info(f"[get_messages] User ID: {user_id}")
 
-    messages = MessageService.get_messages(db, conversation_id, user_id, skip, limit)
+    if q:
+        logger.info(f"[get_messages] Searching messages with query: {q}")
+        messages = MessageService.search_messages(db, conversation_id, user_id, q, skip, limit)
+    else:
+        logger.info(f"[get_messages] Getting messages")
+        messages = MessageService.get_messages(db, conversation_id, user_id, skip, limit)
 
+    logger.info(f"[get_messages] Messages retrieved: count={len(messages)}")
     total = len(messages)  # TODO: Get actual total count
 
-    return MessageListResponse(
+    logger.info(f"[get_messages] Building response for {len(messages)} messages")
+    response = MessageListResponse(
         messages=[_build_message_response(db, msg, user_id) for msg in messages],
         total=total,
         skip=skip,
         limit=limit,
         conversation_id=conversation_id,
     )
+    logger.info(f"[get_messages] Response built successfully for conversation_id={conversation_id}")
+    return response
 
 
 @router.put(

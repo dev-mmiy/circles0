@@ -50,6 +50,7 @@ export default function Header() {
     try {
       const token = await getAccessTokenSilently();
       setAuthToken(token);
+      // Re-enabled after performance optimization of unread count calculation
       const count = await getTotalUnreadCount();
       setUnreadMessageCount(count);
     } catch (error) {

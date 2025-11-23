@@ -1,5 +1,6 @@
 import os
-from datetime import datetime
+from datetime import datetime, timezone
+from typing import Any
 
 # Import dotenv but don't call load_dotenv automatically
 # We'll handle .env loading manually to prevent error messages
@@ -13,6 +14,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from fastapi.encoders import jsonable_encoder
+import json
 
 from app.api.auth import router as auth_router
 from app.api.blocks import router as blocks_router
@@ -97,6 +100,13 @@ if env_file_abs:
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
 
+# Configure logging
+import logging
+logging.basicConfig(
+    level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
 app = FastAPI(
     title="Disease Community API",
     description="API for Disease Community Platform",
@@ -106,21 +116,11 @@ app = FastAPI(
 )
 
 # CORS middleware - MUST be added FIRST (before other middlewares)
-# Temporarily allow all origins for debugging
-allowed_origins = ["*"]
-
-# Production origins (will be used after debugging is complete)
-# allowed_origins = (
-#     ["*"]
-#     if ENVIRONMENT in ["development", "test"]
-#     else [
-#         "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
-#         "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
-#     ]
-# )
-
-# Add localhost origins for development
+# Set allowed origins based on environment
 if ENVIRONMENT in ["development", "test"]:
+    # Development: Allow all origins for local testing
+    allowed_origins = ["*"]
+    # Also explicitly add localhost origins for clarity
     allowed_origins.extend(
         [
             "http://localhost:3000",
@@ -129,6 +129,17 @@ if ENVIRONMENT in ["development", "test"]:
             "http://127.0.0.1:3001",
         ]
     )
+else:
+    # Production: Only allow specific frontend URLs
+    allowed_origins = [
+        "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
+        "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
+    ]
+    # Allow additional origins from environment variable if set
+    # Format: comma-separated list of URLs
+    additional_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+    if additional_origins:
+        allowed_origins.extend([origin.strip() for origin in additional_origins.split(",")])
 
 app.add_middleware(
     CORSMiddleware,
@@ -142,16 +153,74 @@ app.add_middleware(
 # Add market middleware AFTER CORS
 app.add_middleware(MarketMiddleware)
 
+# Add request logging middleware to track all incoming requests
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
+from starlette.types import ASGIApp
+import time
+
+# Get logger for middleware
+request_logger = logging.getLogger(__name__)
+
+class RequestLoggingMiddleware(BaseHTTPMiddleware):
+    """Middleware to log all incoming requests for debugging."""
+    
+    async def dispatch(self, request: Request, call_next):
+        start_time = time.time()
+        method = request.method
+        url = str(request.url)
+        path = request.url.path
+        query_params = str(request.query_params)
+        has_auth = "Authorization" in request.headers
+        
+        # Log incoming request
+        request_logger.info(f"[RequestLogging] Incoming request: {method} {path}?{query_params}")
+        print(f"[RequestLogging] Incoming request: {method} {path}?{query_params}")  # Force print
+        if has_auth:
+            auth_header = request.headers.get("Authorization", "")
+            request_logger.info(f"[RequestLogging] Has Authorization header: {bool(auth_header)}")
+            print(f"[RequestLogging] Has Authorization header: {bool(auth_header)}")  # Force print
+        
+        try:
+            response = await call_next(request)
+            process_time = time.time() - start_time
+            request_logger.info(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")
+            print(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")  # Force print
+            return response
+        except Exception as e:
+            process_time = time.time() - start_time
+            request_logger.error(f"[RequestLogging] Error processing {method} {path}: {str(e)} ({process_time:.3f}s)", exc_info=True)
+            print(f"[RequestLogging] Error processing {method} {path}: {str(e)} ({process_time:.3f}s)")  # Force print
+            import traceback
+            print(f"[RequestLogging] Traceback: {traceback.format_exc()}")  # Force print
+            raise
+
+app.add_middleware(RequestLoggingMiddleware)
+
+
+# Helper function to get CORS origin for exception handlers
+def get_cors_origin(request: Request) -> str:
+    """Get the appropriate CORS origin for the request."""
+    origin = request.headers.get("Origin")
+    if origin and origin in allowed_origins:
+        return origin
+    # If no origin or origin not in allowed list, use first allowed origin or "*" for dev
+    if ENVIRONMENT in ["development", "test"]:
+        return "*"
+    # For production, return first allowed origin (or empty string if none)
+    return allowed_origins[0] if allowed_origins else ""
+
 
 # Exception handlers to ensure CORS headers are always present
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):
     """Handle HTTP exceptions and ensure CORS headers are present."""
+    cors_origin = get_cors_origin(request)
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
         headers={
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": cors_origin,
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "*",
@@ -162,11 +231,13 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle general exceptions and ensure CORS headers are present."""
+    logger.error(f"Unhandled Exception: {str(exc)}", exc_info=True)
+    cors_origin = get_cors_origin(request)
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal server error: {str(exc)}"},
         headers={
-            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Origin": cors_origin,
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Allow-Methods": "*",
             "Access-Control-Allow-Headers": "*",
@@ -217,7 +288,7 @@ async def root(request: Request):
         "environment": ENVIRONMENT,
         "version": "1.0.0",
         "market": market,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
         "timezone": market_config.timezone if market_config else "UTC",
         "currency": market_config.currency if market_config else "USD",
     }
@@ -231,7 +302,7 @@ async def health_check(request: Request):
         "environment": ENVIRONMENT,
         "service": "disease-community-api",
         "market": market,
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
 
@@ -263,7 +334,7 @@ async def config_check():
             ),
             "database_url_configured": bool(database_url),
         },
-        "timestamp": datetime.utcnow().isoformat(),
+        "timestamp": datetime.utcnow().isoformat() + "Z",
     }
 
 

@@ -23,12 +23,13 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
-import { ArrowLeft, Trash2, Send } from 'lucide-react';
-import { setAuthToken } from '@/lib/api/client';
+import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
+import { ArrowLeft, Trash2, Send, Search, X } from 'lucide-react';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
+import { useAuthWithLoader } from '@/lib/hooks/useAuthWithLoader';
 
 export default function ConversationPage() {
-  const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
   const params = useNextParams();
@@ -37,14 +38,27 @@ export default function ConversationPage() {
   const t = useTranslations('messages');
   const tConv = useTranslations('messages.conversation');
   
+  // 認証とローディング管理の共通フック
+  const {
+    isLoading,
+    isLoadingMore,
+    error,
+    setError,
+    isMountedRef,
+    executeWithLoading,
+    clearError,
+  } = useAuthWithLoader({
+    requireAuth: true,
+    authTimeout: 5000,
+  });
+  
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  // 初期ローディング状態を管理（認証が完了するまでtrue）
+  const [initialLoading, setInitialLoading] = useState(true);
   
   // Message form state
   const [messageContent, setMessageContent] = useState('');
@@ -52,100 +66,103 @@ export default function ConversationPage() {
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
   
+  // Message search state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const isMountedRef = useRef(true);
 
   const MESSAGES_PER_PAGE = 50;
-
-  // コンポーネントのマウント状態を追跡
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   // スクロールを最下部に移動
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  // 会話とメッセージを取得
+  // 会話を取得
   const loadConversation = async () => {
-    try {
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          if (!isMountedRef.current) return;
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          if (!isMountedRef.current) return;
-          setAuthToken(null);
-        }
-      } else {
-        setAuthToken(null);
-      }
+    console.log('[ConversationPage] loadConversation called', { conversationId });
+    
+    if (!isMountedRef.current) {
+      console.log('[ConversationPage] Not mounted, returning');
+      return null;
+    }
 
-      const conv = await getConversation(conversationId);
-      if (!isMountedRef.current) return;
-      setConversation(conv);
-    } catch (err: any) {
-      if (!isMountedRef.current) return;
-      console.error('Failed to load conversation:', err);
-      const errorInfo = extractErrorInfo(err);
-      setError(errorInfo);
+    try {
+      const conv = await executeWithLoading(
+        () => getConversation(conversationId),
+        { reset: false, skipLoadingState: true }
+      );
+      
+      console.log('[ConversationPage] loadConversation response', { conversation: !!conv, isMounted: isMountedRef.current });
+      
+      if (conv && isMountedRef.current) {
+        setConversation(conv);
+        clearError();
+      }
+      return conv;
+    } catch (err) {
+      console.error('[ConversationPage] loadConversation error:', err);
+      return null;
     }
   };
 
   const loadMessages = async (reset: boolean = false, skipLoadingState: boolean = false) => {
+    console.log('[ConversationPage] loadMessages called', { reset, skipLoadingState, conversationId });
+    
+    if (!isMountedRef.current) {
+      console.log('[ConversationPage] Not mounted, returning');
+      return;
+    }
+
+    const currentPage = reset ? 0 : page;
+    
     try {
-      const currentPage = reset ? 0 : page;
-      if (!skipLoadingState) {
-        setIsLoadingMore(!reset);
-        if (reset) {
-          setIsLoading(true);
-        }
-      }
-
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          if (!isMountedRef.current) return;
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          if (!isMountedRef.current) return;
-          setAuthToken(null);
-        }
-      } else {
-        setAuthToken(null);
-      }
-
-      const response = await getMessages(
-        conversationId,
-        currentPage * MESSAGES_PER_PAGE,
-        MESSAGES_PER_PAGE
+      const response = await executeWithLoading(
+        () => getMessages(
+          conversationId,
+          currentPage * MESSAGES_PER_PAGE,
+          MESSAGES_PER_PAGE,
+          searchQuery || undefined
+        ),
+        { reset, skipLoadingState }
       );
 
-      if (!isMountedRef.current) return;
+      console.log('[ConversationPage] loadMessages response', { 
+        response: !!response, 
+        messagesCount: response?.messages?.length, 
+        isMounted: isMountedRef.current,
+        responseType: typeof response,
+        responseKeys: response ? Object.keys(response) : null,
+      });
+
+      if (!response) {
+        console.warn('[ConversationPage] No response received from executeWithLoading');
+        // エラーが発生した場合でもinitialLoadingを解除する
+        if (reset) {
+          setInitialLoading(false);
+        }
+        return;
+      }
+
+      if (!isMountedRef.current) {
+        console.log('[ConversationPage] Not mounted, returning');
+        return;
+      }
 
       if (reset) {
         setMessages(response.messages);
         setPage(0);
+        console.log('[ConversationPage] Messages reset, count:', response.messages.length);
         // メッセージ読み込み後、既読にする
         setTimeout(async () => {
           if (!isMountedRef.current) return;
           try {
-            if (isAuthenticated) {
-              const token = await getAccessTokenSilently();
-              if (!isMountedRef.current) return;
-              setAuthToken(token);
-            }
-            await markMessagesAsRead(conversationId, null);
+            await executeWithLoading(
+              () => markMessagesAsRead(conversationId, null),
+              { reset: false, skipLoadingState: true }
+            );
           } catch (err) {
             console.error('Failed to mark messages as read:', err);
           }
@@ -153,31 +170,30 @@ export default function ConversationPage() {
       } else {
         // 古いメッセージを先頭に追加
         setMessages([...response.messages, ...messages]);
+        console.log('[ConversationPage] Messages appended, total count:', response.messages.length + messages.length);
       }
 
       setHasMore(response.messages.length === MESSAGES_PER_PAGE);
-      setError(null);
-    } catch (err: any) {
-      if (!isMountedRef.current) return;
-      console.error('Failed to load messages:', err);
-      const errorInfo = extractErrorInfo(err);
-      setError(errorInfo);
-    } finally {
-      if (isMountedRef.current && !skipLoadingState) {
-        setIsLoading(false);
-        setIsLoadingMore(false);
-      }
+      clearError();
+    } catch (err) {
+      console.error('[ConversationPage] loadMessages error:', err);
+      // エラーが発生してもローディング状態はexecuteWithLoading内で解除される
     }
   };
 
   // 認証チェックと初期読み込み
   useEffect(() => {
-    // authLoadingがtrueでも、isAuthenticatedがtrueなら続行する
-    // （クライアントサイドナビゲーションで状態が維持されている場合）
-    if (authLoading && !isAuthenticated) return;
+    console.log('[ConversationPage] Auth check useEffect', { authLoading, isAuthenticated, conversationId, isRedirecting });
+    
+    if (authLoading && !isAuthenticated) {
+      console.log('[ConversationPage] Auth still loading, skipping');
+      return;
+    }
 
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
+      console.log('[ConversationPage] Not authenticated, redirecting');
+      setInitialLoading(false);
       if (!isRedirecting) {
         setIsRedirecting(true);
         router.push('/');
@@ -186,23 +202,61 @@ export default function ConversationPage() {
     }
 
     // 両方の読み込みを並行して実行し、どちらかが失敗してもローディングを解除する
+    let isCancelled = false;
+    
     const loadData = async () => {
+      console.log('[ConversationPage] Starting loadData', { conversationId, isMounted: isMountedRef.current });
       try {
-        setIsLoading(true);
-        await Promise.all([
+        // Promise.allSettledを使用して、どちらかが失敗しても続行する
+        const results = await Promise.allSettled([
           loadConversation(),
-          loadMessages(true, true), // skipLoadingState: true
+          loadMessages(true, false), // skipLoadingState: false に変更してローディング状態を管理
         ]);
+        
+        console.log('[ConversationPage] loadData results', results.map(r => ({ 
+          status: r.status, 
+          hasValue: r.status === 'fulfilled' && !!r.value,
+          valueType: r.status === 'fulfilled' ? typeof r.value : 'N/A',
+          value: r.status === 'fulfilled' ? (typeof r.value === 'object' ? Object.keys(r.value || {}) : r.value) : null,
+        })));
+        
+        // エラーをログに記録
+        results.forEach((result, index) => {
+          const name = index === 0 ? 'conversation' : 'messages';
+          if (result.status === 'rejected') {
+            console.error(`[ConversationPage] Failed to load ${name}:`, result.reason);
+          } else if (result.status === 'fulfilled') {
+            if (!result.value) {
+              console.warn(`[ConversationPage] ${name} returned null/undefined`);
+            } else {
+              console.log(`[ConversationPage] ${name} loaded successfully`, {
+                type: typeof result.value,
+                keys: typeof result.value === 'object' && result.value ? Object.keys(result.value) : null,
+                messagesCount: index === 1 ? (result.value as any)?.messages?.length : undefined,
+              });
+            }
+          }
+        });
+        
+        // 必ずinitialLoadingをfalseにする（成功・失敗に関わらず）
+        if (!isCancelled) {
+          console.log('[ConversationPage] Setting initialLoading to false');
+          setInitialLoading(false);
+        }
       } catch (err) {
-        console.error('Failed to load data:', err);
-      } finally {
-        if (isMountedRef.current) {
-          setIsLoading(false);
+        console.error('[ConversationPage] Failed to load data:', err);
+        // エラーが発生してもinitialLoadingをfalseにする
+        if (!isCancelled) {
+          setInitialLoading(false);
         }
       }
     };
 
     loadData();
+    
+    return () => {
+      isCancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, conversationId]);
 
@@ -222,14 +276,6 @@ export default function ConversationPage() {
       return;
     }
 
-    // 既に存在するメッセージは追加しない
-    if (messages.some(m => m.id === messageEvent.id)) {
-      console.log('[handleNewMessage] Skipping message - already exists');
-      return;
-    }
-
-    console.log('[handleNewMessage] Processing new message');
-
     // メッセージをMessage形式に変換
     const newMessage: Message = {
       id: messageEvent.id,
@@ -245,8 +291,15 @@ export default function ConversationPage() {
       read_at: null,
     };
 
-    // メッセージを追加
+    // メッセージを追加（setMessages内で最新の状態を参照して重複チェック）
+    // これにより、handleSendMessageで追加されたメッセージと重複しない
     setMessages(prev => {
+      // 重複チェック（最新の状態を参照）
+      if (prev.some(m => m.id === newMessage.id)) {
+        console.log('[handleNewMessage] Message already exists, skipping duplicate');
+        return prev;
+      }
+      console.log('[handleNewMessage] Adding new message');
       const updated = [...prev, newMessage];
       // メッセージ追加後にスクロール
       setTimeout(() => {
@@ -262,11 +315,10 @@ export default function ConversationPage() {
     if (messageEvent.sender_id !== currentUser?.id) {
       setTimeout(async () => {
         try {
-          if (isAuthenticated) {
-            const token = await getAccessTokenSilently();
-            setAuthToken(token);
-          }
-          await markMessagesAsRead(conversationId, [messageEvent.id]);
+          await executeWithLoading(
+            () => markMessagesAsRead(conversationId, [messageEvent.id]),
+            { reset: false, skipLoadingState: true }
+          );
         } catch (err) {
           console.error('Failed to mark message as read:', err);
         }
@@ -275,6 +327,22 @@ export default function ConversationPage() {
   };
 
   useMessageStream(handleNewMessage);
+
+  // 検索クエリが変更されたときにメッセージを再読み込み
+  useEffect(() => {
+    if (!isAuthenticated || !conversationId) return;
+    
+    // 検索クエリが変更されたときのみ再読み込み
+    const timeoutId = setTimeout(() => {
+      setIsSearching(true);
+      loadMessages(true, false).finally(() => {
+        setIsSearching(false);
+      });
+    }, 300); // デバウンス
+
+    return () => clearTimeout(timeoutId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
 
   // メッセージ送信後にスクロール
   useEffect(() => {
@@ -285,7 +353,6 @@ export default function ConversationPage() {
 
   // さらに読み込む
   const handleLoadMore = () => {
-    setIsLoadingMore(true);
     setPage(page + 1);
     loadMessages(false);
   };
@@ -309,37 +376,21 @@ export default function ConversationPage() {
     }
 
     setIsSending(true);
-    setError(null);
+    clearError();
 
     if (!conversation?.other_user?.id) {
       alert(tConv('errorSending'));
+      setIsSending(false);
       return;
     }
 
     try {
-      console.log('[handleSendMessage] Starting message send...');
-      
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          console.log('[handleSendMessage] Getting access token...');
-          const token = await getAccessTokenSilently();
-          setAuthToken(token);
-          console.log('[handleSendMessage] Access token obtained');
-        } catch (tokenError) {
-          console.warn('[handleSendMessage] Failed to get access token:', tokenError);
-          setAuthToken(null);
-          throw new Error('Failed to get access token');
-        }
-      }
-
       // Ensure content is not empty (backend requires min_length=1)
       // If content is empty but image_url exists, use a placeholder
       const trimmedContent = messageContent.trim();
       const trimmedImageUrl = imageUrl.trim() || null;
       
       if (!trimmedContent && !trimmedImageUrl) {
-        // This should not happen due to earlier validation, but just in case
         throw new Error('Message content or image URL is required');
       }
 
@@ -349,8 +400,14 @@ export default function ConversationPage() {
         image_url: trimmedImageUrl,
       };
 
-      console.log('[handleSendMessage] Sending message:', messageData);
-      const newMessage = await sendMessage(messageData);
+      const newMessage = await executeWithLoading(
+        () => sendMessage(messageData),
+        { reset: false, skipLoadingState: true }
+      );
+
+      if (!newMessage) {
+        throw new Error('Failed to send message');
+      }
       console.log('[handleSendMessage] Message sent successfully:', {
         id: newMessage.id,
         conversation_id: newMessage.conversation_id,
@@ -358,70 +415,58 @@ export default function ConversationPage() {
         sender_id: newMessage.sender_id,
       });
       
-      // 新しいメッセージをリストに追加
-      // Note: SSEストリームからも同じメッセージが来る可能性があるが、
-      // handleNewMessageで重複チェックされる
-      setMessages(prev => {
-        // 重複チェック
-        if (prev.some(m => m.id === newMessage.id)) {
-          console.log('[handleSendMessage] Message already in list, skipping');
-          return prev;
-        }
-        console.log('[handleSendMessage] Adding message to list');
-        const updated = [...prev, newMessage];
-        // メッセージ追加後にスクロール
-        setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-        return updated;
-      });
+      // メッセージはSSE経由でhandleNewMessageから追加されるため、
+      // ここでは追加しない（重複を防ぐ）
+      // ただし、SSEが遅延する場合に備えて、短い遅延後に追加を試みる
+      // （SSEが先に来た場合は重複チェックでスキップされる）
+      setTimeout(() => {
+        setMessages(prev => {
+          // 重複チェック（SSE経由で既に追加されている可能性がある）
+          if (prev.some(m => m.id === newMessage.id)) {
+            console.log('[handleSendMessage] Message already exists (added via SSE), skipping');
+            return prev;
+          }
+          console.log('[handleSendMessage] Adding message (SSE may have been delayed)');
+          const updated = [...prev, newMessage];
+          // メッセージ追加後にスクロール
+          setTimeout(() => {
+            scrollToBottom();
+          }, 100);
+          return updated;
+        });
+      }, 500); // SSEが500ms以内に来ない場合のみ追加
       
       // フォームをクリア
       setMessageContent('');
       setImageUrl('');
-      console.log('[handleSendMessage] Form cleared');
       
-      // 会話情報を更新（SSEで自動更新されるので、非同期で実行）
-      // メッセージ送信のレスポンスを待たないようにする
-      console.log('[handleSendMessage] Updating conversation (async)...');
+      // 会話情報を更新（非同期で実行）
       loadConversation().catch((err) => {
-        console.error('[handleSendMessage] Failed to load conversation:', err);
+        console.error('Failed to load conversation:', err);
       });
-      console.log('[handleSendMessage] Message send completed');
     } catch (err: any) {
-      console.error('[handleSendMessage] Failed to send message:', err);
-      console.error('[handleSendMessage] Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status,
-      });
+      console.error('Failed to send message:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
       alert(tConv('errorSending') + ': ' + errorInfo.message);
     } finally {
-      console.log('[handleSendMessage] Finally block - setting isSending to false');
       setIsSending(false);
     }
   };
 
   // メッセージを削除
   const handleDeleteMessage = async (messageId: string) => {
+    setDeletingMessageId(messageId);
+    
     try {
-      // 認証トークンを設定
-      if (isAuthenticated) {
-        try {
-          const token = await getAccessTokenSilently();
-          setAuthToken(token);
-        } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
-          setAuthToken(null);
-        }
+      await executeWithLoading(
+        () => deleteMessage(messageId),
+        { reset: false, skipLoadingState: true }
+      );
+      
+      if (isMountedRef.current) {
+        setMessages(prev => prev.filter(m => m.id !== messageId));
       }
-
-      setDeletingMessageId(messageId);
-      await deleteMessage(messageId);
-      // 削除後、リストから除外
-      setMessages(messages.filter(m => m.id !== messageId));
     } catch (err: any) {
       console.error('Failed to delete message:', err);
       alert(tConv('errorLoading'));
@@ -430,24 +475,48 @@ export default function ConversationPage() {
     }
   };
 
-  // 時間表示のフォーマット
+  // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string) => {
+    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
     const date = new Date(dateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
-    return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
-  };
-
-  // 日付表示のフォーマット
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US', {
+    
+    // Use Intl.DateTimeFormat to format in user's timezone
+    const formatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US', {
+      timeZone: userTimezone,
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
     });
+    
+    // Calculate relative time
+    const relative = formatRelativeTime(dateString, locale, currentUser?.timezone, currentUser?.country);
+    if (relative.minutes < 60) {
+      return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
+    }
+    
+    return formatter.format(date);
   };
 
-  if ((authLoading && !isAuthenticated) || isLoading || isRedirecting) {
+  // 日付表示のフォーマット（ユーザーのタイムゾーンを使用）
+  const formatDate = (dateString: string) => {
+    return formatDateInTimezone(
+      dateString,
+      locale,
+      currentUser?.timezone,
+      currentUser?.country,
+      {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }
+    );
+  };
+
+  // 認証チェック中またはリダイレクト中のみページ全体をローディング
+  if ((authLoading && !isAuthenticated) || isRedirecting) {
     return (
       <div className="min-h-screen bg-gray-50 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -521,6 +590,37 @@ export default function ConversationPage() {
                 </>
               )}
             </div>
+            
+            {/* Message search */}
+            {!initialLoading && !isLoading && (
+              <div className="mt-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={tConv('searchMessages')}
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={isSearching}
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      disabled={isSearching}
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  )}
+                  {isSearching && (
+                    <div className="absolute right-10 top-1/2 transform -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Messages container */}
@@ -538,73 +638,97 @@ export default function ConversationPage() {
               </div>
             )}
 
-            {/* Load more button */}
-            {hasMore && (
-              <div className="flex justify-center">
-                <button
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isLoadingMore
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
-                  }`}
-                >
-                  {isLoadingMore ? (
-                    <span className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {t('loading')}
-                    </span>
-                  ) : (
-                    tConv('loadMore')
-                  )}
-                </button>
-              </div>
-            )}
-
-            {messages.length === 0 ? (
-              <div className="text-center py-12">
-                <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                  />
-                </svg>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">
-                  {tConv('noMessages')}
-                </h3>
-                <p className="mt-2 text-gray-500">
-                  {tConv('noMessagesMessage')}
-                </p>
+            {/* ローディング状態 */}
+            {(initialLoading || isLoading) && messages.length === 0 ? (
+              <div className="flex justify-center items-center py-12">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                  <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+                </div>
               </div>
             ) : (
               <>
-                {messages.map((message, index) => {
+                {/* Load more button */}
+                {hasMore && !searchQuery && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleLoadMore}
+                      disabled={isLoadingMore}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        isLoadingMore
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                      }`}
+                    >
+                      {isLoadingMore ? (
+                        <span className="flex items-center">
+                          <svg
+                            className="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-500"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                          {t('loading')}
+                        </span>
+                      ) : (
+                        tConv('loadMore')
+                      )}
+                    </button>
+                  </div>
+                )}
+
+                {messages.length === 0 ? (
+                  <div className="text-center py-12">
+                    {searchQuery ? (
+                      <>
+                        <Search className="mx-auto h-12 w-12 text-gray-400" />
+                        <h3 className="mt-4 text-lg font-medium text-gray-900">
+                          {tConv('noSearchResults')}
+                        </h3>
+                        <p className="mt-2 text-gray-500">
+                          {tConv('noSearchResultsMessage')}
+                        </p>
+                      </>
+                    ) : (
+                      <>
+                        <svg
+                          className="mx-auto h-12 w-12 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        <h3 className="mt-4 text-lg font-medium text-gray-900">
+                          {tConv('noMessages')}
+                        </h3>
+                        <p className="mt-2 text-gray-500">
+                          {tConv('noMessagesMessage')}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <>
+                    {messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   const showDateSeparator =
                     !prevMessage ||
@@ -706,6 +830,8 @@ export default function ConversationPage() {
                   );
                 })}
                 <div ref={messagesEndRef} />
+                  </>
+                )}
               </>
             )}
           </div>
