@@ -14,6 +14,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { getApiBaseUrl } from '@/lib/config';
 import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
+import { debugLog } from '@/lib/utils/debug';
 
 const SSE_ENDPOINT = `${getApiBaseUrl()}/api/v1/messages/stream`;
 
@@ -70,7 +71,7 @@ export function useMessageStream(
     if (eventSourceRef.current) {
       // Only log if we were connected (not just cleanup)
       if (wasConnectedRef.current) {
-        console.log('[Message SSE] Closing connection');
+        debugLog.log('[Message SSE] Closing connection');
       }
       eventSourceRef.current.close();
       eventSourceRef.current = null;
@@ -86,7 +87,7 @@ export function useMessageStream(
     }
 
     if (!isAuthenticated) {
-      console.log('[Message SSE] Not authenticated, skipping connection');
+      debugLog.log('[Message SSE] Not authenticated, skipping connection');
       return;
     }
 
@@ -97,17 +98,17 @@ export function useMessageStream(
 
     try {
       // Get authentication token using tokenManager to prevent conflicts with other API calls
-      console.log('[Message SSE] Getting token for SSE connection...', { timestamp: new Date().toISOString() });
+      debugLog.log('[Message SSE] Getting token for SSE connection...', { timestamp: new Date().toISOString() });
       const tokenStartTime = Date.now();
       
       let token: string;
       try {
         token = await getAccessTokenFromManager(getAccessTokenSilently);
         const tokenElapsed = Date.now() - tokenStartTime;
-        console.log('[Message SSE] Token retrieved successfully', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
+        debugLog.log('[Message SSE] Token retrieved successfully', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
       } catch (tokenError: any) {
         const tokenElapsed = Date.now() - tokenStartTime;
-        console.error('[Message SSE] Failed to get token for SSE connection:', tokenError, {
+        debugLog.error('[Message SSE] Failed to get token for SSE connection:', tokenError, {
           elapsed: tokenElapsed,
           timestamp: new Date().toISOString()
         });

@@ -99,6 +99,7 @@ if env_file_abs:
 # Environment variables
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
+DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
 # Configure logging
 import logging
@@ -106,6 +107,7 @@ logging.basicConfig(
     level=getattr(logging, LOG_LEVEL.upper(), logging.INFO),
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
+logger = logging.getLogger(__name__)  # Main app logger
 
 app = FastAPI(
     title="Disease Community API",
@@ -168,31 +170,29 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
         method = request.method
-        url = str(request.url)
         path = request.url.path
         query_params = str(request.query_params)
-        has_auth = "Authorization" in request.headers
         
-        # Log incoming request
-        request_logger.info(f"[RequestLogging] Incoming request: {method} {path}?{query_params}")
-        print(f"[RequestLogging] Incoming request: {method} {path}?{query_params}")  # Force print
-        if has_auth:
-            auth_header = request.headers.get("Authorization", "")
-            request_logger.info(f"[RequestLogging] Has Authorization header: {bool(auth_header)}")
-            print(f"[RequestLogging] Has Authorization header: {bool(auth_header)}")  # Force print
+        # Only log detailed request info in debug mode
+        if DEBUG:
+            request_logger.info(f"[RequestLogging] Incoming request: {method} {path}?{query_params}")
+            has_auth = "Authorization" in request.headers
+            if has_auth:
+                request_logger.info(f"[RequestLogging] Has Authorization header: {bool(request.headers.get('Authorization', ''))}")
         
         try:
             response = await call_next(request)
             process_time = time.time() - start_time
-            request_logger.info(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")
-            print(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")  # Force print
+            
+            # Log slow requests (>1s) or all requests in debug mode
+            if DEBUG or process_time > 1.0:
+                request_logger.info(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")
+            
             return response
         except Exception as e:
             process_time = time.time() - start_time
+            # Always log errors
             request_logger.error(f"[RequestLogging] Error processing {method} {path}: {str(e)} ({process_time:.3f}s)", exc_info=True)
-            print(f"[RequestLogging] Error processing {method} {path}: {str(e)} ({process_time:.3f}s)")  # Force print
-            import traceback
-            print(f"[RequestLogging] Traceback: {traceback.format_exc()}")  # Force print
             raise
 
 app.add_middleware(RequestLoggingMiddleware)
@@ -348,7 +348,7 @@ async def startup_event():
         
         try:
             # Run migrations
-            print("🔄 Running database migrations in background...")
+            logger.info("🔄 Running database migrations in background...")
             result = subprocess.run(
                 ["alembic", "upgrade", "head"],
                 capture_output=True,
@@ -356,12 +356,12 @@ async def startup_event():
                 timeout=300,  # 5 minute timeout
             )
             if result.returncode == 0:
-                print("✅ Database migrations completed successfully")
+                logger.info("✅ Database migrations completed successfully")
             else:
-                print(f"⚠️ Migration warnings: {result.stderr}")
+                logger.warning(f"⚠️ Migration warnings: {result.stderr}")
             
             # Run seed data script
-            print("🌱 Seeding master data in background...")
+            logger.info("🌱 Seeding master data in background...")
             seed_result = subprocess.run(
                 [sys.executable, "scripts/seed_final_master_data.py"],
                 capture_output=True,
@@ -369,18 +369,18 @@ async def startup_event():
                 timeout=300,  # 5 minute timeout
             )
             if seed_result.returncode == 0:
-                print("✅ Master data seeding completed successfully")
+                logger.info("✅ Master data seeding completed successfully")
             else:
-                print(f"⚠️ Seed data warnings: {seed_result.stderr}")
+                logger.warning(f"⚠️ Seed data warnings: {seed_result.stderr}")
                 
         except subprocess.TimeoutExpired:
-            print("⚠️ Migrations or seeding timed out, but continuing...")
+            logger.warning("⚠️ Migrations or seeding timed out, but continuing...")
         except Exception as e:
-            print(f"⚠️ Error during migrations/seeding: {e}")
+            logger.error(f"⚠️ Error during migrations/seeding: {e}", exc_info=True)
             # Don't fail startup - app can still serve requests
     
     # Run migrations and seeding in background thread (non-blocking)
     import threading
     thread = threading.Thread(target=run_migrations_and_seed, daemon=True)
     thread.start()
-    print("🚀 Application started, migrations and seeding running in background...")
+    logger.info("🚀 Application started, migrations and seeding running in background...")

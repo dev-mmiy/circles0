@@ -8,6 +8,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { setAuthToken, apiClient } from '@/lib/api/client';
 import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { getAccessToken as getAccessTokenFromManager, clearToken } from '@/lib/utils/tokenManager';
+import { debugLog } from '@/lib/utils/debug';
 
 interface UseAuthWithLoaderOptions {
   /**
@@ -87,7 +88,7 @@ export function useAuthWithLoader(
   }, []);
 
   const getAndSetToken = useCallback(async (): Promise<void> => {
-    console.log('[useAuthWithLoader] getAndSetToken called', { isAuthenticated, isMounted: isMountedRef.current });
+    debugLog.log('[useAuthWithLoader] getAndSetToken called', { isAuthenticated, isMounted: isMountedRef.current });
     if (!isAuthenticated) {
       clearToken();
       setAuthToken(null);
@@ -95,18 +96,18 @@ export function useAuthWithLoader(
     }
 
     try {
-      console.log('[useAuthWithLoader] Calling getAccessTokenFromManager...');
+      debugLog.log('[useAuthWithLoader] Calling getAccessTokenFromManager...');
       const startTime = Date.now();
       // Use centralized token manager to prevent duplicate requests
       const token = await getAccessTokenFromManager(getAccessTokenSilently);
       const elapsed = Date.now() - startTime;
-      console.log('[useAuthWithLoader] Token retrieved successfully', { elapsed, hasToken: !!token });
+      debugLog.log('[useAuthWithLoader] Token retrieved successfully', { elapsed, hasToken: !!token });
       if (isMountedRef.current) {
         setAuthToken(token);
-        console.log('[useAuthWithLoader] Token set in API client');
+        debugLog.log('[useAuthWithLoader] Token set in API client');
       }
     } catch (tokenError) {
-      console.warn('[useAuthWithLoader] Failed to get access token:', tokenError);
+      debugLog.warn('[useAuthWithLoader] Failed to get access token:', tokenError);
       if (isMountedRef.current) {
         clearToken();
         setAuthToken(null);
@@ -138,25 +139,25 @@ export function useAuthWithLoader(
         // Only get token if not already set to avoid redundant calls
         if (isAuthenticated) {
           const currentToken = apiClient.defaults.headers.common['Authorization'];
-          console.log('[useAuthWithLoader] Checking token', { hasToken: !!currentToken, tokenPrefix: currentToken?.substring(0, 20) });
+          debugLog.log('[useAuthWithLoader] Checking token', { hasToken: !!currentToken, tokenPrefix: currentToken?.substring(0, 20) });
           if (!currentToken || !currentToken.startsWith('Bearer ')) {
             try {
-              console.log('[useAuthWithLoader] Token not set, getting token...', { timestamp: new Date().toISOString() });
+              debugLog.log('[useAuthWithLoader] Token not set, getting token...', { timestamp: new Date().toISOString() });
               const tokenStartTime = Date.now();
               await getAndSetToken();
               const tokenElapsed = Date.now() - tokenStartTime;
-              console.log('[useAuthWithLoader] Token retrieval completed', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
+              debugLog.log('[useAuthWithLoader] Token retrieval completed', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
             } catch (tokenError) {
-              console.error('[useAuthWithLoader] Token retrieval failed, continuing without token:', tokenError);
+              debugLog.error('[useAuthWithLoader] Token retrieval failed, continuing without token:', tokenError);
               // Continue execution even if token retrieval fails
               // The API call will handle authentication errors
               // Don't block the request - proceed without token
             }
           } else {
-            console.log('[useAuthWithLoader] Token already set, skipping token retrieval');
+            debugLog.log('[useAuthWithLoader] Token already set, skipping token retrieval');
           }
           if (!isMountedRef.current) {
-            console.log('[useAuthWithLoader] Component unmounted after token check, returning null');
+            debugLog.log('[useAuthWithLoader] Component unmounted after token check, returning null');
             if (!skipLoadingState) {
               setIsLoading(false);
               setIsLoadingMore(false);
@@ -168,16 +169,15 @@ export function useAuthWithLoader(
         }
 
         // Execute the function
-        console.log('[useAuthWithLoader] Executing function', { timestamp: new Date().toISOString() });
+        debugLog.log('[useAuthWithLoader] Executing function', { timestamp: new Date().toISOString() });
         const fnStartTime = Date.now();
         const result = await fn();
         const fnElapsed = Date.now() - fnStartTime;
-        console.log('[useAuthWithLoader] Function executed', { elapsed: fnElapsed, hasResult: !!result });
-        console.log('[useAuthWithLoader] Function executed successfully', { hasResult: !!result, resultType: typeof result });
+        debugLog.log('[useAuthWithLoader] Function executed successfully', { elapsed: fnElapsed, hasResult: !!result, resultType: typeof result });
 
         // Check mount state after execution
         if (!isMountedRef.current) {
-          console.log('[useAuthWithLoader] Not mounted after execution, clearing loading');
+          debugLog.log('[useAuthWithLoader] Not mounted after execution, clearing loading');
           if (!skipLoadingState) {
             setIsLoading(false);
             setIsLoadingMore(false);
@@ -188,7 +188,7 @@ export function useAuthWithLoader(
         setError(null);
         return result;
       } catch (err: any) {
-        console.error('[useAuthWithLoader] Failed to execute function:', {
+        debugLog.error('[useAuthWithLoader] Failed to execute function:', {
           message: err.message,
           code: err.code,
           response: err.response?.data,
@@ -204,7 +204,7 @@ export function useAuthWithLoader(
       } finally {
         // Always clear loading states if mounted
         if (isMountedRef.current && !skipLoadingState) {
-          console.log('[useAuthWithLoader] Clearing loading states');
+          debugLog.log('[useAuthWithLoader] Clearing loading states');
           setIsLoading(false);
           setIsLoadingMore(false);
         }
@@ -226,7 +226,7 @@ export function useAuthWithLoader(
     if (authLoading && !isAuthenticated) {
       timeoutId = setTimeout(() => {
         if (isMountedRef.current && !isAuthenticated) {
-          console.warn('Auth loading timeout');
+          debugLog.warn('Auth loading timeout');
           setIsLoading(false);
         }
       }, authTimeout);

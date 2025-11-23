@@ -3,6 +3,7 @@
  */
 
 import { apiClient } from './client';
+import { debugLog } from '@/lib/utils/debug';
 
 export interface MessageSender {
   id: string;
@@ -85,7 +86,7 @@ export async function getConversations(
   skip: number = 0,
   limit: number = 20
 ): Promise<ConversationListResponse> {
-  console.log('[getConversations] API call:', {
+  debugLog.log('[getConversations] API call:', {
     skip,
     limit,
     baseURL: apiClient.defaults.baseURL,
@@ -97,87 +98,20 @@ export async function getConversations(
   });
 
   const url = `/api/v1/messages/conversations?${params.toString()}`;
-  const fullURL = `${apiClient.defaults.baseURL}${url}`;
-  console.log('[getConversations] Full URL:', fullURL);
-  console.log('[getConversations] About to call apiClient.get, timestamp:', new Date().toISOString());
-  console.log('[getConversations] API client config:', {
-    baseURL: apiClient.defaults.baseURL,
-    timeout: apiClient.defaults.timeout,
-    hasAuth: !!apiClient.defaults.headers.common['Authorization'],
-  });
 
   try {
-    console.log('[getConversations] Calling apiClient.get now...', { 
-      timestamp: new Date().toISOString(),
-      url,
-      fullURL,
-      hasAuth: !!apiClient.defaults.headers.common['Authorization'],
-    });
-    
-    // Add a timeout wrapper to ensure we don't wait forever
-    const requestStartTime = Date.now();
-    console.log('[getConversations] Creating request promise...', { timestamp: new Date().toISOString() });
-    
-    // Create request promise - ensure axios actually sends the request
-    console.log('[getConversations] About to call apiClient.get()...', {
-      url,
-      fullURL,
-      timestamp: new Date().toISOString(),
-    });
-    
-    const requestPromise = apiClient.get<ConversationListResponse>(url)
-      .then((response) => {
-        const elapsed = Date.now() - requestStartTime;
-        console.log('[getConversations] Request promise resolved', { 
-          elapsed, 
-          status: response.status,
-          hasData: !!response.data,
-          timestamp: new Date().toISOString() 
-        });
-        return response;
-      })
-      .catch((error) => {
-        const elapsed = Date.now() - requestStartTime;
-        console.error('[getConversations] Request promise rejected', { 
-          elapsed, 
-          error: error.message,
-          code: error.code,
-          hasResponse: !!error.response,
-          hasRequest: !!error.request,
-          timestamp: new Date().toISOString() 
-        });
-        throw error;
-      });
-    
-    console.log('[getConversations] Request promise created (axios.get() called)', {
-      timestamp: new Date().toISOString(),
-    });
-    
-    // Remove duplicate timeout wrapper - apiClient already has a 20s timeout
-    // The Promise.race with timeoutPromise was causing conflicts with axios's own timeout
-    // Let axios handle the timeout, which will throw ECONNABORTED error
-    console.log('[getConversations] Awaiting apiClient.get response (axios handles timeout)...', { timestamp: new Date().toISOString() });
-    const response = await requestPromise;
-    const totalElapsed = Date.now() - requestStartTime;
-    console.log('[getConversations] Promise race completed, got response', { totalElapsed, timestamp: new Date().toISOString() });
-    const requestElapsed = Date.now() - requestStartTime;
-    console.log('[getConversations] apiClient.get returned', { elapsed: requestElapsed, timestamp: new Date().toISOString() });
-    console.log('[getConversations] API response:', {
+    const response = await apiClient.get<ConversationListResponse>(url);
+    debugLog.log('[getConversations] API response:', {
       status: response.status,
-      data: response.data,
       conversationsCount: response.data?.conversations?.length,
-      hasConversations: !!response.data?.conversations,
     });
     return response.data;
   } catch (error: any) {
-    console.error('[getConversations] API error:', {
+    debugLog.error('[getConversations] API error:', {
       message: error.message,
       code: error.code,
-      response: error.response?.data,
       status: error.response?.status,
-      statusText: error.response?.statusText,
       isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
-      request: error.request ? 'Request made but no response' : 'No request made',
     });
     throw error;
   }
@@ -199,7 +133,7 @@ export async function getTotalUnreadCount(): Promise<number> {
 
     return totalUnread;
   } catch (error) {
-    console.error('Failed to get total unread count:', error);
+    debugLog.error('Failed to get total unread count:', error);
     // Return 0 on error to avoid breaking the UI
     return 0;
   }
@@ -209,24 +143,24 @@ export async function getTotalUnreadCount(): Promise<number> {
  * Get a specific conversation by ID
  */
 export async function getConversation(conversationId: string): Promise<Conversation> {
-  console.log('[getConversation] API call:', {
+  debugLog.log('[getConversation] API call:', {
     conversationId,
     baseURL: apiClient.defaults.baseURL,
   });
 
   const url = `/api/v1/messages/conversations/${conversationId}`;
-  console.log('[getConversation] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+    debugLog.log('[getConversation] Full URL:', `${apiClient.defaults.baseURL}${url}`);
 
   try {
     const response = await apiClient.get<Conversation>(url);
-    console.log('[getConversation] API response:', {
+      debugLog.log('[getConversation] API response:', {
       status: response.status,
       data: response.data,
       hasData: !!response.data,
     });
     return response.data;
   } catch (error: any) {
-    console.error('[getConversation] API error:', {
+      debugLog.error('[getConversation] API error:', {
       message: error.message,
       code: error.code,
       response: error.response?.data,
@@ -250,7 +184,7 @@ export async function deleteConversation(conversationId: string): Promise<void> 
  * Send a message to another user
  */
 export async function sendMessage(data: CreateMessageData): Promise<Message> {
-  console.log('[sendMessage] API call:', {
+  debugLog.log('[sendMessage] API call:', {
     url: '/api/v1/messages',
     data,
     baseURL: apiClient.defaults.baseURL,
@@ -258,10 +192,10 @@ export async function sendMessage(data: CreateMessageData): Promise<Message> {
   
   try {
     const response = await apiClient.post<Message>('/api/v1/messages', data);
-    console.log('[sendMessage] API response:', response.data);
+    debugLog.log('[sendMessage] API response:', response.data);
     return response.data;
   } catch (error) {
-    console.error('[sendMessage] API error:', error);
+    debugLog.error('[sendMessage] API error:', error);
     throw error;
   }
 }
@@ -275,7 +209,7 @@ export async function getMessages(
   limit: number = 50,
   searchQuery?: string
 ): Promise<MessageListResponse> {
-  console.log('[getMessages] API call:', {
+  debugLog.log('[getMessages] API call:', {
     conversationId,
     skip,
     limit,
@@ -293,11 +227,11 @@ export async function getMessages(
   }
 
   const url = `/api/v1/messages/conversations/${conversationId}/messages?${params.toString()}`;
-  console.log('[getMessages] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+    debugLog.log('[getMessages] Full URL:', `${apiClient.defaults.baseURL}${url}`);
 
   try {
     const response = await apiClient.get<MessageListResponse>(url);
-    console.log('[getMessages] API response:', {
+      debugLog.log('[getMessages] API response:', {
       status: response.status,
       data: response.data,
       messagesCount: response.data?.messages?.length,
@@ -305,7 +239,7 @@ export async function getMessages(
     });
     return response.data;
   } catch (error: any) {
-    console.error('[getMessages] API error:', {
+      debugLog.error('[getMessages] API error:', {
       message: error.message,
       code: error.code,
       response: error.response?.data,

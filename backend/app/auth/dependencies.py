@@ -37,13 +37,11 @@ def get_current_user(
     Raises:
         HTTPException: If token is invalid or missing
     """
-    logger.info("[get_current_user] Starting authentication")
-    print("[get_current_user] Starting authentication")  # Force print to stdout
+    logger.debug("[get_current_user] Starting authentication")
     try:
         # Verify token and get user info
-        logger.info("[get_current_user] Calling auth0_service.get_user_info")
         user_info = auth0_service.get_user_info(credentials.credentials)
-        logger.info(f"[get_current_user] Authentication successful: sub={user_info.get('sub')}")
+        logger.debug(f"[get_current_user] Authentication successful: sub={user_info.get('sub')}")
         return user_info
     except HTTPException as e:
         logger.error(f"[get_current_user] HTTPException: {e.detail}")
@@ -78,9 +76,7 @@ def get_current_user_from_query(
     Raises:
         HTTPException: If token is invalid or missing, or user not found
     """
-    logger.info("[get_current_user_from_query] Starting authentication")
-    print("[get_current_user_from_query] Starting authentication")  # Force print
-    print(f"[get_current_user_from_query] Token from query: {bool(token)}")  # Force print
+    logger.debug("[get_current_user_from_query] Starting authentication")
     
     # Try query parameter first (for SSE)
     auth_token = token
@@ -90,12 +86,10 @@ def get_current_user_from_query(
         authorization = request.headers.get("Authorization")
         if authorization and authorization.startswith("Bearer "):
             auth_token = authorization.split(" ")[1]
-            logger.info("[get_current_user_from_query] Using token from Authorization header")
-            print("[get_current_user_from_query] Using token from Authorization header")  # Force print
+            logger.debug("[get_current_user_from_query] Using token from Authorization header")
     
     if not auth_token:
-        logger.error("[get_current_user_from_query] No authentication token provided")
-        print("[get_current_user_from_query] No authentication token provided")  # Force print
+        logger.warning("[get_current_user_from_query] No authentication token provided")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Authentication token required",
@@ -103,35 +97,25 @@ def get_current_user_from_query(
     
     try:
         # Verify token and get user info
-        logger.info("[get_current_user_from_query] Calling auth0_service.get_user_info")
-        print("[get_current_user_from_query] Calling auth0_service.get_user_info")  # Force print
         user_info = auth0_service.get_user_info(auth_token)
         auth0_id = extract_auth0_id(user_info)
-        logger.info(f"[get_current_user_from_query] Authentication successful: auth0_id={auth0_id}")
-        print(f"[get_current_user_from_query] Authentication successful: auth0_id={auth0_id}")  # Force print
+        logger.debug(f"[get_current_user_from_query] Authentication successful: auth0_id={auth0_id}")
         
         # Get user from database
-        logger.info("[get_current_user_from_query] Getting user from database")
-        print("[get_current_user_from_query] Getting user from database")  # Force print
         user = UserService.get_user_by_auth0_id(db, auth0_id)
         if not user:
-            logger.error(f"[get_current_user_from_query] User not found: auth0_id={auth0_id}")
-            print(f"[get_current_user_from_query] User not found: auth0_id={auth0_id}")  # Force print
+            logger.warning(f"[get_current_user_from_query] User not found: auth0_id={auth0_id}")
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found",
             )
         
-        logger.info(f"[get_current_user_from_query] User found: user_id={user.id}")
-        print(f"[get_current_user_from_query] User found: user_id={user.id}")  # Force print
+        logger.debug(f"[get_current_user_from_query] User found: user_id={user.id}")
         return user
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"[get_current_user_from_query] Authentication failed: {str(e)}", exc_info=True)
-        print(f"[get_current_user_from_query] Authentication failed: {str(e)}")  # Force print
-        import traceback
-        print(f"[get_current_user_from_query] Traceback: {traceback.format_exc()}")  # Force print
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Authentication failed: {str(e)}",

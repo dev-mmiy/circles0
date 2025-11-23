@@ -6,6 +6,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { extractErrorInfo, requiresAuthRedirect, ErrorType } from '../utils/errorHandler';
 import { addLocalePrefix } from '../utils/locale';
 import { getApiBaseUrl } from '../config';
+import { debugLog } from '../utils/debug';
 
 // API base URL - use getApiBaseUrl() for consistency with other API clients
 // Note: This does NOT include /api/v1 - each endpoint should include it in the path
@@ -46,28 +47,20 @@ apiClient.interceptors.request.use(
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     (config as any).__requestId = requestId;
     
-    console.log('[apiClient] Request interceptor called:', {
+    debugLog.log('[apiClient] Request interceptor called:', {
       requestId,
       method: config.method,
       url: config.url,
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
       hasAuth: !!config.headers?.Authorization,
-      authHeaderPrefix: config.headers?.Authorization?.substring(0, 20) || 'none',
-      timestamp: new Date().toISOString(),
-    });
-    
-    // Log that we're about to send the request
-    console.log('[apiClient] Request will be sent by axios now', {
-      requestId,
-      url: config.url,
       timestamp: new Date().toISOString(),
     });
     
     return config;
   },
   (error) => {
-    console.error('[apiClient] Request interceptor error:', error, {
+    debugLog.error('[apiClient] Request interceptor error:', error, {
       timestamp: new Date().toISOString(),
     });
     return Promise.reject(error);
@@ -80,20 +73,17 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     const requestId = (response.config as any).__requestId;
-    console.log('[apiClient] Response received:', {
+    debugLog.log('[apiClient] Response received:', {
       requestId,
       status: response.status,
       url: response.config.url,
-      hasData: !!response.data,
-      dataType: typeof response.data,
-      dataKeys: response.data ? Object.keys(response.data) : null,
       timestamp: new Date().toISOString(),
     });
     return response;
   },
   async (error: AxiosError) => {
     const requestId = error.config ? (error.config as any).__requestId : undefined;
-    console.log('[apiClient] Response interceptor error handler called', {
+    debugLog.log('[apiClient] Response interceptor error handler called', {
       requestId,
       hasResponse: !!error.response,
       hasRequest: !!error.request,
@@ -103,10 +93,10 @@ apiClient.interceptors.response.use(
       timestamp: new Date().toISOString(),
     });
     
-    // Log more details about the request if available
-    if (error.request) {
+    // Log more details about the request if available (debug only)
+    if (error.request && process.env.NODE_ENV === 'development') {
       const xhr = error.request as XMLHttpRequest;
-      console.log('[apiClient] Request details:', {
+      debugLog.log('[apiClient] Request details:', {
         readyState: xhr?.readyState,
         status: xhr?.status,
         statusText: xhr?.statusText,
@@ -144,7 +134,7 @@ apiClient.interceptors.response.use(
         }
       }
       
-      console.error('[apiClient] API Error:', {
+      debugLog.error('[apiClient] API Error:', {
         status: error.response.status,
         statusText: error.response.statusText,
         data: error.response.data,
@@ -152,7 +142,7 @@ apiClient.interceptors.response.use(
       });
     } else if (error.request) {
       // Request made but no response received (network error, timeout, etc.)
-      console.error('[apiClient] Network Error:', {
+      debugLog.error('[apiClient] Network Error:', {
         message: error.message,
         code: error.code,
         url: error.config?.url,
@@ -161,7 +151,7 @@ apiClient.interceptors.response.use(
       });
     } else {
       // Error in request setup
-      console.error('[apiClient] Request Error:', {
+      debugLog.error('[apiClient] Request Error:', {
         message: error.message,
         url: error.config?.url,
       });

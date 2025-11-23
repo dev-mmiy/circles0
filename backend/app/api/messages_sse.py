@@ -146,20 +146,7 @@ async def message_stream(
         EventSourceResponse: SSE stream with Content-Type: text/event-stream
     """
     try:
-        logger.info(f"[message_stream] Request received for user stream")
-        print(f"[message_stream] Request received for user stream")  # Force print
-        
-        if not current_user:
-            logger.error("[message_stream] No current_user provided")
-            print("[message_stream] No current_user provided")  # Force print
-            from fastapi import HTTPException, status
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication required"
-            )
-        
         logger.info(f"[message_stream] User {current_user.id} connecting to message stream")
-        print(f"[message_stream] User {current_user.id} connecting to message stream")  # Force print
 
         return EventSourceResponse(
             event_generator(current_user.id, request),
@@ -171,9 +158,6 @@ async def message_stream(
         )
     except Exception as e:
         logger.error(f"[message_stream] Error in message_stream endpoint: {e}", exc_info=True)
-        print(f"[message_stream] Error in message_stream endpoint: {e}")  # Force print
-        import traceback
-        print(f"[message_stream] Traceback: {traceback.format_exc()}")  # Force print
         from fastapi import HTTPException, status
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

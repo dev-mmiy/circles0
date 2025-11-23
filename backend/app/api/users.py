@@ -168,8 +168,7 @@ async def create_or_get_user(user_data: UserCreate, db: Session = Depends(get_db
     except Exception as e:
         import traceback
 
-        print(f"Error creating user: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
+        logger.error(f"Error creating user: {str(e)}", exc_info=True)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

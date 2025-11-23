@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/lib/api/client';
+import { debugLog } from './debug';
 
 let tokenPromise: Promise<string> | null = null;
 let tokenCache: string | null = null;
@@ -51,7 +52,7 @@ export async function getAccessToken(
   if (!forceRefresh) {
     const cached = getCachedToken();
     if (cached) {
-      console.log('[tokenManager] Using cached token', {
+      debugLog.log('[tokenManager] Using cached token', {
         cacheAge: tokenExpiry ? Date.now() - (tokenExpiry - TOKEN_CACHE_DURATION) : 0,
         timestamp: new Date().toISOString()
       });
@@ -68,13 +69,13 @@ export async function getAccessToken(
     if (tokenCache === tokenValue || !tokenExpiry || Date.now() < tokenExpiry) {
       tokenCache = tokenValue;
       tokenExpiry = Date.now() + TOKEN_CACHE_DURATION;
-      console.log('[tokenManager] Using token from API client', {
+      debugLog.log('[tokenManager] Using token from API client', {
         timestamp: new Date().toISOString()
       });
       return tokenValue;
     } else {
       // Token in API client is different or expired, clear it
-      console.log('[tokenManager] Token in API client is expired or different, clearing', {
+      debugLog.log('[tokenManager] Token in API client is expired or different, clearing', {
         timestamp: new Date().toISOString()
       });
       delete apiClient.defaults.headers.common['Authorization'];
@@ -83,7 +84,7 @@ export async function getAccessToken(
 
   // If a request is already in progress, reuse that promise
   if (tokenPromise) {
-    console.log('[tokenManager] Reusing existing token request');
+    debugLog.log('[tokenManager] Reusing existing token request');
     try {
       const token = await tokenPromise;
       return token;
@@ -95,7 +96,7 @@ export async function getAccessToken(
   }
 
   // Start new token request with retry logic
-  console.log('[tokenManager] Starting new token request', { timestamp: new Date().toISOString() });
+  debugLog.log('[tokenManager] Starting new token request', { timestamp: new Date().toISOString() });
   const newTokenPromise = (async () => {
     const maxRetries = 2; // Reduced from 3 to 2 to fail faster
     const retryDelay = 1000; // 1 second
@@ -105,7 +106,7 @@ export async function getAccessToken(
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const startTime = Date.now();
-        console.log('[tokenManager] Calling getAccessTokenSilently...', { 
+        debugLog.log('[tokenManager] Calling getAccessTokenSilently...', { 
           attempt, 
           maxRetries,
           timeout: TOKEN_TIMEOUT,
@@ -117,7 +118,7 @@ export async function getAccessToken(
           timeout: TOKEN_TIMEOUT, // Pass timeout to Auth0
         }).catch((err) => {
           // Handle Auth0 specific errors
-          console.warn('[tokenManager] Auth0 getAccessTokenSilently error:', err, {
+          debugLog.warn('[tokenManager] Auth0 getAccessTokenSilently error:', err, {
             attempt,
             timestamp: new Date().toISOString()
           });
@@ -128,7 +129,7 @@ export async function getAccessToken(
         const timeoutPromise = new Promise<never>((_, reject) => {
           const timeoutId = setTimeout(() => {
             const elapsed = Date.now() - startTime;
-            console.error('[tokenManager] Token retrieval timeout', { 
+            debugLog.error('[tokenManager] Token retrieval timeout', { 
               elapsed, 
               attempt,
               maxRetries,
@@ -143,7 +144,7 @@ export async function getAccessToken(
         
         const token = await Promise.race([auth0TokenPromise, timeoutPromise]);
         const elapsed = Date.now() - startTime;
-        console.log('[tokenManager] Token retrieved successfully', { 
+        debugLog.log('[tokenManager] Token retrieved successfully', { 
           elapsed, 
           tokenLength: token?.length, 
           attempt,
@@ -154,7 +155,7 @@ export async function getAccessToken(
       } catch (error: any) {
         lastError = error;
         const elapsed = Date.now() - startTime;
-        console.error('[tokenManager] Token retrieval failed:', { 
+        debugLog.error('[tokenManager] Token retrieval failed:', { 
           error: error?.message || error, 
           elapsed, 
           attempt,
@@ -171,7 +172,7 @@ export async function getAccessToken(
         
         // Wait before retrying (exponential backoff)
         const delay = retryDelay * attempt;
-        console.log(`[tokenManager] Retrying token retrieval in ${delay}ms...`, {
+        debugLog.log(`[tokenManager] Retrying token retrieval in ${delay}ms...`, {
           attempt: attempt + 1,
           maxRetries,
           timestamp: new Date().toISOString()

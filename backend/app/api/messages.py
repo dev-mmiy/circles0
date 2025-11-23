@@ -85,7 +85,7 @@ def _build_message_response(
                 is_read = True
                 read_at = read_record.read_at
         except Exception as e:
-            print(f"[_build_message_response] Error accessing message.reads: {e}")  # Force print to stdout
+            logger.warning(f"[_build_message_response] Error accessing message.reads: {e}")
             # Fallback: query the database directly
             from app.models.message import MessageRead
             read_record = (
@@ -138,9 +138,7 @@ def _build_conversation_response(
     last_message = None
     if conversation.messages:
         last_message_data = conversation.messages[-1]
-        print(f"[_build_conversation_response] Building message response for conversation {conversation.id}")  # Force print to stdout
         last_message = _build_message_response(db, last_message_data, current_user_id)
-        print(f"[_build_conversation_response] Message response built for conversation {conversation.id}")  # Force print to stdout
 
     # Get unread count (re-enabled after performance optimization)
     logger.debug(f"[_build_conversation_response] Getting unread count for conversation {conversation.id}")
@@ -213,17 +211,14 @@ async def get_conversations(
     Returns conversations ordered by last message time (most recent first).
     """
     logger.info(f"[get_conversations] Request received: skip={skip}, limit={limit}")
-    print(f"[get_conversations] Request received: skip={skip}, limit={limit}")  # Force print to stdout
     user_id = get_user_id_from_token(db, current_user)
-    logger.info(f"[get_conversations] User ID: {user_id}")
+    logger.debug(f"[get_conversations] User ID: {user_id}")
 
-    logger.info(f"[get_conversations] Calling MessageService.get_conversations")
     conversations = MessageService.get_conversations(db, user_id, skip, limit)
-    logger.info(f"[get_conversations] Conversations retrieved: count={len(conversations)}")
+    logger.debug(f"[get_conversations] Conversations retrieved: count={len(conversations)}")
 
     total = len(conversations)  # TODO: Get actual total count
 
-    logger.info(f"[get_conversations] Building response for {len(conversations)} conversations")
     response = ConversationListResponse(
         conversations=[
             _build_conversation_response(db, conv, user_id) for conv in conversations
@@ -232,18 +227,7 @@ async def get_conversations(
         skip=skip,
         limit=limit,
     )
-    logger.info(f"[get_conversations] Response built successfully")
-    print(f"[get_conversations] Response built successfully, returning response")  # Force print to stdout
-    
-    # Try to serialize the response to check if there's an issue
-    try:
-        import json
-        from fastapi.encoders import jsonable_encoder
-        serialized = jsonable_encoder(response)
-        print(f"[get_conversations] Response serialized successfully, size: {len(json.dumps(serialized))} bytes")  # Force print to stdout
-    except Exception as e:
-        print(f"[get_conversations] Error serializing response: {e}")  # Force print to stdout
-        logger.error(f"[get_conversations] Error serializing response: {e}")
+    logger.info(f"[get_conversations] Response built successfully: {len(conversations)} conversations")
     
     return response
 
