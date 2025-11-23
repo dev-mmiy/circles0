@@ -113,8 +113,9 @@ export async function getAccessToken(
     let lastError: any = null;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      const startTime = Date.now(); // Move startTime outside try block for catch block access
+      
       try {
-        const startTime = Date.now();
         debugLog.log('[tokenManager] Calling getAccessTokenSilently...', { 
           attempt, 
           maxRetries,
