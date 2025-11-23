@@ -45,7 +45,9 @@ apiClient.interceptors.request.use(
   (config) => {
     // Token will be set via setAuthToken function
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestStartTime = Date.now();
     (config as any).__requestId = requestId;
+    (config as any).__requestStartTime = requestStartTime;
     
     debugLog.log('[apiClient] Request interceptor called:', {
       requestId,
@@ -54,6 +56,7 @@ apiClient.interceptors.request.use(
       baseURL: config.baseURL,
       fullURL: `${config.baseURL}${config.url}`,
       hasAuth: !!config.headers?.Authorization,
+      timeout: config.timeout,
       timestamp: new Date().toISOString(),
     });
     
@@ -73,10 +76,14 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => {
     const requestId = (response.config as any).__requestId;
+    const requestStartTime = (response.config as any).__requestStartTime;
+    const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
+    
     debugLog.log('[apiClient] Response received:', {
       requestId,
       status: response.status,
       url: response.config.url,
+      elapsed: elapsed ? `${elapsed}ms` : undefined,
       timestamp: new Date().toISOString(),
     });
     return response;
@@ -142,12 +149,31 @@ apiClient.interceptors.response.use(
       });
     } else if (error.request) {
       // Request made but no response received (network error, timeout, etc.)
+      const isTimeout = error.code === 'ECONNABORTED' || 
+                       error.message?.includes('timeout') ||
+                       error.message?.includes('exceeded');
+      
+      const requestStartTime = (error.config as any)?.__requestStartTime;
+      const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
+      
       debugLog.error('[apiClient] Network Error:', {
+        requestId,
         message: error.message,
         code: error.code,
         url: error.config?.url,
+        fullURL: error.config ? `${error.config.baseURL}${error.config.url}` : undefined,
+        method: error.config?.method,
         timeout: error.config?.timeout,
-        isTimeout: error.code === 'ECONNABORTED' || error.message?.includes('timeout'),
+        isTimeout,
+        elapsed: elapsed ? `${elapsed}ms` : undefined,
+        timestamp: new Date().toISOString(),
+        ...(isTimeout && {
+          timeoutDetails: {
+            configuredTimeout: error.config?.timeout,
+            actualElapsed: elapsed,
+            timeoutExceeded: elapsed && error.config?.timeout ? elapsed > error.config.timeout : undefined,
+          },
+        }),
       });
     } else {
       // Error in request setup

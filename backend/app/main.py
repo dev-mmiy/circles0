@@ -1,3 +1,4 @@
+import asyncio
 import os
 from datetime import datetime, timezone
 from typing import Any
@@ -189,10 +190,43 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
                 request_logger.info(f"[RequestLogging] Response: {method} {path} -> {response.status_code} ({process_time:.3f}s)")
             
             return response
+        except asyncio.TimeoutError as e:
+            process_time = time.time() - start_time
+            # Log timeout errors with detailed information
+            request_logger.error(
+                f"[RequestLogging] Timeout Error: {method} {path} - "
+                f"Request timed out after {process_time:.3f}s. "
+                f"Query params: {query_params}",
+                exc_info=True
+            )
+            raise
         except Exception as e:
             process_time = time.time() - start_time
-            # Always log errors
-            request_logger.error(f"[RequestLogging] Error processing {method} {path}: {str(e)} ({process_time:.3f}s)", exc_info=True)
+            error_type = type(e).__name__
+            error_message = str(e)
+            
+            # Check if it's a timeout-related error
+            is_timeout = (
+                "timeout" in error_message.lower() or
+                "timed out" in error_message.lower() or
+                isinstance(e, asyncio.TimeoutError)
+            )
+            
+            if is_timeout:
+                request_logger.error(
+                    f"[RequestLogging] Timeout Error: {method} {path} - "
+                    f"{error_type}: {error_message} (elapsed: {process_time:.3f}s). "
+                    f"Query params: {query_params}",
+                    exc_info=True
+                )
+            else:
+                # Always log errors with detailed information
+                request_logger.error(
+                    f"[RequestLogging] Error processing {method} {path}: "
+                    f"{error_type}: {error_message} (elapsed: {process_time:.3f}s). "
+                    f"Query params: {query_params}",
+                    exc_info=True
+                )
             raise
 
 app.add_middleware(RequestLoggingMiddleware)

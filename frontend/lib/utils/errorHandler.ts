@@ -56,11 +56,32 @@ export function extractErrorInfo(error: any): ErrorInfo {
                        axiosError.message?.includes('timeout') ||
                        axiosError.message?.includes('exceeded');
       
+      // Extract timeout details for better error messages
+      const config = axiosError.config as any;
+      const requestStartTime = config?.__requestStartTime;
+      const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
+      const configuredTimeout = config?.timeout;
+      
       if (isTimeout) {
+        let timeoutMessage = 'Request timeout: The server is taking too long to respond.';
+        if (configuredTimeout && elapsed) {
+          timeoutMessage += ` (Timeout: ${configuredTimeout}ms, Elapsed: ${elapsed}ms)`;
+        } else if (configuredTimeout) {
+          timeoutMessage += ` (Timeout: ${configuredTimeout}ms)`;
+        }
+        timeoutMessage += ' Please try again.';
+        
         return {
           type: ErrorType.NETWORK,
-          message: 'Request timeout: The server is taking too long to respond. Please try again.',
-          originalError: error,
+          message: timeoutMessage,
+          originalError: {
+            ...error,
+            timeoutDetails: {
+              configuredTimeout,
+              actualElapsed: elapsed,
+              timeoutExceeded: elapsed && configuredTimeout ? elapsed > configuredTimeout : undefined,
+            },
+          },
         };
       }
       
