@@ -45,7 +45,15 @@ export function clearToken(): void {
  * If token is already cached and valid, returns it immediately
  */
 export async function getAccessToken(
-  getAccessTokenSilently: () => Promise<string>,
+  getAccessTokenSilently: (options?: {
+    audience?: string;
+    scope?: string;
+    ignoreCache?: boolean;
+    redirect_uri?: string;
+    detailedResponse?: boolean;
+    cacheMode?: 'on' | 'off';
+    timeout?: number;
+  }) => Promise<string>,
   forceRefresh: boolean = false
 ): Promise<string> {
   // Check cache first (unless forcing refresh)
