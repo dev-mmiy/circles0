@@ -402,7 +402,7 @@ Auth0を使用したOAuth2.0認証システム。
 2. **コード品質の向上**
    - [x] ESLint警告の解消（`<img>`タグの`<Image />`への置換） ✅ 完了（既に置換済み）
    - [x] 型定義の改善 ✅ 完了（2025-11-23）
-   - [ ] 未使用コードの削除
+   - [x] 未使用コードの削除とデバッグログの整理 ✅ 完了（2025-11-23）
    - [ ] コメントの充実
 
 ---
@@ -1720,6 +1720,19 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/types/jest-dom.d.ts](frontend/types/jest-dom.d.ts) - Jest DOM型定義ファイル
 
 - **.nextディレクトリの権限問題とbuild-manifest.jsonエラーの修正** ✅ 完了
+
+- **未使用コードの削除とデバッグログの整理** ✅ 完了
+  - **実装内容**:
+    - **デバッグログの整理**:
+      - `messages/[conversationId]/page.tsx`: すべての`console.log/error/warn`を`debugLog`に置換
+      - 開発環境でのみログが出力されるように統一
+      - エラーログは本番環境でも出力（モニタリングのため）
+  - **効果**:
+    - 本番環境での不要なログ出力を削減
+    - デバッグログの一貫性が向上
+    - コードの可読性が向上
+  - **実装ファイル**:
+    - [frontend/app/[locale]/messages/[conversationId]/page.tsx](frontend/app/[locale]/messages/[conversationId]/page.tsx) - console.logをdebugLogに置換
   - **問題**: メッセージページで`build-manifest.json`が見つからないエラーが発生
   - **原因**: `.next`ディレクトリのファイルが`root`ユーザーで作成されていたため、通常ユーザーがアクセスできない
   - **解決策**:
