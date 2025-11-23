@@ -7,6 +7,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import and_, func
 from sqlalchemy.orm import Session, joinedload
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 from app.auth.dependencies import get_current_user
 from app.database import get_db
 from app.models.user import User
+from app.models.message import Message, MessageRead
 from app.schemas.message import (
     ConversationCreate,
     ConversationListResponse,
@@ -224,9 +226,6 @@ async def get_conversations(
     conversation_ids = [conv.id for conv in conversations]
     unread_counts = {}
     if conversation_ids:
-        from app.models.message import MessageRead
-        from sqlalchemy import and_, func
-        
         # Count unread messages per conversation in a single query
         unread_counts_query = (
             db.query(
