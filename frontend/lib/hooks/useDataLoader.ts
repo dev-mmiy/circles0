@@ -231,7 +231,7 @@ export function useDataLoader<T>(
       if (requireAuth && !isAuthenticated) {
         if (isMountedRef.current) {
           setError({
-            type: ErrorType.AUTH,
+            type: ErrorType.UNAUTHORIZED,
             message: 'Authentication required',
             originalError: null,
           });
@@ -305,7 +305,7 @@ export function useDataLoader<T>(
               }
 
               setError({
-                type: ErrorType.AUTH,
+                type: ErrorType.UNAUTHORIZED,
                 message: errorMessage,
                 originalError: tokenError,
               });
@@ -325,7 +325,7 @@ export function useDataLoader<T>(
           isLoadingRef.current = false;
           if (isMountedRef.current) {
             setError({
-              type: ErrorType.AUTH,
+              type: ErrorType.UNAUTHORIZED,
               message: 'Authentication required',
               originalError: null,
             });
@@ -424,7 +424,7 @@ export function useDataLoader<T>(
           // This prevents issues where cached data might be stale or invalid
           if (cacheEnabled && cacheRef.current) {
             const cacheAge = Date.now() - cacheRef.current.timestamp;
-            if (cacheAge < cacheTtl && errorInfo.type !== ErrorType.AUTH) {
+            if (cacheAge < cacheTtl && errorInfo.type !== ErrorType.UNAUTHORIZED) {
               // Only use cache for non-auth errors (network errors, etc.)
               // Auth errors should not use cached data
               debugLog.log('[useDataLoader] Using cached data due to non-auth error');
