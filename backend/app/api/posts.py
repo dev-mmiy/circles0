@@ -6,6 +6,7 @@ from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, get_current_user_optional
@@ -154,7 +155,89 @@ async def get_feed(
     posts = PostService.get_feed(db, user_id, skip, limit, filter_type, disease_id)
     logger.debug(f"[get_feed] Posts retrieved: count={len(posts)}")
 
-    response = [_build_post_response(db, post, user_id) for post in posts]
+    # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
+    post_ids = [post.id for post in posts]
+    
+    # Get like counts for all posts in a single query
+    from app.models.post import PostLike
+    like_counts_query = (
+        db.query(PostLike.post_id, func.count(PostLike.id).label('count'))
+        .filter(PostLike.post_id.in_(post_ids))
+        .group_by(PostLike.post_id)
+        .all()
+    )
+    like_counts = {post_id: count for post_id, count in like_counts_query}
+    
+    # Get comment counts for all posts in a single query
+    from app.models.post import PostComment
+    comment_counts_query = (
+        db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
+        .filter(
+            PostComment.post_id.in_(post_ids),
+            PostComment.is_active == True
+        )
+        .group_by(PostComment.post_id)
+        .all()
+    )
+    comment_counts = {post_id: count for post_id, count in comment_counts_query}
+    
+    # Get liked posts for current user in a single query
+    liked_post_ids = set()
+    if user_id and post_ids:
+        liked_posts = (
+            db.query(PostLike.post_id)
+            .filter(
+                PostLike.post_id.in_(post_ids),
+                PostLike.user_id == user_id
+            )
+            .all()
+        )
+        liked_post_ids = {row[0] for row in liked_posts}
+    
+    # Get hashtags for all posts in a single query
+    from app.models.hashtag import PostHashtag
+    from app.models.hashtag import Hashtag
+    post_hashtags_query = (
+        db.query(PostHashtag.post_id, Hashtag)
+        .join(Hashtag, PostHashtag.hashtag_id == Hashtag.id)
+        .filter(PostHashtag.post_id.in_(post_ids))
+        .all()
+    )
+    hashtags_by_post = {}
+    for post_id, hashtag in post_hashtags_query:
+        if post_id not in hashtags_by_post:
+            hashtags_by_post[post_id] = []
+        hashtags_by_post[post_id].append(hashtag)
+    
+    # Get mentions for all posts in a single query
+    from app.models.mention import PostMention
+    from app.models.user import User
+    post_mentions_query = (
+        db.query(PostMention.post_id, User)
+        .join(User, PostMention.mentioned_user_id == User.id)
+        .filter(PostMention.post_id.in_(post_ids))
+        .all()
+    )
+    mentions_by_post = {}
+    for post_id, user in post_mentions_query:
+        if post_id not in mentions_by_post:
+            mentions_by_post[post_id] = []
+        mentions_by_post[post_id].append(user)
+    
+    logger.debug(f"[get_feed] Pre-fetched data: like_counts={len(like_counts)}, comment_counts={len(comment_counts)}, liked_posts={len(liked_post_ids)}, hashtags={len(hashtags_by_post)}, mentions={len(mentions_by_post)}")
+    
+    # Build responses with pre-fetched data
+    response = [
+        _build_post_response_optimized(
+            db, post, user_id,
+            like_counts.get(post.id, 0),
+            comment_counts.get(post.id, 0),
+            post.id in liked_post_ids,
+            hashtags_by_post.get(post.id, []),
+            mentions_by_post.get(post.id, [])
+        )
+        for post in posts
+    ]
     logger.info(f"[get_feed] Response built successfully, returning {len(response)} posts")
     
     return response
@@ -186,7 +269,90 @@ async def get_posts_by_hashtag(
 
     posts = PostService.get_posts_by_hashtag(db, hashtag_name, user_id, skip, limit)
 
-    return [_build_post_response(db, post, user_id) for post in posts]
+    # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
+    post_ids = [post.id for post in posts]
+    
+    if post_ids:
+        # Get like counts for all posts in a single query
+        from app.models.post import PostLike
+        like_counts_query = (
+            db.query(PostLike.post_id, func.count(PostLike.id).label('count'))
+            .filter(PostLike.post_id.in_(post_ids))
+            .group_by(PostLike.post_id)
+            .all()
+        )
+        like_counts = {post_id: count for post_id, count in like_counts_query}
+        
+        # Get comment counts for all posts in a single query
+        from app.models.post import PostComment
+        comment_counts_query = (
+            db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
+            .filter(
+                PostComment.post_id.in_(post_ids),
+                PostComment.is_active == True
+            )
+            .group_by(PostComment.post_id)
+            .all()
+        )
+        comment_counts = {post_id: count for post_id, count in comment_counts_query}
+        
+        # Get liked posts for current user in a single query
+        liked_post_ids = set()
+        if user_id:
+            liked_posts = (
+                db.query(PostLike.post_id)
+                .filter(
+                    PostLike.post_id.in_(post_ids),
+                    PostLike.user_id == user_id
+                )
+                .all()
+            )
+            liked_post_ids = {row[0] for row in liked_posts}
+        
+        # Get hashtags for all posts in a single query
+        from app.models.hashtag import PostHashtag
+        from app.models.hashtag import Hashtag
+        post_hashtags_query = (
+            db.query(PostHashtag.post_id, Hashtag)
+            .join(Hashtag, PostHashtag.hashtag_id == Hashtag.id)
+            .filter(PostHashtag.post_id.in_(post_ids))
+            .all()
+        )
+        hashtags_by_post = {}
+        for post_id, hashtag in post_hashtags_query:
+            if post_id not in hashtags_by_post:
+                hashtags_by_post[post_id] = []
+            hashtags_by_post[post_id].append(hashtag)
+        
+        # Get mentions for all posts in a single query
+        from app.models.mention import PostMention
+        from app.models.user import User
+        post_mentions_query = (
+            db.query(PostMention.post_id, User)
+            .join(User, PostMention.mentioned_user_id == User.id)
+            .filter(PostMention.post_id.in_(post_ids))
+            .all()
+        )
+        mentions_by_post = {}
+        for post_id, user in post_mentions_query:
+            if post_id not in mentions_by_post:
+                mentions_by_post[post_id] = []
+            mentions_by_post[post_id].append(user)
+        
+        # Build responses with pre-fetched data
+        return [
+            _build_post_response_optimized(
+                db, post, user_id,
+                like_counts.get(post.id, 0),
+                comment_counts.get(post.id, 0),
+                post.id in liked_post_ids,
+                hashtags_by_post.get(post.id, []),
+                mentions_by_post.get(post.id, [])
+            )
+            for post in posts
+        ]
+    else:
+        return []
 
 
 @router.get(
@@ -246,7 +412,90 @@ async def get_user_posts(
 
     posts = PostService.get_user_posts(db, user_id, current_user_id, skip, limit)
 
-    return [_build_post_response(db, post, current_user_id) for post in posts]
+    # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
+    post_ids = [post.id for post in posts]
+    
+    if post_ids:
+        # Get like counts for all posts in a single query
+        from app.models.post import PostLike
+        like_counts_query = (
+            db.query(PostLike.post_id, func.count(PostLike.id).label('count'))
+            .filter(PostLike.post_id.in_(post_ids))
+            .group_by(PostLike.post_id)
+            .all()
+        )
+        like_counts = {post_id: count for post_id, count in like_counts_query}
+        
+        # Get comment counts for all posts in a single query
+        from app.models.post import PostComment
+        comment_counts_query = (
+            db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
+            .filter(
+                PostComment.post_id.in_(post_ids),
+                PostComment.is_active == True
+            )
+            .group_by(PostComment.post_id)
+            .all()
+        )
+        comment_counts = {post_id: count for post_id, count in comment_counts_query}
+        
+        # Get liked posts for current user in a single query
+        liked_post_ids = set()
+        if current_user_id:
+            liked_posts = (
+                db.query(PostLike.post_id)
+                .filter(
+                    PostLike.post_id.in_(post_ids),
+                    PostLike.user_id == current_user_id
+                )
+                .all()
+            )
+            liked_post_ids = {row[0] for row in liked_posts}
+        
+        # Get hashtags for all posts in a single query
+        from app.models.hashtag import PostHashtag
+        from app.models.hashtag import Hashtag
+        post_hashtags_query = (
+            db.query(PostHashtag.post_id, Hashtag)
+            .join(Hashtag, PostHashtag.hashtag_id == Hashtag.id)
+            .filter(PostHashtag.post_id.in_(post_ids))
+            .all()
+        )
+        hashtags_by_post = {}
+        for post_id, hashtag in post_hashtags_query:
+            if post_id not in hashtags_by_post:
+                hashtags_by_post[post_id] = []
+            hashtags_by_post[post_id].append(hashtag)
+        
+        # Get mentions for all posts in a single query
+        from app.models.mention import PostMention
+        from app.models.user import User
+        post_mentions_query = (
+            db.query(PostMention.post_id, User)
+            .join(User, PostMention.mentioned_user_id == User.id)
+            .filter(PostMention.post_id.in_(post_ids))
+            .all()
+        )
+        mentions_by_post = {}
+        for post_id, user in post_mentions_query:
+            if post_id not in mentions_by_post:
+                mentions_by_post[post_id] = []
+            mentions_by_post[post_id].append(user)
+        
+        # Build responses with pre-fetched data
+        return [
+            _build_post_response_optimized(
+                db, post, current_user_id,
+                like_counts.get(post.id, 0),
+                comment_counts.get(post.id, 0),
+                post.id in liked_post_ids,
+                hashtags_by_post.get(post.id, []),
+                mentions_by_post.get(post.id, [])
+            )
+            for post in posts
+        ]
+    else:
+        return []
 
 
 @router.put(
@@ -587,7 +836,7 @@ async def delete_comment(
 def _build_post_response(
     db: Session, post, current_user_id: Optional[UUID]
 ) -> PostResponse:
-    """Build PostResponse with calculated fields."""
+    """Build PostResponse with calculated fields (non-optimized version for single post)."""
     from app.schemas.post import (
         HashtagResponse,
         MentionResponse,
@@ -617,6 +866,81 @@ def _build_post_response(
 
     # Get mentions for the post
     mentioned_users = MentionService.get_mentions_for_post(db, post.id)
+    mention_responses = [
+        MentionResponse(
+            id=user.id,
+            nickname=user.nickname,
+            username=user.username,
+            avatar_url=user.avatar_url,
+        )
+        for user in mentioned_users
+    ]
+
+    # Get images for the post
+    image_responses = [
+        PostImageResponse(
+            id=image.id,
+            image_url=image.image_url,
+            display_order=image.display_order,
+            created_at=image.created_at,
+        )
+        for image in (post.images if hasattr(post, "images") and post.images else [])
+    ]
+
+    return PostResponse(
+        id=post.id,
+        user_id=post.user_id,
+        content=post.content,
+        visibility=post.visibility,
+        is_active=post.is_active,
+        created_at=post.created_at,
+        updated_at=post.updated_at,
+        author=(
+            PostAuthor(
+                id=post.user.id,
+                nickname=post.user.nickname,
+                username=post.user.username,
+                avatar_url=post.user.avatar_url,
+            )
+            if post.user
+            else None
+        ),
+        like_count=like_count,
+        comment_count=comment_count,
+        is_liked_by_current_user=is_liked,
+        hashtags=hashtag_responses,
+        mentions=mention_responses,
+        images=image_responses,
+    )
+
+
+def _build_post_response_optimized(
+    db: Session,
+    post,
+    current_user_id: Optional[UUID],
+    like_count: int,
+    comment_count: int,
+    is_liked: bool,
+    hashtags: list,
+    mentioned_users: list,
+) -> PostResponse:
+    """Build PostResponse with pre-fetched data (optimized version for bulk operations)."""
+    from app.schemas.post import (
+        HashtagResponse,
+        MentionResponse,
+        PostAuthor,
+        PostImageResponse,
+    )
+
+    hashtag_responses = [
+        HashtagResponse(
+            id=hashtag.id,
+            name=hashtag.name,
+            created_at=hashtag.created_at,
+        )
+        for hashtag in hashtags
+    ]
+
     mention_responses = [
         MentionResponse(
             id=user.id,
