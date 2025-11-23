@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-21
+## 最終更新日: 2025-11-21（デバッグログ整理完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装中、本番環境稼働中
 
@@ -372,20 +372,33 @@ Auth0を使用したOAuth2.0認証システム。
      - extractErrorInfoを使用したエラー情報の抽出
 
 ### 優先度: 中
-1. **テストの追加**
-   - ユニットテスト
-   - インテグレーションテスト
-   - E2Eテスト
+1. **パフォーマンス最適化の確認** ⏳ 進行中
+   - [ ] 未読数計算のパフォーマンス測定（本番環境）
+   - [ ] 必要に応じてキャッシュ導入
+   - [ ] データベースクエリのプロファイリング
+   - [ ] 画像の最適化（WebP、遅延読み込み）
+   - [ ] コードスプリッティングの最適化
+   - [ ] キャッシング戦略の見直し
 
-2. **パフォーマンス最適化**
-   - 画像の最適化
-   - コードスプリッティング
-   - キャッシング戦略
+2. **テストの追加**
+   - [ ] useDataLoaderのユニットテスト
+   - [ ] tokenManagerのユニットテスト
+   - [ ] 未読数計算の統合テスト
+   - [ ] インテグレーションテストの拡充
+   - [ ] E2Eテストの導入（Playwright）
 
 ### 優先度: 低
 1. **ドキュメント整備**
-   - API仕様書の充実
-   - 開発者ガイドの作成
+   - [ ] API仕様書の充実
+   - [ ] 開発者ガイドの作成
+   - [ ] デバッグログの使用方法ドキュメント
+   - [ ] 本番環境でのログ設定ガイド
+
+2. **コード品質の向上**
+   - [ ] ESLint警告の解消（`<img>`タグの`<Image />`への置換）
+   - [ ] 未使用コードの削除
+   - [ ] 型定義の改善
+   - [ ] コメントの充実
 
 ---
 
@@ -622,13 +635,15 @@ Auth0を使用したOAuth2.0認証システム。
 ### パフォーマンス
 - [ ] **フロントエンド最適化**
   - [ ] 画像最適化（WebP、遅延読み込み）
-  - [ ] コード分割
-  - [ ] キャッシング戦略
+  - [ ] Next.js Imageコンポーネントへの置換（ESLint警告対応）
+  - [ ] コード分割の最適化
+  - [ ] キャッシング戦略の見直し
 - [ ] **バックエンド最適化**
-  - [ ] データベースクエリ最適化
-  - [ ] インデックス追加
-  - [ ] Redis キャッシュ導入
-  - [ ] CDN導入
+  - [x] データベースクエリ最適化（未読数計算の最適化完了）
+  - [ ] パフォーマンス測定とプロファイリング
+  - [ ] インデックス追加の検討
+  - [ ] Redis キャッシュ導入の検討
+  - [ ] CDN導入の検討
 
 ### テスト
 - [ ] **自動テスト**
@@ -642,21 +657,30 @@ Auth0を使用したOAuth2.0認証システム。
   - [ ] セキュリティスキャン
 
 ### 監視・ロギング
-- [ ] **アプリケーション監視**
-  - [ ] Google Cloud Monitoring
-  - [ ] エラー追跡（Sentry）
-  - [ ] パフォーマンス監視（APM）
-- [ ] **ロギング強化**
-  - [ ] 構造化ログ
-  - [ ] ログ集約（Cloud Logging）
+- [x] **ロギング強化** ✅ 完了（2025-11-21）
+  - [x] デバッグログの整理と本番環境での無効化
+  - [x] 環境変数によるログ制御（DEBUG環境変数）
+  - [x] 構造化ログ（logger使用）
+  - [ ] ログ集約（Cloud Logging）の最適化
   - [ ] アラート設定
+- [ ] **アプリケーション監視**
+  - [ ] Google Cloud Monitoringの活用
+  - [ ] エラー追跡（Sentry）の導入
+  - [ ] パフォーマンス監視（APM）の導入
 
 ---
 
 ## 次回セッションの推奨タスク
 
 ### 最優先（すぐに着手）
-1. ~~**通知機能の完成**~~ ✅ 完了（2025-11-13）
+1. ~~**デバッグログの整理**~~ ✅ 完了（2025-11-21）
+   - [x] バックエンド: print()文を削除し、loggerに統一
+   - [x] フロントエンド: console.logをdebugLogに置換
+   - [x] 本番環境では不要なログを無効化
+   - [x] 開発環境では引き続きデバッグログを確認可能
+   - [x] TypeScriptビルドエラーの修正
+
+2. ~~**通知機能の完成**~~ ✅ 完了（2025-11-13）
    - [x] バックエンド実装完了（モデル、サービス、API）
    - [x] 既存サービスへの統合完了
    - [x] データベースマイグレーション実行
@@ -664,17 +688,17 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] ローカル環境でのテスト完了
    - [x] 本番環境デプロイ完了
 
-2. ~~**リアルタイム通知機能**~~ ✅ 完了（2025-11-15）
+3. ~~**リアルタイム通知機能**~~ ✅ 完了（2025-11-15）
    - [x] Server-Sent Events (SSE) 実装
    - [x] 通知のリアルタイム配信
    - [x] ブラウザ通知（Web Push API） ✅ 完了（2025-11-15）
 
-3. ~~**フォロワー限定投稿フィルター**~~ ✅ 完了（既に実装済み）
+4. ~~**フォロワー限定投稿フィルター**~~ ✅ 完了（既に実装済み）
    - [x] バックエンド: フォロー関係に基づく投稿フィルタリング
    - [x] フロントエンド: フォローしているユーザーの投稿のみ表示
    - [x] フィルタータブUI実装（すべての投稿/フォロー中のユーザー）
 
-4. ~~**通知一覧ページ**~~ ✅ 完了（2025-11-15）
+5. ~~**通知一覧ページ**~~ ✅ 完了（2025-11-15）
    - [x] 通知一覧ページ (`app/[locale]/notifications/page.tsx`) の作成
    - [x] フィルター機能（すべての通知/未読のみ）の実装
    - [x] ページネーション対応（20件ずつ読み込み）
@@ -685,7 +709,7 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] エラーハンドリングと再試行機能
 
 ### 優先度高（短期目標）
-5. ~~**投稿機能の拡張**~~ ✅ 完了（2025-11-15）
+6. ~~**投稿機能の拡張**~~ ✅ 完了（2025-11-15）
    - [x] 画像添付機能（画像URL対応） ✅ 完了（2025-11-15）
      - [x] PostImageモデルの作成（post_imagesテーブル）
      - [x] データベースマイグレーション（add_post_image_table_20251115.py）
@@ -707,7 +731,7 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] メンション機能 ✅ 完了（2025-11-15）
    - [x] 疾患別フィード ✅ 完了（2025-11-15）
 
-6. ~~**検索機能の拡張**~~ ✅ 完了（2025-11-15）
+7. ~~**検索機能の拡張**~~ ✅ 完了（2025-11-15）
    - [x] 検索履歴保存 ✅ 完了（2025-11-15）
      - [x] 検索履歴ユーティリティ関数の作成（localStorage使用）
      - [x] ユーザー検索の検索履歴機能（最大10件、重複排除）
@@ -730,7 +754,7 @@ Auth0を使用したOAuth2.0認証システム。
      - [x] 多言語対応（日本語・英語）
 
 ### 技術改善
-6. ~~**自動テストの導入**~~ ✅ 完了（2025-11-15）
+8. ~~**自動テストの導入**~~ ✅ 完了（2025-11-15）
    - [x] pytest によるバックエンドテスト ✅ 既に実装済み
      - テストファイル: `backend/tests/` (9ファイル)
      - テスト設定: `backend/tests/conftest.py`
@@ -748,9 +772,35 @@ Auth0を使用したOAuth2.0認証システム。
      - package.json更新: Jest関連の依存関係追加
      - CI/CD統合: GitHub Actionsで自動実行
 
-7. ~~**`.gitignore` の更新**~~ ✅ 完了（2025-11-15）
-   - [x] `tsconfig.tsbuildinfo` 追加
-   - [x] `*.tsbuildinfo` パターン追加
+9. ~~**`.gitignore` の更新**~~ ✅ 完了（2025-11-15）
+
+### 次回セッションの推奨タスク（新規）
+
+1. **パフォーマンス最適化の確認** ⏳ 進行中
+   - [ ] 未読数計算のパフォーマンス測定（本番環境）
+   - [ ] 必要に応じてキャッシュ導入
+   - [ ] データベースクエリのプロファイリング
+   - [ ] 画像の最適化（WebP、遅延読み込み）
+   - [ ] Next.js Imageコンポーネントへの置換（ESLint警告対応）
+
+2. **テストの追加**
+   - [ ] useDataLoaderのユニットテスト
+   - [ ] tokenManagerのユニットテスト
+   - [ ] 未読数計算の統合テスト
+   - [ ] インテグレーションテストの拡充
+   - [ ] E2Eテストの導入（Playwright）
+
+3. **コード品質の向上**
+   - [ ] ESLint警告の解消（`<img>`タグの`<Image />`への置換）
+   - [ ] 未使用コードの削除
+   - [ ] 型定義の改善
+   - [ ] コメントの充実
+
+4. **ドキュメント整備**
+   - [ ] API仕様書の充実
+   - [ ] 開発者ガイドの作成
+   - [ ] デバッグログの使用方法ドキュメント
+   - [ ] 本番環境でのログ設定ガイド
 
 ---
 
@@ -1500,6 +1550,57 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/messages/ja.json](frontend/messages/ja.json) - 日本語翻訳追加
     - [frontend/messages/en.json](frontend/messages/en.json) - 英語翻訳追加
 
+### 2025-11-21 (続き)
+- **デバッグログの整理と本番環境での無効化** ✅ 完了
+  - **バックエンド実装**:
+    - `DEBUG`環境変数による制御を追加
+    - `RequestLoggingMiddleware`: 本番環境では詳細ログを無効化、1秒以上のリクエストのみログ
+    - `print()`文を削除し、`logger`に統一
+      - `messages.py`, `posts.py`, `messages_sse.py`: `print()`を削除
+      - `auth/dependencies.py`: `print()`を`logger.debug`に変更
+      - `users.py`: `print()`を`logger.error`に変更
+      - `main.py`: 起動時の`print()`を`logger`に変更
+  - **フロントエンド実装**:
+    - `debug.ts`ユーティリティの作成
+      - `debugLog.log`, `debugLog.warn`, `debugLog.error`を提供
+      - `NODE_ENV === 'development'`のときのみログ出力（`error`は常に出力）
+    - 主要ファイルの`console.log`を`debugLog`に置換
+      - `api/client.ts`: リクエスト/レスポンスインターセプター
+      - `api/messages.ts`: メッセージAPI呼び出し
+      - `hooks/useDataLoader.ts`: データローダー
+      - `utils/tokenManager.ts`: トークン管理
+      - `hooks/useMessageStream.ts`: SSE接続
+      - `hooks/useAuthWithLoader.ts`: 認証とローディング
+  - **効果**:
+    - 本番環境では不要なログが出力されない
+    - 開発環境では引き続きデバッグログを確認可能
+    - エラーログは本番環境でも出力（問題追跡のため）
+    - ログ出力が統一され、管理しやすくなった
+  - **実装ファイル**:
+    - [backend/app/main.py](backend/app/main.py) - DEBUG環境変数とRequestLoggingMiddleware改善
+    - [backend/app/api/messages.py](backend/app/api/messages.py) - print()削除
+    - [backend/app/api/posts.py](backend/app/api/posts.py) - print()削除
+    - [backend/app/api/messages_sse.py](backend/app/api/messages_sse.py) - print()削除
+    - [backend/app/auth/dependencies.py](backend/app/auth/dependencies.py) - print()削除
+    - [backend/app/api/users.py](backend/app/api/users.py) - print()削除
+    - [frontend/lib/utils/debug.ts](frontend/lib/utils/debug.ts) - デバッグユーティリティ新規作成
+    - [frontend/lib/api/client.ts](frontend/lib/api/client.ts) - console.logをdebugLogに置換
+    - [frontend/lib/api/messages.ts](frontend/lib/api/messages.ts) - console.logをdebugLogに置換
+    - [frontend/lib/hooks/useDataLoader.ts](frontend/lib/hooks/useDataLoader.ts) - console.logをdebugLogに置換
+    - [frontend/lib/utils/tokenManager.ts](frontend/lib/utils/tokenManager.ts) - console.logをdebugLogに置換
+    - [frontend/lib/hooks/useMessageStream.ts](frontend/lib/hooks/useMessageStream.ts) - console.logをdebugLogに置換
+    - [frontend/lib/hooks/useAuthWithLoader.ts](frontend/lib/hooks/useAuthWithLoader.ts) - console.logをdebugLogに置換
+
+- **TypeScriptビルドエラーの修正** ✅ 完了
+  - **問題**: `PostForm.tsx`で`instanceof Promise`の型エラーが発生
+  - **原因**: `onPostCreated`の型が`() => void`で、TypeScriptが`instanceof Promise`チェックを許可していない
+  - **解決策**:
+    - `onPostCreated`の型を`() => void | Promise<void>`に変更
+    - `instanceof Promise`の代わりに、型安全なPromise判定に変更
+      - `result && typeof result === 'object' && 'then' in result && typeof (result as any).then === 'function'`
+  - **実装ファイル**:
+    - [frontend/components/PostForm.tsx](frontend/components/PostForm.tsx) - 型定義とPromise判定の修正
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1552,6 +1653,8 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+14a4e02 - fix: Fix TypeScript error in PostForm.tsx (2025-11-21)
+c52827e - refactor: Clean up debug logs and disable in production (2025-11-21)
 6dc9906 - feat: Implement group search and fix translation lints (2025-11-20)
 6b2f1d0 - refactor: Remove duplicate Home link from Header navigation (2025-11-15)
 997f170 - fix: Fix useParams import error in groups and messages pages (2025-11-15)
@@ -1560,8 +1663,6 @@ fe0f4ae - fix: Add i18n locale prefix support and make isort check non-blocking 
 f7dbef8 - Add DOTENV_SILENT environment variable and improve path resolution (2025-11-15)
 887f4e8 - Improve .env file loading error handling (2025-11-15)
 cfd185c - Add error handling for dotenv import and filter .env errors from isort (2025-11-15)
-2d71c2a - Refactor .env loading to prevent error messages completely (2025-11-15)
-eec5fc8 - Wrap stat() call in try-except to prevent error messages (2025-11-15)
 ```
 
 ---
@@ -1579,6 +1680,6 @@ eec5fc8 - Wrap stat() call in try-except to prevent error messages (2025-11-15)
 
 ---
 
-**最終更新日**: 2025-11-21
+**最終更新日**: 2025-11-21（デバッグログ整理完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了
