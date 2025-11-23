@@ -376,6 +376,7 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] get_feedのN+1クエリ問題の修正 ✅ 完了（2025-11-21）
    - [x] get_conversationsのN+1クエリ問題の修正 ✅ 完了
    - [x] エラーハンドリングの改善（タイムアウト時の詳細ログ） ✅ 完了（2025-11-21）
+   - [x] パフォーマンス測定と検証機能の追加 ✅ 完了（2025-11-21）
    - [ ] 未読数計算のパフォーマンス測定（本番環境）
    - [ ] 必要に応じてキャッシュ導入
    - [ ] データベースクエリのプロファイリング
@@ -1698,6 +1699,37 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/lib/utils/errorHandler.ts](frontend/lib/utils/errorHandler.ts) - タイムアウト詳細を含むエラーメッセージ
     - [backend/app/main.py](backend/app/main.py) - タイムアウトエラーの詳細ログ
 
+- **パフォーマンス測定と検証機能の追加** ✅ 完了
+  - **実装内容**:
+    - **バックエンド**:
+      - `get_feed`エンドポイントに詳細なパフォーマンスログを追加
+        - feed取得時間、bulk_fetch時間、response_build時間、total時間を記録
+      - `get_conversations`エンドポイントに詳細なパフォーマンスログを追加
+        - conversations取得時間、unread_counts取得時間、response_build時間、total時間を記録
+    - **フロントエンド**:
+      - 最適化されたエンドポイントのパフォーマンスメトリクスをログに記録
+        - レスポンス時間、データサイズ、アイテム数を記録
+    - **パフォーマンステストスクリプト**:
+      - `backend/scripts/performance_test.py`を作成
+        - `get_feed`と`get_conversations`エンドポイントのパフォーマンスを測定
+        - 複数回のイテレーションで平均、最小、最大値を計算
+        - コマンドライン引数でエンドポイントとイテレーション数を指定可能
+    - **ドキュメント**:
+      - `docs/PERFORMANCE_MONITORING.md`を作成
+        - パフォーマンス測定機能の使用方法
+        - パフォーマンス目標とトラブルシューティングガイド
+  - **効果**:
+    - リアルタイムでのパフォーマンス監視が可能
+    - 自動化されたパフォーマンステストの実行
+    - パフォーマンス回帰の検出
+    - 最適化の効果検証
+  - **実装ファイル**:
+    - [backend/app/api/posts.py](backend/app/api/posts.py) - パフォーマンスログ追加
+    - [backend/app/api/messages.py](backend/app/api/messages.py) - パフォーマンスログ追加
+    - [frontend/lib/api/client.ts](frontend/lib/api/client.ts) - パフォーマンスメトリクスログ追加
+    - [backend/scripts/performance_test.py](backend/scripts/performance_test.py) - パフォーマンステストスクリプト
+    - [docs/PERFORMANCE_MONITORING.md](docs/PERFORMANCE_MONITORING.md) - パフォーマンス監視ガイド
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1750,6 +1782,7 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+cb03d6b - Add performance measurement and monitoring (2025-11-21)
 8f51b16 - Improve error handling with detailed timeout logging (2025-11-21)
 aab0af4 - Optimize get_feed to eliminate N+1 queries (2025-11-21)
 d2b0a44 - fix: Fix missing imports in messages.py (2025-11-21)
@@ -1780,6 +1813,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-21（エラーハンドリング改善完了）
+**最終更新日**: 2025-11-21（パフォーマンス測定機能追加完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了
