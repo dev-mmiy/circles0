@@ -20,6 +20,7 @@ interface UserProfileCardProps {
 
 export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserProfileCardProps) {
   const t = useTranslations('userProfileCard');
+  const tLanguage = useTranslations('languageSwitcher');
   const locale = useLocale();
   
   // Format date for display
@@ -41,6 +42,14 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
     if (!gender) return t('notAvailable');
     const genderKey = `genderValues.${gender}` as const;
     return t(genderKey, { defaultValue: gender });
+  };
+
+  // Format language for display
+  const formatLanguage = (languageCode?: string) => {
+    if (!languageCode) return t('notAvailable');
+    // Use languageSwitcher translations for language names
+    const languageKey = `languages.${languageCode}` as const;
+    return tLanguage(languageKey, { defaultValue: languageCode });
   };
 
   return (
@@ -100,7 +109,7 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
           {user.preferred_language && (
             <div>
               <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('language')}</h3>
-              <p className="text-gray-700">{user.preferred_language}</p>
+              <p className="text-gray-700">{formatLanguage(user.preferred_language)}</p>
             </div>
           )}
         </div>

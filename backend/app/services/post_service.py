@@ -64,7 +64,7 @@ class PostService:
 
         Respects visibility settings:
         - Public posts: visible to everyone
-        - Followers_only: visible to followers (TODO: implement follow relationship)
+        - Followers_only: visible to followers (follow relationship check implemented)
         - Private: visible only to author
         """
         query = (
@@ -88,9 +88,19 @@ class PostService:
         if post.visibility == "private" and post.user_id != current_user_id:
             return None
 
-        # TODO: Implement followers_only check when follow feature is implemented
-        if post.visibility == "followers_only" and current_user_id is None:
-            return None
+        # Check followers_only visibility
+        if post.visibility == "followers_only":
+            if current_user_id is None:
+                # Unauthenticated users cannot see followers_only posts
+                return None
+            elif post.user_id == current_user_id:
+                # Users can always see their own posts
+                pass
+            else:
+                # Check if current user is following the post author
+                from app.services.follow_service import FollowService
+                if not FollowService.is_following(db, current_user_id, post.user_id):
+                    return None
 
         return post
 
@@ -119,12 +129,21 @@ class PostService:
             pass
         elif current_user_id:
             # Authenticated user viewing another user's posts
-            query = query.filter(
-                or_(
-                    Post.visibility == "public",
-                    Post.visibility == "followers_only",  # TODO: Add follower check
+            # Check if current user is following the post author
+            from app.services.follow_service import FollowService
+            is_following = FollowService.is_following(db, current_user_id, user_id)
+            
+            if is_following:
+                # Show public and followers_only posts
+                query = query.filter(
+                    or_(
+                        Post.visibility == "public",
+                        Post.visibility == "followers_only",
+                    )
                 )
-            )
+            else:
+                # Only show public posts if not following
+                query = query.filter(Post.visibility == "public")
         else:
             # Unauthenticated user - only public posts
             query = query.filter(Post.visibility == "public")
@@ -194,9 +213,12 @@ class PostService:
             .filter(Post.is_active == True)
         )
 
-        # Filter by disease if specified
+        # Step 1: Filter by disease if specified
+        # When disease_id is provided, we only show posts from users who have that disease
+        # and have made it public and searchable
         if disease_id is not None:
             # Get user IDs that have this disease (public and searchable)
+            # This query is executed once and cached in disease_user_ids list
             user_diseases = (
                 db.query(UserDisease.user_id)
                 .filter(
@@ -210,17 +232,19 @@ class PostService:
             disease_user_ids = [ud[0] for ud in user_diseases]
 
             if not disease_user_ids:
-                # No users have this disease, return empty result
+                # No users have this disease, return empty result early
                 return []
 
             # Filter posts to only those from users with this disease
             query = query.filter(Post.user_id.in_(disease_user_ids))
 
-        # Optimize: Get following user IDs once if needed
+        # Step 2: Get following user IDs once if needed (optimization to avoid repeated queries)
+        # This list is used to determine which users' followers_only posts should be shown
         following_user_ids = []
         if current_user_id:
             if filter_type in ("following", "all", "disease"):
-                # Get list of user IDs that current user is following (once)
+                # Get list of user IDs that current user is following (executed once)
+                # This avoids querying the follow relationship multiple times
                 following_ids = (
                     db.query(Follow.following_id)
                     .filter(
@@ -231,6 +255,7 @@ class PostService:
                 )
                 following_user_ids = [f[0] for f in following_ids]
 
+        # Step 3: Apply visibility and filter_type filters
         if current_user_id:
             if filter_type == "my_posts":
                 # Show only posts from current user (all visibility levels)
@@ -238,6 +263,7 @@ class PostService:
             elif filter_type == "following":
                 if following_user_ids:
                     # Show posts from followed users only (public + followers_only)
+                    # Users can see public posts and followers_only posts from users they follow
                     query = query.filter(
                         Post.user_id.in_(following_user_ids),
                         or_(
@@ -246,11 +272,13 @@ class PostService:
                         ),
                     )
                 else:
-                    # User is not following anyone, return empty result
+                    # User is not following anyone, return empty result early
                     return []
             else:
                 # filter_type="all" or "disease": show public posts + followers_only posts from followed users
-                # Show public posts OR followers_only posts from followed users
+                # Visibility logic:
+                # - Public posts: visible to everyone
+                # - Followers_only posts: only visible if current user follows the post author
                 query = query.filter(
                     or_(
                         Post.visibility == "public",
@@ -261,16 +289,22 @@ class PostService:
                     )
                 )
         else:
-            # Unauthenticated user - only public posts
+            # Unauthenticated user - only public posts are visible
             query = query.filter(Post.visibility == "public")
 
+        # Step 4: Execute query with pagination
         posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
 
-        # Optimize: Filter out blocked users in a single query instead of N+1
+        # Step 5: Filter out blocked users (optimization to avoid N+1 queries)
+        # Instead of checking block status for each post individually, we:
+        # 1. Query all block relationships for current user in one query
+        # 2. Build a set of blocked user IDs (both directions: user blocked others and others blocked user)
+        # 3. Filter posts in memory using set lookup (O(1) per post)
         if current_user_id and posts:
             from app.models.block import Block
 
             # Get all blocked user IDs (both directions) in one query
+            # This includes both users that current_user blocked and users that blocked current_user
             blocked_user_ids = set()
             blocked_relationships = (
                 db.query(Block)
@@ -283,13 +317,17 @@ class PostService:
                 )
                 .all()
             )
+            # Build set of blocked user IDs (the "other" user in each block relationship)
             for block in blocked_relationships:
                 if block.blocker_id == current_user_id:
+                    # Current user blocked this user
                     blocked_user_ids.add(block.blocked_id)
                 else:
+                    # This user blocked current user
                     blocked_user_ids.add(block.blocker_id)
 
             # Filter posts in memory (much faster than N queries)
+            # Set lookup is O(1), so this is O(n) where n is number of posts
             posts = [post for post in posts if post.user_id not in blocked_user_ids]
 
         return posts

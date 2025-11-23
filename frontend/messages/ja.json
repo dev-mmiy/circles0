@@ -5,7 +5,7 @@
   },
   "navigation": {
     "home": "ホーム",
-    "feed": "フィード",
+    "feed": "タイムライン",
     "users": "ユーザー",
     "userSearch": "ユーザー検索",
     "diseases": "疾患",
@@ -70,7 +70,7 @@
       "title": "会話",
       "sendMessage": "メッセージを送信",
       "messagePlaceholder": "メッセージを入力...",
-      "imageUrlPlaceholder": "画像URL（オプション）",
+      "attachImage": "画像を添付",
       "send": "送信",
       "sending": "送信中...",
       "noMessages": "メッセージがありません",
@@ -84,7 +84,10 @@
       "markAsRead": "既読にする",
       "messageRequired": "メッセージを入力してください",
       "messageTooLong": "メッセージは5000文字以内で入力してください",
-      "imageUrlTooLong": "画像URLは500文字以内で入力してください",
+      "invalidImageFile": "無効な画像ファイルです。JPEG、PNG、GIF、WebP形式のみ対応しています。",
+      "failedToCreatePreview": "画像プレビューの作成に失敗しました",
+      "uploadServiceNotConfigured": "画像アップロードサービスが設定されていません。",
+      "uploadFailed": "画像のアップロードに失敗しました",
       "deletedMessage": "削除されたメッセージ",
       "searchMessages": "メッセージを検索...",
       "noSearchResults": "検索結果が見つかりませんでした",
@@ -258,7 +261,7 @@
     "newGroupMessage": "グループメッセージ"
   },
   "feed": {
-    "title": "コミュニティフィード",
+    "title": "タイムライン",
     "subtitle": "みんなの経験や気持ちをシェアしましょう",
     "loginPrompt": "投稿を作成するにはログインしてください",
     "errorLoadingPosts": "投稿の読み込みに失敗しました",

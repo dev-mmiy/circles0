@@ -223,14 +223,20 @@ async def get_conversations(
     conversations_elapsed = time.time() - conversations_start_time
     logger.debug(f"[get_conversations] Conversations retrieved: count={len(conversations)} (took {conversations_elapsed:.3f}s)")
 
-    total = len(conversations)  # TODO: Get actual total count
+    # Get actual total count
+    total = MessageService.count_conversations(db, user_id)
 
-    # Optimize: Get all unread counts in a single query
+    # Optimize: Get all unread counts in a single query instead of N+1 queries
+    # This approach uses GROUP BY with LEFT JOIN to count unread messages per conversation
+    # in a single database query, rather than querying each conversation individually
     conversation_ids = [conv.id for conv in conversations]
     unread_counts = {}
     unread_counts_start_time = time.time()
     if conversation_ids:
-        # Count unread messages per conversation in a single query
+        # Count unread messages per conversation in a single query using GROUP BY
+        # LEFT JOIN MessageRead to find messages that have been read
+        # Filter for messages where MessageRead.id IS NULL (unread messages)
+        # GROUP BY conversation_id to get count per conversation
         unread_counts_query = (
             db.query(
                 Message.conversation_id,
@@ -413,12 +419,15 @@ async def get_messages(
     if q:
         logger.info(f"[get_messages] Searching messages with query: {q}")
         messages = MessageService.search_messages(db, conversation_id, user_id, q, skip, limit)
+        # Get actual total count for search results
+        total = MessageService.count_search_messages(db, conversation_id, user_id, q)
     else:
         logger.info(f"[get_messages] Getting messages")
         messages = MessageService.get_messages(db, conversation_id, user_id, skip, limit)
+        # Get actual total count
+        total = MessageService.count_messages(db, conversation_id, user_id)
 
-    logger.info(f"[get_messages] Messages retrieved: count={len(messages)}")
-    total = len(messages)  # TODO: Get actual total count
+    logger.info(f"[get_messages] Messages retrieved: count={len(messages)}, total={total}")
 
     logger.info(f"[get_messages] Building response for {len(messages)} messages")
     response = MessageListResponse(

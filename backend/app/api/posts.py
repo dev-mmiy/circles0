@@ -159,10 +159,13 @@ async def get_feed(
     logger.debug(f"[get_feed] Posts retrieved: count={len(posts)} (took {feed_elapsed:.3f}s)")
 
     # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
+    # This avoids N+1 query problems by fetching all related data in a few queries
+    # instead of querying for each post individually
     post_ids = [post.id for post in posts]
     bulk_fetch_start_time = time.time()
     
-    # Get like counts for all posts in a single query
+    # Step 1: Get like counts for all posts in a single query using GROUP BY
+    # This replaces N queries (one per post) with a single aggregated query
     from app.models.post import PostLike
     like_counts_query = (
         db.query(PostLike.post_id, func.count(PostLike.id).label('count'))
@@ -172,7 +175,8 @@ async def get_feed(
     )
     like_counts = {post_id: count for post_id, count in like_counts_query}
     
-    # Get comment counts for all posts in a single query
+    # Step 2: Get comment counts for all posts in a single query using GROUP BY
+    # Only count active comments (is_active == True)
     from app.models.post import PostComment
     comment_counts_query = (
         db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
@@ -185,7 +189,8 @@ async def get_feed(
     )
     comment_counts = {post_id: count for post_id, count in comment_counts_query}
     
-    # Get liked posts for current user in a single query
+    # Step 3: Get liked posts for current user in a single query
+    # This determines which posts the current user has liked (for UI state)
     liked_post_ids = set()
     if user_id and post_ids:
         liked_posts = (
@@ -198,7 +203,8 @@ async def get_feed(
         )
         liked_post_ids = {row[0] for row in liked_posts}
     
-    # Get hashtags for all posts in a single query
+    # Step 4: Get hashtags for all posts in a single query
+    # JOIN PostHashtag with Hashtag to get full hashtag objects
     from app.models.hashtag import PostHashtag
     from app.models.hashtag import Hashtag
     post_hashtags_query = (
@@ -207,13 +213,15 @@ async def get_feed(
         .filter(PostHashtag.post_id.in_(post_ids))
         .all()
     )
+    # Build dictionary mapping post_id to list of hashtags
     hashtags_by_post = {}
     for post_id, hashtag in post_hashtags_query:
         if post_id not in hashtags_by_post:
             hashtags_by_post[post_id] = []
         hashtags_by_post[post_id].append(hashtag)
     
-    # Get mentions for all posts in a single query
+    # Step 5: Get mentions for all posts in a single query
+    # JOIN PostMention with User to get full user objects for mentioned users
     from app.models.mention import PostMention
     from app.models.user import User
     post_mentions_query = (
@@ -222,6 +230,7 @@ async def get_feed(
         .filter(PostMention.post_id.in_(post_ids))
         .all()
     )
+    # Build dictionary mapping post_id to list of mentioned users
     mentions_by_post = {}
     for post_id, user in post_mentions_query:
         if post_id not in mentions_by_post:
@@ -382,7 +391,7 @@ async def get_post(
 
     Respects visibility settings:
     - Public: visible to everyone
-    - Followers only: visible to followers (TODO: implement follow check)
+    - Followers only: visible to followers (follow check implemented)
     - Private: visible only to author
     """
     user_id = get_user_id_from_token(db, current_user) if current_user else None

@@ -195,8 +195,8 @@ class MessageService:
             "content": message.content,
             "image_url": message.image_url,
             "is_deleted": message.is_deleted,
-            "created_at": message.created_at.isoformat(),
-            "updated_at": message.updated_at.isoformat(),
+            "created_at": message.created_at.isoformat() + "Z",
+            "updated_at": message.updated_at.isoformat() + "Z",
             "sender": sender_data,
         }
 
@@ -257,12 +257,14 @@ class MessageService:
             return conversations
 
         # Optimize: Load all last messages in a single query using window function
-        # This avoids N+1 query problem
+        # This avoids N+1 query problem where we would query for last message per conversation
+        # individually. Instead, we use SQL window functions to get the latest message
+        # for all conversations in a single query.
         conversation_ids = [conv.id for conv in conversations]
         
-        # Get latest message per conversation using window function approach
-        # First, get all messages for these conversations, ordered by created_at desc
-        # Then use a subquery to get only the first (latest) message per conversation
+        # Step 1: Create a subquery that assigns row numbers to messages within each conversation
+        # ROW_NUMBER() window function partitions by conversation_id and orders by created_at DESC
+        # This gives us rn=1 for the latest message in each conversation
         latest_messages_subquery = (
             db.query(
                 Message.id,
@@ -281,7 +283,7 @@ class MessageService:
             .subquery()
         )
         
-        # Get only the latest message (rn=1) for each conversation
+        # Step 2: Filter to get only the latest message (rn=1) for each conversation
         latest_message_ids = (
             db.query(latest_messages_subquery.c.id)
             .filter(latest_messages_subquery.c.rn == 1)
@@ -291,7 +293,8 @@ class MessageService:
         if latest_message_ids:
             message_ids = [row[0] for row in latest_message_ids]
             
-            # Load all latest messages with relationships in a single query
+            # Step 3: Load all latest messages with their relationships (sender, reads) in a single query
+            # Using joinedload to eagerly load relationships prevents additional queries
             last_messages = (
                 db.query(Message)
                 .options(
@@ -302,7 +305,8 @@ class MessageService:
                 .all()
             )
             
-            # Map messages to conversations
+            # Step 4: Map messages to their conversations
+            # This creates a dictionary for O(1) lookup when assigning messages to conversations
             messages_by_conversation = {msg.conversation_id: msg for msg in last_messages}
             for conversation in conversations:
                 if conversation.id in messages_by_conversation:
@@ -452,6 +456,110 @@ class MessageService:
         return messages
 
     @staticmethod
+    def count_conversations(
+        db: Session,
+        user_id: UUID,
+    ) -> int:
+        """
+        Count total conversations for a user.
+
+        Args:
+            db: Database session
+            user_id: User ID
+
+        Returns:
+            Total number of conversations
+        """
+        count = (
+            db.query(func.count(Conversation.id))
+            .filter(
+                or_(
+                    and_(
+                        Conversation.user1_id == user_id,
+                        Conversation.user1_deleted_at.is_(None),
+                    ),
+                    and_(
+                        Conversation.user2_id == user_id,
+                        Conversation.user2_deleted_at.is_(None),
+                    ),
+                )
+            )
+            .scalar()
+        )
+        return count or 0
+
+    @staticmethod
+    def count_messages(
+        db: Session,
+        conversation_id: UUID,
+        user_id: UUID,
+    ) -> int:
+        """
+        Count total messages in a conversation.
+
+        Args:
+            db: Database session
+            conversation_id: Conversation ID
+            user_id: User ID (must be a participant)
+
+        Returns:
+            Total number of messages
+        """
+        # Verify user is a participant
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
+        if not conversation:
+            return 0
+
+        count = (
+            db.query(func.count(Message.id))
+            .filter(
+                Message.conversation_id == conversation_id,
+                Message.is_deleted == False,
+            )
+            .scalar()
+        )
+        return count or 0
+
+    @staticmethod
+    def count_search_messages(
+        db: Session,
+        conversation_id: UUID,
+        user_id: UUID,
+        query: str,
+    ) -> int:
+        """
+        Count total messages matching search query in a conversation.
+
+        Args:
+            db: Database session
+            conversation_id: Conversation ID
+            user_id: User ID (must be a participant)
+            query: Search query string
+
+        Returns:
+            Total number of matching messages
+        """
+        # Verify user is a participant
+        conversation = MessageService.get_conversation_by_id(
+            db, conversation_id, user_id
+        )
+        if not conversation:
+            return 0
+
+        count = (
+            db.query(func.count(Message.id))
+            .filter(
+                Message.conversation_id == conversation_id,
+                Message.is_deleted == False,
+                Message.content.ilike(f"%{query}%"),
+            )
+            .scalar()
+        )
+        return count or 0
+
+    @staticmethod
     def mark_messages_as_read(
         db: Session,
         conversation_id: UUID,
@@ -496,7 +604,9 @@ class MessageService:
 
         messages = query.all()
 
-        # Filter out already read messages
+        # Step 1: Filter out already read messages to avoid duplicate MessageRead records
+        # Query all existing MessageRead records for these messages in a single query
+        # This prevents creating duplicate read records and improves performance
         already_read_message_ids = {
             mr.message_id
             for mr in db.query(MessageRead)
@@ -507,9 +617,11 @@ class MessageService:
             .all()
         }
 
+        # Filter to only messages that haven't been read yet
         messages_to_mark = [m for m in messages if m.id not in already_read_message_ids]
 
-        # Create MessageRead records
+        # Step 2: Create MessageRead records for unread messages
+        # Each MessageRead record tracks when a specific message was read by a specific user
         marked_count = 0
         for message in messages_to_mark:
             message_read = MessageRead(
@@ -611,9 +723,16 @@ class MessageService:
             return 0
 
         # Optimized: Use COUNT with LEFT JOIN instead of loading all message IDs
-        # Count messages that are not from the user and not deleted
-        # and don't have a corresponding MessageRead record
-        # Note: Using subquery for better performance
+        # This approach is much more efficient than:
+        # 1. Loading all messages and checking read status individually (N+1 problem)
+        # 2. Loading all message IDs and checking read status in Python
+        #
+        # Instead, we use SQL to:
+        # - LEFT JOIN MessageRead to find messages that have been read
+        # - Filter for messages where MessageRead.id IS NULL (unread messages)
+        # - Count in a single database query
+        #
+        # Performance: O(1) database query instead of O(n) queries
         unread_count = (
             db.query(func.count(Message.id))
             .select_from(Message)
@@ -626,9 +745,9 @@ class MessageService:
             )
             .filter(
                 Message.conversation_id == conversation_id,
-                Message.sender_id != user_id,
+                Message.sender_id != user_id,  # Don't count own messages
                 Message.is_deleted == False,
-                MessageRead.id.is_(None),  # Messages that haven't been read
+                MessageRead.id.is_(None),  # Messages that haven't been read (no MessageRead record)
             )
             .scalar()
         )

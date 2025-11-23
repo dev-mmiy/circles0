@@ -55,7 +55,7 @@ async def event_generator(user_id: UUID, request: Request):
             "data": {
                 "message": "Connected to message stream",
                 "user_id": str(user_id),
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
             },
         }
 
@@ -77,7 +77,7 @@ async def event_generator(user_id: UUID, request: Request):
                     "event": "reconnect",
                     "data": {
                         "message": "Connection timeout, please reconnect",
-                        "timestamp": datetime.utcnow().isoformat(),
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
                     },
                 }
                 break

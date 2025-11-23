@@ -129,10 +129,13 @@ class GroupService:
         groups = query.all()
 
         # Load last message for each group
+        # Note: This creates N+1 queries (one per group)
+        # For better performance with many groups, consider using a window function
+        # similar to get_conversations in MessageService
         for group in groups:
             last_message = (
                 db.query(GroupMessage)
-                .options(joinedload(GroupMessage.sender))
+                .options(joinedload(GroupMessage.sender))  # Eagerly load sender to avoid additional query
                 .filter(
                     GroupMessage.group_id == group.id,
                     GroupMessage.is_deleted == False,
@@ -144,6 +147,33 @@ class GroupService:
                 group.messages = [last_message]
 
         return groups
+
+    @staticmethod
+    def count_groups(
+        db: Session,
+        user_id: UUID,
+    ) -> int:
+        """
+        Count total groups for a user.
+
+        Args:
+            db: Database session
+            user_id: User ID
+
+        Returns:
+            Total number of groups
+        """
+        count = (
+            db.query(func.count(Group.id))
+            .join(GroupMember)
+            .filter(
+                GroupMember.user_id == user_id,
+                GroupMember.left_at.is_(None),
+                Group.is_deleted == False,
+            )
+            .scalar()
+        )
+        return count or 0
 
     @staticmethod
     def search_groups(
@@ -186,6 +216,35 @@ class GroupService:
         )
 
         return groups
+
+    @staticmethod
+    def count_search_groups(
+        db: Session,
+        query: str,
+    ) -> int:
+        """
+        Count total groups matching search query.
+
+        Args:
+            db: Database session
+            query: Search query string
+
+        Returns:
+            Total number of matching groups
+        """
+        search_query = f"%{query}%"
+        count = (
+            db.query(func.count(Group.id))
+            .filter(
+                or_(
+                    Group.name.ilike(search_query),
+                    Group.description.ilike(search_query),
+                ),
+                Group.is_deleted == False,
+            )
+            .scalar()
+        )
+        return count or 0
 
     @staticmethod
     def get_group_by_id(
@@ -768,6 +827,47 @@ class GroupService:
         messages.reverse()
 
         return messages
+
+    @staticmethod
+    def count_group_messages(
+        db: Session,
+        group_id: UUID,
+        user_id: UUID,
+    ) -> int:
+        """
+        Count total messages in a group.
+
+        Args:
+            db: Database session
+            group_id: Group ID
+            user_id: User ID (must be a member)
+
+        Returns:
+            Total number of messages
+        """
+        # Verify user is a member
+        membership = (
+            db.query(GroupMember)
+            .filter(
+                GroupMember.group_id == group_id,
+                GroupMember.user_id == user_id,
+                GroupMember.left_at.is_(None),
+            )
+            .first()
+        )
+
+        if not membership:
+            return 0
+
+        count = (
+            db.query(func.count(GroupMessage.id))
+            .filter(
+                GroupMessage.group_id == group_id,
+                GroupMessage.is_deleted == False,
+            )
+            .scalar()
+        )
+        return count or 0
 
     @staticmethod
     def mark_group_messages_as_read(

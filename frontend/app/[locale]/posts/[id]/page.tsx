@@ -6,9 +6,23 @@ import { Link } from '@/i18n/routing';
 import { useRouter } from '@/i18n/routing';
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useCallback } from 'react';
-import CommentSection from '@/components/CommentSection';
+import dynamic from 'next/dynamic';
 import PostCard from '@/components/PostCard';
 import { getPost, type PostDetail } from '@/lib/api/posts';
+
+// Dynamically import CommentSection to reduce initial bundle size
+const CommentSection = dynamic(() => import('@/components/CommentSection'), {
+  loading: () => (
+    <div className="mt-6 bg-white rounded-lg shadow p-4">
+      <div className="animate-pulse">
+        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="h-20 bg-gray-200 rounded mb-2"></div>
+        <div className="h-20 bg-gray-200 rounded"></div>
+      </div>
+    </div>
+  ),
+  ssr: false,
+});
 
 export default function PostDetailPage() {
   const t = useTranslations('postDetailPage');

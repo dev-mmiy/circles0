@@ -353,7 +353,6 @@ export default function MessagesPage() {
                                 width={48}
                                 height={48}
                                 className="rounded-full object-cover"
-                                unoptimized
                               />
                             ) : (
                               <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
@@ -571,7 +570,6 @@ export default function MessagesPage() {
                               width={40}
                               height={40}
                               className="rounded-full object-cover"
-                              unoptimized
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">

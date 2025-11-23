@@ -25,13 +25,14 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
-import { ArrowLeft, Trash2, Send, Search, X } from 'lucide-react';
+import { ArrowLeft, Trash2, Send, Search, X, Image as ImageIcon } from 'lucide-react';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useAuthWithLoader } from '@/lib/hooks/useAuthWithLoader';
 import { debugLog } from '@/lib/utils/debug';
+import { uploadImage, validateImageFile, createImagePreview } from '@/lib/api/images';
 
 export default function ConversationPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
   const params = useNextParams();
@@ -64,9 +65,12 @@ export default function ConversationPage() {
   
   // Message form state
   const [messageContent, setMessageContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Message search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -262,7 +266,16 @@ export default function ConversationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, conversationId]);
 
-  // リアルタイムメッセージ更新
+  /**
+   * Handle new message from Server-Sent Events (SSE) stream
+   * 
+   * This function is called when a new message is received via the SSE connection.
+   * It filters messages to only process those for the current conversation,
+   * converts the SSE message format to the internal Message format,
+   * and updates the UI state accordingly.
+   * 
+   * @param messageEvent - Message event received from SSE stream
+   */
   const handleNewMessage = (messageEvent: MessageEvent) => {
     debugLog.log('[handleNewMessage] Received message event:', {
       messageId: messageEvent.id,
@@ -272,13 +285,16 @@ export default function ConversationPage() {
       currentUserId: currentUser?.id,
     });
 
-    // 現在の会話のメッセージのみ処理
+    // Filter: Only process messages for the current conversation
+    // This prevents messages from other conversations from appearing in the UI
     if (messageEvent.conversation_id !== conversationId) {
       debugLog.log('[handleNewMessage] Skipping message - conversation_id mismatch');
       return;
     }
 
-    // メッセージをMessage形式に変換
+    // Convert SSE message format to internal Message format
+    // SSE messages come with sender data included, but we need to match
+    // the Message interface used throughout the component
     const newMessage: Message = {
       id: messageEvent.id,
       conversation_id: messageEvent.conversation_id,
@@ -289,7 +305,7 @@ export default function ConversationPage() {
       created_at: messageEvent.created_at,
       updated_at: messageEvent.updated_at,
       sender: messageEvent.sender,
-      is_read: false,
+      is_read: false,  // New messages are unread by default
       read_at: null,
     };
 
@@ -359,21 +375,79 @@ export default function ConversationPage() {
     loadMessages(false);
   };
 
+  /**
+   * Handle image file selection and upload
+   * 
+   * This function processes image file selection from the file input:
+   * 1. Validates the file (type, size)
+   * 2. Creates a preview URL for immediate UI feedback
+   * 3. Uploads the image to the server (GCS)
+   * 4. Stores the uploaded image URL for message sending
+   * 
+   * @param e - File input change event
+   */
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Step 1: Validate file (type, size limits)
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      alert(validation.error || tConv('invalidImageFile'));
+      return;
+    }
+
+    // Step 2: Create preview URL for immediate UI feedback
+    // This uses FileReader to create a data URL that can be displayed immediately
+    try {
+      const previewUrl = await createImagePreview(file);
+      setImagePreview(previewUrl);
+    } catch (err) {
+      debugLog.error('Failed to create preview:', err);
+      alert(tConv('failedToCreatePreview'));
+      return;
+    }
+
+    // Step 3: Upload image to server (GCS)
+    // The uploaded URL will be included in the message when sending
+    setUploadingImage(true);
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const uploadResponse = await uploadImage(file, accessToken);
+      setUploadedImageUrl(uploadResponse.url);
+    } catch (err: any) {
+      debugLog.error('Failed to upload image:', err);
+      setImagePreview(null);
+      if (err.response?.status === 503) {
+        alert(tConv('uploadServiceNotConfigured'));
+      } else {
+        alert(err.response?.data?.detail || err.message || tConv('uploadFailed'));
+      }
+    } finally {
+      setUploadingImage(false);
+      // Reset file input to allow selecting the same file again
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // 画像を削除
+  const handleRemoveImage = () => {
+    setUploadedImageUrl(null);
+    setImagePreview(null);
+  };
+
   // メッセージを送信
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageContent.trim() && !imageUrl.trim()) {
+    if (!messageContent.trim() && !uploadedImageUrl) {
       return;
     }
 
     if (messageContent.length > 5000) {
       alert(tConv('messageTooLong'));
-      return;
-    }
-
-    if (imageUrl && imageUrl.length > 500) {
-      alert(tConv('imageUrlTooLong'));
       return;
     }
 
@@ -390,16 +464,15 @@ export default function ConversationPage() {
       // Ensure content is not empty (backend requires min_length=1)
       // If content is empty but image_url exists, use a placeholder
       const trimmedContent = messageContent.trim();
-      const trimmedImageUrl = imageUrl.trim() || null;
       
-      if (!trimmedContent && !trimmedImageUrl) {
-        throw new Error('Message content or image URL is required');
+      if (!trimmedContent && !uploadedImageUrl) {
+        throw new Error('Message content or image is required');
       }
 
       const messageData: CreateMessageData = {
         recipient_id: conversation.other_user.id,
         content: trimmedContent || ' ', // Use single space if empty (image only message)
-        image_url: trimmedImageUrl,
+        image_url: uploadedImageUrl || null,
       };
 
       const newMessage = await executeWithLoading(
@@ -417,30 +490,34 @@ export default function ConversationPage() {
         sender_id: newMessage.sender_id,
       });
       
-      // メッセージはSSE経由でhandleNewMessageから追加されるため、
-      // ここでは追加しない（重複を防ぐ）
-      // ただし、SSEが遅延する場合に備えて、短い遅延後に追加を試みる
-      // （SSEが先に来た場合は重複チェックでスキップされる）
+      // Message handling strategy:
+      // 1. Messages are typically added via SSE (handleNewMessage) for real-time updates
+      // 2. However, SSE may be delayed or fail, so we add a fallback:
+      //    - Wait 500ms for SSE to deliver the message
+      //    - If SSE message hasn't arrived, add it manually
+      //    - Duplicate check prevents adding the same message twice
+      // This ensures messages appear immediately even if SSE is slow
       setTimeout(() => {
         setMessages(prev => {
-          // 重複チェック（SSE経由で既に追加されている可能性がある）
+          // Duplicate check: SSE may have already added this message
           if (prev.some(m => m.id === newMessage.id)) {
             debugLog.log('[handleSendMessage] Message already exists (added via SSE), skipping');
             return prev;
           }
           debugLog.log('[handleSendMessage] Adding message (SSE may have been delayed)');
           const updated = [...prev, newMessage];
-          // メッセージ追加後にスクロール
+          // Scroll to bottom after adding message
           setTimeout(() => {
             scrollToBottom();
           }, 100);
           return updated;
         });
-      }, 500); // SSEが500ms以内に来ない場合のみ追加
+      }, 500); // Wait 500ms for SSE, then add manually if not received
       
       // フォームをクリア
       setMessageContent('');
-      setImageUrl('');
+      setUploadedImageUrl(null);
+      setImagePreview(null);
       
       // 会話情報を更新（非同期で実行）
       loadConversation().catch((err) => {
@@ -480,7 +557,11 @@ export default function ConversationPage() {
   // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string) => {
     const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
-    const date = new Date(dateString);
+    // Normalize date string to ensure UTC interpretation
+    const normalizedDateString = dateString.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateString) 
+      ? dateString 
+      : dateString + 'Z';
+    const date = new Date(normalizedDateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
     
     // Use Intl.DateTimeFormat to format in user's timezone
@@ -573,7 +654,6 @@ export default function ConversationPage() {
                       width={40}
                       height={40}
                       className="rounded-full object-cover"
-                      unoptimized
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
@@ -763,7 +843,6 @@ export default function ConversationPage() {
                               width={32}
                               height={32}
                               className="rounded-full object-cover"
-                              unoptimized
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
@@ -805,8 +884,9 @@ export default function ConversationPage() {
                                       alt="Attached image"
                                       width={400}
                                       height={300}
+                                      sizes="(max-width: 768px) 100vw, 400px"
                                       className="max-w-full rounded-lg object-contain"
-                                      unoptimized
+                                      loading="lazy"
                                       onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                       }}
@@ -850,37 +930,35 @@ export default function ConversationPage() {
           {/* Message form */}
           <div className="border-t border-gray-200 bg-white py-4 sticky bottom-0 z-10">
             <form onSubmit={handleSendMessage} className="space-y-2">
-              {imageUrl && (
+              {(imagePreview || uploadedImageUrl) && (
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                   <Image
-                    src={imageUrl}
+                    src={uploadedImageUrl || imagePreview || ''}
                     alt="Preview"
                     width={64}
                     height={64}
                     className="object-cover rounded"
-                    unoptimized
+                    loading="lazy"
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
+                  {uploadingImage && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                    </div>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setImageUrl('')}
+                    onClick={handleRemoveImage}
                     className="text-red-600 hover:text-red-700"
+                    disabled={uploadingImage}
                   >
                     ×
                   </button>
                 </div>
               )}
               <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder={tConv('imageUrlPlaceholder')}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  disabled={isSending}
-                />
                 <textarea
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
@@ -888,7 +966,7 @@ export default function ConversationPage() {
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
                   rows={1}
                   maxLength={5000}
-                  disabled={isSending}
+                  disabled={isSending || uploadingImage}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
@@ -896,9 +974,26 @@ export default function ConversationPage() {
                     }
                   }}
                 />
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  disabled={isSending || uploadingImage}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isSending || uploadingImage}
+                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  title={tConv('attachImage')}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                </button>
                 <button
                   type="submit"
-                  disabled={isSending || (!messageContent.trim() && !imageUrl.trim())}
+                  disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                 >
                   {isSending ? (

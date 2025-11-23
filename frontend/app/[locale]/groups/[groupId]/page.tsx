@@ -27,8 +27,14 @@ import { useLocale } from 'next-intl';
 import { getUserTimezone, formatDateInTimezone } from '@/lib/utils/timezone';
 import { ArrowLeft, Trash2, Send, Image as ImageIcon, Users, Settings } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
-import GroupSettingsModal from '@/components/GroupSettingsModal';
+import dynamic from 'next/dynamic';
 import { useMessageStream } from '@/lib/hooks/useMessageStream';
+
+// Dynamically import GroupSettingsModal to reduce initial bundle size
+const GroupSettingsModal = dynamic(() => import('@/components/GroupSettingsModal'), {
+  loading: () => null,
+  ssr: false,
+});
 
 export default function GroupChatPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -442,7 +448,6 @@ export default function GroupChatPage() {
                             width={32}
                             height={32}
                             className="rounded-full object-cover"
-                            unoptimized
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
@@ -487,8 +492,9 @@ export default function GroupChatPage() {
                                   alt="Message attachment"
                                   width={400}
                                   height={300}
+                                  sizes="(max-width: 768px) 100vw, 400px"
                                   className="max-w-full rounded-lg object-contain"
-                                  unoptimized
+                                  loading="lazy"
                                   onError={(e) => {
                                     (e.target as HTMLImageElement).style.display = 'none';
                                   }}
@@ -546,7 +552,7 @@ export default function GroupChatPage() {
                       width={256}
                       height={128}
                       className="max-w-xs max-h-32 rounded-lg object-contain"
-                      unoptimized
+                      loading="lazy"
                     />
                     <button
                       type="button"

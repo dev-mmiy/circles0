@@ -231,7 +231,8 @@ async def get_groups(
 
     groups = GroupService.get_groups(db, user_id, skip, limit)
 
-    total = len(groups)  # TODO: Get actual total count
+    # Get actual total count
+    total = GroupService.count_groups(db, user_id)
 
     return GroupListResponse(
         groups=[_build_group_response(db, group, user_id) for group in groups],
@@ -262,7 +263,8 @@ async def search_groups(
 
     groups = GroupService.search_groups(db, q, skip, limit)
 
-    total = len(groups)  # TODO: Get actual total count
+    # Get actual total count for search results
+    total = GroupService.count_search_groups(db, q)
 
     return GroupListResponse(
         groups=[_build_group_response(db, group, user_id) for group in groups],
@@ -581,7 +583,8 @@ async def get_group_messages(
 
     messages = GroupService.get_group_messages(db, group_id, user_id, skip, limit)
 
-    total = len(messages)  # TODO: Get actual total count
+    # Get actual total count
+    total = GroupService.count_group_messages(db, group_id, user_id)
 
     return GroupMessageListResponse(
         messages=[

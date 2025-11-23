@@ -5,10 +5,16 @@ import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { likePost, unlikePost, deletePost, type Post } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
-import EditPostModal from './EditPostModal';
+
+// Dynamically import EditPostModal to reduce initial bundle size
+const EditPostModal = dynamic(() => import('./EditPostModal'), {
+  loading: () => null,
+  ssr: false,
+});
 
 interface PostCardProps {
   post: Post;
@@ -323,8 +329,9 @@ export default function PostCard({
                     src={image.image_url}
                     alt={`Post image ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                     className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                    unoptimized
+                    loading="lazy"
                     onClick={() => {
                       window.open(image.image_url, '_blank');
                     }}
@@ -342,7 +349,9 @@ export default function PostCard({
                     src={image.image_url}
                     alt={`Post image ${index + 1}`}
                     fill
+                    sizes="(max-width: 768px) 50vw, (max-width: 1200px) 40vw, 600px"
                     className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                    loading="lazy"
                     onClick={() => {
                       window.open(image.image_url, '_blank');
                     }}
@@ -354,7 +363,6 @@ export default function PostCard({
                         target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
                       }
                     }}
-                    unoptimized
                   />
                 )}
               </div>

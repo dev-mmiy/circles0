@@ -282,7 +282,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center relative overflow-hidden">
                                                             {user.avatar_url ? (
-                                                                <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full object-cover" unoptimized />
+                                                                <Image src={user.avatar_url} alt="" width={32} height={32} className="rounded-full object-cover" />
                                                             ) : (
                                                                 <span className="text-sm font-medium">{user.nickname?.[0] || '?'}</span>
                                                             )}
@@ -311,7 +311,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                             <div className="flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded-full bg-white border flex items-center justify-center relative overflow-hidden">
                                                     {member.user?.avatar_url ? (
-                                                        <Image src={member.user.avatar_url} alt="" width={40} height={40} className="rounded-full object-cover" unoptimized />
+                                                        <Image src={member.user.avatar_url} alt="" width={40} height={40} className="rounded-full object-cover" />
                                                     ) : (
                                                         <span className="font-medium text-gray-600">{member.user?.nickname?.[0] || '?'}</span>
                                                     )}
