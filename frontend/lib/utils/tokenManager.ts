@@ -63,8 +63,9 @@ export async function getAccessToken(
   // Check if token is already set in API client (from previous call)
   // Only use it if it's not expired (within last 5 minutes)
   const currentToken = apiClient.defaults.headers.common['Authorization'];
-  if (!forceRefresh && currentToken && currentToken.startsWith('Bearer ')) {
-    const tokenValue = currentToken.replace('Bearer ', '');
+  const tokenString = typeof currentToken === 'string' ? currentToken : '';
+  if (!forceRefresh && tokenString && tokenString.startsWith('Bearer ')) {
+    const tokenValue = tokenString.replace('Bearer ', '');
     // Only reuse if we have a valid cached token or it's been less than 5 minutes
     if (tokenCache === tokenValue || !tokenExpiry || Date.now() < tokenExpiry) {
       tokenCache = tokenValue;
