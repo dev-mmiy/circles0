@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useParams as useNextParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -433,12 +434,15 @@ export default function GroupChatPage() {
                       }`}
                   >
                     {showAvatar && !isOwnMessage && (
-                      <div className="flex-shrink-0">
+                      <div className="flex-shrink-0 relative w-8 h-8">
                         {message.sender?.avatar_url ? (
-                          <img
+                          <Image
                             src={message.sender.avatar_url}
                             alt={message.sender.nickname}
-                            className="w-8 h-8 rounded-full object-cover"
+                            width={32}
+                            height={32}
+                            className="rounded-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
@@ -477,14 +481,19 @@ export default function GroupChatPage() {
                               </p>
                             )}
                             {message.image_url && (
-                              <img
-                                src={message.image_url}
-                                alt="Message attachment"
-                                className="mt-2 max-w-full rounded-lg"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
+                              <div className="mt-2 relative w-full">
+                                <Image
+                                  src={message.image_url}
+                                  alt="Message attachment"
+                                  width={400}
+                                  height={300}
+                                  className="max-w-full rounded-lg object-contain"
+                                  unoptimized
+                                  onError={(e) => {
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                              </div>
                             )}
                           </>
                         )}
@@ -531,10 +540,13 @@ export default function GroupChatPage() {
                 />
                 {imageUrl && (
                   <div className="mt-2 relative inline-block">
-                    <img
+                    <Image
                       src={imageUrl}
                       alt="Preview"
-                      className="max-w-xs max-h-32 rounded-lg"
+                      width={256}
+                      height={128}
+                      className="max-w-xs max-h-32 rounded-lg object-contain"
+                      unoptimized
                     />
                     <button
                       type="button"

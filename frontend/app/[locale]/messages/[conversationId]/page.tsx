@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useParams as useNextParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -565,10 +566,13 @@ export default function ConversationPage() {
               {conversation?.other_user && (
                 <>
                   {conversation.other_user.avatar_url ? (
-                    <img
+                    <Image
                       src={conversation.other_user.avatar_url}
                       alt={conversation.other_user.nickname}
-                      className="w-10 h-10 rounded-full object-cover"
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
@@ -750,12 +754,15 @@ export default function ConversationPage() {
                         }`}
                       >
                         {/* Avatar */}
-                        <div className="flex-shrink-0">
+                        <div className="flex-shrink-0 relative w-8 h-8">
                           {message.sender?.avatar_url ? (
-                            <img
+                            <Image
                               src={message.sender.avatar_url}
                               alt={message.sender.nickname}
-                              className="w-8 h-8 rounded-full object-cover"
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                              unoptimized
                             />
                           ) : (
                             <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
@@ -791,11 +798,14 @@ export default function ConversationPage() {
                                   </p>
                                 )}
                                 {message.image_url && (
-                                  <div className="mt-2">
-                                    <img
+                                  <div className="mt-2 relative w-full">
+                                    <Image
                                       src={message.image_url}
                                       alt="Attached image"
-                                      className="max-w-full rounded-lg"
+                                      width={400}
+                                      height={300}
+                                      className="max-w-full rounded-lg object-contain"
+                                      unoptimized
                                       onError={(e) => {
                                         (e.target as HTMLImageElement).style.display = 'none';
                                       }}
@@ -841,10 +851,13 @@ export default function ConversationPage() {
             <form onSubmit={handleSendMessage} className="space-y-2">
               {imageUrl && (
                 <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <img
+                  <Image
                     src={imageUrl}
                     alt="Preview"
-                    className="w-16 h-16 object-cover rounded"
+                    width={64}
+                    height={64}
+                    className="object-cover rounded"
+                    unoptimized
                     onError={(e) => {
                       (e.target as HTMLImageElement).style.display = 'none';
                     }}

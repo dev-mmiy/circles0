@@ -624,7 +624,12 @@ export function useDataLoader<T>(
         });
         
         // Use ref to get latest load function
-        await loadFnRef.current(true);
+        if (loadFnRef.current) {
+          await loadFnRef.current(true);
+        } else {
+          // Fallback: call load directly if ref not set yet
+          await load(true);
+        }
       } catch (err) {
         if (!isCancelled && isMountedRef.current) {
           debugLog.error('[useDataLoader] Auto-load failed:', err, {

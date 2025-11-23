@@ -319,18 +319,22 @@ export default function PostCard({
                 }`}
               >
                 {post.images!.length === 1 ? (
-                  <img
+                  <Image
                     src={image.image_url}
                     alt={`Post image ${index + 1}`}
-                    className="w-full h-auto object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    fill
+                    className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
+                    unoptimized
                     onClick={() => {
                       window.open(image.image_url, '_blank');
                     }}
-                    onError={(e) => {
+                    onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback
                       const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                      if (target) {
+                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                      }
                     }}
                   />
                 ) : (
@@ -342,11 +346,13 @@ export default function PostCard({
                     onClick={() => {
                       window.open(image.image_url, '_blank');
                     }}
-                    onError={(e) => {
+                    onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback
                       const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                      if (target) {
+                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                      }
                     }}
                     unoptimized
                   />

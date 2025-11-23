@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import Header from '@/components/Header';
@@ -267,10 +268,13 @@ export default function NewGroupPage() {
                     >
                       <div className="flex items-center gap-3">
                         {user.avatar_url ? (
-                          <img
+                          <Image
                             src={user.avatar_url}
                             alt={user.nickname}
-                            className="w-10 h-10 rounded-full object-cover"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
