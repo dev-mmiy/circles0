@@ -350,6 +350,7 @@ export function AvatarUploadModal({
                 onMouseLeave={handleMouseUp}
                 onWheel={handleWheel}
               >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   ref={imageRef}
                   src={previewUrl}

@@ -24,6 +24,7 @@ class UserFieldVisibilityService:
         "country": "public",
         "language": "public",
         "username": "public",
+        "online_status": "private",
     }
 
     @staticmethod
@@ -139,17 +140,29 @@ class UserFieldVisibilityService:
         Returns:
             True if viewer can see the field, False otherwise
         """
-        # Owner can always see their own fields
-        if viewer_id == field_owner_id:
-            return True
-
+        import logging
+        logger = logging.getLogger(__name__)
+        
         visibility = UserFieldVisibilityService.get_field_visibility(
             db, field_owner_id, field_name
+        )
+
+        logger.debug(
+            f"[can_view_field] Field visibility check: "
+            f"field_owner_id={field_owner_id}, field_name={field_name}, "
+            f"viewer_id={viewer_id}, visibility={visibility}"
         )
 
         if visibility == "public":
             return True
         elif visibility == "private":
+            # Private fields are never visible to anyone (including the owner in API responses)
+            # The owner can see their own fields in the profile page, but not in public API responses
+            logger.debug(
+                f"[can_view_field] Field is private, returning False: "
+                f"field_owner_id={field_owner_id}, field_name={field_name}, "
+                f"viewer_id={viewer_id}"
+            )
             return False
         elif visibility == "limited":
             # Only authenticated users can see

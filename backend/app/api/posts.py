@@ -240,6 +240,20 @@ async def get_feed(
     bulk_fetch_elapsed = time.time() - bulk_fetch_start_time
     logger.debug(f"[get_feed] Pre-fetched data: like_counts={len(like_counts)}, comment_counts={len(comment_counts)}, liked_posts={len(liked_post_ids)}, hashtags={len(hashtags_by_post)}, mentions={len(mentions_by_post)} (took {bulk_fetch_elapsed:.3f}s)")
     
+    # Get viewer's disease IDs for field visibility checks
+    from app.models.disease import UserDisease
+    viewer_disease_ids = None
+    if user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+    
     # Build responses with pre-fetched data
     response_build_start_time = time.time()
     response = [
@@ -249,7 +263,8 @@ async def get_feed(
             comment_counts.get(post.id, 0),
             post.id in liked_post_ids,
             hashtags_by_post.get(post.id, []),
-            mentions_by_post.get(post.id, [])
+            mentions_by_post.get(post.id, []),
+            viewer_disease_ids
         )
         for post in posts
     ]
@@ -629,6 +644,21 @@ async def like_post(
 
     # Build response with user info
     from app.schemas.post import PostAuthor
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
+
+    # Get viewer's disease IDs for field visibility checks
+    viewer_disease_ids = None
+    if user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
 
     return PostLikeResponse(
         id=like.id,
@@ -640,8 +670,20 @@ async def like_post(
             PostAuthor(
                 id=like.user.id,
                 nickname=like.user.nickname,
-                username=like.user.username,
-                avatar_url=like.user.avatar_url,
+                username=(
+                    like.user.username
+                    if UserFieldVisibilityService.can_view_field(
+                        db, like.user.id, "username", user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
+                avatar_url=(
+                    like.user.avatar_url
+                    if UserFieldVisibilityService.can_view_field(
+                        db, like.user.id, "avatar_url", user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
             )
             if like.user
             else None
@@ -687,13 +729,30 @@ async def get_post_likes(
         50, ge=1, le=100, description="Maximum number of likes to return"
     ),
     db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
     """
     Get all users who liked a post.
     """
     likes = PostService.get_post_likes(db, post_id, skip, limit)
+    current_user_id = get_user_id_from_token(db, current_user)
 
     from app.schemas.post import PostAuthor
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
+
+    # Get viewer's disease IDs for field visibility checks
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
 
     return [
         PostLikeResponse(
@@ -706,8 +765,20 @@ async def get_post_likes(
                 PostAuthor(
                     id=like.user.id,
                     nickname=like.user.nickname,
-                    username=like.user.username,
-                    avatar_url=like.user.avatar_url,
+                    username=(
+                        like.user.username
+                        if UserFieldVisibilityService.can_view_field(
+                            db, like.user.id, "username", current_user_id, viewer_disease_ids
+                        )
+                        else None
+                    ),
+                    avatar_url=(
+                        like.user.avatar_url
+                        if UserFieldVisibilityService.can_view_field(
+                            db, like.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                        )
+                        else None
+                    ),
                 )
                 if like.user
                 else None
@@ -747,7 +818,21 @@ async def create_comment(
             detail="Post not found, not accessible, or parent comment invalid",
         )
 
-    return _build_comment_response(db, comment)
+    # Get viewer's disease IDs for field visibility checks
+    from app.models.disease import UserDisease
+    viewer_disease_ids = None
+    if user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return _build_comment_response(db, comment, user_id, viewer_disease_ids)
 
 
 @router.get(
@@ -762,6 +847,7 @@ async def get_post_comments(
         50, ge=1, le=100, description="Maximum number of comments to return"
     ),
     db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
     """
     Get top-level comments for a post (not including nested replies).
@@ -769,8 +855,23 @@ async def get_post_comments(
     Use the `/comments/{comment_id}/replies` endpoint to get replies to a specific comment.
     """
     comments = PostService.get_post_comments(db, post_id, skip, limit)
+    current_user_id = get_user_id_from_token(db, current_user)
 
-    return [_build_comment_response(db, comment) for comment in comments]
+    # Get viewer's disease IDs for field visibility checks
+    from app.models.disease import UserDisease
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return [_build_comment_response(db, comment, current_user_id, viewer_disease_ids) for comment in comments]
 
 
 @router.get(
@@ -785,13 +886,29 @@ async def get_comment_replies(
         20, ge=1, le=100, description="Maximum number of replies to return"
     ),
     db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
     """
     Get all replies to a specific comment.
     """
     replies = PostService.get_comment_replies(db, comment_id, skip, limit)
+    current_user_id = get_user_id_from_token(db, current_user)
 
-    return [_build_comment_response(db, reply) for reply in replies]
+    # Get viewer's disease IDs for field visibility checks
+    from app.models.disease import UserDisease
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return [_build_comment_response(db, reply, current_user_id, viewer_disease_ids) for reply in replies]
 
 
 @router.put(
@@ -820,7 +937,21 @@ async def update_comment(
             detail="Comment not found or you don't have permission to update it",
         )
 
-    return _build_comment_response(db, comment)
+    # Get viewer's disease IDs for field visibility checks
+    from app.models.disease import UserDisease
+    viewer_disease_ids = None
+    if user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return _build_comment_response(db, comment, user_id, viewer_disease_ids)
 
 
 @router.delete(
@@ -865,6 +996,8 @@ def _build_post_response(
         PostImageResponse,
     )
     from app.services.mention_service import MentionService
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
 
     like_count = PostService.get_like_count(db, post.id)
     comment_count = PostService.get_comment_count(db, post.id)
@@ -873,6 +1006,19 @@ def _build_post_response(
         if current_user_id
         else False
     )
+
+    # Get viewer's disease IDs for field visibility checks
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
 
     # Get hashtags for the post
     hashtags = HashtagService.get_hashtags_for_post(db, post.id)
@@ -891,8 +1037,20 @@ def _build_post_response(
         MentionResponse(
             id=user.id,
             nickname=user.nickname,
-            username=user.username,
-            avatar_url=user.avatar_url,
+            username=(
+                user.username
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "username", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
+            avatar_url=(
+                user.avatar_url
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "avatar_url", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
         )
         for user in mentioned_users
     ]
@@ -908,6 +1066,28 @@ def _build_post_response(
         for image in (post.images if hasattr(post, "images") and post.images else [])
     ]
 
+    # Build author with field visibility checks
+    author = None
+    if post.user:
+        author = PostAuthor(
+            id=post.user.id,
+            nickname=post.user.nickname,
+            username=(
+                post.user.username
+                if UserFieldVisibilityService.can_view_field(
+                    db, post.user.id, "username", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
+            avatar_url=(
+                post.user.avatar_url
+                if UserFieldVisibilityService.can_view_field(
+                    db, post.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
+        )
+
     return PostResponse(
         id=post.id,
         user_id=post.user_id,
@@ -916,16 +1096,7 @@ def _build_post_response(
         is_active=post.is_active,
         created_at=post.created_at,
         updated_at=post.updated_at,
-        author=(
-            PostAuthor(
-                id=post.user.id,
-                nickname=post.user.nickname,
-                username=post.user.username,
-                avatar_url=post.user.avatar_url,
-            )
-            if post.user
-            else None
-        ),
+        author=author,
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
@@ -944,6 +1115,7 @@ def _build_post_response_optimized(
     is_liked: bool,
     hashtags: list,
     mentioned_users: list,
+    viewer_disease_ids: Optional[List[int]] = None,
 ) -> PostResponse:
     """Build PostResponse with pre-fetched data (optimized version for bulk operations)."""
     from app.schemas.post import (
@@ -952,6 +1124,7 @@ def _build_post_response_optimized(
         PostAuthor,
         PostImageResponse,
     )
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
 
     hashtag_responses = [
         HashtagResponse(
@@ -966,8 +1139,20 @@ def _build_post_response_optimized(
         MentionResponse(
             id=user.id,
             nickname=user.nickname,
-            username=user.username,
-            avatar_url=user.avatar_url,
+            username=(
+                user.username
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "username", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
+            avatar_url=(
+                user.avatar_url
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "avatar_url", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
         )
         for user in mentioned_users
     ]
@@ -983,6 +1168,34 @@ def _build_post_response_optimized(
         for image in (post.images if hasattr(post, "images") and post.images else [])
     ]
 
+    # Build author with field visibility checks
+    author = None
+    if post.user:
+        # Check if viewer can see username
+        can_view_username = UserFieldVisibilityService.can_view_field(
+            db, post.user.id, "username", current_user_id, viewer_disease_ids
+        )
+        # Check if viewer can see avatar_url
+        can_view_avatar = UserFieldVisibilityService.can_view_field(
+            db, post.user.id, "avatar_url", current_user_id, viewer_disease_ids
+        )
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug(
+            f"[_build_post_response_optimized] Field visibility check: "
+            f"post.user.id={post.user.id}, current_user_id={current_user_id}, "
+            f"can_view_username={can_view_username}, can_view_avatar={can_view_avatar}, "
+            f"post.user.username={post.user.username}"
+        )
+        
+        author = PostAuthor(
+            id=post.user.id,
+            nickname=post.user.nickname,
+            username=post.user.username if can_view_username else None,
+            avatar_url=post.user.avatar_url if can_view_avatar else None,
+        )
+
     return PostResponse(
         id=post.id,
         user_id=post.user_id,
@@ -991,16 +1204,7 @@ def _build_post_response_optimized(
         is_active=post.is_active,
         created_at=post.created_at,
         updated_at=post.updated_at,
-        author=(
-            PostAuthor(
-                id=post.user.id,
-                nickname=post.user.nickname,
-                username=post.user.username,
-                avatar_url=post.user.avatar_url,
-            )
-            if post.user
-            else None
-        ),
+        author=author,
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
@@ -1016,6 +1220,8 @@ def _build_post_detail_response(
     """Build PostDetailResponse with comments and likes."""
     from app.schemas.post import HashtagResponse, PostAuthor, PostImageResponse
     from app.services.mention_service import MentionService
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
 
     like_count = PostService.get_like_count(db, post.id)
     comment_count = PostService.get_comment_count(db, post.id)
@@ -1024,6 +1230,19 @@ def _build_post_detail_response(
         if current_user_id
         else False
     )
+
+    # Get viewer's disease IDs for field visibility checks
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
 
     # Get hashtags for the post
     hashtags = HashtagService.get_hashtags_for_post(db, post.id)
@@ -1042,8 +1261,20 @@ def _build_post_detail_response(
         MentionResponse(
             id=user.id,
             nickname=user.nickname,
-            username=user.username,
-            avatar_url=user.avatar_url,
+            username=(
+                user.username
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "username", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
+            avatar_url=(
+                user.avatar_url
+                if UserFieldVisibilityService.can_view_field(
+                    db, user.id, "avatar_url", current_user_id, viewer_disease_ids
+                )
+                else None
+            ),
         )
         for user in mentioned_users
     ]
@@ -1061,7 +1292,7 @@ def _build_post_detail_response(
 
     # Build comments
     comments = [
-        _build_comment_response(db, comment)
+        _build_comment_response(db, comment, current_user_id, viewer_disease_ids)
         for comment in post.comments
         if comment.is_active
     ]
@@ -1100,8 +1331,20 @@ def _build_post_detail_response(
             PostAuthor(
                 id=post.user.id,
                 nickname=post.user.nickname,
-                username=post.user.username,
-                avatar_url=post.user.avatar_url,
+                username=(
+                    post.user.username
+                    if UserFieldVisibilityService.can_view_field(
+                        db, post.user.id, "username", current_user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
+                avatar_url=(
+                    post.user.avatar_url
+                    if UserFieldVisibilityService.can_view_field(
+                        db, post.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
             )
             if post.user
             else None
@@ -1117,9 +1360,12 @@ def _build_post_detail_response(
     )
 
 
-def _build_comment_response(db: Session, comment) -> PostCommentResponse:
+def _build_comment_response(
+    db: Session, comment, current_user_id: Optional[UUID] = None, viewer_disease_ids: Optional[List[int]] = None
+) -> PostCommentResponse:
     """Build PostCommentResponse with calculated fields."""
     from app.schemas.post import PostAuthor
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
 
     reply_count = PostService.get_reply_count(db, comment.id)
 
@@ -1136,8 +1382,20 @@ def _build_comment_response(db: Session, comment) -> PostCommentResponse:
             PostAuthor(
                 id=comment.user.id,
                 nickname=comment.user.nickname,
-                username=comment.user.username,
-                avatar_url=comment.user.avatar_url,
+                username=(
+                    comment.user.username
+                    if UserFieldVisibilityService.can_view_field(
+                        db, comment.user.id, "username", current_user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
+                avatar_url=(
+                    comment.user.avatar_url
+                    if UserFieldVisibilityService.can_view_field(
+                        db, comment.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
             )
             if comment.user
             else None

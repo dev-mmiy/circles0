@@ -2,6 +2,8 @@
 User field visibility model for fine-grained privacy control.
 """
 
+from uuid import uuid4
+
 from sqlalchemy import Column, Enum, ForeignKey, String, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 
@@ -18,7 +20,7 @@ class UserFieldVisibility(Base):
 
     __tablename__ = "user_field_visibility"
 
-    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True)
+    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
     user_id = Column(
         PostgreSQLUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),

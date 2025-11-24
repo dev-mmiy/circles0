@@ -472,7 +472,9 @@
       "profileVisibility": "Profile Visibility",
       "avatarUrl": "Avatar Image URL",
       "language": "Language",
-      "timezone": "Timezone"
+      "timezone": "Timezone",
+      "email": "Email Address",
+      "onlineStatus": "Online Status"
     },
     "placeholders": {
       "nickname": "Public nickname",

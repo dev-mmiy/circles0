@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import Link from 'next/link';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
@@ -11,20 +11,22 @@ import {
   getFollowStats,
   type FollowerResponse,
 } from '@/lib/api/follows';
+import { useUser } from '@/contexts/UserContext';
 
 interface FollowersListProps {
   userId: string;
 }
 
 export default function FollowersList({ userId }: FollowersListProps) {
-  const { getAccessTokenSilently, isAuthenticated, user } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { user: currentUser } = useUser();
   const t = useTranslations('followersList');
   const [followers, setFollowers] = useState<FollowerResponse[]>([]);
   const [followStats, setFollowStats] = useState<Record<string, boolean>>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const currentUserId = user?.sub;
+  const currentUserId = currentUser?.id;
 
   const loadFollowers = useCallback(async () => {
     try {
@@ -112,7 +114,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
             className="flex items-center justify-between p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
           >
             <Link
-              href={`/profile/${follower.follower.member_id}`}
+              href={isCurrentUser ? '/profile/me' : `/profile/${follower.follower.member_id}`}
               className="flex items-center space-x-4 flex-1 min-w-0"
             >
               {/* Avatar */}

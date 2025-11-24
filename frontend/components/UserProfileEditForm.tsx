@@ -96,11 +96,12 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       const fieldVisibilityMap: Record<string, 'public' | 'limited' | 'private' | 'same_disease_only'> = {
         username: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         bio: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        avatar_url: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         country: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         date_of_birth: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         gender: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        email: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+        online_status: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
       };
       
       // Update all field visibilities
@@ -405,30 +406,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             </select>
           </div>
 
-          {/* Privacy Options */}
-          <div className="space-y-2">
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="show_email"
-                checked={formData.show_email || false}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">{t('privacy.showEmail')}</span>
-            </label>
-
-            <label className="flex items-center">
-              <input
-                type="checkbox"
-                name="show_online_status"
-                checked={formData.show_online_status || false}
-                onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <span className="ml-2 text-sm text-gray-700">{t('privacy.showOnlineStatus')}</span>
-            </label>
-          </div>
         </div>
       </div>
 
@@ -447,11 +424,12 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             {[
               { field: 'username', label: t('fields.username') },
               { field: 'bio', label: t('fields.bio') },
-              { field: 'avatar_url', label: t('fields.avatarUrl') },
               { field: 'country', label: t('fields.country') },
               { field: 'date_of_birth', label: t('fields.dateOfBirth') },
               { field: 'gender', label: t('fields.gender') },
               { field: 'language', label: t('fields.language') },
+              { field: 'email', label: t('fields.email') },
+              { field: 'online_status', label: t('fields.onlineStatus') },
             ].map(({ field, label }) => (
               <div key={field} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <label className="text-sm font-medium text-gray-700">{label}</label>

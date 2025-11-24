@@ -130,7 +130,7 @@ export default function MyProfilePage() {
   };
 
   const handleAvatarUpdate = async (avatarUrl: string | null) => {
-    await updateUserProfile({ avatar_url: avatarUrl });
+    await updateUserProfile({ avatar_url: avatarUrl ?? undefined });
     // Refresh user data to ensure the image is updated
     await refreshUser();
   };

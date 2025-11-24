@@ -383,13 +383,36 @@ async def get_user_public_profile(
     # Get user's diseases (only public ones)
     user_diseases = UserService.get_user_diseases(db, user.id)
 
+    # Convert Disease objects to UserDiseaseResponse format with translations
+    diseases_list = [
+        {
+            "id": disease.id,
+            "name": disease.name,
+            "description": disease.description,
+            "category": disease.category,
+            "translations": [
+                {
+                    "id": trans.id,
+                    "disease_id": trans.disease_id,
+                    "language_code": trans.language_code,
+                    "translated_name": trans.translated_name,
+                    "details": trans.details,
+                    "created_at": trans.created_at,
+                    "updated_at": trans.updated_at,
+                }
+                for trans in disease.translations
+            ],
+        }
+        for disease in user_diseases
+    ]
+
     # Build response with field-level visibility filtering
     user_dict = {
         "id": user.id,
         "member_id": user.member_id,
         "nickname": user.nickname,  # Always visible
         "created_at": user.created_at,  # Always visible
-        "diseases": user_diseases,  # Already filtered to public diseases
+        "diseases": diseases_list,  # Already filtered to public diseases with translations
     }
 
     # Check visibility for each field

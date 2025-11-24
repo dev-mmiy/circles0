@@ -471,7 +471,9 @@
       "profileVisibility": "プロフィール公開設定",
       "avatarUrl": "アバター画像URL",
       "language": "言語",
-      "timezone": "タイムゾーン"
+      "timezone": "タイムゾーン",
+      "email": "メールアドレス",
+      "onlineStatus": "オンライン状態"
     },
     "placeholders": {
       "nickname": "公開用ニックネーム",

@@ -67,7 +67,11 @@ export const COUNTRIES: Country[] = [
  * Get country name based on locale
  */
 export function getCountryName(countryCode: string, locale: string = 'ja'): string {
-  const country = COUNTRIES.find(c => c.code === countryCode);
+  if (!countryCode) return countryCode;
+  
+  // Normalize country code to uppercase for matching
+  const normalizedCode = countryCode.toUpperCase();
+  const country = COUNTRIES.find(c => c.code === normalizedCode);
   if (!country) return countryCode;
   
   return locale === 'ja' ? country.nameJa : country.nameEn;

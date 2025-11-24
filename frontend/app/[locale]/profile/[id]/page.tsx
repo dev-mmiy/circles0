@@ -361,6 +361,46 @@ export default function PublicProfilePage() {
               <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
             </div>
           )}
+
+          {/* Registered Diseases */}
+          {profile.diseases && profile.diseases.length > 0 && (
+            <div className="mt-6 pt-6 border-t border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('registeredDiseases')}</h2>
+              <div className="space-y-2">
+                {profile.diseases.map(disease => {
+                  // Get localized disease name
+                  const getDiseaseName = (): string => {
+                    if (!disease.translations || disease.translations.length === 0) {
+                      return disease.name; // Fallback to English name
+                    }
+
+                    // Try to find exact language match
+                    const translation = disease.translations.find(
+                      (t) => t.language_code === locale
+                    );
+
+                    if (translation) {
+                      return translation.translated_name;
+                    }
+
+                    // Fallback: try Japanese, then English name
+                    const jaTranslation = disease.translations.find((t) => t.language_code === 'ja');
+                    return jaTranslation?.translated_name || disease.name;
+                  };
+
+                  return (
+                    <div
+                      key={disease.id}
+                      className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
+                    >
+                      <span className="text-blue-600">•</span>
+                      <span className="text-gray-800">{getDiseaseName()}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
@@ -403,24 +443,6 @@ export default function PublicProfilePage() {
           <div className="p-6">
             {activeTab === 'posts' && (
               <div>
-                {/* Diseases */}
-                {profile.diseases && profile.diseases.length > 0 && (
-                  <div className="mb-6">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('registeredDiseases')}</h2>
-                    <div className="space-y-2">
-                      {profile.diseases.map(disease => (
-                        <div
-                          key={disease.id}
-                          className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
-                        >
-                          <span className="text-blue-600">•</span>
-                          <span className="text-gray-800">{disease.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                
                 {/* Posts */}
                 <div>
                   {isLoadingPosts && posts.length === 0 ? (
