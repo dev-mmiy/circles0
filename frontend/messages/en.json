@@ -645,6 +645,8 @@
     "loading": "Loading...",
     "noDiseases": "No diseases registered",
     "addDisease": "Add Disease",
+    "changeAvatar": "Change Avatar",
+    "change": "Change",
     "genderValues": {
       "male": "Male",
       "female": "Female",
@@ -652,6 +654,30 @@
       "prefer_not_to_say": "Prefer not to say"
     },
     "notAvailable": "N/A"
+  },
+  "avatarUpload": {
+    "title": "Set Avatar Image",
+    "selectImage": "Select Image",
+    "fileRequirements": "JPEG, PNG, GIF, WebP format, max 10MB",
+    "preview": "Preview",
+    "currentAvatar": "Current Avatar",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "cancel": "Cancel",
+    "invalidImageFile": "Invalid image file",
+    "failedToCreatePreview": "Failed to create preview",
+    "noFileSelected": "No file selected",
+    "uploadServiceNotConfigured": "Image upload service is not configured",
+    "uploadFailed": "Upload failed",
+    "adjustImage": "Adjust Image",
+    "dragToMove": "Drag to move",
+    "scrollToZoom": "Scroll to zoom",
+    "zoomIn": "Zoom In",
+    "zoomOut": "Zoom Out",
+    "reset": "Reset",
+    "remove": "Remove",
+    "removing": "Removing...",
+    "removeFailed": "Failed to remove avatar"
   },
   "diseaseList": {
     "loading": "Loading...",

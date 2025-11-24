@@ -187,6 +187,7 @@ export default function PostCard({
           <Link href={`/profile/${post.user_id}`}>
             {post.author?.avatar_url ? (
               <Image
+                key={post.author.avatar_url}
                 src={post.author.avatar_url}
                 alt={post.author.nickname}
                 width={40}

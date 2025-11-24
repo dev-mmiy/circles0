@@ -15,7 +15,7 @@ import Header from '@/components/Header';
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const t = useTranslations('myProfile');
-  const { user, loading: userLoading } = useUser();
+  const { user, loading: userLoading, updateUserProfile, refreshUser } = useUser();
   const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } =
     useDisease();
   const router = useRouter();
@@ -129,6 +129,12 @@ export default function MyProfilePage() {
     }
   };
 
+  const handleAvatarUpdate = async (avatarUrl: string | null) => {
+    await updateUserProfile({ avatar_url: avatarUrl });
+    // Refresh user data to ensure the image is updated
+    await refreshUser();
+  };
+
   return (
     <>
       <Header />
@@ -158,6 +164,7 @@ export default function MyProfilePage() {
             loadingUserDiseases={loadingUserDiseases}
             addDiseaseButtonHref="/diseases/add"
             addDiseaseButtonLabel={t('addDiseaseButton')}
+            onAvatarUpdate={handleAvatarUpdate}
           />
         </div>
 

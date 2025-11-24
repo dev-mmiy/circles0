@@ -5,14 +5,16 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Link } from '@/i18n/routing';
 import { UserProfile, UserDiseaseDetailed } from '@/lib/api/users';
 import { getCountryName } from '@/lib/utils/countries';
 import { DiseaseList } from './DiseaseList';
+import { AvatarUploadModal } from './AvatarUploadModal';
 
 interface UserProfileCardProps {
   user: UserProfile;
@@ -26,6 +28,7 @@ interface UserProfileCardProps {
   loadingUserDiseases?: boolean;
   addDiseaseButtonHref?: string;
   addDiseaseButtonLabel?: string;
+  onAvatarUpdate?: (avatarUrl: string | null) => Promise<void>;
 }
 
 export function UserProfileCard({ 
@@ -40,10 +43,16 @@ export function UserProfileCard({
   loadingUserDiseases = false,
   addDiseaseButtonHref,
   addDiseaseButtonLabel,
+  onAvatarUpdate,
 }: UserProfileCardProps) {
   const t = useTranslations('userProfileCard');
   const tLanguage = useTranslations('languageSwitcher');
   const locale = useLocale();
+  const { user: auth0User } = useAuth0();
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  
+  // Use avatar_url if available, otherwise fallback to Auth0 picture
+  const avatarUrl = user.avatar_url || auth0User?.picture;
   
   // Format date for display
   const formatDate = (dateString?: string) => {
@@ -79,9 +88,45 @@ export function UserProfileCard({
       {/* Header with avatar */}
       <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
         <div className="flex items-center space-x-4">
-          {user.avatar_url ? (
+          {showPrivateInfo && onAvatarUpdate ? (
+            <button
+              onClick={() => setIsAvatarModalOpen(true)}
+              className="relative group cursor-pointer"
+              title={t('changeAvatar')}
+            >
+              {avatarUrl ? (
+                <div className="relative">
+                  <Image
+                    key={avatarUrl}
+                    src={avatarUrl}
+                    alt={user.nickname}
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 rounded-full border-4 border-white object-cover transition-opacity group-hover:opacity-80"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all">
+                    <span className="text-white text-xs opacity-0 group-hover:opacity-100 font-medium">
+                      {t('change')}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="w-20 h-20 rounded-full border-4 border-white bg-white flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                  <span className="text-3xl text-blue-600 font-bold">
+                    {user.nickname.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-all">
+                    <span className="text-white text-xs opacity-0 group-hover:opacity-100 font-medium">
+                      {t('change')}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </button>
+          ) : avatarUrl ? (
             <Image
-              src={user.avatar_url}
+              key={avatarUrl}
+              src={avatarUrl}
               alt={user.nickname}
               width={80}
               height={80}
@@ -245,6 +290,18 @@ export function UserProfileCard({
         </div>
 
       </div>
+
+      {/* Avatar Upload Modal */}
+      {showPrivateInfo && onAvatarUpdate && (
+        <AvatarUploadModal
+          isOpen={isAvatarModalOpen}
+          onClose={() => setIsAvatarModalOpen(false)}
+          onUploadComplete={async (avatarUrl) => {
+            await onAvatarUpdate(avatarUrl);
+          }}
+          currentAvatarUrl={avatarUrl}
+        />
+      )}
     </div>
   );
 }
