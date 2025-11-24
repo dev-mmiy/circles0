@@ -23,7 +23,6 @@ class UserFieldVisibilityService:
         "avatar_url": "public",
         "country": "public",
         "language": "public",
-        "timezone": "limited",
         "username": "public",
     }
 

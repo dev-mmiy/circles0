@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
@@ -17,12 +17,14 @@ import { HashtagSearch } from '@/components/HashtagSearch';
 import { searchDiseases, searchUsers } from '@/lib/api/search';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useUser } from '@/contexts/UserContext';
+import { DiseaseCategory } from '@/lib/api/diseases';
 
 type SearchTab = 'diseases' | 'users' | 'hashtags';
 
 export default function SearchPage() {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('searchPage');
+  const locale = useLocale();
   const { user } = useUser();
   const { categories, diseases: allDiseases } = useDisease();
   const searchParams = useSearchParams();
@@ -73,14 +75,30 @@ export default function SearchPage() {
     }
   };
 
+  // Get category name with translation (matching CategorySelector logic)
+  const getCategoryName = (category: DiseaseCategory): string => {
+    if (category.translations && category.translations.length > 0) {
+      // Try to find translation matching current locale
+      const localeTranslation = category.translations.find(trans => trans.language_code === locale);
+      if (localeTranslation) {
+        return localeTranslation.translated_name;
+      }
+      // Fallback to Japanese translation
+      const jaTranslation = category.translations.find(trans => trans.language_code === 'ja');
+      if (jaTranslation) {
+        return jaTranslation.translated_name;
+      }
+      // Fallback to first available translation
+      return category.translations[0].translated_name;
+    }
+    return category.category_code;
+  };
+
   // Format categories for search component
   const formattedCategories = categories.map((cat) => {
-    const translation = cat.translations?.find(
-      (t) => t.language_code === user?.preferred_language || 'ja'
-    );
     return {
       id: cat.id,
-      name: translation?.translated_name || cat.category_code || `Category ${cat.id}`,
+      name: getCategoryName(cat),
     };
   });
 

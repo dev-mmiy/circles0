@@ -9,16 +9,38 @@ import React from 'react';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
-import { UserProfile } from '@/lib/api/users';
+import { Link } from '@/i18n/routing';
+import { UserProfile, UserDiseaseDetailed } from '@/lib/api/users';
 import { getCountryName } from '@/lib/utils/countries';
+import { DiseaseList } from './DiseaseList';
 
 interface UserProfileCardProps {
   user: UserProfile;
   onEdit?: () => void;
   showPrivateInfo?: boolean;
+  userDiseases?: UserDiseaseDetailed[];
+  onEditDisease?: (disease: UserDiseaseDetailed) => void;
+  onDeleteDisease?: (disease: UserDiseaseDetailed) => void;
+  editingDiseaseId?: number | null;
+  editForm?: React.ReactNode;
+  loadingUserDiseases?: boolean;
+  addDiseaseButtonHref?: string;
+  addDiseaseButtonLabel?: string;
 }
 
-export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserProfileCardProps) {
+export function UserProfileCard({ 
+  user, 
+  onEdit, 
+  showPrivateInfo = false,
+  userDiseases,
+  onEditDisease,
+  onDeleteDisease,
+  editingDiseaseId,
+  editForm,
+  loadingUserDiseases = false,
+  addDiseaseButtonHref,
+  addDiseaseButtonLabel,
+}: UserProfileCardProps) {
   const t = useTranslations('userProfileCard');
   const tLanguage = useTranslations('languageSwitcher');
   const locale = useLocale();
@@ -159,6 +181,50 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
                 </div>
               )}
             </div>
+
+ 
+            {/* User Diseases - shown at the end of private information */}
+            {userDiseases !== undefined && (
+              <div className="mt-6 pt-6 border-t">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase">{t('myDiseases')}</h3>
+                  {addDiseaseButtonHref && (
+                    <Link
+                      href={addDiseaseButtonHref}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
+                      {addDiseaseButtonLabel || t('addDisease')}
+                    </Link>
+                  )}
+                </div>
+              {/* Disease count */}
+                {user.diseases && user.diseases.length > 0 && (
+                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-800">
+                      {t('diseaseCount')}: <span className="font-semibold">{user.diseases.length}</span>
+                    </p>
+                  </div>
+                )}
+                {loadingUserDiseases ? (
+                  <div className="text-center py-4">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <p className="text-sm text-gray-600">{t('loading')}</p>
+                  </div>
+                ) : userDiseases.length > 0 ? (
+                  <DiseaseList
+                    diseases={userDiseases}
+                    onEdit={onEditDisease}
+                    onDelete={onDeleteDisease}
+                    loading={loadingUserDiseases}
+                    editingDiseaseId={editingDiseaseId}
+                    preferredLanguage={user.preferred_language}
+                    editForm={editForm}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-500">{t('noDiseases')}</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
@@ -178,14 +244,6 @@ export function UserProfileCard({ user, onEdit, showPrivateInfo = false }: UserP
           </div>
         </div>
 
-        {/* Disease count */}
-        {user.diseases && user.diseases.length > 0 && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-blue-800">
-              {t('diseaseCount')}: <span className="font-semibold">{user.diseases.length}</span>
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

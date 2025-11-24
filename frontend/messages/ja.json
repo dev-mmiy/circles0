@@ -640,6 +640,10 @@
     "accountCreated": "アカウント作成日",
     "lastLogin": "最終ログイン",
     "diseaseCount": "登録疾患数",
+    "myDiseases": "登録疾患",
+    "loading": "読み込み中...",
+    "noDiseases": "疾患が登録されていません",
+    "addDisease": "疾患を追加",
     "genderValues": {
       "male": "男性",
       "female": "女性",

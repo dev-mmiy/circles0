@@ -33,7 +33,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
     country: user.country,
     language: user.language,
     preferred_language: user.preferred_language,
-    timezone: user.timezone,
     profile_visibility: user.profile_visibility,
     show_email: user.show_email,
     show_online_status: user.show_online_status,
@@ -102,7 +101,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
         date_of_birth: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         gender: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
         language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        timezone: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
       };
       
       // Update all field visibilities
@@ -454,7 +452,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               { field: 'date_of_birth', label: t('fields.dateOfBirth') },
               { field: 'gender', label: t('fields.gender') },
               { field: 'language', label: t('fields.language') },
-              { field: 'timezone', label: t('fields.timezone') },
             ].map(({ field, label }) => (
               <div key={field} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <label className="text-sm font-medium text-gray-700">{label}</label>

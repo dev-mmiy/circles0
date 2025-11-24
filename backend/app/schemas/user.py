@@ -76,7 +76,6 @@ class UserUpdate(BaseModel):
     country: Optional[str] = Field(None, min_length=2, max_length=2)
     language: Optional[str] = Field(None, min_length=2, max_length=5)
     preferred_language: Optional[str] = Field(None, min_length=2, max_length=5)
-    timezone: Optional[str] = Field(None, max_length=50)
     profile_visibility: Optional[str] = Field(
         None, pattern="^(public|limited|private)$"
     )
@@ -134,7 +133,7 @@ class UserResponse(BaseModel):
     country: Optional[str] = "jp"
     language: Optional[str] = "ja"
     preferred_language: str = "ja"
-    timezone: Optional[str] = "Asia/Tokyo"
+    timezone: Optional[str] = "Asia/Tokyo"  # Internal use only, not shown in profile edit form
 
     # Privacy settings
     profile_visibility: Optional[str] = "limited"

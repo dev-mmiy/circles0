@@ -320,7 +320,7 @@ export default function PostCard({
                 key={image.id}
                 className={`relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100 ${
                   post.images!.length === 1
-                    ? 'w-full'
+                    ? 'w-full aspect-video'
                     : 'aspect-square'
                 }`}
               >

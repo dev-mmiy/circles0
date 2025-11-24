@@ -220,8 +220,15 @@ export default function FeedPage() {
                   id="disease-select"
                   value={selectedDiseaseId || ''}
                   onChange={(e) => {
-                    const diseaseId = parseInt(e.target.value);
-                    setSelectedDiseaseId(diseaseId);
+                    const value = e.target.value;
+                    if (value === '') {
+                      setSelectedDiseaseId(null);
+                    } else {
+                      const diseaseId = parseInt(value, 10);
+                      if (!isNaN(diseaseId)) {
+                        setSelectedDiseaseId(diseaseId);
+                      }
+                    }
                   }}
                   className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md"
                 >
@@ -329,7 +336,7 @@ export default function FeedPage() {
             </div>
           ) : (
             <>
-              {posts.map((post) => (
+              {Array.isArray(posts) && posts.map((post) => (
                 <PostCard
                   key={post.id}
                   post={post}

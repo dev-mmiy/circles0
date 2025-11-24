@@ -91,7 +91,7 @@ def format_user_response(user: User, db: Session) -> dict:
         "country": user.country,
         "language": user.language,
         "preferred_language": user.preferred_language,
-        "timezone": user.timezone,
+        "timezone": user.timezone,  # Internal use only for time display
         "profile_visibility": user.profile_visibility,
         "show_email": user.show_email,
         "show_online_status": user.show_online_status,
@@ -330,7 +330,6 @@ async def search_users(
             "date_of_birth": user.date_of_birth,
             "gender": user.gender,
             "language": user.language,
-            "timezone": user.timezone,
         }
 
         for field_name, field_value in fields_to_check.items():
@@ -402,7 +401,6 @@ async def get_user_public_profile(
         "date_of_birth": user.date_of_birth,
         "gender": user.gender,
         "language": user.language,
-        "timezone": user.timezone,
     }
 
     for field_name, field_value in fields_to_check.items():

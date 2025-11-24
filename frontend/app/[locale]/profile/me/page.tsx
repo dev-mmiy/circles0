@@ -6,7 +6,6 @@ import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
 import { UserProfileCard } from '@/components/UserProfileCard';
-import { DiseaseList } from '@/components/DiseaseList';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useRouter } from '@/i18n/routing';
 import { EditDiseaseForm } from '@/components/EditDiseaseForm';
@@ -137,47 +136,29 @@ export default function MyProfilePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Card */}
         <div className="mb-6">
-          <UserProfileCard user={user} showPrivateInfo={true} onEdit={handleEdit} />
-        </div>
-
-        {/* User Diseases */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">{t('myDiseases')}</h2>
-            <Link
-              href="/diseases/add"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-            >
-              {t('addDiseaseButton')}
-            </Link>
-          </div>
-
-          {loadingUserDiseases ? (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">{t('loading')}</p>
-            </div>
-          ) : (
-            <DiseaseList
-              diseases={userDiseases}
-              onEdit={handleEditDisease}
-              onDelete={handleDeleteDisease}
-              loading={loadingUserDiseases}
-              editingDiseaseId={editingDisease?.id || null}
-              preferredLanguage={user.preferred_language}
-              editForm={
-                editingDisease &&
-                isEditModalOpen && (
-                  <EditDiseaseForm
-                    userDisease={editingDisease}
-                    statuses={statuses}
-                    onSave={handleSaveDisease}
-                    onCancel={handleCloseEditModal}
-                  />
-                )
-              }
-            />
-          )}
+          <UserProfileCard 
+            user={user} 
+            showPrivateInfo={true} 
+            onEdit={handleEdit}
+            userDiseases={userDiseases}
+            onEditDisease={handleEditDisease}
+            onDeleteDisease={handleDeleteDisease}
+            editingDiseaseId={editingDisease?.id || null}
+            editForm={
+              editingDisease &&
+              isEditModalOpen && (
+                <EditDiseaseForm
+                  userDisease={editingDisease}
+                  statuses={statuses}
+                  onSave={handleSaveDisease}
+                  onCancel={handleCloseEditModal}
+                />
+              )
+            }
+            loadingUserDiseases={loadingUserDiseases}
+            addDiseaseButtonHref="/diseases/add"
+            addDiseaseButtonLabel={t('addDiseaseButton')}
+          />
         </div>
 
         {/* Blocked Users Link */}

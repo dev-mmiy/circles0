@@ -641,6 +641,10 @@
     "accountCreated": "Account Created",
     "lastLogin": "Last Login",
     "diseaseCount": "Registered Diseases",
+    "myDiseases": "Registered Diseases",
+    "loading": "Loading...",
+    "noDiseases": "No diseases registered",
+    "addDisease": "Add Disease",
     "genderValues": {
       "male": "Male",
       "female": "Female",
