@@ -471,7 +471,7 @@ export default function ConversationPage() {
         }, 200);
       });
     }
-  }, [initialLoading]);
+  }, [initialLoading, messages.length]);
 
   // さらに読み込む
   const handleLoadMore = () => {

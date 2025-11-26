@@ -194,7 +194,7 @@ export function DiseaseForm({
       //
       // This allows users to register diseases that aren't in the master disease list,
       // while maintaining data integrity by creating proper disease records.
-      if (isOther && otherDiseaseName) {
+      if (isOther && otherDiseaseName && mode === 'add') {
         // Authentication is required to create new diseases
         if (!isAuthenticated) {
           setError(tErrors('authenticationRequired'));
@@ -211,7 +211,8 @@ export function DiseaseForm({
           const newDisease = await createDisease(otherDiseaseName.trim(), accessToken);
           
           // Step 3: Use the newly created disease's ID for the user's disease association
-          submitData.disease_id = newDisease.id;
+          // In 'add' mode, submitData is UserDiseaseCreate which includes disease_id
+          (submitData as UserDiseaseCreate).disease_id = newDisease.id;
           
           // Step 4: Add the custom disease name to notes for reference
           // This helps identify that this disease was created by the user

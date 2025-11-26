@@ -241,6 +241,25 @@ export default function MessagesPage() {
     }
   };
 
+  const handleSearchGroups = async () => {
+    if (!searchQuery.trim()) {
+      setModalGroupSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const token = await getAccessTokenSilently();
+      const results = await searchGroups(searchQuery, 0, 20);
+      setModalGroupSearchResults(results.groups || []);
+    } catch (err) {
+      debugLog.error('Search error:', err);
+      setModalGroupSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleSelectUser = async (user: UserPublicProfile) => {
     setIsCreatingConversation(true);
     try {

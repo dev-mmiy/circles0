@@ -8,7 +8,7 @@ const DISEASE_SEARCH_FILTER_KEY = 'disease_search_filter_settings';
 
 export interface UserSearchFilterSettings {
   diseaseIds?: number[];
-  sortBy?: 'created_at' | 'last_login_at' | 'nickname';
+  sortBy?: 'created_at' | 'last_login_at' | 'nickname' | 'post_count';
   sortOrder?: 'asc' | 'desc';
 }
 
