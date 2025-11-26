@@ -1892,6 +1892,67 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/components/AvatarUploadModal.tsx](frontend/components/AvatarUploadModal.tsx) - 画像クロッピングロジックのコメント追加
     - [frontend/lib/hooks/useDataLoader.ts](frontend/lib/hooks/useDataLoader.ts) - データローダーフックのコメント追加
 
+### 2025-11-25
+- **グループアバター機能の実装** ✅ 完了
+  - **グループ設定でのアバター画像設定機能**:
+    - グループ設定モーダルにアバター画像アップロード機能を追加
+    - アバターアイコンをクリックして編集できるように実装（個人設定と同様のUI）
+    - 「アバターを変更」ボタンを削除し、アイコンクリックで編集画面を開く方式に変更
+    - アバターアップロード完了時に自動保存機能を実装
+    - アバターがない場合はUsersアイコンを表示（グループ名の頭文字ではなく）
+  - **アバター表示の統合**:
+    - メッセージ一覧ページでグループアバターを表示
+    - グループ一覧ページでグループアバターを表示
+    - グループチャットページのヘッダーでグループアバターを表示
+    - すべての場所で一貫したアバター表示を実現
+  - **データベースマイグレーション**:
+    - `groups`テーブルに`avatar_url`カラムを追加（既存のマイグレーションを修正）
+    - 安全なカラム追加処理（IF NOT EXISTS対応）
+  - **多言語対応**:
+    - グループアバター関連の翻訳キーを追加（日本語・英語）
+    - `groupAvatar`, `changeAvatar`, `change`, `uploadAvatar`などのキーを追加
+  - **実装ファイル**:
+    - [frontend/components/GroupSettingsModal.tsx](frontend/components/GroupSettingsModal.tsx) - アバター編集機能追加
+    - [frontend/app/[locale]/messages/page.tsx](frontend/app/[locale]/messages/page.tsx) - メッセージ一覧でのアバター表示
+    - [frontend/app/[locale]/groups/page.tsx](frontend/app/[locale]/groups/page.tsx) - グループ一覧でのアバター表示
+    - [frontend/app/[locale]/groups/[groupId]/page.tsx](frontend/app/[locale]/groups/[groupId]/page.tsx) - グループチャットヘッダーでのアバター表示
+    - [backend/app/models/group.py](backend/app/models/group.py) - avatar_urlフィールド確認
+    - [backend/alembic/versions/7caed1f3ebfa_add_group_avatar_url.py](backend/alembic/versions/7caed1f3ebfa_add_group_avatar_url.py) - マイグレーションファイル
+    - [frontend/messages/ja.json](frontend/messages/ja.json) - 日本語翻訳追加
+    - [frontend/messages/en.json](frontend/messages/en.json) - 英語翻訳追加
+
+- **コメントいいね機能の実装** ✅ 完了
+  - **バックエンド実装**:
+    - PostCommentLikeモデルの作成（post_comment_likesテーブル）
+      - comment_id, user_id, reaction_type, created_atフィールド
+      - ユニーク制約（1ユーザーは1コメントに1回のみいいね可能）
+    - データベースマイグレーション（add_post_comment_like_table_20251115.py）
+    - PostServiceにコメントいいね機能を追加
+      - `like_comment` - コメントにいいねを付ける
+      - `unlike_comment` - コメントのいいねを解除
+      - `get_comment_likes` - コメントのいいね一覧を取得
+      - `get_comment_like_count` - コメントのいいね数を取得
+      - `is_comment_liked_by_user` - ユーザーがコメントにいいねしているかチェック
+    - コメントいいねAPIエンドポイントの実装
+      - POST /api/v1/posts/comments/{comment_id}/like - コメントにいいね
+      - DELETE /api/v1/posts/comments/{comment_id}/like - コメントのいいね解除
+      - GET /api/v1/posts/comments/{comment_id}/likes - コメントのいいね一覧
+    - コメントいいね通知機能の実装
+      - NotificationServiceに`create_comment_like_notification`メソッドを追加
+      - コメントにいいねが付けられたときに通知を作成
+  - **フロントエンド実装**:
+    - コメントいいねAPI関数の実装
+      - `likeComment`, `unlikeComment`, `getCommentLikes`関数を追加
+    - コメントセクションにいいね機能を追加（今後実装予定）
+  - **実装ファイル**:
+    - [backend/app/models/post.py](backend/app/models/post.py) - PostCommentLikeモデル追加
+    - [backend/app/models/user.py](backend/app/models/user.py) - comment_likesリレーション追加
+    - [backend/app/services/post_service.py](backend/app/services/post_service.py) - コメントいいね機能追加
+    - [backend/app/services/notification_service.py](backend/app/services/notification_service.py) - コメントいいね通知機能追加
+    - [backend/app/api/posts.py](backend/app/api/posts.py) - コメントいいねAPIエンドポイント追加
+    - [backend/app/schemas/post.py](backend/app/schemas/post.py) - PostCommentLikeCreate/Responseスキーマ追加
+    - [backend/alembic/versions/add_post_comment_like_table_20251115.py](backend/alembic/versions/add_post_comment_like_table_20251115.py) - マイグレーションファイル
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1981,6 +2042,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-24（コメント充実完了、エラーハンドリング改善完了）
+**最終更新日**: 2025-11-25（グループアバター機能実装完了、コメントいいね機能実装完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了、エラーハンドリング改善完了（翻訳キー追加、debugLog統一）
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了、エラーハンドリング改善完了（翻訳キー追加、debugLog統一）、グループアバター機能実装完了、コメントいいね機能実装完了
