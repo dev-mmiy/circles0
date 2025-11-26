@@ -100,7 +100,21 @@
     "selectUserPlaceholder": "Search by username or nickname...",
     "noUserSelected": "Please select a user",
     "creatingConversation": "Creating conversation...",
-    "errorCreatingConversation": "Failed to create conversation"
+    "errorCreatingConversation": "Failed to create conversation",
+    "createGroup": "Create Group",
+    "searchUsersAndGroups": "Search users and groups...",
+    "selectUserOrGroup": "Select User or Group",
+    "tabUser": "User",
+    "tabGroup": "Group",
+    "selectGroup": "Select Group",
+    "selectGroupPlaceholder": "Search by group name...",
+    "noGroupSelected": "Please select a group",
+    "searchResults": "Search Results",
+    "users": "Users",
+    "groups": "Groups",
+    "noGroupsFound": "No groups found",
+    "noUsersFound": "No users found",
+    "editGroup": "Edit Group"
   },
   "validation": {
     "required": "This field is required",
@@ -192,7 +206,9 @@
     "general": "An error occurred.",
     "statusCode": "Status Code",
     "retry": "Retry",
-    "backToHome": "Back to Home"
+    "backToHome": "Back to Home",
+    "authenticationRequired": "Authentication is required to perform this action.",
+    "createDiseaseFailed": "Failed to create disease."
   },
   "auth": {
     "login": "Login",
@@ -388,6 +404,11 @@
     "dangerZone": "Danger Zone",
     "groupName": "Group Name",
     "groupDescription": "Description",
+    "groupAvatar": "Group Avatar",
+    "uploadAvatar": "Upload Avatar",
+    "changeAvatar": "Change Avatar",
+    "change": "Change",
+    "removeAvatar": "Remove Avatar",
     "saving": "Saving...",
     "saveChanges": "Save Changes",
     "addMembers": "Add Members",
@@ -447,7 +468,13 @@
       "messageRequired": "Please enter a message",
       "messageTooLong": "Message must be 5000 characters or less",
       "imageUrlTooLong": "Image URL must be 500 characters or less",
-      "deletedMessage": "Deleted message"
+      "deletedMessage": "Deleted message",
+      "attachImage": "Attach image",
+      "uploading": "Uploading...",
+      "uploadFailed": "Failed to upload image",
+      "uploadServiceNotConfigured": "Upload service not configured",
+      "failedToCreatePreview": "Failed to create preview",
+      "invalidImageFile": "Invalid image file. Only JPEG, PNG, GIF, and WebP formats are supported."
     }
   },
   "userProfileEdit": {
@@ -567,6 +594,8 @@
     "sortByDate": "Registration date",
     "sortByLogin": "Last login",
     "sortByName": "Nickname",
+    "sortByPostCount": "Post Count",
+    "postCount": "Posts: {count}",
     "sortOrderAsc": "Ascending",
     "sortOrderDesc": "Descending",
     "resultsTitle": "Search Results ({count} items)",
@@ -708,7 +737,7 @@
   "searchPage": {
     "title": "Search",
     "subtitle": "Search for diseases and users",
-    "tabDiseases": "Search Diseases",
+    "tabDiseases": "Search from Diseases",
     "tabUsers": "Search Users",
     "tabHashtags": "Search Hashtags",
     "hintsTitle": "Search Tips",
@@ -863,7 +892,8 @@
       "selectDisease": "Please select a disease",
       "enterDiseaseName": "Please enter a disease name",
       "saveFailed": "Failed to save",
-      "updateFailed": "Failed to update"
+      "updateFailed": "Failed to update",
+      "createDiseaseFailed": "Failed to create disease"
     },
     "otherDiseasePrefix": "Other Disease:",
     "diseaseIdPrefix": "Disease ID:",

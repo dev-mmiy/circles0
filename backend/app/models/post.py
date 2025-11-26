@@ -159,6 +159,48 @@ class PostComment(Base):
         back_populates="parent_comment",
         cascade="all, delete-orphan",
     )
+    likes = relationship(
+        "PostCommentLike", back_populates="comment", cascade="all, delete-orphan"
+    )
+
+
+class PostCommentLike(Base):
+    """
+    Post comment like/reaction model.
+
+    Tracks which users have liked which comments.
+    Supports different reaction types.
+    """
+
+    __tablename__ = "post_comment_likes"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    comment_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("post_comments.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    reaction_type = Column(
+        String(20),
+        nullable=False,
+        default="like",
+        comment="like, support, empathy",
+    )
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    comment = relationship("PostComment", back_populates="likes")
+    user = relationship("User", back_populates="post_comment_likes")
+
+    # Ensure one user can only like a comment once
+    __table_args__ = (UniqueConstraint("comment_id", "user_id", name="uq_comment_user_like"),)
 
 
 class PostImage(Base):

@@ -146,6 +146,34 @@ class PostCommentResponse(PostCommentBase):
             return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
+class PostCommentLikeCreate(BaseModel):
+    """Schema for creating a comment like."""
+
+    reaction_type: str = Field(default="like", pattern="^(like|support|empathy)$")
+
+
+class PostCommentLikeResponse(BaseModel):
+    """Schema for comment like responses."""
+
+    id: int
+    comment_id: UUID
+    user_id: UUID
+    reaction_type: str
+    created_at: datetime
+    user: Optional[PostAuthor] = None
+
+    model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
+
 class HashtagResponse(BaseModel):
     """Schema for hashtag responses."""
 

@@ -49,7 +49,7 @@ export interface UserSearchParams {
   disease_ids?: string; // Comma-separated disease IDs
   country?: string; // Filter by country code
   language?: string; // Filter by preferred language
-  sort_by?: 'created_at' | 'last_login_at' | 'nickname'; // Sort field
+  sort_by?: 'created_at' | 'last_login_at' | 'nickname' | 'post_count'; // Sort field
   sort_order?: 'asc' | 'desc'; // Sort order
   limit?: number; // Maximum results
 }

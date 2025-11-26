@@ -25,7 +25,7 @@ def upgrade() -> None:
     op.execute(
         """
         DO $$ BEGIN
-            CREATE TYPE notificationtype AS ENUM ('follow', 'comment', 'reply', 'like', 'comment_like');
+            CREATE TYPE notificationtype AS ENUM ('follow', 'comment', 'reply', 'like', 'comment_like', 'message');
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;

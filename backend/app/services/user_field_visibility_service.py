@@ -128,14 +128,31 @@ class UserFieldVisibilityService:
         viewer_disease_ids: Optional[List[int]] = None,
     ) -> bool:
         """
-        Check if a viewer can see a specific field.
+        Check if a viewer can see a specific field based on privacy settings.
+        
+        This method implements the field-level visibility logic with the following rules:
+        1. "public": Visible to everyone (including unauthenticated users)
+        2. "private": Not visible to anyone (including the owner in public API responses)
+           Note: The owner can see their own fields in the profile page, but not in public API responses
+        3. "limited": Only visible to authenticated users
+        4. "same_disease_only": Only visible to authenticated users who share at least one disease
+           with the field owner (both must have the disease marked as public and active)
+        
+        Business Logic:
+        - Private fields are strictly enforced: even the owner cannot see them in public API responses
+          (e.g., feed, search results). This ensures true privacy.
+        - Same disease check requires:
+          a) Viewer must be authenticated
+          b) Owner must have at least one public, active disease
+          c) Viewer must have at least one active disease that matches owner's public diseases
 
         Args:
             db: Database session
             field_owner_id: ID of the user who owns the field
             field_name: Name of the field to check
             viewer_id: ID of the user viewing (None if unauthenticated)
-            viewer_disease_ids: List of disease IDs the viewer has (for same_disease_only check)
+            viewer_disease_ids: List of disease IDs the viewer has (for same_disease_only check).
+                              If None, will be fetched from database.
 
         Returns:
             True if viewer can see the field, False otherwise
@@ -154,10 +171,13 @@ class UserFieldVisibilityService:
         )
 
         if visibility == "public":
+            # Public fields are visible to everyone, including unauthenticated users
             return True
         elif visibility == "private":
             # Private fields are never visible to anyone (including the owner in API responses)
             # The owner can see their own fields in the profile page, but not in public API responses
+            # This ensures true privacy: if a user sets a field to "private", it won't appear
+            # in feed, search results, or any public-facing API responses
             logger.debug(
                 f"[can_view_field] Field is private, returning False: "
                 f"field_owner_id={field_owner_id}, field_name={field_name}, "
@@ -165,14 +185,21 @@ class UserFieldVisibilityService:
             )
             return False
         elif visibility == "limited":
-            # Only authenticated users can see
+            # Limited fields are only visible to authenticated users
+            # Unauthenticated users cannot see these fields
             return viewer_id is not None
         elif visibility == "same_disease_only":
-            # Only users with same diseases can see
+            # Same disease only: Only users with matching diseases can see
+            # This requires:
+            # 1. Viewer must be authenticated
+            # 2. Owner must have at least one public, active disease
+            # 3. Viewer must have at least one active disease that matches owner's public diseases
             if viewer_id is None:
                 return False
 
-            # Get owner's disease IDs
+            # Get owner's public, active disease IDs
+            # Note: We only consider diseases that are both active AND public
+            # This ensures that private diseases don't affect visibility matching
             from app.models.disease import UserDisease
 
             owner_disease_ids = [
@@ -186,10 +213,13 @@ class UserFieldVisibilityService:
                 .all()
             ]
 
+            # If owner has no public diseases, no one can see the field
             if not owner_disease_ids:
                 return False
 
-            # Check if viewer has any of the same diseases
+            # Get viewer's active disease IDs (if not provided)
+            # Note: For viewer, we check all active diseases (not just public ones)
+            # because we want to match if viewer has the disease, regardless of their privacy setting
             if viewer_disease_ids is None:
                 viewer_disease_ids = [
                     ud.disease_id
@@ -201,6 +231,8 @@ class UserFieldVisibilityService:
                     .all()
                 ]
 
+            # Check if there's any overlap between owner's public diseases and viewer's diseases
+            # Using set intersection for efficient matching
             return bool(set(owner_disease_ids) & set(viewer_disease_ids))
 
         return False

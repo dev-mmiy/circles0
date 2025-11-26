@@ -18,13 +18,22 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import { getUserTimezone } from '@/lib/utils/timezone';
-import { Trash2, Plus, X, Search } from 'lucide-react';
+import { Trash2, Plus, X, Search, Users, Settings } from 'lucide-react';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useUser } from '@/contexts/UserContext';
 import { findOrCreateConversation } from '@/lib/api/messages';
 import { searchUsers, UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile } from '@/lib/api/users';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
+import { searchGroups, Group, getGroups } from '@/lib/api/groups';
+import { debugLog } from '@/lib/utils/debug';
+import dynamic from 'next/dynamic';
+
+// Dynamically import GroupSettingsModal to reduce initial bundle size
+const GroupSettingsModal = dynamic(() => import('@/components/GroupSettingsModal'), {
+  loading: () => null,
+  ssr: false,
+});
 
 export default function MessagesPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -33,9 +42,14 @@ export default function MessagesPage() {
   const locale = useLocale();
   const t = useTranslations('messages');
   
-  // Unified data loader for conversations
+  // Unified type for conversations and groups
+  type ConversationOrGroup = 
+    | (Conversation & { type: 'conversation' })
+    | (Group & { type: 'group' });
+
+  // Unified data loader for conversations and groups
   const {
-    items: conversations,
+    items: allItems,
     isLoading,
     isLoadingMore,
     isRefreshing,
@@ -46,12 +60,40 @@ export default function MessagesPage() {
     refresh,
     retry,
     clearError,
-  } = useDataLoader<Conversation>({
+  } = useDataLoader<ConversationOrGroup>({
     loadFn: async (skip, limit) => {
-      const response = await getConversations(skip, limit);
+      // Fetch conversations and groups in parallel
+      // For pagination, we fetch half from each
+      const conversationsSkip = Math.floor(skip / 2);
+      const groupsSkip = Math.floor(skip / 2);
+      const conversationsLimit = Math.ceil(limit / 2);
+      const groupsLimit = Math.ceil(limit / 2);
+
+      const [conversationsResponse, groupsResponse] = await Promise.all([
+        getConversations(conversationsSkip, conversationsLimit),
+        getGroups(groupsSkip, groupsLimit),
+      ]);
+
+      // Mark items with their type
+      const conversations = conversationsResponse.conversations.map(conv => ({ ...conv, type: 'conversation' as const }));
+      const groups = groupsResponse.groups.map(group => ({ ...group, type: 'group' as const }));
+
+      // Combine and sort by last_message_at (most recent first)
+      const combined = [...conversations, ...groups].sort((a, b) => {
+        const aTime = a.type === 'conversation' ? a.last_message_at : a.last_message_at;
+        const bTime = b.type === 'conversation' ? b.last_message_at : b.last_message_at;
+        if (!aTime && !bTime) return 0;
+        if (!aTime) return 1;
+        if (!bTime) return -1;
+        return new Date(bTime).getTime() - new Date(aTime).getTime();
+      });
+
+      // Take only the requested number of items
+      const paginated = combined.slice(0, limit);
+
       return {
-        items: response.conversations,
-        total: response.total,
+        items: paginated,
+        total: conversationsResponse.total + groupsResponse.total,
       };
     },
     pageSize: 20,
@@ -68,40 +110,55 @@ export default function MessagesPage() {
     },
   });
   
+  // Separate conversations and groups for easier access (for filtering)
+  const conversations = allItems.filter((item): item is Conversation & { type: 'conversation' } => item.type === 'conversation');
+  const groups = allItems.filter((item): item is Group & { type: 'group' } => item.type === 'group');
+  
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingConversationId, setDeletingConversationId] = useState<string | null>(null);
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
   
   // New message modal state
   const [showNewMessageModal, setShowNewMessageModal] = useState(false);
+  const [modalTab, setModalTab] = useState<'user' | 'group'>('user');
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserPublicProfile[]>([]);
+  const [modalGroupSearchResults, setModalGroupSearchResults] = useState<Group[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   
-  // Conversation list search state
-  const [conversationSearchQuery, setConversationSearchQuery] = useState('');
+  // Search for users and groups (extended search)
+  const [searchUsersAndGroupsQuery, setSearchUsersAndGroupsQuery] = useState('');
+  const [userSearchResults, setUserSearchResults] = useState<UserPublicProfile[]>([]);
+  const [groupSearchResults, setGroupSearchResults] = useState<Group[]>([]);
+  const [isSearchingUsersAndGroups, setIsSearchingUsersAndGroups] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
 
-  const conversationsRef = useRef<Conversation[]>([]);
+  const conversationsRef = useRef<ConversationOrGroup[]>([]);
   const currentUserRef = useRef(currentUser);
 
   // Update refs
   useEffect(() => {
-    conversationsRef.current = conversations;
-  }, [conversations]);
+    conversationsRef.current = allItems;
+  }, [allItems]);
 
   useEffect(() => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
 
-  // リアルタイムメッセージ更新
+  // リアルタイムメッセージ更新（会話とグループの両方に対応）
   const handleNewMessage = useCallback((messageEvent: MessageEvent) => {
     // 会話リストを更新（該当する会話のlast_messageとunread_countを更新）
-    // Note: useDataLoader manages conversations state, so we need to update it directly
-    // For now, refresh the list to get updated data
-    const conversationIndex = conversationsRef.current.findIndex(conv => conv.id === messageEvent.conversation_id);
+    // Note: useDataLoader manages allItems state, so we need to update it directly
+    // For now, refresh the list to get the latest data
+    const itemIndex = conversationsRef.current.findIndex(item => 
+      (item.type === 'conversation' && item.id === messageEvent.conversation_id) ||
+      (item.type === 'group' && 'group_id' in messageEvent && item.id === messageEvent.group_id)
+    );
     
-    // 会話が存在しない場合（新しい会話）、リストを再読み込み
-    if (conversationIndex === -1) {
+    // アイテムが存在しない場合（新しい会話/グループ）、リストを再読み込み
+    if (itemIndex === -1) {
       // 非同期で再読み込み（無限ループを防ぐ）
       setTimeout(() => {
         refresh();
@@ -137,7 +194,7 @@ export default function MessagesPage() {
       // Refresh list to remove deleted conversation
       await refresh();
     } catch (err: any) {
-      console.error('Failed to delete conversation:', err);
+      debugLog.error('Failed to delete conversation:', err);
       alert(t('errorLoading') || t('errorDeletingConversation'));
     } finally {
       setDeletingConversationId(null);
@@ -177,7 +234,7 @@ export default function MessagesPage() {
       const filteredResults = results.filter(u => u.id !== currentUser?.id);
       setSearchResults(filteredResults);
     } catch (err) {
-      console.error('Search error:', err);
+      debugLog.error('Search error:', err);
       setSearchResults([]);
     } finally {
       setIsSearching(false);
@@ -192,13 +249,50 @@ export default function MessagesPage() {
         router.push(`/messages/${conversationId}`);
       }
     } catch (err) {
-      console.error('Failed to create conversation:', err);
+      debugLog.error('Failed to create conversation:', err);
       alert(t('errorCreatingConversation'));
     } finally {
       setIsCreatingConversation(false);
       setShowNewMessageModal(false);
       setSearchQuery('');
       setSearchResults([]);
+    }
+  };
+
+  // Search for users and groups
+  const handleSearchUsersAndGroups = async (query: string) => {
+    if (!query.trim()) {
+      setShowSearchResults(false);
+      setUserSearchResults([]);
+      setGroupSearchResults([]);
+      return;
+    }
+
+    setIsSearchingUsersAndGroups(true);
+    setShowSearchResults(true);
+    
+    try {
+      const token = await getAccessTokenSilently();
+      
+      // Search users and groups in parallel
+      const [users, groups] = await Promise.all([
+        searchUsers({ q: query, limit: 5 }, token).catch(() => []),
+        searchGroups(query, 0, 5).catch(() => ({ groups: [], total: 0 })),
+      ]);
+
+      // Filter out current user from results
+      const filteredUsers = Array.isArray(users) 
+        ? users.filter((u: UserPublicProfile) => u.id !== currentUser?.id)
+        : [];
+      
+      setUserSearchResults(filteredUsers);
+      setGroupSearchResults(Array.isArray(groups) ? groups : groups.groups || []);
+    } catch (err) {
+      debugLog.error('Search error:', err);
+      setUserSearchResults([]);
+      setGroupSearchResults([]);
+    } finally {
+      setIsSearchingUsersAndGroups(false);
     }
   };
 
@@ -226,13 +320,22 @@ export default function MessagesPage() {
               <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
               <p className="text-gray-600 mt-2">{t('conversations')}</p>
             </div>
-            <button
-              onClick={() => setShowNewMessageModal(true)}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-5 h-5 mr-2" />
-              {t('newMessage')}
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => router.push('/groups/new')}
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                {t('createGroup')}
+              </button>
+              <button
+                onClick={() => setShowNewMessageModal(true)}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                {t('newMessage')}
+              </button>
+            </div>
           </div>
 
           {/* Error message */}
@@ -246,41 +349,144 @@ export default function MessagesPage() {
             </div>
           )}
 
-          {/* Conversation search */}
-          {(!isLoading || conversations.length > 0) && (
-            <div className="mb-4">
+          {/* Extended search for users and groups */}
+          {(!isLoading || allItems.length > 0) && (
+            <div className="mb-4 relative">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  value={conversationSearchQuery}
-                  onChange={(e) => setConversationSearchQuery(e.target.value)}
-                  placeholder={t('searchConversations')}
+                  value={searchUsersAndGroupsQuery}
+                  onChange={(e) => {
+                    const query = e.target.value;
+                    setSearchUsersAndGroupsQuery(query);
+                    if (query.trim()) {
+                      handleSearchUsersAndGroups(query);
+                    } else {
+                      setShowSearchResults(false);
+                      setUserSearchResults([]);
+                      setGroupSearchResults([]);
+                    }
+                  }}
+                  onFocus={() => {
+                    if (searchUsersAndGroupsQuery.trim()) {
+                      setShowSearchResults(true);
+                    }
+                  }}
+                  placeholder={t('searchUsersAndGroups')}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                {conversationSearchQuery && (
+                {searchUsersAndGroupsQuery && (
                   <button
-                    onClick={() => setConversationSearchQuery('')}
+                    onClick={() => {
+                      setSearchUsersAndGroupsQuery('');
+                      setShowSearchResults(false);
+                      setUserSearchResults([]);
+                      setGroupSearchResults([]);
+                    }}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 )}
               </div>
+              
+              {/* Search results dropdown */}
+              {showSearchResults && (userSearchResults.length > 0 || groupSearchResults.length > 0) && (
+                <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+                  {userSearchResults.length > 0 && (
+                    <div className="p-2">
+                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 border-b border-gray-200">
+                        {t('users')}
+                      </div>
+                      {userSearchResults.map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={async () => {
+                            try {
+                              const conversationId = await findOrCreateConversation(user.id);
+                              if (conversationId) {
+                                router.push(`/messages/${conversationId}`);
+                                setSearchUsersAndGroupsQuery('');
+                                setShowSearchResults(false);
+                              }
+                            } catch (err) {
+                              debugLog.error('Failed to create conversation:', err);
+                            }
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 transition-colors"
+                        >
+                          {user.avatar_url ? (
+                            <Image
+                              src={user.avatar_url}
+                              alt={user.nickname}
+                              width={32}
+                              height={32}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
+                              <span className="text-gray-600 text-xs font-medium">
+                                {user.nickname?.[0]?.toUpperCase() || '?'}
+                              </span>
+                            </div>
+                          )}
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900">{user.nickname}</p>
+                            {user.username && (
+                              <p className="text-xs text-gray-500">@{user.username}</p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {groupSearchResults.length > 0 && (
+                    <div className="p-2">
+                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 border-b border-gray-200">
+                        {t('groups')}
+                      </div>
+                      {groupSearchResults.map((group) => (
+                        <button
+                          key={group.id}
+                          onClick={() => {
+                            router.push(`/groups/${group.id}`);
+                            setSearchUsersAndGroupsQuery('');
+                            setShowSearchResults(false);
+                          }}
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span className="text-blue-600 text-xs font-medium">
+                              {group.name[0]?.toUpperCase() || 'G'}
+                            </span>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900">{group.name}</p>
+                            {group.description && (
+                              <p className="text-xs text-gray-500 truncate">{group.description}</p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
 
-          {/* Conversations list */}
+          {/* Conversations and Groups list */}
           <div className="bg-white rounded-lg shadow">
             {/* ローディング状態 */}
-            {isLoading && conversations.length === 0 ? (
+            {isLoading && allItems.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="flex justify-center items-center">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
                 <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
               </div>
-            ) : conversations.length === 0 ? (
+            ) : allItems.length === 0 ? (
               <div className="p-12 text-center">
                 <svg
                   className="mx-auto h-12 w-12 text-gray-400"
@@ -304,117 +510,162 @@ export default function MessagesPage() {
               </div>
             ) : (
               <>
-                {(() => {
-                  const filteredConversations = conversations.filter((conversation) => {
-                    if (!conversationSearchQuery.trim()) return true;
-                    const query = conversationSearchQuery.toLowerCase();
-                    const nickname = conversation.other_user?.nickname?.toLowerCase() || '';
-                    const username = conversation.other_user?.username?.toLowerCase() || '';
-                    const lastMessage = conversation.last_message?.content?.toLowerCase() || '';
-                    return (
-                      nickname.includes(query) ||
-                      username.includes(query) ||
-                      lastMessage.includes(query)
-                    );
-                  });
+                <div className="divide-y divide-gray-100">
+                  {allItems.map((item) => {
+                        if (item.type === 'conversation') {
+                          return (
+                            <div
+                              key={item.id}
+                              className="p-4 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <Link
+                                  href={`/messages/${item.id}`}
+                                  className="flex-1 flex items-center gap-4"
+                                >
+                                  {/* Avatar */}
+                                  <div className="flex-shrink-0 relative w-12 h-12">
+                                    {item.other_user?.avatar_url ? (
+                                      <Image
+                                        src={item.other_user.avatar_url}
+                                        alt={item.other_user.nickname}
+                                        width={48}
+                                        height={48}
+                                        className="rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                                        <span className="text-gray-600 font-medium">
+                                          {item.other_user?.nickname?.[0]?.toUpperCase() || '?'}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </div>
 
-                  if (filteredConversations.length === 0 && conversationSearchQuery.trim()) {
-                    return (
-                      <div className="p-12 text-center">
-                        <Search className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">
-                          {t('noSearchResults')}
-                        </h3>
-                        <p className="mt-2 text-gray-500">
-                          {t('noSearchResultsMessage')}
-                        </p>
-                      </div>
-                    );
-                  }
+                                  {/* Conversation info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                                        {item.other_user?.nickname || 'Unknown User'}
+                                      </h3>
+                                      {item.last_message_at && (
+                                        <span className="text-sm text-gray-500 ml-2">
+                                          {formatTime(item.last_message_at)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {item.last_message && (
+                                      <p className="text-sm text-gray-600 truncate mt-1">
+                                        {item.last_message.is_deleted
+                                          ? `(${t('conversation.deletedMessage')})`
+                                          : item.last_message.content}
+                                      </p>
+                                    )}
+                                    {item.unread_count > 0 && (
+                                      <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
+                                        {item.unread_count}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Link>
 
-                  return (
-                    <div className="divide-y divide-gray-100">
-                      {filteredConversations.map((conversation) => (
-                    <div
-                      key={conversation.id}
-                      className="p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <Link
-                          href={`/messages/${conversation.id}`}
-                          className="flex-1 flex items-center gap-4"
-                        >
-                          {/* Avatar */}
-                          <div className="flex-shrink-0 relative w-12 h-12">
-                            {conversation.other_user?.avatar_url ? (
-                              <Image
-                                src={conversation.other_user.avatar_url}
-                                alt={conversation.other_user.nickname}
-                                width={48}
-                                height={48}
-                                className="rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                                <span className="text-gray-600 font-medium">
-                                  {conversation.other_user?.nickname?.[0]?.toUpperCase() || '?'}
-                                </span>
+                                {/* Delete button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleDeleteConversation(item.id);
+                                  }}
+                                  disabled={deletingConversationId === item.id}
+                                  className="ml-4 p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                                  title={t('deleteConversation')}
+                                >
+                                  {deletingConversationId === item.id ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                                  ) : (
+                                    <Trash2 className="w-5 h-5" />
+                                  )}
+                                </button>
                               </div>
-                            )}
-                          </div>
-
-                          {/* Conversation info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center justify-between">
-                              <h3 className="text-lg font-medium text-gray-900 truncate">
-                                {conversation.other_user?.nickname || 'Unknown User'}
-                              </h3>
-                              {conversation.last_message_at && (
-                                <span className="text-sm text-gray-500 ml-2">
-                                  {formatTime(conversation.last_message_at)}
-                                </span>
-                              )}
                             </div>
-                            {conversation.last_message && (
-                              <p className="text-sm text-gray-600 truncate mt-1">
-                                {conversation.last_message.is_deleted
-                                  ? `(${t('conversation.deletedMessage')})`
-                                  : conversation.last_message.content}
-                              </p>
-                            )}
-                            {conversation.unread_count > 0 && (
-                              <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
-                                {conversation.unread_count}
-                              </span>
-                            )}
-                          </div>
-                        </Link>
+                          );
+                        } else {
+                          // Group
+                          return (
+                            <div
+                              key={item.id}
+                              className="p-4 hover:bg-gray-50 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <Link
+                                  href={`/groups/${item.id}`}
+                                  className="flex-1 flex items-center gap-4"
+                                >
+                                  {/* Group icon */}
+                                  <div className="flex-shrink-0 relative w-12 h-12">
+                                    {item.avatar_url ? (
+                                      <Image
+                                        src={item.avatar_url}
+                                        alt={item.name}
+                                        width={48}
+                                        height={48}
+                                        className="rounded-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <Users className="w-6 h-6 text-blue-600" />
+                                      </div>
+                                    )}
+                                  </div>
 
-                        {/* Delete button */}
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleDeleteConversation(conversation.id);
-                          }}
-                          disabled={deletingConversationId === conversation.id}
-                          className="ml-4 p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
-                          title={t('deleteConversation')}
-                        >
-                          {deletingConversationId === conversation.id ? (
-                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
-                          ) : (
-                            <Trash2 className="w-5 h-5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                      ))}
-                    </div>
-                  );
-                })()}
+                                  {/* Group info */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between">
+                                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                                        {item.name}
+                                      </h3>
+                                      {item.last_message_at && (
+                                        <span className="text-sm text-gray-500 ml-2">
+                                          {formatTime(item.last_message_at)}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {item.last_message && (
+                                      <p className="text-sm text-gray-600 truncate mt-1">
+                                        {item.last_message.is_deleted
+                                          ? `(${t('conversation.deletedMessage')})`
+                                          : item.last_message.content}
+                                      </p>
+                                    )}
+                                    {item.unread_count > 0 && (
+                                      <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
+                                        {item.unread_count}
+                                      </span>
+                                    )}
+                                  </div>
+                                </Link>
+
+                                {/* Edit group button */}
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setEditingGroup(item);
+                                    setEditingGroupId(item.id);
+                                  }}
+                                  className="ml-4 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                  title={t('editGroup') || 'Edit Group'}
+                                >
+                                  <Settings className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        }
+                      })}
+                </div>
 
                 {/* Load more button */}
-                {hasMore && !conversationSearchQuery.trim() && (
+                {hasMore && (
                   <div className="flex justify-center p-6 border-t border-gray-200">
                     <button
                       onClick={loadMore}
@@ -455,8 +706,8 @@ export default function MessagesPage() {
                   </div>
                 )}
 
-                {/* End of conversations message */}
-                {!hasMore && conversations.length > 0 && (
+                {/* End of conversations and groups message */}
+                {!hasMore && allItems.length > 0 && (
                   <div className="text-center py-6 border-t border-gray-200">
                     <p className="text-gray-500">{t('allConversationsShown')}</p>
                   </div>
@@ -485,16 +736,50 @@ export default function MessagesPage() {
             <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{t('newMessage')}</h3>
+                  <h3 className="text-lg font-medium text-gray-900">{t('selectUserOrGroup')}</h3>
                   <button
                     onClick={() => {
                       setShowNewMessageModal(false);
                       setSearchQuery('');
                       setSearchResults([]);
+                      setModalGroupSearchResults([]);
+                      setModalTab('user');
                     }}
                     className="text-gray-400 hover:text-gray-500"
                   >
                     <X className="w-6 h-6" />
+                  </button>
+                </div>
+
+                {/* Tab selection */}
+                <div className="mb-4 flex border-b border-gray-200">
+                  <button
+                    onClick={() => {
+                      setModalTab('user');
+                      setSearchQuery('');
+                      setSearchResults([]);
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
+                      modalTab === 'user'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {t('tabUser')}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setModalTab('group');
+                      setSearchQuery('');
+                      setModalGroupSearchResults([]);
+                    }}
+                    className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
+                      modalTab === 'group'
+                        ? 'border-blue-500 text-blue-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {t('tabGroup')}
                   </button>
                 </div>
 
@@ -511,15 +796,25 @@ export default function MessagesPage() {
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
-                          handleSearchUsers();
+                          if (modalTab === 'user') {
+                            handleSearchUsers();
+                          } else {
+                            handleSearchGroups();
+                          }
                         }
                       }}
-                      placeholder={t('selectUserPlaceholder')}
+                      placeholder={modalTab === 'user' ? t('selectUserPlaceholder') : t('selectGroupPlaceholder')}
                       className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
                   <button
-                    onClick={handleSearchUsers}
+                    onClick={() => {
+                      if (modalTab === 'user') {
+                        handleSearchUsers();
+                      } else {
+                        handleSearchGroups();
+                      }
+                    }}
                     disabled={isSearching || !searchQuery.trim()}
                     className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
@@ -547,13 +842,26 @@ export default function MessagesPage() {
                         {t('loading')}
                       </div>
                     ) : (
-                      t('selectUser')
+                      modalTab === 'user' ? t('selectUser') : t('selectGroup')
                     )}
                   </button>
+                  
+                  {/* Create group button (only in group tab) */}
+                  {modalTab === 'group' && (
+                    <button
+                      onClick={() => {
+                        setShowNewMessageModal(false);
+                        router.push('/groups/new');
+                      }}
+                      className="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      {t('createGroup')}
+                    </button>
+                  )}
                 </div>
 
                 {/* Search results */}
-                {searchResults.length > 0 && (
+                {modalTab === 'user' && searchResults.length > 0 && (
                   <div className="max-h-96 overflow-y-auto border-t border-gray-200">
                     <div className="py-2">
                       {searchResults.map((user) => (
@@ -611,15 +919,70 @@ export default function MessagesPage() {
                   </div>
                 )}
 
-                {searchQuery && searchResults.length === 0 && !isSearching && (
+                {modalTab === 'group' && modalGroupSearchResults.length > 0 && (
+                  <div className="max-h-96 overflow-y-auto border-t border-gray-200">
+                    <div className="py-2">
+                      {modalGroupSearchResults.map((group) => (
+                        <button
+                          key={group.id}
+                          onClick={() => {
+                            router.push(`/groups/${group.id}`);
+                            setShowNewMessageModal(false);
+                            setSearchQuery('');
+                            setModalGroupSearchResults([]);
+                          }}
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <span className="text-blue-600 font-medium">
+                              {group.name[0]?.toUpperCase() || 'G'}
+                            </span>
+                          </div>
+                          <div className="flex-1 text-left">
+                            <p className="text-sm font-medium text-gray-900">{group.name}</p>
+                            {group.description && (
+                              <p className="text-xs text-gray-500 truncate">{group.description}</p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {searchQuery && modalTab === 'user' && searchResults.length === 0 && !isSearching && (
                   <div className="text-center py-8 text-gray-500">
-                    <p>{t('noUserSelected')}</p>
+                    <p>{t('noUsersFound')}</p>
+                  </div>
+                )}
+
+                {searchQuery && modalTab === 'group' && modalGroupSearchResults.length === 0 && !isSearching && (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>{t('noGroupsFound')}</p>
                   </div>
                 )}
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Group Settings Modal */}
+      {editingGroup && (
+        <GroupSettingsModal
+          group={editingGroup}
+          isOpen={!!editingGroupId}
+          onClose={() => {
+            setEditingGroupId(null);
+            setEditingGroup(null);
+          }}
+          onUpdate={async () => {
+            // Refresh the groups list
+            await refresh();
+            setEditingGroupId(null);
+            setEditingGroup(null);
+          }}
+        />
       )}
     </>
   );

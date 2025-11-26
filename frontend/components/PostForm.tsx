@@ -8,6 +8,7 @@ import { createPost, type CreatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
 import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
+import { debugLog } from '@/lib/utils/debug';
 
 interface PostFormProps {
   onPostCreated?: () => void | Promise<void>;
@@ -63,7 +64,7 @@ export default function PostForm({
         validFiles.push(file);
         previews.push({ url: previewUrl, file });
       } catch (err) {
-        console.error('Failed to create preview:', err);
+        debugLog.error('Failed to create preview:', err);
         setError('Failed to create preview for one or more images');
       }
     }
@@ -103,7 +104,7 @@ export default function PostForm({
         setError(uploadResponse.errors.join(', '));
       }
     } catch (err: any) {
-      console.error('Failed to upload images:', err);
+      debugLog.error('Failed to upload images:', err);
       
       // Handle 503 error (GCS not configured)
       if (err.response?.status === 503) {
@@ -176,7 +177,7 @@ export default function PostForm({
         }
       }
     } catch (err: any) {
-      console.error('Failed to create post:', err);
+      debugLog.error('Failed to create post:', err);
       setError(err.message || t('errors.createFailed'));
     } finally {
       setIsSubmitting(false);

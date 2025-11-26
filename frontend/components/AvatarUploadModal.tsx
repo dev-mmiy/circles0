@@ -123,6 +123,33 @@ export function AvatarUploadModal({
   };
 
   // Crop image to circular avatar
+  /**
+   * Crop and resize image to avatar format (circular, 400x400px).
+   * 
+   * This function performs complex coordinate transformations to accurately crop
+   * the image based on the user's zoom and position adjustments in the UI.
+   * 
+   * Coordinate System Overview:
+   * 1. Natural Image Coordinates: The original image dimensions (img.naturalWidth x img.naturalHeight)
+   * 2. Displayed Image Coordinates: The image as shown in the UI (scaled by actualScale)
+   * 3. Container Coordinates: The crop area (300x300px circle)
+   * 4. Canvas Coordinates: The final output (400x400px square)
+   * 
+   * Transformation Flow:
+   * - User adjusts image position (cropState.x, cropState.y) and zoom (cropState.scale)
+   * - These adjustments are in displayed image coordinates
+   * - We need to convert back to natural image coordinates to crop the correct region
+   * - The cropped region is then drawn to a 400x400px canvas with a circular mask
+   * 
+   * Key Calculations:
+   * - actualScale = baseScale * cropState.scale (combined scale factor)
+   * - displayedSize = naturalSize * actualScale (how big the image appears)
+   * - containerCenterInDisplayed = displayedSize/2 - cropState.offset (where container center is in displayed coords)
+   * - naturalCenter = containerCenterInDisplayed * (naturalSize / displayedSize) (convert to natural coords)
+   * - sourceSize = containerSize / actualScale (crop size in natural coordinates)
+   * 
+   * @returns Promise that resolves to a Blob containing the cropped image
+   */
   const cropImageToAvatar = async (): Promise<Blob> => {
     return new Promise((resolve, reject) => {
       if (!imageRef.current || !originalFile) {
@@ -138,17 +165,20 @@ export function AvatarUploadModal({
         return;
       }
 
-      // Avatar size (square)
+      // Avatar output size (square, 400x400px)
+      // This is the final size of the avatar image
       const avatarSize = 400;
       canvas.width = avatarSize;
       canvas.height = avatarSize;
 
-      // Container size (crop area)
+      // Container size (crop area visible to user, 300x300px circle)
+      // This is the size of the circular crop area shown in the UI
       const containerSize = 300;
       
       // Calculate the actual displayed scale
-      // baseScale is the initial scale to cover the container
-      // cropState.scale is the user's zoom adjustment (1.0 = no zoom, >1.0 = zoom in, <1.0 = zoom out)
+      // baseScale: Initial scale to cover the container (calculated when image loads)
+      // cropState.scale: User's zoom adjustment (1.0 = no zoom, >1.0 = zoom in, <1.0 = zoom out)
+      // actualScale: Combined scale factor for the displayed image
       const actualScale = baseScale * cropState.scale;
       
       // Calculate displayed dimensions

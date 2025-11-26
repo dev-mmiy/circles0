@@ -100,7 +100,21 @@
     "selectUserPlaceholder": "ユーザー名またはニックネームで検索...",
     "noUserSelected": "ユーザーを選択してください",
     "creatingConversation": "会話を作成中...",
-    "errorCreatingConversation": "会話の作成に失敗しました"
+    "errorCreatingConversation": "会話の作成に失敗しました",
+    "createGroup": "グループを作成",
+    "searchUsersAndGroups": "ユーザーとグループを検索...",
+    "selectUserOrGroup": "ユーザーまたはグループを選択",
+    "tabUser": "ユーザー",
+    "tabGroup": "グループ",
+    "selectGroup": "グループを選択",
+    "selectGroupPlaceholder": "グループ名で検索...",
+    "noGroupSelected": "グループを選択してください",
+    "searchResults": "検索結果",
+    "users": "ユーザー",
+    "groups": "グループ",
+    "noGroupsFound": "グループが見つかりませんでした",
+    "noUsersFound": "ユーザーが見つかりませんでした",
+    "editGroup": "グループを編集"
   },
   "validation": {
     "required": "この項目は必須です",
@@ -192,7 +206,9 @@
     "general": "エラーが発生しました。",
     "statusCode": "ステータスコード",
     "retry": "再試行",
-    "backToHome": "ホームに戻る"
+    "backToHome": "ホームに戻る",
+    "authenticationRequired": "この操作を実行するにはログインが必要です。",
+    "createDiseaseFailed": "疾患の作成に失敗しました。"
   },
   "auth": {
     "login": "ログイン",
@@ -387,6 +403,11 @@
     "dangerZone": "危険エリア",
     "groupName": "グループ名",
     "groupDescription": "説明",
+    "groupAvatar": "グループアバター",
+    "uploadAvatar": "アバターをアップロード",
+    "changeAvatar": "アバターを変更",
+    "change": "変更",
+    "removeAvatar": "アバターを削除",
     "saving": "保存中...",
     "saveChanges": "変更を保存",
     "addMembers": "メンバーを追加",
@@ -446,7 +467,13 @@
       "messageRequired": "メッセージを入力してください",
       "messageTooLong": "メッセージは5000文字以内で入力してください",
       "imageUrlTooLong": "画像URLは500文字以内で入力してください",
-      "deletedMessage": "削除されたメッセージ"
+      "deletedMessage": "削除されたメッセージ",
+      "attachImage": "画像を添付",
+      "uploading": "アップロード中...",
+      "uploadFailed": "画像のアップロードに失敗しました",
+      "uploadServiceNotConfigured": "画像アップロードサービスが設定されていません",
+      "failedToCreatePreview": "画像プレビューの作成に失敗しました",
+      "invalidImageFile": "無効な画像ファイルです。JPEG、PNG、GIF、WebP形式のみ対応しています。"
     }
   },
   "userProfileEdit": {
@@ -566,6 +593,8 @@
     "sortByDate": "登録日順",
     "sortByLogin": "最終ログイン順",
     "sortByName": "ニックネーム順",
+    "sortByPostCount": "投稿数順",
+    "postCount": "投稿数: {count}件",
     "sortOrderAsc": "昇順",
     "sortOrderDesc": "降順",
     "resultsTitle": "検索結果 ({count}件)",
@@ -707,7 +736,7 @@
   "searchPage": {
     "title": "検索",
     "subtitle": "疾患やユーザーを検索できます",
-    "tabDiseases": "疾患を検索",
+    "tabDiseases": "疾患から検索",
     "tabUsers": "ユーザーを検索",
     "tabHashtags": "ハッシュタグを検索",
     "hintsTitle": "検索のヒント",
@@ -862,7 +891,8 @@
       "selectDisease": "疾患を選択してください",
       "enterDiseaseName": "疾患名を入力してください",
       "saveFailed": "保存に失敗しました",
-      "updateFailed": "更新に失敗しました"
+      "updateFailed": "更新に失敗しました",
+      "createDiseaseFailed": "疾患の作成に失敗しました"
     },
     "otherDiseasePrefix": "その他の疾患:",
     "diseaseIdPrefix": "疾患 ID:",

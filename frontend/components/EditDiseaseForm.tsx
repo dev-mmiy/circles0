@@ -9,6 +9,7 @@ import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import { DiseaseStatus } from '@/lib/api/diseases';
+import { debugLog } from '@/lib/utils/debug';
 
 interface EditDiseaseFormProps {
   userDisease: UserDiseaseDetailed;
@@ -82,7 +83,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
     try {
       await onSave(userDisease.id, formData);
     } catch (err) {
-      console.error('Failed to update disease:', err);
+      debugLog.error('Failed to update disease:', err);
       setError(err instanceof Error ? err.message : t('errors.updateFailed'));
     } finally {
       setSubmitting(false);

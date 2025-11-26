@@ -39,6 +39,7 @@ export interface Group {
   id: string;
   name: string;
   description: string | null;
+  avatar_url: string | null;
   creator_id: string | null;
   last_message_at: string | null;
   is_deleted: boolean;
@@ -75,6 +76,7 @@ export interface CreateGroupData {
 export interface UpdateGroupData {
   name?: string;
   description?: string | null;
+  avatar_url?: string | null;
 }
 
 export interface CreateGroupMessageData {

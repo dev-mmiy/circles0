@@ -88,7 +88,13 @@ export function getUserTimezone(timezone?: string, countryCode?: string): string
  * Normalize UTC date string to ensure it's interpreted as UTC
  * If the string doesn't have timezone info, append 'Z' to indicate UTC
  */
-function normalizeUtcDateString(dateString: string): string {
+function normalizeUtcDateString(dateString: string | undefined | null): string {
+  // Handle undefined or null
+  if (!dateString) {
+    // Return current date as fallback
+    return new Date().toISOString();
+  }
+  
   // Check if the string already has timezone info
   // ISO 8601 format: YYYY-MM-DDTHH:mm:ss[Z|±HH:mm]
   // Look for 'Z' at the end or timezone offset pattern (+HH:mm or -HH:mm)
@@ -112,7 +118,7 @@ function normalizeUtcDateString(dateString: string): string {
  * If timezone is not provided, uses browser's local timezone
  */
 export function formatDateInTimezone(
-  utcDateString: string,
+  utcDateString: string | undefined | null,
   locale: string,
   timezone?: string,
   countryCode?: string,
@@ -121,6 +127,12 @@ export function formatDateInTimezone(
   // Normalize the date string to ensure it's interpreted as UTC
   const normalizedDateString = normalizeUtcDateString(utcDateString);
   const utcDate = new Date(normalizedDateString);
+  
+  // Check if date is valid
+  if (isNaN(utcDate.getTime())) {
+    // Return empty string or fallback if date is invalid
+    return '';
+  }
   
   // Determine target timezone:
   // 1. Use provided timezone if available
@@ -144,7 +156,7 @@ export function formatDateInTimezone(
  * This calculates the difference based on UTC time
  */
 export function formatRelativeTime(
-  utcDateString: string,
+  utcDateString: string | undefined | null,
   locale: string,
   timezone?: string,
   countryCode?: string
@@ -152,6 +164,12 @@ export function formatRelativeTime(
   // Normalize the date string to ensure it's interpreted as UTC
   const normalizedDateString = normalizeUtcDateString(utcDateString);
   const utcDate = new Date(normalizedDateString);
+  
+  // Check if date is valid
+  if (isNaN(utcDate.getTime())) {
+    // Return default values if date is invalid
+    return { minutes: 0, hours: 0, days: 0, isRecent: false };
+  }
   
   // Get current UTC time
   const now = new Date();

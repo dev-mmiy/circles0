@@ -12,10 +12,11 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.disease import UserDisease
 from app.models.hashtag import Hashtag, PostHashtag
 from app.models.mention import PostMention
-from app.models.post import Post, PostComment, PostImage, PostLike
+from app.models.post import Post, PostComment, PostCommentLike, PostImage, PostLike
 from app.models.user import User
 from app.schemas.post import (
     PostCommentCreate,
+    PostCommentLikeCreate,
     PostCommentUpdate,
     PostCreate,
     PostLikeCreate,
@@ -296,10 +297,25 @@ class PostService:
         posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
 
         # Step 5: Filter out blocked users (optimization to avoid N+1 queries)
-        # Instead of checking block status for each post individually, we:
-        # 1. Query all block relationships for current user in one query
-        # 2. Build a set of blocked user IDs (both directions: user blocked others and others blocked user)
-        # 3. Filter posts in memory using set lookup (O(1) per post)
+        # 
+        # Performance Optimization: Instead of checking block status for each post individually,
+        # we use a bulk approach:
+        # 1. Query all block relationships for current user in one query (both directions)
+        # 2. Build a set of blocked user IDs for O(1) lookup
+        # 3. Filter posts in memory using set lookup (O(1) per post, O(n) total)
+        #
+        # Without this optimization:
+        # - For 20 posts, we would execute 20 queries (one per post to check block status)
+        # - This results in 20+ database queries for a single feed request
+        #
+        # With this optimization:
+        # - We execute only 1 query to get all block relationships
+        # - We filter posts in memory using set lookup (much faster than database queries)
+        #
+        # Block relationships are bidirectional:
+        # - If user A blocks user B, user B's posts won't appear in user A's feed
+        # - If user B blocks user A, user A's posts won't appear in user B's feed
+        # - We check both directions to ensure proper filtering
         if current_user_id and posts:
             from app.models.block import Block
 
@@ -766,4 +782,110 @@ class PostService:
                 PostComment.is_active == True,
             )
             .scalar()
+        )
+
+    # ========== Post Comment Likes ==========
+
+    @staticmethod
+    def like_comment(
+        db: Session, comment_id: UUID, user_id: UUID, like_data: PostCommentLikeCreate
+    ) -> Optional[PostCommentLike]:
+        """
+        Like a comment. If already liked, update the reaction type.
+        Returns None if comment doesn't exist or is not accessible.
+        """
+        # Check if comment exists and is active
+        comment = (
+            db.query(PostComment)
+            .filter(PostComment.id == comment_id, PostComment.is_active == True)
+            .first()
+        )
+        if not comment:
+            return None
+
+        # Check if already liked
+        existing_like = (
+            db.query(PostCommentLike)
+            .filter(PostCommentLike.comment_id == comment_id, PostCommentLike.user_id == user_id)
+            .first()
+        )
+
+        if existing_like:
+            # Update reaction type
+            existing_like.reaction_type = like_data.reaction_type
+            db.commit()
+            db.refresh(existing_like)
+            return existing_like
+
+        # Create new like
+        like = PostCommentLike(
+            comment_id=comment_id,
+            user_id=user_id,
+            reaction_type=like_data.reaction_type,
+            created_at=datetime.utcnow(),
+        )
+        db.add(like)
+        db.commit()
+        db.refresh(like)
+
+        # Create notification for the comment author
+        NotificationService.create_comment_like_notification(
+            db=db,
+            liker_id=user_id,
+            comment_id=comment_id,
+        )
+
+        return like
+
+    @staticmethod
+    def unlike_comment(db: Session, comment_id: UUID, user_id: UUID) -> bool:
+        """
+        Remove like from a comment.
+        Returns True if successful, False if like didn't exist.
+        """
+        like = (
+            db.query(PostCommentLike)
+            .filter(PostCommentLike.comment_id == comment_id, PostCommentLike.user_id == user_id)
+            .first()
+        )
+
+        if not like:
+            return False
+
+        db.delete(like)
+        db.commit()
+        return True
+
+    @staticmethod
+    def get_comment_likes(
+        db: Session, comment_id: UUID, skip: int = 0, limit: int = 50
+    ) -> List[PostCommentLike]:
+        """Get all likes for a comment with user information."""
+        return (
+            db.query(PostCommentLike)
+            .options(joinedload(PostCommentLike.user))
+            .filter(PostCommentLike.comment_id == comment_id)
+            .order_by(desc(PostCommentLike.created_at))
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
+
+    @staticmethod
+    def get_comment_like_count(db: Session, comment_id: UUID) -> int:
+        """Get the number of likes for a comment."""
+        return (
+            db.query(func.count(PostCommentLike.id))
+            .filter(PostCommentLike.comment_id == comment_id)
+            .scalar()
+        )
+
+    @staticmethod
+    def is_comment_liked_by_user(db: Session, comment_id: UUID, user_id: UUID) -> bool:
+        """Check if a comment is liked by a specific user."""
+        return (
+            db.query(PostCommentLike)
+            .filter(PostCommentLike.comment_id == comment_id, PostCommentLike.user_id == user_id)
+            .first()
+            is not None
         )

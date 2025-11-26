@@ -3,7 +3,6 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import Image from 'next/image';
 import { useParams as useNextParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
@@ -25,13 +24,28 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
+import { shouldShowAvatar } from '@/lib/utils/chatMessage';
 import { ArrowLeft, Trash2, Send, Search, X, Image as ImageIcon } from 'lucide-react';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
 import { useAuthWithLoader } from '@/lib/hooks/useAuthWithLoader';
 import { debugLog } from '@/lib/utils/debug';
-import { uploadImage, validateImageFile, createImagePreview } from '@/lib/api/images';
+import MessageImage from '@/components/MessageImage';
+import ImageUploadPreview from '@/components/ImageUploadPreview';
+import Avatar from '@/components/Avatar';
+import ChatMessage from '@/components/ChatMessage';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 export default function ConversationPage() {
+  // Disable Next.js automatic scroll restoration for this page
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'scrollRestoration' in window.history) {
+      const originalScrollRestoration = window.history.scrollRestoration;
+      window.history.scrollRestoration = 'manual';
+      return () => {
+        window.history.scrollRestoration = originalScrollRestoration;
+      };
+    }
+  }, []);
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
@@ -65,25 +79,72 @@ export default function ConversationPage() {
   
   // Message form state
   const [messageContent, setMessageContent] = useState('');
-  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [uploadingImage, setUploadingImage] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Image upload hook
+  const {
+    uploadedImageUrl,
+    imagePreview,
+    uploadingImage,
+    fileInputRef,
+    handleImageSelect,
+    handleRemoveImage,
+    clearImage,
+  } = useImageUpload({
+    translationKeys: {
+      invalidImageFile: tConv('invalidImageFile'),
+      failedToCreatePreview: tConv('failedToCreatePreview'),
+      uploadServiceNotConfigured: tConv('uploadServiceNotConfigured'),
+      uploadFailed: tConv('uploadFailed'),
+    },
+  });
   
   // Message search state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const MESSAGES_PER_PAGE = 50;
 
   // スクロールを最下部に移動
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  // sticky要素がある場合でも確実にスクロールするため、scrollTopを直接設定
+  const scrollToBottom = (smooth: boolean = true, retries: number = 3) => {
+    const attemptScroll = (attempt: number) => {
+      if (messagesContainerRef.current) {
+        const container = messagesContainerRef.current;
+        const maxScrollTop = container.scrollHeight - container.clientHeight;
+        
+        // scrollTopを直接設定（sticky要素の影響を受けない）
+        if (smooth && attempt === retries) {
+          // 最後の試行時のみスムーズスクロール
+          container.scrollTo({
+            top: maxScrollTop,
+            behavior: 'smooth'
+          });
+        } else {
+          // 即座にスクロール（scrollTopを直接設定）
+          container.scrollTop = maxScrollTop;
+        }
+        
+        // スクロールが完了したか確認（余裕を持たせる）
+        const currentScrollTop = container.scrollTop;
+        const isAtBottom = Math.abs(currentScrollTop - maxScrollTop) < 5;
+        
+        // まだ最下部に到達していない場合、再試行
+        if (!isAtBottom && attempt < retries) {
+          requestAnimationFrame(() => {
+            attemptScroll(attempt + 1);
+          });
+        }
+      }
+    };
+    
+    // requestAnimationFrameを使用してDOM更新後にスクロール
+    requestAnimationFrame(() => {
+      attemptScroll(1);
+    });
   };
 
   // 会話を取得
@@ -141,13 +202,26 @@ export default function ConversationPage() {
         isMounted: isMountedRef.current,
         responseType: typeof response,
         responseKeys: response ? Object.keys(response) : null,
+        responseValue: response,
       });
 
+      // executeWithLoadingはエラー時やアンマウント時にnullを返す可能性がある
       if (!response) {
-        debugLog.warn('[ConversationPage] No response received from executeWithLoading');
+        debugLog.warn('[ConversationPage] executeWithLoading returned null (error or unmounted)', { reset, skipLoadingState });
         // エラーが発生した場合でもinitialLoadingを解除する
         if (reset) {
           setInitialLoading(false);
+          setMessages([]);
+        }
+        return;
+      }
+
+      // response.messagesが存在しない場合
+      if (!response.messages) {
+        debugLog.warn('[ConversationPage] Response has no messages property', { response, responseKeys: Object.keys(response) });
+        if (reset) {
+          setInitialLoading(false);
+          setMessages([]);
         }
         return;
       }
@@ -161,6 +235,13 @@ export default function ConversationPage() {
         setMessages(response.messages);
         setPage(0);
         debugLog.log('[ConversationPage] Messages reset, count:', response.messages.length);
+        // メッセージ読み込み後、最下部にスクロール（初期読み込み時は即座に）
+        // DOM更新を待つために複数のタイミングで試行
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            scrollToBottom(false, 5); // 初期読み込み時は即座にスクロール、5回まで再試行
+          }, 100);
+        });
         // メッセージ読み込み後、既読にする
         setTimeout(async () => {
           if (!isMountedRef.current) return;
@@ -233,7 +314,9 @@ export default function ConversationPage() {
             debugLog.error(`[ConversationPage] Failed to load ${name}:`, result.reason);
           } else if (result.status === 'fulfilled') {
             if (!result.value) {
-              debugLog.warn(`[ConversationPage] ${name} returned null/undefined`);
+              // executeWithLoadingはエラー時やアンマウント時にnullを返す可能性がある
+              // これは正常な動作なので、警告レベルを下げる
+              debugLog.log(`[ConversationPage] ${name} returned null/undefined (likely error or unmounted)`);
             } else {
               debugLog.log(`[ConversationPage] ${name} loaded successfully`, {
                 type: typeof result.value,
@@ -321,7 +404,11 @@ export default function ConversationPage() {
       const updated = [...prev, newMessage];
       // メッセージ追加後にスクロール
       setTimeout(() => {
-        scrollToBottom();
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            scrollToBottom(true, 3);
+          }, 100);
+        });
       }, 100);
       return updated;
     });
@@ -362,12 +449,29 @@ export default function ConversationPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // メッセージ送信後にスクロール
+  // メッセージが変更されたときにスクロール（初期読み込み時を除く）
   useEffect(() => {
-    if (messages.length > 0) {
-      scrollToBottom();
+    if (messages.length > 0 && !initialLoading) {
+      // DOM更新を待つためにrequestAnimationFrameを使用
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToBottom(true, 3);
+        }, 100);
+      });
     }
-  }, [messages.length]);
+  }, [messages.length, initialLoading]);
+  
+  // 初期読み込み完了時に最下部にスクロール
+  useEffect(() => {
+    if (!initialLoading && messages.length > 0) {
+      // 初期読み込み完了時は即座にスクロール、複数回試行
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          scrollToBottom(false, 5);
+        }, 200);
+      });
+    }
+  }, [initialLoading]);
 
   // さらに読み込む
   const handleLoadMore = () => {
@@ -375,68 +479,6 @@ export default function ConversationPage() {
     loadMessages(false);
   };
 
-  /**
-   * Handle image file selection and upload
-   * 
-   * This function processes image file selection from the file input:
-   * 1. Validates the file (type, size)
-   * 2. Creates a preview URL for immediate UI feedback
-   * 3. Uploads the image to the server (GCS)
-   * 4. Stores the uploaded image URL for message sending
-   * 
-   * @param e - File input change event
-   */
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    // Step 1: Validate file (type, size limits)
-    const validation = validateImageFile(file);
-    if (!validation.valid) {
-      alert(validation.error || tConv('invalidImageFile'));
-      return;
-    }
-
-    // Step 2: Create preview URL for immediate UI feedback
-    // This uses FileReader to create a data URL that can be displayed immediately
-    try {
-      const previewUrl = await createImagePreview(file);
-      setImagePreview(previewUrl);
-    } catch (err) {
-      debugLog.error('Failed to create preview:', err);
-      alert(tConv('failedToCreatePreview'));
-      return;
-    }
-
-    // Step 3: Upload image to server (GCS)
-    // The uploaded URL will be included in the message when sending
-    setUploadingImage(true);
-    try {
-      const accessToken = await getAccessTokenSilently();
-      const uploadResponse = await uploadImage(file, accessToken);
-      setUploadedImageUrl(uploadResponse.url);
-    } catch (err: any) {
-      debugLog.error('Failed to upload image:', err);
-      setImagePreview(null);
-      if (err.response?.status === 503) {
-        alert(tConv('uploadServiceNotConfigured'));
-      } else {
-        alert(err.response?.data?.detail || err.message || tConv('uploadFailed'));
-      }
-    } finally {
-      setUploadingImage(false);
-      // Reset file input to allow selecting the same file again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
-  };
-
-  // 画像を削除
-  const handleRemoveImage = () => {
-    setUploadedImageUrl(null);
-    setImagePreview(null);
-  };
 
   // メッセージを送信
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -508,7 +550,11 @@ export default function ConversationPage() {
           const updated = [...prev, newMessage];
           // Scroll to bottom after adding message
           setTimeout(() => {
-            scrollToBottom();
+            requestAnimationFrame(() => {
+          setTimeout(() => {
+            scrollToBottom(true, 3);
+          }, 100);
+        });
           }, 100);
           return updated;
         });
@@ -516,8 +562,7 @@ export default function ConversationPage() {
       
       // フォームをクリア
       setMessageContent('');
-      setUploadedImageUrl(null);
-      setImagePreview(null);
+      clearImage();
       
       // 会話情報を更新（非同期で実行）
       loadConversation().catch((err) => {
@@ -634,10 +679,10 @@ export default function ConversationPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1">
+      <div className="h-[calc(100vh-4rem)] bg-gray-50 flex flex-col">
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1 min-h-0">
           {/* Header */}
-          <div className="py-4 border-b border-gray-200 bg-white sticky top-16 z-10">
+          <div className="py-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center gap-4">
               <Link
                 href="/messages"
@@ -647,21 +692,13 @@ export default function ConversationPage() {
               </Link>
               {conversation?.other_user && (
                 <>
-                  {conversation.other_user.avatar_url ? (
-                    <Image
-                      src={conversation.other_user.avatar_url}
-                      alt={conversation.other_user.nickname}
-                      width={40}
-                      height={40}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <span className="text-gray-600 font-medium">
-                        {conversation.other_user.nickname?.[0]?.toUpperCase() || '?'}
-                      </span>
-                    </div>
-                  )}
+                  <Avatar
+                    avatarUrl={conversation.other_user.avatar_url}
+                    nickname={conversation.other_user.nickname}
+                    size={40}
+                    className="rounded-full object-cover"
+                    alt={conversation.other_user.nickname}
+                  />
                   <div>
                     <h1 className="text-xl font-bold text-gray-900">
                       {conversation.other_user.nickname}
@@ -711,7 +748,7 @@ export default function ConversationPage() {
           {/* Messages container */}
           <div
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto py-4 space-y-4"
+            className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0"
           >
             {error && (
               <div className="mb-4">
@@ -829,98 +866,37 @@ export default function ConversationPage() {
                           </span>
                         </div>
                       )}
-                      <div
-                        className={`flex gap-3 ${
-                          isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                        }`}
-                      >
-                        {/* Avatar */}
-                        <div className="flex-shrink-0 relative w-8 h-8">
-                          {message.sender?.avatar_url ? (
-                            <Image
-                              src={message.sender.avatar_url}
-                              alt={message.sender.nickname}
-                              width={32}
-                              height={32}
-                              className="rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                              <span className="text-gray-600 text-xs font-medium">
-                                {message.sender?.nickname?.[0]?.toUpperCase() || '?'}
-                              </span>
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Message content */}
-                        <div
-                          className={`flex-1 max-w-[70%] ${
-                            isOwnMessage ? 'items-end' : 'items-start'
-                          } flex flex-col`}
-                        >
-                          <div
-                            className={`rounded-lg px-4 py-2 ${
-                              isOwnMessage
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white border border-gray-200 text-gray-900'
-                            }`}
-                          >
-                            {message.is_deleted ? (
-                              <p className="text-sm italic opacity-70">
-                                ({tConv('deletedMessage')})
-                              </p>
-                            ) : (
-                              <>
-                                {message.content && (
-                                  <p className="text-sm whitespace-pre-wrap break-words">
-                                    {message.content}
-                                  </p>
-                                )}
-                                {message.image_url && (
-                                  <div className="mt-2 relative w-full">
-                                    <Image
-                                      src={message.image_url}
-                                      alt="Attached image"
-                                      width={400}
-                                      height={300}
-                                      sizes="(max-width: 768px) 100vw, 400px"
-                                      className="max-w-full rounded-lg object-contain"
-                                      loading="lazy"
-                                      onError={(e) => {
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                      }}
-                                    />
-                                  </div>
-                                )}
-                              </>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="text-xs text-gray-500">
-                              {formatTime(message.created_at)}
-                            </span>
-                            {isOwnMessage && !message.is_deleted && (
-                              <button
-                                onClick={() => handleDeleteMessage(message.id)}
-                                disabled={deletingMessageId === message.id}
-                                className="text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
-                                title={tConv('deleteMessage')}
-                              >
-                                {deletingMessageId === message.id ? (
-                                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-red-600"></div>
-                                ) : (
-                                  <Trash2 className="w-3 h-3" />
-                                )}
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                      <ChatMessage
+                        id={message.id}
+                        sender={message.sender ? {
+                          id: message.sender.id,
+                          nickname: message.sender.nickname,
+                          avatar_url: message.sender.avatar_url,
+                        } : null}
+                        senderId={message.sender_id}
+                        content={message.content}
+                        imageUrl={message.image_url}
+                        isDeleted={message.is_deleted}
+                        createdAt={message.created_at}
+                        isOwnMessage={isOwnMessage}
+                        showAvatar={shouldShowAvatar(
+                          index,
+                          index > 0 ? messages[index - 1].sender_id : null,
+                          message.sender_id,
+                          !!message.image_url,
+                          true // Direct messages: always show avatar
+                        )}
+                        showSenderName={false}
+                        onDelete={handleDeleteMessage}
+                        isDeleting={deletingMessageId === message.id}
+                        formatTime={formatTime}
+                        deleteMessageTitle={tConv('deleteMessage')}
+                        deletedMessageText={`(${tConv('deletedMessage')})`}
+                        priority={index >= messages.length - 3}
+                      />
                     </div>
                   );
                 })}
-                <div ref={messagesEndRef} />
                   </>
                 )}
               </>
@@ -928,35 +904,15 @@ export default function ConversationPage() {
           </div>
 
           {/* Message form */}
-          <div className="border-t border-gray-200 bg-white py-4 sticky bottom-0 z-10">
+          <div className="border-t border-gray-200 bg-white py-4 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="space-y-2">
-              {(imagePreview || uploadedImageUrl) && (
-                <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                  <Image
-                    src={uploadedImageUrl || imagePreview || ''}
-                    alt="Preview"
-                    width={64}
-                    height={64}
-                    className="object-cover rounded"
-                    loading="lazy"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
-                    }}
-                  />
-                  {uploadingImage && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="text-red-600 hover:text-red-700"
-                    disabled={uploadingImage}
-                  >
-                    ×
-                  </button>
-                </div>
+              {imagePreview && (
+                <ImageUploadPreview
+                  previewUrl={imagePreview}
+                  onRemove={handleRemoveImage}
+                  isUploading={uploadingImage}
+                  className="max-w-xs max-h-32 rounded-lg object-contain"
+                />
               )}
               <div className="flex gap-2">
                 <textarea

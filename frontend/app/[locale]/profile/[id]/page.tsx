@@ -6,6 +6,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
+import Header from '@/components/Header';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
 import { getFollowStats, type FollowStats } from '@/lib/api/follows';
 import { getUserPosts, type Post } from '@/lib/api/posts';
@@ -198,54 +199,65 @@ export default function PublicProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('loading')}</p>
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">{t('loading')}</p>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">{t('error')}</h1>
-          <p className="text-gray-600 mb-4">{error}</p>
-          <Link
-            href="/"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
-          >
-            {t('goToHome')}
-          </Link>
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-red-600 mb-4">{t('error')}</h1>
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Link
+              href="/"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
+            >
+              {t('goToHome')}
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   if (!profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
-          <p className="text-gray-600 mb-4">{t('profileNotFoundMessage')}</p>
-          <Link
-            href="/"
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
-          >
-            {t('goToHome')}
-          </Link>
+      <>
+        <Header />
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
+            <p className="text-gray-600 mb-4">{t('profileNotFoundMessage')}</p>
+            <Link
+              href="/"
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
+            >
+              {t('goToHome')}
+            </Link>
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Profile Header */}
+          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start space-x-6">
             {/* Avatar */}
             <div className="relative">
@@ -401,10 +413,10 @@ export default function PublicProfilePage() {
               </div>
             </div>
           )}
-        </div>
+          </div>
 
-        {/* Tabs */}
-        <div className="bg-white rounded-lg shadow-md mb-6">
+          {/* Tabs */}
+          <div className="bg-white rounded-lg shadow-md mb-6">
           <div className="border-b border-gray-200">
             <nav className="flex -mb-px">
               <button
@@ -502,15 +514,16 @@ export default function PublicProfilePage() {
               <FollowingList userId={profile.id} />
             )}
           </div>
-        </div>
+          </div>
 
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
-            {t('backToHome')}
-          </Link>
+          {/* Back to Home */}
+          <div className="mt-8 text-center">
+            <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
+              {t('backToHome')}
+            </Link>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

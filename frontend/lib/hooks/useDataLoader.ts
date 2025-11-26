@@ -131,6 +131,37 @@ export interface UseDataLoaderReturn<T> {
  * - Optimistic UI (shows existing data even on error)
  * - Automatic token management
  */
+/**
+ * Unified data loading hook with pagination, error handling, retry logic, and caching.
+ * 
+ * This hook provides a consistent interface for loading paginated data across the application.
+ * It handles common concerns like authentication, error handling, retry logic, and caching.
+ * 
+ * Key Features:
+ * 1. Automatic pagination: Supports "load more" functionality with configurable page size
+ * 2. Error handling: Standardized error handling with retry logic and user-friendly messages
+ * 3. Authentication: Automatic token management and authentication checks
+ * 4. Caching: Optional caching to reduce unnecessary API calls (default: 5 minutes)
+ * 5. Retry logic: Automatic retry on network errors with exponential backoff
+ * 6. Loading states: Separate states for initial load, loading more, and refreshing
+ * 
+ * Usage Example:
+ * ```typescript
+ * const { items, isLoading, error, loadMore, refresh } = useDataLoader({
+ *   loadFn: async (skip, limit) => {
+ *     const response = await fetchPosts(skip, limit);
+ *     return { items: response.posts, total: response.total };
+ *   },
+ *   pageSize: 20,
+ *   requireAuth: true,
+ *   autoLoad: true,
+ * });
+ * ```
+ * 
+ * @template T - Type of items being loaded
+ * @param options - Configuration options for the data loader
+ * @returns Object containing items, loading states, error, and control functions
+ */
 export function useDataLoader<T>(
   options: UseDataLoaderOptions<T>
 ): UseDataLoaderReturn<T> {
@@ -210,7 +241,32 @@ export function useDataLoader<T>(
     };
   }, []);
 
-  // Internal load function with retry logic
+  /**
+   * Internal load function with retry logic and error handling.
+   * 
+   * This function handles the actual data loading with the following steps:
+   * 1. Check component mount state (prevent state updates on unmounted components)
+   * 2. Prevent duplicate requests (using isLoadingRef)
+   * 3. Check authentication if required
+   * 4. Get access token (with timeout handling)
+   * 5. Execute loadFn with retry logic
+   * 6. Update state with results or errors
+   * 
+   * Retry Logic:
+   * - Automatically retries on network errors (up to maxRetries times)
+   * - Uses exponential backoff for retry delays
+   * - Only retries on network errors, not on validation or authentication errors
+   * 
+   * Caching:
+   * - Uses cache if enabled and data is fresh (within TTL)
+   * - Cache is cleared on component mount to ensure fresh data
+   * - Cache is not used for refresh operations
+   * 
+   * @param skip - Number of items to skip (for pagination)
+   * @param reset - Whether to reset the items list (true for initial load/refresh)
+   * @param showLoading - Whether to show loading state
+   * @param isRefresh - Whether this is a refresh operation (affects loading state)
+   */
   const loadInternal = useCallback(
     async (
       skip: number,
@@ -218,16 +274,19 @@ export function useDataLoader<T>(
       showLoading: boolean,
       isRefresh: boolean = false
     ): Promise<void> => {
-      // Check mount state
+      // Check mount state: Prevent state updates on unmounted components
+      // This is important for avoiding React warnings and memory leaks
       if (!isMountedRef.current) return;
 
-      // Prevent duplicate requests
+      // Prevent duplicate requests: Only one request at a time (except for refresh)
+      // This prevents race conditions and unnecessary API calls
       if (isLoadingRef.current && !isRefresh) {
         debugLog.log('[useDataLoader] Request already in progress, skipping duplicate');
         return;
       }
 
-      // Check authentication
+      // Check authentication: If authentication is required but user is not authenticated,
+      // set error and return early. This prevents unnecessary API calls.
       if (requireAuth && !isAuthenticated) {
         if (isMountedRef.current) {
           setError({

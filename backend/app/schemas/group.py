@@ -29,6 +29,9 @@ class GroupUpdate(BaseModel):
     description: Optional[str] = Field(
         None, max_length=5000, description="Group description"
     )
+    avatar_url: Optional[str] = Field(
+        None, max_length=500, description="URL of the group avatar image"
+    )
 
 
 class GroupMemberInfo(BaseModel):
@@ -124,6 +127,7 @@ class GroupResponse(BaseModel):
     id: UUID
     name: str
     description: Optional[str]
+    avatar_url: Optional[str] = None
     creator_id: Optional[UUID]
     last_message_at: Optional[datetime]
     is_deleted: bool

@@ -153,6 +153,7 @@ def _build_group_response(
         id=group.id,
         name=group.name,
         description=group.description,
+        avatar_url=group.avatar_url,
         creator_id=group.creator_id,
         last_message_at=group.last_message_at,
         is_deleted=group.is_deleted,

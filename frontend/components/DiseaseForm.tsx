@@ -7,8 +7,10 @@
 
 import React, { useState, FormEvent } from 'react';
 import { useTranslations } from 'next-intl';
+import { useAuth0 } from '@auth0/auth0-react';
 import { UserDiseaseCreate, UserDiseaseUpdate, UserDiseaseDetailed } from '@/lib/api/users';
-import { Disease, DiseaseCategory, DiseaseStatus } from '@/lib/api/diseases';
+import { Disease, DiseaseCategory, DiseaseStatus, createDisease } from '@/lib/api/diseases';
+import { debugLog } from '@/lib/utils/debug';
 
 interface DiseaseFormProps {
   // Mode
@@ -38,7 +40,9 @@ export function DiseaseForm({
   onCancel,
   onSearchDiseases,
 }: DiseaseFormProps) {
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('diseaseForm');
+  const tErrors = useTranslations('errors');
   
   // Form state
   const [formData, setFormData] = useState<UserDiseaseCreate | UserDiseaseUpdate>({
@@ -164,31 +168,73 @@ export function DiseaseForm({
     e.preventDefault();
     setError(null);
 
-    // Validation
+    setSubmitting(true);
+
+    // Validation: Ensure required fields are provided
     if (mode === 'add') {
       if (!isOther && !(formData as UserDiseaseCreate).disease_id) {
         setError(t('errors.selectDisease'));
+        setSubmitting(false);
         return;
       }
       if (isOther && !otherDiseaseName.trim()) {
         setError(t('errors.enterDiseaseName'));
+        setSubmitting(false);
         return;
       }
     }
-
-    setSubmitting(true);
     try {
-      // If "Other" is selected, add the other disease name to notes
-      const submitData = { ...formData };
+      let submitData = { ...formData };
+      
+      // Business Logic: Handle "Other" disease option
+      // When a user selects "Other" and enters a custom disease name, we need to:
+      // 1. Create a new disease entry in the backend database first
+      // 2. Use the newly created disease's ID to associate it with the user
+      // 3. Add the custom disease name to the notes field for reference
+      //
+      // This allows users to register diseases that aren't in the master disease list,
+      // while maintaining data integrity by creating proper disease records.
       if (isOther && otherDiseaseName) {
-        submitData.notes = `${t('otherDiseasePrefix')} ${otherDiseaseName}${
-          submitData.notes ? '\n' + submitData.notes : ''
-        }`;
+        // Authentication is required to create new diseases
+        if (!isAuthenticated) {
+          setError(tErrors('authenticationRequired'));
+          setSubmitting(false);
+          return;
+        }
+        
+        try {
+          // Step 1: Get access token for authenticated API call
+          const accessToken = await getAccessTokenSilently();
+          
+          // Step 2: Create the new disease in the backend
+          // This will create a new disease record with the user-provided name
+          const newDisease = await createDisease(otherDiseaseName.trim(), accessToken);
+          
+          // Step 3: Use the newly created disease's ID for the user's disease association
+          submitData.disease_id = newDisease.id;
+          
+          // Step 4: Add the custom disease name to notes for reference
+          // This helps identify that this disease was created by the user
+          // Format: "その他の疾患: [disease name]" (or "Other Disease: [disease name]" in English)
+          submitData.notes = `${t('otherDiseasePrefix')} ${otherDiseaseName}${
+            submitData.notes ? '\n' + submitData.notes : ''
+          }`;
+        } catch (createErr) {
+          // If disease creation fails, show error and stop submission
+          // This prevents partial data (user disease without disease record)
+          debugLog.error('Error creating disease:', createErr);
+          const errorMessage = createErr instanceof Error 
+            ? createErr.message 
+            : t('errors.createDiseaseFailed');
+          setError(errorMessage);
+          setSubmitting(false);
+          return;
+        }
       }
 
       await onSubmit(submitData);
     } catch (err) {
-      console.error('Error submitting form:', err);
+      debugLog.error('Error submitting form:', err);
       setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSubmitting(false);

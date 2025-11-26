@@ -13,6 +13,8 @@ from app.auth.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
 from app.schemas.post import (
     PostCommentCreate,
+    PostCommentLikeCreate,
+    PostCommentLikeResponse,
     PostCommentResponse,
     PostCommentUpdate,
     PostCreate,
@@ -158,14 +160,24 @@ async def get_feed(
     feed_elapsed = time.time() - feed_start_time
     logger.debug(f"[get_feed] Posts retrieved: count={len(posts)} (took {feed_elapsed:.3f}s)")
 
-    # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
+    # Performance Optimization: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     # This avoids N+1 query problems by fetching all related data in a few queries
-    # instead of querying for each post individually
+    # instead of querying for each post individually.
+    # 
+    # Without this optimization:
+    # - For 20 posts, we would execute 20+ queries (one per post for likes, comments, etc.)
+    # - This results in 100+ database queries for a single feed request
+    #
+    # With this optimization:
+    # - We execute only 6 queries total (likes, comments, liked status, hashtags, mentions, images)
+    # - This reduces database load and improves response time significantly
     post_ids = [post.id for post in posts]
     bulk_fetch_start_time = time.time()
     
     # Step 1: Get like counts for all posts in a single query using GROUP BY
-    # This replaces N queries (one per post) with a single aggregated query
+    # This replaces N queries (one per post) with a single aggregated query.
+    # Example: Instead of 20 queries like "SELECT COUNT(*) FROM post_likes WHERE post_id = ?",
+    # we execute one query: "SELECT post_id, COUNT(*) FROM post_likes WHERE post_id IN (...) GROUP BY post_id"
     from app.models.post import PostLike
     like_counts_query = (
         db.query(PostLike.post_id, func.count(PostLike.id).label('count'))
@@ -982,6 +994,182 @@ async def delete_comment(
     return None
 
 
+# ========== Post Comment Like Endpoints ==========
+
+
+@router.post(
+    "/comments/{comment_id}/like",
+    response_model=PostCommentLikeResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Like a comment",
+)
+async def like_comment(
+    comment_id: UUID,
+    like_data: PostCommentLikeCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Like a comment or update existing reaction type.
+
+    If the user has already liked the comment, the reaction type will be updated.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+
+    like = PostService.like_comment(db, comment_id, user_id, like_data)
+
+    if not like:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Comment not found or not accessible",
+        )
+
+    # Build response with user info
+    from app.schemas.post import PostAuthor
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
+
+    # Get viewer's disease IDs for field visibility checks
+    viewer_disease_ids = None
+    if user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return PostCommentLikeResponse(
+        id=like.id,
+        comment_id=like.comment_id,
+        user_id=like.user_id,
+        reaction_type=like.reaction_type,
+        created_at=like.created_at,
+        user=(
+            PostAuthor(
+                id=like.user.id,
+                nickname=like.user.nickname,
+                username=(
+                    like.user.username
+                    if UserFieldVisibilityService.can_view_field(
+                        db, like.user.id, "username", user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
+                avatar_url=(
+                    like.user.avatar_url
+                    if UserFieldVisibilityService.can_view_field(
+                        db, like.user.id, "avatar_url", user_id, viewer_disease_ids
+                    )
+                    else None
+                ),
+            )
+            if like.user
+            else None
+        ),
+    )
+
+
+@router.delete(
+    "/comments/{comment_id}/like",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Unlike a comment",
+)
+async def unlike_comment(
+    comment_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Remove like from a comment.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+
+    success = PostService.unlike_comment(db, comment_id, user_id)
+
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Like not found",
+        )
+
+    return None
+
+
+@router.get(
+    "/comments/{comment_id}/likes",
+    response_model=List[PostCommentLikeResponse],
+    summary="Get all likes for a comment",
+)
+async def get_comment_likes(
+    comment_id: UUID,
+    skip: int = Query(0, ge=0, description="Number of likes to skip"),
+    limit: int = Query(
+        50, ge=1, le=100, description="Maximum number of likes to return"
+    ),
+    db: Session = Depends(get_db),
+    current_user: Optional[dict] = Depends(get_current_user_optional),
+):
+    """
+    Get all likes for a comment.
+    """
+    likes = PostService.get_comment_likes(db, comment_id, skip, limit)
+    current_user_id = get_user_id_from_token(db, current_user)
+
+    # Get viewer's disease IDs for field visibility checks
+    from app.schemas.post import PostAuthor
+    from app.services.user_field_visibility_service import UserFieldVisibilityService
+    from app.models.disease import UserDisease
+
+    viewer_disease_ids = None
+    if current_user_id:
+        viewer_disease_ids = [
+            ud.disease_id
+            for ud in db.query(UserDisease)
+            .filter(
+                UserDisease.user_id == current_user_id,
+                UserDisease.is_active == True,
+            )
+            .all()
+        ]
+
+    return [
+        PostCommentLikeResponse(
+            id=like.id,
+            comment_id=like.comment_id,
+            user_id=like.user_id,
+            reaction_type=like.reaction_type,
+            created_at=like.created_at,
+            user=(
+                PostAuthor(
+                    id=like.user.id,
+                    nickname=like.user.nickname,
+                    username=(
+                        like.user.username
+                        if UserFieldVisibilityService.can_view_field(
+                            db, like.user.id, "username", current_user_id, viewer_disease_ids
+                        )
+                        else None
+                    ),
+                    avatar_url=(
+                        like.user.avatar_url
+                        if UserFieldVisibilityService.can_view_field(
+                            db, like.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                        )
+                        else None
+                    ),
+                )
+                if like.user
+                else None
+            ),
+        )
+        for like in likes
+    ]
+
+
 # ========== Helper Functions ==========
 
 
@@ -1117,7 +1305,28 @@ def _build_post_response_optimized(
     mentioned_users: list,
     viewer_disease_ids: Optional[List[int]] = None,
 ) -> PostResponse:
-    """Build PostResponse with pre-fetched data (optimized version for bulk operations)."""
+    """
+    Build PostResponse with pre-fetched data (optimized version for bulk operations).
+    
+    This function is optimized for building multiple post responses efficiently by:
+    1. Accepting pre-fetched data (like_count, comment_count, hashtags, mentions) to avoid N+1 queries
+    2. Using field visibility service to conditionally include username and avatar_url based on privacy settings
+    3. Building response objects without additional database queries
+    
+    Args:
+        db: Database session (used for field visibility checks)
+        post: Post model instance
+        current_user_id: ID of the user viewing the post (None if unauthenticated)
+        like_count: Pre-fetched like count for this post
+        comment_count: Pre-fetched comment count for this post
+        is_liked: Whether the current user has liked this post (pre-fetched)
+        hashtags: Pre-fetched list of hashtag objects for this post
+        mentioned_users: Pre-fetched list of mentioned user objects
+        viewer_disease_ids: List of disease IDs the viewer has (for same_disease_only visibility checks)
+    
+    Returns:
+        PostResponse object with all related data included
+    """
     from app.schemas.post import (
         HashtagResponse,
         MentionResponse,

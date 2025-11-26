@@ -5,8 +5,8 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import { useTranslations } from 'next-intl';
 import { UserSearchParams } from '@/lib/api/search';
@@ -31,17 +31,23 @@ interface UserSearchProps {
   onSearch: (params: UserSearchParams) => Promise<UserPublicProfile[]>;
   diseases?: Array<{ id: number; name: string; translations?: any[] }>;
   preferredLanguage?: string;
+  initialDiseaseId?: number;
+  initialSortBy?: 'created_at' | 'last_login_at' | 'nickname' | 'post_count';
 }
 
 export function UserSearch({
   onSearch,
   diseases = [],
   preferredLanguage = 'ja',
+  initialDiseaseId,
+  initialSortBy = 'post_count',
 }: UserSearchProps) {
   const t = useTranslations('userSearch');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at' | 'nickname'>('created_at');
+  const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at' | 'nickname' | 'post_count'>(
+    initialSortBy || 'post_count'
+  );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [results, setResults] = useState<UserPublicProfile[]>([]);
   const [loading, setLoading] = useState(false);
@@ -49,8 +55,9 @@ export function UserSearch({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -88,22 +95,44 @@ export function UserSearch({
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchQuery, selectedDiseases, sortBy, sortOrder, onSearch, t]);
 
-  // Load search history and filter settings on mount
+  // Initialize with initialDiseaseId if provided
   useEffect(() => {
-    setSearchHistory(getSearchHistory('user'));
-    
-    // Restore saved filter settings
-    const savedSettings = getUserSearchFilterSettings();
-    if (savedSettings) {
-      if (savedSettings.diseaseIds && savedSettings.diseaseIds.length > 0) {
-        setSelectedDiseases(savedSettings.diseaseIds);
+    if (!hasInitialized) {
+      setSearchHistory(getSearchHistory('user'));
+      
+      if (initialDiseaseId) {
+        // Set initial disease ID and trigger search
+        setSelectedDiseases([initialDiseaseId]);
+        setHasInitialized(true);
+      } else {
+        // Restore saved filter settings
+        const savedSettings = getUserSearchFilterSettings();
+        if (savedSettings) {
+          if (savedSettings.diseaseIds && savedSettings.diseaseIds.length > 0) {
+            setSelectedDiseases(savedSettings.diseaseIds);
+          }
+          if (savedSettings.sortBy) setSortBy(savedSettings.sortBy);
+          if (savedSettings.sortOrder) setSortOrder(savedSettings.sortOrder);
+        }
+        setHasInitialized(true);
       }
-      if (savedSettings.sortBy) setSortBy(savedSettings.sortBy);
-      if (savedSettings.sortOrder) setSortOrder(savedSettings.sortOrder);
+    } else if (initialDiseaseId && !selectedDiseases.includes(initialDiseaseId)) {
+      // Update selectedDiseases when initialDiseaseId changes after initialization
+      setSelectedDiseases([initialDiseaseId]);
     }
-  }, []);
+  }, [initialDiseaseId, hasInitialized, selectedDiseases]);
+
+  // Auto-search when initialDiseaseId is set and selected
+  useEffect(() => {
+    if (hasInitialized && initialDiseaseId && selectedDiseases.includes(initialDiseaseId) && selectedDiseases.length === 1) {
+      // Trigger search after state is set
+      setTimeout(() => {
+        handleSearch();
+      }, 100);
+    }
+  }, [hasInitialized, initialDiseaseId, selectedDiseases, handleSearch]);
 
   // Save filter settings when they change
   useEffect(() => {
@@ -294,12 +323,13 @@ export function UserSearch({
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname')}
+                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname' | 'post_count')}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="created_at">{t('sortByDate')}</option>
                 <option value="last_login_at">{t('sortByLogin')}</option>
                 <option value="nickname">{t('sortByName')}</option>
+                <option value="post_count">{t('sortByPostCount')}</option>
               </select>
             </div>
             <div>
@@ -359,10 +389,19 @@ export function UserSearch({
 
                   {/* User Info */}
                   <div className="flex-1">
-                    <h4 className="text-lg font-semibold text-gray-900">{user.nickname}</h4>
-                    {user.username && (
-                      <p className="text-sm text-gray-600">@{user.username}</p>
-                    )}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900">{user.nickname}</h4>
+                        {user.username && (
+                          <p className="text-sm text-gray-600">@{user.username}</p>
+                        )}
+                      </div>
+                      {user.post_count !== undefined && (
+                        <div className="text-sm text-gray-500">
+                          {t('postCount', { count: user.post_count })}
+                        </div>
+                      )}
+                    </div>
 
                     {user.bio && <p className="text-sm text-gray-700 mt-2">{user.bio}</p>}
 

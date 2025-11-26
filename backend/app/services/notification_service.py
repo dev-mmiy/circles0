@@ -111,9 +111,10 @@ class NotificationService:
         notification_id = uuid4()
         
         # Build SQL with proper enum value (lowercase string)
+        # Use CAST() instead of :: for type casting with SQLAlchemy parameter binding
         insert_sql = text("""
             INSERT INTO notifications (id, recipient_id, actor_id, type, post_id, comment_id, is_read, created_at)
-            VALUES (:id, :recipient_id, :actor_id, :type::notificationtype, :post_id, :comment_id, false, NOW())
+            VALUES (:id, :recipient_id, :actor_id, CAST(:type AS notificationtype), :post_id, :comment_id, false, NOW())
             RETURNING id
         """)
         
@@ -549,6 +550,37 @@ class NotificationService:
             actor_id=liker_id,
             notification_type=NotificationType.LIKE,
             post_id=post_id,
+        )
+
+    @staticmethod
+    def create_comment_like_notification(
+        db: Session,
+        liker_id: UUID,
+        comment_id: UUID,
+    ) -> Optional[Notification]:
+        """
+        Create a notification when someone likes a comment.
+
+        Args:
+            db: Database session
+            liker_id: User who liked
+            comment_id: Comment ID
+
+        Returns:
+            Created notification or None
+        """
+        # Get comment owner
+        comment = db.query(PostComment).filter(PostComment.id == comment_id).first()
+        if not comment:
+            return None
+
+        return NotificationService.create_notification(
+            db=db,
+            recipient_id=comment.user_id,
+            actor_id=liker_id,
+            notification_type=NotificationType.COMMENT_LIKE,
+            post_id=comment.post_id,
+            comment_id=comment_id,
         )
 
     @staticmethod

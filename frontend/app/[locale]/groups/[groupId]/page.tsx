@@ -25,10 +25,17 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import { getUserTimezone, formatDateInTimezone } from '@/lib/utils/timezone';
+import { shouldShowAvatar } from '@/lib/utils/chatMessage';
 import { ArrowLeft, Trash2, Send, Image as ImageIcon, Users, Settings } from 'lucide-react';
 import { setAuthToken } from '@/lib/api/client';
 import dynamic from 'next/dynamic';
 import { useMessageStream } from '@/lib/hooks/useMessageStream';
+import { debugLog } from '@/lib/utils/debug';
+import MessageImage from '@/components/MessageImage';
+import ImageUploadPreview from '@/components/ImageUploadPreview';
+import Avatar from '@/components/Avatar';
+import ChatMessage from '@/components/ChatMessage';
+import { useImageUpload } from '@/hooks/useImageUpload';
 
 // Dynamically import GroupSettingsModal to reduce initial bundle size
 const GroupSettingsModal = dynamic(() => import('@/components/GroupSettingsModal'), {
@@ -58,9 +65,26 @@ export default function GroupChatPage() {
 
   // Message form state
   const [messageContent, setMessageContent] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
+  
+  // Image upload hook
+  const {
+    uploadedImageUrl,
+    imagePreview,
+    uploadingImage,
+    fileInputRef,
+    handleImageSelect,
+    handleRemoveImage,
+    clearImage,
+  } = useImageUpload({
+    translationKeys: {
+      invalidImageFile: tChat('invalidImageFile'),
+      failedToCreatePreview: tChat('failedToCreatePreview'),
+      uploadServiceNotConfigured: tChat('uploadServiceNotConfigured'),
+      uploadFailed: tChat('uploadFailed'),
+    },
+  });
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -76,6 +100,11 @@ export default function GroupChatPage() {
       if (!messages.find(m => m.id === lastMessage.id)) {
         // Convert MessageEvent to GroupMessage (they are compatible)
         const newMessage = lastMessage as unknown as GroupMessage;
+        debugLog.log('[GroupChatPage] SSE message received:', {
+          id: newMessage.id,
+          image_url: newMessage.image_url,
+          content: newMessage.content,
+        });
         setMessages(prev => [...prev, newMessage]);
 
         // Mark as read if it's not our own message
@@ -211,21 +240,17 @@ export default function GroupChatPage() {
     loadMessages(false);
   };
 
+
   // メッセージを送信
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!messageContent.trim() && !imageUrl.trim()) {
+    if (!messageContent.trim() && !uploadedImageUrl) {
       return;
     }
 
     if (messageContent.length > 5000) {
       alert(tChat('messageTooLong'));
-      return;
-    }
-
-    if (imageUrl && imageUrl.length > 500) {
-      alert(tChat('imageUrlTooLong'));
       return;
     }
 
@@ -239,31 +264,37 @@ export default function GroupChatPage() {
           const token = await getAccessTokenSilently();
           setAuthToken(token);
         } catch (tokenError) {
-          console.warn('Failed to get access token:', tokenError);
+          debugLog.warn('Failed to get access token:', tokenError);
           setAuthToken(null);
         }
       }
 
       const messageData: CreateGroupMessageData = {
         content: messageContent.trim() || '',
-        image_url: imageUrl.trim() || null,
+        image_url: uploadedImageUrl || null,
       };
 
       // Send message - SSE will handle the update for us, but we can optimistically add it or wait for SSE
       // For now, let's wait for the response to ensure it's sent, but rely on SSE for the list update to avoid duplicates if we're not careful
       // Actually, the existing logic adds it manually. Let's keep it but be careful with duplicates in the SSE effect.
       const newMessage = await sendGroupMessage(groupId, messageData);
+      
+      debugLog.log('[handleSendMessage] Message sent successfully:', {
+        id: newMessage.id,
+        image_url: newMessage.image_url,
+        content: newMessage.content,
+      });
 
       setMessages(prev => [...prev, newMessage]);
 
       // フォームをクリア
       setMessageContent('');
-      setImageUrl('');
+      clearImage();
 
       // グループ情報を更新 (last_message_at etc)
       loadGroup();
     } catch (err: any) {
-      console.error('Failed to send message:', err);
+      debugLog.error('Failed to send message:', err);
       const errorInfo = extractErrorInfo(err);
       setError(errorInfo);
       alert(tChat('errorSending'));
@@ -299,9 +330,16 @@ export default function GroupChatPage() {
   };
 
   // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
-  const formatTime = (dateString: string) => {
+  const formatTime = (dateString: string | undefined | null) => {
+    if (!dateString) {
+      return '';
+    }
     const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
     const date = new Date(dateString);
+    // Check if date is valid
+    if (isNaN(date.getTime())) {
+      return '';
+    }
     const dateLocale = locale === 'ja' ? ja : enUS;
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
   };
@@ -341,23 +379,33 @@ export default function GroupChatPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 flex flex-col">
-        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1">
+      <div className="h-[calc(100vh-4rem)] bg-gray-50 flex flex-col">
+        <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1 min-h-0">
           {/* Header */}
-          <div className="py-4 border-b border-gray-200 bg-white sticky top-16 z-10">
+          <div className="py-4 border-b border-gray-200 bg-white flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Link
-                  href="/groups"
+                  href="/messages"
                   className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                  <span className="text-blue-600 font-bold text-lg">
-                    {group?.name[0]?.toUpperCase() || 'G'}
-                  </span>
-                </div>
+                {group?.avatar_url ? (
+                  <div className="w-10 h-10 rounded-full flex-shrink-0 relative overflow-hidden">
+                    <Image
+                      src={group.avatar_url}
+                      alt={group.name}
+                      width={40}
+                      height={40}
+                      className="rounded-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                )}
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold text-gray-900 truncate">
                     {group?.name || t('group')}
@@ -383,7 +431,7 @@ export default function GroupChatPage() {
           {/* Messages */}
           <div
             ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto py-4 space-y-4"
+            className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0"
           >
             {isLoadingMore && (
               <div className="flex justify-center py-4">
@@ -399,7 +447,14 @@ export default function GroupChatPage() {
 
             {messages.map((message, index) => {
               const isOwnMessage = message.sender_id === currentUser?.id;
-              const showAvatar = index === 0 || messages[index - 1].sender_id !== message.sender_id;
+              const prevSenderId = index > 0 ? messages[index - 1].sender_id : null;
+              const showAvatar = shouldShowAvatar(
+                index,
+                prevSenderId,
+                message.sender_id,
+                !!message.image_url,
+                false // Group chats: show avatar based on sender change or image
+              );
               // Compare dates in user's timezone
               const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : undefined;
               const currentDate = formatDateInTimezone(
@@ -435,97 +490,28 @@ export default function GroupChatPage() {
                       )}
                     </div>
                   )}
-                  <div
-                    className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'
-                      }`}
-                  >
-                    {showAvatar && !isOwnMessage && (
-                      <div className="flex-shrink-0 relative w-8 h-8">
-                        {message.sender?.avatar_url ? (
-                          <Image
-                            src={message.sender.avatar_url}
-                            alt={message.sender.nickname}
-                            width={32}
-                            height={32}
-                            className="rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-600 text-xs font-medium">
-                              {message.sender?.nickname?.[0]?.toUpperCase() || '?'}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {showAvatar && isOwnMessage && <div className="w-8 h-8" />}
-                    <div
-                      className={`flex-1 max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'
-                        } flex flex-col`}
-                    >
-                      {showAvatar && !isOwnMessage && (
-                        <span className="text-xs text-gray-500 mb-1">
-                          {message.sender?.nickname || 'Unknown'}
-                        </span>
-                      )}
-                      <div
-                        className={`rounded-lg px-4 py-2 ${isOwnMessage
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-white border border-gray-200 text-gray-900'
-                          }`}
-                      >
-                        {message.is_deleted ? (
-                          <span className="italic text-gray-500">
-                            {tChat('deletedMessage')}
-                          </span>
-                        ) : (
-                          <>
-                            {message.content && (
-                              <p className="whitespace-pre-wrap break-words">
-                                {message.content}
-                              </p>
-                            )}
-                            {message.image_url && (
-                              <div className="mt-2 relative w-full">
-                                <Image
-                                  src={message.image_url}
-                                  alt="Message attachment"
-                                  width={400}
-                                  height={300}
-                                  sizes="(max-width: 768px) 100vw, 400px"
-                                  className="max-w-full rounded-lg object-contain"
-                                  loading="lazy"
-                                  onError={(e) => {
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </div>
-                      <div
-                        className={`text-xs text-gray-500 mt-1 ${isOwnMessage ? 'text-right' : 'text-left'
-                          }`}
-                      >
-                        {formatTime(message.created_at)}
-                      </div>
-                    </div>
-                    {isOwnMessage && !message.is_deleted && (
-                      <button
-                        onClick={() => handleDeleteMessage(message.id)}
-                        disabled={deletingMessageId === message.id}
-                        className="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
-                        title={tChat('deleteMessage')}
-                      >
-                        {deletingMessageId === message.id ? (
-                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
-                        ) : (
-                          <Trash2 className="w-4 h-4" />
-                        )}
-                      </button>
-                    )}
-                  </div>
+                  <ChatMessage
+                    id={message.id}
+                    sender={message.sender ? {
+                      id: message.sender.id,
+                      nickname: message.sender.nickname,
+                      avatar_url: message.sender.avatar_url,
+                    } : null}
+                    senderId={message.sender_id}
+                    content={message.content}
+                    imageUrl={message.image_url}
+                    isDeleted={message.is_deleted}
+                    createdAt={message.created_at}
+                    isOwnMessage={isOwnMessage}
+                    showAvatar={showAvatar}
+                    showSenderName={showAvatar && !isOwnMessage}
+                    onDelete={handleDeleteMessage}
+                    isDeleting={deletingMessageId === message.id}
+                    formatTime={formatTime}
+                    deleteMessageTitle={tChat('deleteMessage')}
+                    deletedMessageText={tChat('deletedMessage')}
+                    priority={index >= messages.length - 3}
+                  />
                 </div>
               );
             })}
@@ -533,7 +519,7 @@ export default function GroupChatPage() {
           </div>
 
           {/* Message Form */}
-          <div className="border-t border-gray-200 bg-white p-4">
+          <div className="border-t border-gray-200 bg-white p-4 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -544,37 +530,47 @@ export default function GroupChatPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   maxLength={5000}
                 />
-                {imageUrl && (
-                  <div className="mt-2 relative inline-block">
-                    <Image
-                      src={imageUrl}
-                      alt="Preview"
-                      width={256}
-                      height={128}
-                      className="max-w-xs max-h-32 rounded-lg object-contain"
-                      loading="lazy"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setImageUrl('')}
-                      className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                {imagePreview && (
+                  <ImageUploadPreview
+                    previewUrl={imagePreview}
+                    onRemove={handleRemoveImage}
+                    isUploading={uploadingImage}
+                  />
+                )}
+                {uploadingImage && (
+                  <div className="mt-2 text-sm text-gray-500">
+                    {tChat('uploading') || 'Uploading...'}
                   </div>
                 )}
               </div>
-              <button
-                type="submit"
-                disabled={isSending || (!messageContent.trim() && !imageUrl.trim())}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {isSending ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </button>
+              <div className="flex gap-2">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  accept="image/*"
+                  onChange={handleImageSelect}
+                  className="hidden"
+                  id="group-image-upload"
+                />
+                <label
+                  htmlFor="group-image-upload"
+                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors flex items-center"
+                  title={tChat('attachImage') || 'Attach image'}
+                >
+                  <ImageIcon className="w-5 h-5" />
+                </label>
+                <button
+                  type="submit"
+                  disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSending ? (
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
             </form>
           </div>
         </div>

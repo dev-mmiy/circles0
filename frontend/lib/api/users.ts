@@ -193,6 +193,7 @@ export interface UserPublicProfile {
   country?: string;
   created_at: string;
   diseases: UserDisease[];
+  post_count?: number; // Number of posts in feed
 }
 
 /**

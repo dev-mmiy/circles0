@@ -36,6 +36,7 @@ export default function SearchPage() {
   const [activeTab, setActiveTab] = useState<SearchTab>(
     urlTab && ['diseases', 'users', 'hashtags'].includes(urlTab) ? urlTab : 'diseases'
   );
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | undefined>(undefined);
 
   const handleDiseaseSearch = async (params: any) => {
     try {
@@ -162,6 +163,11 @@ export default function SearchPage() {
               {activeTab === 'diseases' ? (
                 <DiseaseSearch
                   onSearch={handleDiseaseSearch}
+                  onSelect={(disease) => {
+                    // Switch to users tab and search for users with this disease
+                    setActiveTab('users');
+                    setSelectedDiseaseId(disease.id);
+                  }}
                   categories={formattedCategories}
                   preferredLanguage={user?.preferred_language || 'ja'}
                 />
@@ -170,6 +176,8 @@ export default function SearchPage() {
                   onSearch={handleUserSearch}
                   diseases={formattedDiseases}
                   preferredLanguage={user?.preferred_language || 'ja'}
+                  initialDiseaseId={selectedDiseaseId}
+                  initialSortBy="post_count"
                 />
               ) : (
                 <HashtagSearch

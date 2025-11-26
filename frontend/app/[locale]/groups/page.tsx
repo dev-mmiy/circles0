@@ -3,6 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
+import Image from 'next/image';
 import { useRouter } from '@/i18n/routing';
 import { Link } from '@/i18n/routing';
 import Header from '@/components/Header';
@@ -18,7 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
 import { getUserTimezone } from '@/lib/utils/timezone';
-import { Trash2, Plus, Search } from 'lucide-react';
+import { Trash2, Plus, Search, Users } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 
@@ -261,12 +262,20 @@ export default function GroupsPage() {
                           className="flex-1 flex items-center gap-4"
                         >
                           {/* Group icon */}
-                          <div className="flex-shrink-0">
-                            <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                              <span className="text-blue-600 font-bold text-lg">
-                                {group.name[0]?.toUpperCase() || 'G'}
-                              </span>
-                            </div>
+                          <div className="flex-shrink-0 relative w-12 h-12">
+                            {group.avatar_url ? (
+                              <Image
+                                src={group.avatar_url}
+                                alt={group.name}
+                                width={48}
+                                height={48}
+                                className="rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                                <Users className="w-6 h-6 text-blue-600" />
+                              </div>
+                            )}
                           </div>
 
                           {/* Group info */}

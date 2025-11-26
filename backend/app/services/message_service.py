@@ -256,15 +256,28 @@ class MessageService:
         if not conversations:
             return conversations
 
-        # Optimize: Load all last messages in a single query using window function
+        # Performance Optimization: Load all last messages in a single query using window function
         # This avoids N+1 query problem where we would query for last message per conversation
         # individually. Instead, we use SQL window functions to get the latest message
         # for all conversations in a single query.
+        #
+        # Without this optimization:
+        # - For 20 conversations, we would execute 20 queries (one per conversation)
+        # - This results in 20+ database queries for a single conversation list request
+        #
+        # With this optimization:
+        # - We execute only 2 queries total (window function subquery + message fetch)
+        # - This reduces database load and improves response time significantly
         conversation_ids = [conv.id for conv in conversations]
         
         # Step 1: Create a subquery that assigns row numbers to messages within each conversation
         # ROW_NUMBER() window function partitions by conversation_id and orders by created_at DESC
-        # This gives us rn=1 for the latest message in each conversation
+        # This gives us rn=1 for the latest message in each conversation.
+        #
+        # Example SQL generated:
+        # SELECT id, conversation_id, ROW_NUMBER() OVER (PARTITION BY conversation_id ORDER BY created_at DESC) as rn
+        # FROM messages
+        # WHERE conversation_id IN (...) AND is_deleted = False
         latest_messages_subquery = (
             db.query(
                 Message.id,

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth0 } from '@auth0/auth0-react';
 import Image from 'next/image';
-import { X, UserPlus, Trash2, Shield, ShieldAlert, LogOut } from 'lucide-react';
+import { X, UserPlus, Trash2, Shield, ShieldAlert, LogOut, Camera, Users } from 'lucide-react';
 import { Group, GroupMember, updateGroup, addMembers, removeMember, updateMemberRole, deleteGroup } from '@/lib/api/groups';
 import { searchUsers, UserSearchParams } from '@/lib/api/search';
 import { UserPublicProfile } from '@/lib/api/users';
@@ -13,6 +13,7 @@ import { extractErrorInfo } from '@/lib/utils/errorHandler';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { useRouter } from '@/i18n/routing';
 import { setAuthToken } from '@/lib/api/client';
+import { AvatarUploadModal } from '@/components/AvatarUploadModal';
 
 interface GroupSettingsModalProps {
     group: Group;
@@ -30,13 +31,22 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
     const [activeTab, setActiveTab] = useState<'general' | 'members' | 'danger'>('general');
     const [name, setName] = useState(group.name);
     const [description, setDescription] = useState(group.description || '');
+    const [avatarUrl, setAvatarUrl] = useState(group.avatar_url);
     const [isSaving, setIsSaving] = useState(false);
     const [error, setError] = useState<any>(null);
+    const [isAvatarUploadModalOpen, setIsAvatarUploadModalOpen] = useState(false);
 
     // Member search state
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<UserPublicProfile[]>([]);
     const [isSearching, setIsSearching] = useState(false);
+
+    // Update local state when group prop changes
+    useEffect(() => {
+        setName(group.name);
+        setDescription(group.description || '');
+        setAvatarUrl(group.avatar_url);
+    }, [group.id, group.name, group.description, group.avatar_url]);
 
     if (!isOpen) return null;
 
@@ -49,18 +59,38 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
         setIsSaving(true);
         setError(null);
         try {
-            await updateGroup(group.id, {
+            const updateData = {
                 name: name.trim(),
                 description: description.trim() || null,
-            });
+                avatar_url: avatarUrl || null,
+            };
+            console.log('Updating group with data:', updateData);
+            await updateGroup(group.id, updateData);
             onUpdate();
             // Don't close modal, just show success or update state
         } catch (err) {
+            console.error('Failed to update group:', err);
             setError(extractErrorInfo(err));
         } finally {
             setIsSaving(false);
         }
     };
+
+    const handleAvatarUploadComplete = async (newAvatarUrl: string | null) => {
+        console.log('Avatar upload complete, new URL:', newAvatarUrl);
+        setAvatarUrl(newAvatarUrl);
+        setIsAvatarUploadModalOpen(false);
+        // Automatically save the avatar URL when changed
+        try {
+            await updateGroup(group.id, {
+                avatar_url: newAvatarUrl || null,
+            });
+            onUpdate();
+        } catch (err) {
+            setError(extractErrorInfo(err));
+        }
+    };
+
 
     const handleSearch = async () => {
         if (!searchQuery.trim()) {
@@ -204,6 +234,65 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
 
                     {activeTab === 'general' && (
                         <div className="space-y-4">
+                            {/* Avatar Upload Section */}
+                            {isAdmin && (
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{t('groupAvatar') || 'グループアバター'}</label>
+                                    <div className="flex items-center gap-4">
+                                        {isAdmin ? (
+                                            <button
+                                                onClick={() => setIsAvatarUploadModalOpen(true)}
+                                                className="relative group cursor-pointer"
+                                                title={t('changeAvatar') || 'アバターを変更'}
+                                            >
+                                                {avatarUrl ? (
+                                                    <div className="relative">
+                                                        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                                                            <Image 
+                                                                src={avatarUrl} 
+                                                                alt={group.name} 
+                                                                width={96} 
+                                                                height={96} 
+                                                                className="rounded-full object-cover w-full h-full transition-opacity group-hover:opacity-80"
+                                                            />
+                                                        </div>
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all">
+                                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 font-medium">
+                                                                {t('change') || '変更'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="relative">
+                                                        <div className="w-24 h-24 rounded-full bg-blue-100 flex items-center justify-center border-2 border-gray-300 group-hover:bg-blue-200 transition-colors">
+                                                            <Users className="w-12 h-12 text-blue-600" />
+                                                        </div>
+                                                        <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-20 rounded-full transition-all">
+                                                            <span className="text-white text-xs opacity-0 group-hover:opacity-100 font-medium">
+                                                                {t('change') || '変更'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </button>
+                                        ) : (
+                                            <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden border-2 border-gray-300">
+                                                {avatarUrl ? (
+                                                    <Image 
+                                                        src={avatarUrl} 
+                                                        alt={group.name} 
+                                                        width={96} 
+                                                        height={96} 
+                                                        className="rounded-full object-cover w-full h-full"
+                                                    />
+                                                ) : (
+                                                    <Users className="w-12 h-12 text-blue-600" />
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{t('groupName')}</label>
                                 <input
@@ -381,6 +470,14 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                     )}
                 </div>
             </div>
+
+            {/* Avatar Upload Modal */}
+            <AvatarUploadModal
+                isOpen={isAvatarUploadModalOpen}
+                onClose={() => setIsAvatarUploadModalOpen(false)}
+                onUploadComplete={handleAvatarUploadComplete}
+                currentAvatarUrl={avatarUrl || undefined}
+            />
         </div>
     );
 }

@@ -277,3 +277,30 @@ export async function getDiseaseTranslation(
 
   return response.json();
 }
+
+/**
+ * Create a new disease
+ */
+export async function createDisease(
+  name: string,
+  accessToken: string
+): Promise<Disease> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/diseases/`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      name: name,
+      is_active: true,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || 'Failed to create disease');
+  }
+
+  return response.json();
+}

@@ -10,6 +10,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { UserProfile, UserProfileUpdate, getFieldVisibilities, setFieldVisibility, AllFieldVisibilityResponse } from '@/lib/api/users';
 import { COUNTRIES, getCountryName } from '@/lib/utils/countries';
+import { debugLog } from '@/lib/utils/debug';
 
 interface UserProfileEditFormProps {
   user: UserProfile;
@@ -52,7 +53,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
         const response = await getFieldVisibilities(accessToken);
         setFieldVisibilities(response.field_visibilities);
       } catch (err) {
-        console.error('Failed to load field visibilities:', err);
+        debugLog.error('Failed to load field visibilities:', err);
       } finally {
         setLoadingVisibilities(false);
       }
@@ -114,7 +115,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       // Update local state
       setFieldVisibilities(prev => ({ ...prev, ...fieldVisibilityMap }));
     } catch (err) {
-      console.error('Failed to apply preset:', err);
+      debugLog.error('Failed to apply preset:', err);
       setError(err instanceof Error ? err.message : t('visibilityPresets.applyFailed'));
     }
   };
@@ -134,10 +135,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
         }
       });
 
-      console.log('Submitting cleaned profile data:', cleanedData);
+      debugLog.log('Submitting cleaned profile data:', cleanedData);
       await onSave(cleanedData);
     } catch (err) {
-      console.error('Error saving profile:', err);
+      debugLog.error('Error saving profile:', err);
       setError(err instanceof Error ? err.message : t('errors.saveFailed'));
     } finally {
       setSaving(false);
@@ -443,7 +444,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
                       await setFieldVisibility(accessToken, field, newVisibility);
                       setFieldVisibilities(prev => ({ ...prev, [field]: newVisibility }));
                     } catch (err) {
-                      console.error(`Failed to update visibility for ${field}:`, err);
+                      debugLog.error(`Failed to update visibility for ${field}:`, err);
                       setError(err instanceof Error ? err.message : t('fieldVisibility.updateFailed'));
                     } finally {
                       setUpdatingVisibility(null);

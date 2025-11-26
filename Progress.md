@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-21（デバッグログ整理完了）
+## 最終更新日: 2025-11-24（コメント充実完了、エラーハンドリング改善完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装中、本番環境稼働中
 
@@ -350,7 +350,7 @@ Auth0を使用したOAuth2.0認証システム。
      - ユーザーが手動で言語を切り替えた場合は、その設定を優先（localStorageに`locale_override`フラグを保存）
      - LanguageSwitcherコンポーネントで手動切り替え時に`locale_override`フラグを設定
 
-2. **エラーハンドリングの改善** ✅ 完了
+2. **エラーハンドリングの改善** ✅ 完了（2025-11-24）
    - ✅ 401/403エラー時の自動リダイレクト処理
      - APIクライアントのインターセプターで401/403エラーを検出
      - 認証トークンをクリア
@@ -406,7 +406,10 @@ Auth0を使用したOAuth2.0認証システム。
    - [x] ESLint警告の解消（`<img>`タグの`<Image />`への置換） ✅ 完了（既に置換済み）
    - [x] 型定義の改善 ✅ 完了（2025-11-23）
    - [x] 未使用コードの削除とデバッグログの整理 ✅ 完了（2025-11-23）
-   - [ ] コメントの充実
+   - [x] コメントの充実 ✅ 完了（2025-11-24）
+     - [x] バックエンドのパフォーマンス最適化箇所にコメント追加
+     - [x] フロントエンドの複雑なロジックにコメント追加
+     - [x] ビジネスロジックの重要な部分にコメント追加
 
 ---
 
@@ -528,6 +531,19 @@ Auth0を使用したOAuth2.0認証システム。
   - [x] メッセージ一覧ページ ✅ 完了
   - [x] 会話画面 ✅ 完了
   - [x] リアルタイム更新機能（SSE） ✅ 完了（2025-11-15）
+- [ ] **メッセージとグループの統合** ⏳ 実装予定
+  - [ ] メッセージページの検索機能拡張
+    - [ ] 会話検索をユーザー検索とグループ検索に拡張
+    - [ ] 検索結果にユーザーとグループの両方を表示
+    - [ ] 検索結果から直接会話/グループチャットを開始
+  - [ ] グループ作成ボタンの追加
+    - [ ] メッセージページ上部に「グループを作成」ボタンを追加
+    - [ ] クリックでグループ作成ページに遷移、またはモーダルで作成
+  - [ ] 新しいメッセージモーダルの拡張
+    - [ ] ユーザー/グループ選択タブまたはラジオボタンを追加
+    - [ ] ユーザー選択時：既存のユーザー検索機能を使用
+    - [ ] グループ選択時：グループ検索とグループ作成オプションを表示
+    - [ ] グループ選択時はグループ一覧を表示し、選択可能にする
 
 #### 3.2 グループチャット ✅ 完了（2025-11-20）
 - [x] **グループ作成** ✅ 完了
@@ -732,7 +748,29 @@ Auth0を使用したOAuth2.0認証システム。
 ## 次回セッションの推奨タスク
 
 ### 最優先（すぐに着手）
-1. ~~**デバッグログの整理**~~ ✅ 完了（2025-11-21）
+1. **メッセージとグループの統合** ⏳ 実装予定
+   - **Phase 1: バックエンドAPIの確認・拡張**
+     - [ ] グループ検索APIの確認（既存の`searchGroups` APIの動作確認）
+     - [ ] 必要に応じてAPIの拡張（ユーザーとグループを統合して検索するエンドポイントの追加を検討）
+   - **Phase 2: フロントエンド実装**
+     - [ ] メッセージページの検索機能拡張
+       - [ ] 会話検索をユーザー検索とグループ検索に拡張
+       - [ ] 検索結果にユーザーとグループの両方を表示
+       - [ ] 検索結果から直接会話/グループチャットを開始
+     - [ ] グループ作成ボタンの追加
+       - [ ] メッセージページの上部に「グループを作成」ボタンを追加
+       - [ ] クリックでグループ作成ページ（`/groups/new`）に遷移、またはモーダルで作成
+     - [ ] 新しいメッセージモーダルの拡張
+       - [ ] ユーザー/グループ選択タブまたはラジオボタンを追加
+       - [ ] ユーザー選択時：既存のユーザー検索機能を使用
+       - [ ] グループ選択時：グループ検索とグループ作成オプションを表示
+       - [ ] グループ選択時はグループ一覧を表示し、選択可能にする
+   - **Phase 3: 統合とテスト**
+     - [ ] 会話リストにグループも表示（既存の会話とグループを統合表示）
+     - [ ] 翻訳キーの追加（日本語・英語）
+     - [ ] 動作確認とテスト
+
+2. ~~**デバッグログの整理**~~ ✅ 完了（2025-11-21）
    - [x] バックエンド: print()文を削除し、loggerに統一
    - [x] フロントエンド: console.logをdebugLogに置換
    - [x] 本番環境では不要なログを無効化
@@ -1797,6 +1835,63 @@ Auth0を使用したOAuth2.0認証システム。
     - [backend/scripts/performance_test.py](backend/scripts/performance_test.py) - パフォーマンステストスクリプト
     - [docs/PERFORMANCE_MONITORING.md](docs/PERFORMANCE_MONITORING.md) - パフォーマンス監視ガイド
 
+### 2025-11-24
+- **エラーハンドリングの改善** ✅ 完了
+  - **実装内容**:
+    - **不足している翻訳キーの追加**:
+      - `errors.authenticationRequired`（日本語・英語）を追加
+      - `errors.createDiseaseFailed`（日本語・英語）を追加
+      - `diseaseForm.errors.createDiseaseFailed`（日本語・英語）を追加
+    - **DiseaseForm.tsxのエラーハンドリング改善**:
+      - グローバルな`errors`名前空間を使用するように`tErrors`を追加
+      - バリデーションエラー時に`setSubmitting(false)`を追加
+      - エラー発生時に`setSubmitting(false)`を確実に実行
+      - `console.error`を`debugLog.error`に置き換え
+    - **他のコンポーネントのエラーハンドリング統一**:
+      - `PostForm.tsx`: `console.error`を`debugLog.error`に置き換え
+      - `UserProfileEditForm.tsx`: `console.error`と`console.log`を`debugLog`に置き換え
+      - `EditDiseaseForm.tsx`: `console.error`を`debugLog.error`に置き換え
+  - **効果**:
+    - エラーメッセージの翻訳が完全に揃った
+    - エラーハンドリングの一貫性が向上
+    - 本番環境でのログ出力が統一された
+  - **実装ファイル**:
+    - [frontend/messages/ja.json](frontend/messages/ja.json) - 翻訳キー追加
+    - [frontend/messages/en.json](frontend/messages/en.json) - 翻訳キー追加
+    - [frontend/components/DiseaseForm.tsx](frontend/components/DiseaseForm.tsx) - エラーハンドリング改善
+    - [frontend/components/PostForm.tsx](frontend/components/PostForm.tsx) - `debugLog`への置き換え
+    - [frontend/components/UserProfileEditForm.tsx](frontend/components/UserProfileEditForm.tsx) - `debugLog`への置き換え
+    - [frontend/components/EditDiseaseForm.tsx](frontend/components/EditDiseaseForm.tsx) - `debugLog`への置き換え
+
+- **コメントの充実** ✅ 完了
+  - **実装内容**:
+    - **バックエンド（4ファイル）**:
+      - `backend/app/api/posts.py`: `get_feed`のN+1クエリ回避の説明を追加、`_build_post_response_optimized`のdocstringを拡充
+      - `backend/app/services/message_service.py`: `get_conversations`のウィンドウ関数による最適化の説明を追加
+      - `backend/app/services/post_service.py`: ブロックユーザーフィルタリングの最適化の説明を追加
+      - `backend/app/services/user_field_visibility_service.py`: `can_view_field`のdocstringを拡充、可視性ルールの詳細説明
+    - **フロントエンド（3ファイル）**:
+      - `frontend/components/DiseaseForm.tsx`: 「その他」オプションの疾患作成処理の詳細説明
+      - `frontend/components/AvatarUploadModal.tsx`: `cropImageToAvatar`のJSDocを追加、座標変換の詳細説明
+      - `frontend/lib/hooks/useDataLoader.ts`: フック全体のJSDocを追加、`loadInternal`の詳細コメント
+  - **効果**:
+    - コードの可読性が大幅に向上
+    - パフォーマンス最適化の意図が明確になった
+    - ビジネスロジックの理解が容易になった
+    - 新規メンバーのオンボーディングが容易になった
+  - **統計**:
+    - 変更ファイル数: 7ファイル
+    - 追加行数: 260行（コメント）
+    - 削除行数: 34行（既存コメントの改善）
+  - **実装ファイル**:
+    - [backend/app/api/posts.py](backend/app/api/posts.py) - パフォーマンス最適化のコメント追加
+    - [backend/app/services/message_service.py](backend/app/services/message_service.py) - N+1クエリ回避のコメント追加
+    - [backend/app/services/post_service.py](backend/app/services/post_service.py) - ブロックユーザーフィルタリングのコメント追加
+    - [backend/app/services/user_field_visibility_service.py](backend/app/services/user_field_visibility_service.py) - フィールド可視性ロジックのコメント追加
+    - [frontend/components/DiseaseForm.tsx](frontend/components/DiseaseForm.tsx) - 「その他」オプション処理のコメント追加
+    - [frontend/components/AvatarUploadModal.tsx](frontend/components/AvatarUploadModal.tsx) - 画像クロッピングロジックのコメント追加
+    - [frontend/lib/hooks/useDataLoader.ts](frontend/lib/hooks/useDataLoader.ts) - データローダーフックのコメント追加
+
 ### 2025-11-20
 - **ローカル環境への展開と検証** ✅ 完了
   - `make dev` コマンドによるDocker環境の起動確認
@@ -1886,6 +1981,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-23（統合テスト追加完了）
+**最終更新日**: 2025-11-24（コメント充実完了、エラーハンドリング改善完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了、エラーハンドリング改善完了（翻訳キー追加、debugLog統一）

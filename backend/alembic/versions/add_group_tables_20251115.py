@@ -25,6 +25,7 @@ def upgrade() -> None:
         sa.Column("id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("name", sa.String(length=255), nullable=False),
         sa.Column("description", sa.Text(), nullable=True),
+        sa.Column("avatar_url", sa.String(length=500), nullable=True),
         sa.Column("creator_id", postgresql.UUID(as_uuid=True), nullable=True),
         sa.Column("last_message_at", sa.DateTime(), nullable=True),
         sa.Column("is_deleted", sa.Boolean(), server_default="false", nullable=False),

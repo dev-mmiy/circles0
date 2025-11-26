@@ -163,15 +163,6 @@ export default function Header() {
               </Link>
 
               <Link
-                href="/groups"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${pathname.startsWith('/groups')
-                  ? 'border-blue-500 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-              >
-                {t('groups')}
-              </Link>
-              <Link
                 href="/messages"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium relative ${pathname.startsWith('/messages')
                   ? 'border-blue-500 text-gray-900'
@@ -250,13 +241,6 @@ export default function Header() {
                 {unreadMessageCount > 0 && (
                   <span className="absolute top-2 right-4 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
                 )}
-              </Link>
-              <Link
-                href="/groups"
-                onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
-              >
-                {t('groups')}
               </Link>
             </nav>
           </div>

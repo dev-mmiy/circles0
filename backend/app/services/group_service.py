@@ -334,6 +334,8 @@ class GroupService:
             group.name = group_data.name
         if group_data.description is not None:
             group.description = group_data.description
+        if group_data.avatar_url is not None:
+            group.avatar_url = group_data.avatar_url
 
         group.updated_at = datetime.utcnow()
         db.commit()

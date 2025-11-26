@@ -29,6 +29,11 @@ class Group(Base):
     description = Column(
         Text, nullable=True, comment="Group description"
     )
+    avatar_url = Column(
+        String(500),
+        nullable=True,
+        comment="URL of the group avatar image",
+    )
     creator_id = Column(
         PostgreSQLUUID(as_uuid=True),
         ForeignKey("users.id", ondelete="SET NULL"),

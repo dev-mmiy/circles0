@@ -186,8 +186,8 @@ async def search_users(
     language: Optional[str] = Query(None, description="Language code"),
     sort_by: str = Query(
         "created_at",
-        regex="^(created_at|last_login_at|nickname)$",
-        description="Sort field: created_at, last_login_at, or nickname",
+        regex="^(created_at|last_login_at|nickname|post_count)$",
+        description="Sort field: created_at, last_login_at, nickname, or post_count",
     ),
     sort_order: str = Query(
         "desc", regex="^(asc|desc)$", description="Sort order: asc or desc"
@@ -210,6 +210,16 @@ async def search_users(
     # Start with base query (only active users)
     query = db.query(User).filter(User.is_active == True)
 
+    # Exclude current user from search results
+    if current_user:
+        from app.utils.auth_utils import extract_auth0_id
+        from app.services.user_service import UserService
+        
+        auth0_id = extract_auth0_id(current_user)
+        viewer = UserService.get_user_by_auth0_id(db, auth0_id)
+        if viewer:
+            query = query.filter(User.id != viewer.id)
+
     # Search by query string (nickname or bio)
     if q:
         query = query.filter(
@@ -228,13 +238,12 @@ async def search_users(
             from app.models.disease import UserDisease
 
             # Get users who have at least one of the specified diseases
-            # (public and searchable diseases only)
+            # (searchable diseases only - is_public is not required for search)
             users_with_diseases = (
                 db.query(UserDisease.user_id)
                 .filter(
                     UserDisease.disease_id.in_(disease_id_list),
                     UserDisease.is_active == True,
-                    UserDisease.is_public == True,
                     UserDisease.is_searchable == True,
                 )
                 .distinct()
@@ -249,8 +258,27 @@ async def search_users(
     if language:
         query = query.filter(User.language == language)
 
-    # Apply sorting
-    if sort_by == "nickname":
+    # Apply sorting and get post counts
+    post_count_subquery = None
+    if sort_by == "post_count":
+        # Sort by post count (number of posts in feed)
+        from app.models.post import Post
+        post_count_subquery = (
+            db.query(Post.user_id, func.count(Post.id).label('post_count'))
+            .filter(Post.is_active == True)
+            .group_by(Post.user_id)
+            .subquery()
+        )
+        query = query.outerjoin(
+            post_count_subquery, User.id == post_count_subquery.c.user_id
+        )
+        # Add post_count to the select columns
+        query = query.add_columns(func.coalesce(post_count_subquery.c.post_count, 0).label('post_count'))
+        if sort_order == "asc":
+            query = query.order_by(func.coalesce(post_count_subquery.c.post_count, 0).asc())
+        else:
+            query = query.order_by(func.coalesce(post_count_subquery.c.post_count, 0).desc())
+    elif sort_by == "nickname":
         order_func = asc if sort_order == "asc" else desc
         query = query.order_by(order_func(User.nickname))
     elif sort_by == "last_login_at":
@@ -260,8 +288,30 @@ async def search_users(
         order_func = asc if sort_order == "asc" else desc
         query = query.order_by(order_func(User.created_at))
 
-    # Apply limit
-    users = query.limit(limit).all()
+    # Apply limit and execute query
+    if sort_by == "post_count":
+        # When sorting by post_count, the query returns tuples (User, post_count)
+        results_with_counts = query.limit(limit).all()
+        users = [row[0] for row in results_with_counts]
+        post_counts = {row[0].id: int(row[1]) for row in results_with_counts}
+    else:
+        users = query.limit(limit).all()
+        # Get post counts for all users in a single query
+        from app.models.post import Post
+        user_ids = [user.id for user in users]
+        if user_ids:
+            post_counts_query = (
+                db.query(Post.user_id, func.count(Post.id).label('post_count'))
+                .filter(
+                    Post.user_id.in_(user_ids),
+                    Post.is_active == True
+                )
+                .group_by(Post.user_id)
+                .all()
+            )
+            post_counts = {user_id: int(count) for user_id, count in post_counts_query}
+        else:
+            post_counts = {}
 
     # Get current viewer's ID for visibility checks
     viewer_id = None
@@ -296,12 +346,24 @@ async def search_users(
         # Get user's public diseases
         user_diseases = UserService.get_user_public_diseases(db, user.id)
 
+        # Get post count for this user
+        if sort_by == "post_count" and user.id in post_counts:
+            post_count = post_counts[user.id]
+        else:
+            # Calculate post count if not already in query
+            from app.models.post import Post
+            post_count = db.query(func.count(Post.id)).filter(
+                Post.user_id == user.id,
+                Post.is_active == True
+            ).scalar() or 0
+
         # Build user dict with field-level visibility
         user_dict = {
             "id": user.id,
             "member_id": user.member_id,
             "nickname": user.nickname,  # Always visible
             "created_at": user.created_at,  # Always visible
+            "post_count": post_count,  # Number of posts in feed
             "diseases": [
                 {
                     "id": d.id,
