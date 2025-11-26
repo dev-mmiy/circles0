@@ -2005,6 +2005,9 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+[最新] - feat: Add group avatar functionality and improve UI (2025-11-25)
+[最新] - docs: Update Progress.md with group avatar and comment like features (2025-11-25)
+[最新] - docs: Update Progress.md header and commit history (2025-11-25)
 [最新] - Fix TODO items: Implement total counts and followers_only visibility check (2025-11-23)
 [最新] - Performance optimization: Image optimization and code splitting (2025-11-23)
 [最新] - Fix TypeScript type errors in test files (2025-11-23)
