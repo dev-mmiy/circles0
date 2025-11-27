@@ -154,7 +154,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
                 }
               }}
               placeholder={t('placeholder')}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             />
             {loading && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
@@ -169,7 +169,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
               }
             }}
             disabled={!searchQuery.trim() || loading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors"
           >
             {t('search')}
           </button>
@@ -177,14 +177,14 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
 
         {/* Suggestions Dropdown */}
         {showSuggestions && hashtagSuggestions.length > 0 && (
-          <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
             {hashtagSuggestions.map((hashtag) => (
               <button
                 key={hashtag.id}
                 onClick={() => handleHashtagSelect(hashtag.name)}
-                className="w-full px-4 py-2 text-left hover:bg-gray-100 transition-colors"
+                className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <span className="text-blue-600 font-medium">#{hashtag.name}</span>
+                <span className="text-blue-600 dark:text-blue-400 font-medium">#{hashtag.name}</span>
               </button>
             ))}
           </div>
@@ -194,13 +194,13 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
       {/* Popular Hashtags */}
       {!selectedHashtag && popularHashtags.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-700 mb-2">{t('popularHashtags')}</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('popularHashtags')}</h3>
           <div className="flex flex-wrap gap-2">
             {popularHashtags.map((hashtag) => (
               <button
                 key={hashtag.id}
                 onClick={() => handleHashtagSelect(hashtag.name)}
-                className="px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-100 transition-colors"
+                className="px-3 py-1 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
               >
                 #{hashtag.name}
               </button>
@@ -211,8 +211,8 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-600 dark:text-red-200">{error}</p>
         </div>
       )}
 
@@ -220,7 +220,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
       {selectedHashtag && (
         <div>
           <div className="mb-4">
-            <h2 className="text-xl font-bold text-gray-900">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
               {t('postsForHashtag', { hashtag: selectedHashtag })}
             </h2>
           </div>
@@ -228,11 +228,11 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
           {loadingPosts && posts.length === 0 ? (
             <div className="text-center py-8">
               <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <p className="mt-4 text-gray-600">{t('loading')}</p>
+              <p className="mt-4 text-gray-600 dark:text-gray-400">{t('loading')}</p>
             </div>
           ) : posts.length === 0 ? (
-            <div className="text-center py-8 bg-gray-50 rounded-lg">
-              <p className="text-gray-600">{t('noPosts')}</p>
+            <div className="text-center py-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+              <p className="text-gray-600 dark:text-gray-400">{t('noPosts')}</p>
             </div>
           ) : (
             <>
@@ -247,7 +247,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
                   <button
                     onClick={loadMorePosts}
                     disabled={loadingPosts}
-                    className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors"
+                    className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed transition-colors"
                   >
                     {loadingPosts ? t('loading') : t('loadMore')}
                   </button>

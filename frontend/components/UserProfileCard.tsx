@@ -141,13 +141,13 @@ export function UserProfileCard({
           )}
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-white">{user.nickname}</h2>
-            {user.username && <p className="text-blue-100">@{user.username}</p>}
-            <p className="text-sm text-blue-200 mt-1">{t('memberId')}: {user.member_id}</p>
+            {user.username && <p className="text-blue-100 dark:text-blue-200">@{user.username}</p>}
+            <p className="text-sm text-blue-200 dark:text-blue-100 mt-1">{t('memberId')}: {user.member_id}</p>
           </div>
           {onEdit && (
             <button
               onClick={onEdit}
-              className="px-4 py-2 bg-white text-blue-600 rounded-lg hover:bg-blue-50 transition-colors font-medium"
+              className="px-4 py-2 bg-white dark:bg-gray-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-200 transition-colors font-medium"
             >
               {t('editProfile')}
             </button>
