@@ -348,7 +348,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                             className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50"
                                         >
                                             {isSearching ? (
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-gray-700"></div>
+                                                <div className="w-5 h-5 border-4 border-gray-700 border-t-transparent rounded-full animate-spin"></div>
                                             ) : (
                                                 t('search')
                                             )}

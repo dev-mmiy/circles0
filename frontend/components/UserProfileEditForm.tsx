@@ -417,7 +417,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
         {loadingVisibilities ? (
           <div className="text-center py-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
             <p className="text-sm text-gray-600 mt-2">{t('fieldVisibility.loading')}</p>
           </div>
         ) : (

@@ -255,7 +255,7 @@ export default function PostForm({
                   />
                   {uploadingImages && preview.file && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
                     </div>
                   )}
                   <button
@@ -295,7 +295,7 @@ export default function PostForm({
               >
                 {uploadingImages ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-600 mr-2"></div>
+                    <div className="w-4 h-4 border-4 border-gray-600 border-t-transparent rounded-full animate-spin mr-2"></div>
                     {t('uploading')}
                   </>
                 ) : (

@@ -158,7 +158,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
             />
             {loading && (
               <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                <div className="w-5 h-5 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
           </div>
@@ -227,7 +227,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
 
           {loadingPosts && posts.length === 0 ? (
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
               <p className="mt-4 text-gray-600">{t('loading')}</p>
             </div>
           ) : posts.length === 0 ? (

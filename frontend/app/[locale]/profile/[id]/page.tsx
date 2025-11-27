@@ -203,7 +203,7 @@ export default function PublicProfilePage() {
         <Header />
         <div className="min-h-screen flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
             <p className="text-gray-600">{t('loading')}</p>
           </div>
         </div>
@@ -459,7 +459,7 @@ export default function PublicProfilePage() {
                 <div>
                   {isLoadingPosts && posts.length === 0 ? (
                     <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                      <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
                       <p className="text-gray-600">{t('loadingPosts')}</p>
                     </div>
                   ) : postsError ? (

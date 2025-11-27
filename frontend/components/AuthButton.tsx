@@ -146,7 +146,7 @@ export default function AuthButton() {
   if (authState === 'loading') {
     return (
       <div className="flex items-center space-x-2">
-        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+        <div className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         <span className="text-sm text-gray-600">{t('loading')}</span>
       </div>
     );
@@ -210,7 +210,7 @@ export default function AuthButton() {
       // Auth0 temporary error during authentication flow (ignoring)
       return (
         <div className="flex items-center space-x-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+          <div className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
           <span className="text-sm text-gray-600">{t('loading')}</span>
         </div>
       );

@@ -252,7 +252,7 @@ export function UserProfileCard({
                 )}
                 {loadingUserDiseases ? (
                   <div className="text-center py-4">
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                    <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                     <p className="text-sm text-gray-600">{t('loading')}</p>
                   </div>
                 ) : userDiseases.length > 0 ? (

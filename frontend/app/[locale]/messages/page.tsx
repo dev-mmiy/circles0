@@ -599,7 +599,7 @@ export default function MessagesPage() {
                                   title={t('deleteConversation')}
                                 >
                                   {deletingConversationId === item.id ? (
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-red-600"></div>
+                                    <div className="w-5 h-5 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
                                   ) : (
                                     <Trash2 className="w-5 h-5" />
                                   )}
