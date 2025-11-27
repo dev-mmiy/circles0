@@ -8,6 +8,8 @@
 import React, { useState, FormEvent, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations, useLocale } from 'next-intl';
+import { useRouter, usePathname } from '@/i18n/routing';
+import { useTransition } from 'react';
 import { UserProfile, UserProfileUpdate, getFieldVisibilities, setFieldVisibility, AllFieldVisibilityResponse } from '@/lib/api/users';
 import { COUNTRIES, getCountryName } from '@/lib/utils/countries';
 import { debugLog } from '@/lib/utils/debug';
@@ -21,7 +23,11 @@ interface UserProfileEditFormProps {
 export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('userProfileEdit');
+  const tLang = useTranslations('languageSwitcher');
   const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<UserProfileUpdate>({
     nickname: user.nickname,
     first_name: user.first_name,
@@ -462,6 +468,35 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             ))}
           </div>
         )}
+      </div>
+
+      {/* Language Settings */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-700 mb-4 border-b pb-2">{t('sections.language')}</h3>
+        <p className="text-sm text-gray-600 mb-4">{t('language.description')}</p>
+        
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <label className="text-sm font-medium text-gray-700">{t('language.displayLanguage')}</label>
+            <select
+              value={locale}
+              onChange={(e) => {
+                const newLocale = e.target.value as 'ja' | 'en';
+                // Mark that user has manually overridden locale preference
+                localStorage.setItem('locale_override', 'true');
+                startTransition(() => {
+                  // Navigate to the same page but with the new locale
+                  router.replace(pathname, { locale: newLocale });
+                });
+              }}
+              disabled={isPending}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            >
+              <option value="ja">{tLang('languages.ja')}</option>
+              <option value="en">{tLang('languages.en')}</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Form Actions */}

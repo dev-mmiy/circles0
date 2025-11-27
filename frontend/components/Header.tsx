@@ -8,7 +8,6 @@ import { Menu, X } from 'lucide-react';
 import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
-import LanguageSwitcher from './LanguageSwitcher';
 import { getTotalUnreadCount } from '@/lib/api/messages';
 import { setAuthToken } from '@/lib/api/client';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
@@ -179,9 +178,6 @@ export default function Header() {
 
           {/* 右側のアクション */}
           <div className="flex items-center gap-4">
-            {/* 言語切り替え */}
-            <LanguageSwitcher />
-
             {/* 通知ベル */}
             {showAuthenticatedUI && (
               <div className="relative">

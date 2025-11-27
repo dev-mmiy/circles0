@@ -482,7 +482,8 @@
       "publicInfo": "公開情報",
       "privateInfo": "個人情報",
       "preferences": "設定",
-      "fieldVisibility": "フィールド別公開設定"
+      "fieldVisibility": "フィールド別公開設定",
+      "language": "言語設定"
     },
     "fields": {
       "nickname": "ニックネーム",
@@ -547,6 +548,10 @@
         "private": "非公開",
         "sameDiseaseOnly": "同じ疾患を持つユーザーのみ"
       }
+    },
+    "language": {
+      "description": "アプリケーションの表示言語を設定できます",
+      "displayLanguage": "表示言語"
     },
     "languages": {
       "ja": "日本語",

@@ -483,7 +483,8 @@
       "publicInfo": "Public Information",
       "privateInfo": "Private Information",
       "preferences": "Preferences",
-      "fieldVisibility": "Field-Level Visibility Settings"
+      "fieldVisibility": "Field-Level Visibility Settings",
+      "language": "Language Settings"
     },
     "fields": {
       "nickname": "Nickname",
@@ -548,6 +549,10 @@
         "private": "Private",
         "sameDiseaseOnly": "Same Disease Only"
       }
+    },
+    "language": {
+      "description": "You can set the display language of the application",
+      "displayLanguage": "Display Language"
     },
     "languages": {
       "ja": "Japanese",
