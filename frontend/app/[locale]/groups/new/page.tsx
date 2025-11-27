@@ -153,7 +153,7 @@ export default function NewGroupPage() {
 
   if (authLoading || isRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -166,19 +166,19 @@ export default function NewGroupPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6">
             <Link
               href="/groups"
-              className="inline-flex items-center text-gray-600 hover:text-gray-900 mb-4"
+              className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
               {t('backToGroups')}
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">{t('createGroup')}</h1>
-            <p className="text-gray-600 mt-2">{t('createGroupDescription')}</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('createGroup')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{t('createGroupDescription')}</p>
           </div>
 
           {/* Error message */}
@@ -193,18 +193,18 @@ export default function NewGroupPage() {
           )}
 
           {/* Create Group Form */}
-          <div className="bg-white rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             {/* Group Name */}
             <div className="mb-6">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                {t('groupName')} <span className="text-red-500">*</span>
+              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('groupName')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('groupNamePlaceholder')}
                 maxLength={255}
               />
@@ -212,14 +212,14 @@ export default function NewGroupPage() {
 
             {/* Group Description */}
             <div className="mb-6">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('groupDescription')}
               </label>
               <textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('groupDescriptionPlaceholder')}
                 rows={4}
                 maxLength={5000}
@@ -228,7 +228,7 @@ export default function NewGroupPage() {
 
             {/* Add Members */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('addMembers')}
               </label>
               
@@ -240,10 +240,10 @@ export default function NewGroupPage() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onKeyPress={handleSearchKeyPress}
-                    className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder={t('searchUsersPlaceholder')}
                   />
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 </div>
                 <button
                   onClick={handleSearch}
@@ -260,11 +260,11 @@ export default function NewGroupPage() {
 
               {/* Search Results */}
               {searchResults.length > 0 && (
-                <div className="mb-4 border border-gray-200 rounded-lg max-h-60 overflow-y-auto">
+                <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg max-h-60 overflow-y-auto bg-white dark:bg-gray-700">
                   {searchResults.map((user) => (
                     <div
                       key={user.id}
-                      className="p-3 hover:bg-gray-50 flex items-center justify-between border-b border-gray-100 last:border-b-0"
+                      className="p-3 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-between border-b border-gray-100 dark:border-gray-600 last:border-b-0"
                     >
                       <div className="flex items-center gap-3">
                         {user.avatar_url ? (
@@ -276,22 +276,22 @@ export default function NewGroupPage() {
                             className="rounded-full object-cover"
                           />
                         ) : (
-                          <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                            <span className="text-gray-600 font-medium">
+                          <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                            <span className="text-gray-600 dark:text-gray-300 font-medium">
                               {user.nickname[0]?.toUpperCase() || '?'}
                             </span>
                           </div>
                         )}
                         <div>
-                          <div className="font-medium text-gray-900">{user.nickname}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">{user.nickname}</div>
                           {user.username && (
-                            <div className="text-sm text-gray-500">@{user.username}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</div>
                           )}
                         </div>
                       </div>
                       <button
                         onClick={() => handleAddMember(user)}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900 rounded-lg transition-colors"
                         title={t('addMember')}
                       >
                         <UserPlus className="w-5 h-5" />
@@ -304,19 +304,19 @@ export default function NewGroupPage() {
               {/* Selected Members */}
               {selectedMembers.length > 0 && (
                 <div className="mt-4">
-                  <div className="text-sm font-medium text-gray-700 mb-2">
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('selectedMembers')} ({selectedMembers.length})
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {selectedMembers.map((member) => (
                       <div
                         key={member.id}
-                        className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 text-blue-800 rounded-full"
+                        className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
                       >
                         <span className="text-sm font-medium">{member.nickname}</span>
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -331,7 +331,7 @@ export default function NewGroupPage() {
             <div className="flex justify-end gap-4">
               <Link
                 href="/groups"
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 {t('cancel')}
               </Link>

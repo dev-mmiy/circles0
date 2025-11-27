@@ -378,6 +378,12 @@
       "en": "English"
     }
   },
+  "themeSwitcher": {
+    "ariaLabel": "Switch theme",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
   "myProfile": {
     "loading": "Loading...",
     "loadingProfile": "Loading profile...",
@@ -395,7 +401,11 @@
     "deleteSuccess": "Disease deleted successfully",
     "deleteFailed": "Failed to delete disease",
     "privacySettings": "Privacy Settings",
-    "viewBlockedUsers": "View Blocked Users"
+    "viewBlockedUsers": "View Blocked Users",
+    "themeSettings": "Theme Settings",
+    "themeDescription": "You can change the display theme of the application",
+    "languageSettings": "Language Settings",
+    "languageDescription": "You can change the display language of the application"
   },
   "groups": {
     "groupSettings": "Group Settings",

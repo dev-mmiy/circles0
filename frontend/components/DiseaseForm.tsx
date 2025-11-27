@@ -248,28 +248,28 @@ export function DiseaseForm({
     .sort((a, b) => a.display_order - b.display_order);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
         {mode === 'add' ? t('title.add') : t('title.edit')}
       </h2>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
       {/* Disease Selection (Add mode only) */}
       {mode === 'add' && (
         <div className="mb-6 space-y-4">
-          <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.diseaseSelection')}</h3>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.diseaseSelection')}</h3>
 
           {/* Step 1: Category Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('steps.selectCategory')}
             </label>
-            <div className="border border-gray-300 rounded-lg overflow-hidden">
+            <div className="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden">
               {sortedCategories.map((category, categoryIndex) => {
                 const isSelected = selectedCategoryId === category.id;
                 const isLastCategory = categoryIndex === sortedCategories.length - 1;
@@ -279,19 +279,19 @@ export function DiseaseForm({
                     key={category.id}
                     type="button"
                     onClick={() => selectCategory(category.id)}
-                    className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-blue-50 transition-colors ${
-                      isSelected ? 'bg-blue-100 border-l-4 border-blue-600 font-semibold' : ''
+                    className={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
+                      isSelected ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold' : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center">
-                        <span className="text-gray-400 mr-3 select-none">
+                        <span className="text-gray-400 dark:text-gray-500 mr-3 select-none">
                           {isLastCategory ? '└─' : '├─'}
                         </span>
-                        <span className="text-gray-900">{getCategoryName(category.id)}</span>
+                        <span className="text-gray-900 dark:text-gray-100">{getCategoryName(category.id)}</span>
                       </div>
                       {isSelected && (
-                        <span className="text-blue-600">
+                        <span className="text-blue-600 dark:text-blue-400">
                           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                             <path
                               fillRule="evenodd"
@@ -310,17 +310,17 @@ export function DiseaseForm({
               <button
                 type="button"
                 onClick={() => selectCategory('other')}
-                className={`w-full text-left px-4 py-3 border-t-2 border-gray-300 hover:bg-blue-50 transition-colors ${
-                  isOther ? 'bg-blue-100 border-l-4 border-blue-600 font-semibold' : ''
+                className={`w-full text-left px-4 py-3 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
+                  isOther ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    <span className="text-gray-400 mr-3 select-none">⑫</span>
-                    <span className="text-gray-900">{t('options.other')}</span>
+                    <span className="text-gray-400 dark:text-gray-500 mr-3 select-none">⑫</span>
+                    <span className="text-gray-900 dark:text-gray-100">{t('options.other')}</span>
                   </div>
                   {isOther && (
-                    <span className="text-blue-600">
+                    <span className="text-blue-600 dark:text-blue-400">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                         <path
                           fillRule="evenodd"
@@ -338,10 +338,10 @@ export function DiseaseForm({
           {/* Step 2: Disease Selection (only if category is selected) */}
           {selectedCategoryId && !isOther && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('steps.selectDisease')}
               </label>
-              <div className="border border-gray-300 rounded-lg max-h-80 overflow-y-auto">
+              <div className="border border-gray-300 dark:border-gray-600 rounded-lg max-h-80 overflow-y-auto">
                 {(diseasesByCategory[selectedCategoryId] || []).map(disease => {
                   const isSelected = (formData as UserDiseaseCreate).disease_id === disease.id;
                   const jaTranslation = disease.translations?.find(t => t.language_code === 'ja');
@@ -351,28 +351,28 @@ export function DiseaseForm({
                       key={disease.id}
                       type="button"
                       onClick={() => selectDisease(disease.id)}
-                      className={`w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-blue-50 transition-colors ${
-                        isSelected ? 'bg-blue-100 border-l-4 border-blue-600 font-medium' : ''
+                      className={`w-full text-left px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
+                        isSelected ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-medium' : ''
                       }`}
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
                             {jaTranslation?.translated_name || disease.name}
                           </div>
                           {disease.disease_code && (
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                               {t('descriptions.code')} {disease.disease_code}
                             </div>
                           )}
                           {jaTranslation?.details && (
-                            <div className="text-sm text-gray-600 mt-1">
+                            <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                               {jaTranslation.details}
                             </div>
                           )}
                         </div>
                         {isSelected && (
-                          <span className="ml-2 text-blue-600">
+                          <span className="ml-2 text-blue-600 dark:text-blue-400">
                             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                               <path
                                 fillRule="evenodd"
@@ -392,26 +392,26 @@ export function DiseaseForm({
 
           {/* "Other" disease name input */}
           {isOther && (
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('fields.diseaseName')} <span className="text-red-500">*</span>
+            <div className="p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('fields.diseaseName')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
                 value={otherDiseaseName}
                 onChange={e => setOtherDiseaseName(e.target.value)}
                 placeholder={t('placeholders.diseaseName')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 required={isOther}
               />
-              <p className="mt-2 text-sm text-gray-600">{t('descriptions.otherDiseaseNote')}</p>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('descriptions.otherDiseaseNote')}</p>
             </div>
           )}
 
           {/* Display selected disease */}
           {!isOther && (formData as UserDiseaseCreate).disease_id && (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-gray-700">
+            <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm text-gray-700 dark:text-gray-300">
                 {t('fields.selectedDisease')}{' '}
                 <span className="font-semibold">
                   {getDiseaseName((formData as UserDiseaseCreate).disease_id)}
@@ -424,14 +424,14 @@ export function DiseaseForm({
 
       {/* Diagnosis Information */}
       <div className="mb-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.diagnosisInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.diagnosisInfo')}</h3>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Diagnosis Date */}
           <div>
             <label
               htmlFor="diagnosis_date"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               {t('fields.diagnosisDate')}
             </label>
@@ -441,7 +441,7 @@ export function DiseaseForm({
               name="diagnosis_date"
               value={formData.diagnosis_date || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             />
           </div>
 
@@ -449,7 +449,7 @@ export function DiseaseForm({
           <div>
             <label
               htmlFor="severity_level"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               {t('fields.severityLevel')}
             </label>
@@ -458,7 +458,7 @@ export function DiseaseForm({
               name="severity_level"
               value={formData.severity_level || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">{t('placeholders.select')}</option>
               <option value="1">{t('options.severity.1')}</option>
@@ -473,7 +473,7 @@ export function DiseaseForm({
           <div>
             <label
               htmlFor="diagnosis_doctor"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               {t('fields.doctor')}
             </label>
@@ -483,7 +483,7 @@ export function DiseaseForm({
               name="diagnosis_doctor"
               value={formData.diagnosis_doctor || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder={t('placeholders.doctor')}
             />
           </div>
@@ -492,7 +492,7 @@ export function DiseaseForm({
           <div>
             <label
               htmlFor="diagnosis_hospital"
-              className="block text-sm font-medium text-gray-700 mb-1"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
             >
               {t('fields.hospital')}
             </label>
@@ -502,14 +502,14 @@ export function DiseaseForm({
               name="diagnosis_hospital"
               value={formData.diagnosis_hospital || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
               placeholder={t('placeholders.hospital')}
             />
           </div>
 
           {/* Disease Status */}
           <div className="col-span-2">
-            <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 mb-1">
+            <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('fields.status')}
             </label>
             <select
@@ -517,7 +517,7 @@ export function DiseaseForm({
               name="status_id"
               value={formData.status_id || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">{t('placeholders.select')}</option>
               {statuses.map(status => (
@@ -532,11 +532,11 @@ export function DiseaseForm({
 
       {/* Clinical Information */}
       <div className="mb-6 space-y-4">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">{t('sections.clinicalInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.clinicalInfo')}</h3>
 
         {/* Symptoms */}
         <div>
-          <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('fields.symptoms')}
           </label>
           <textarea
@@ -545,14 +545,14 @@ export function DiseaseForm({
             value={formData.symptoms || ''}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder={t('placeholders.symptoms')}
           />
         </div>
 
         {/* Limitations */}
         <div>
-          <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('fields.limitations')}
           </label>
           <textarea
@@ -561,14 +561,14 @@ export function DiseaseForm({
             value={formData.limitations || ''}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder={t('placeholders.limitations')}
           />
         </div>
 
         {/* Medications */}
         <div>
-          <label htmlFor="medications" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="medications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('fields.medications')}
           </label>
           <textarea
@@ -577,14 +577,14 @@ export function DiseaseForm({
             value={formData.medications || ''}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder={t('placeholders.medications')}
           />
         </div>
 
         {/* Notes */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             {t('fields.notes')}
           </label>
           <textarea
@@ -593,7 +593,7 @@ export function DiseaseForm({
             value={formData.notes || ''}
             onChange={handleChange}
             rows={3}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder={t('placeholders.notes')}
           />
         </div>
@@ -601,7 +601,7 @@ export function DiseaseForm({
 
       {/* Privacy Settings */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 border-b pb-2 mb-4">{t('sections.privacySettings')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-4">{t('sections.privacySettings')}</h3>
 
         <div className="space-y-3">
           <label className="flex items-center">
@@ -610,11 +610,11 @@ export function DiseaseForm({
               name="is_public"
               checked={formData.is_public || false}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700">{t('fields.public')}</span>
-              <p className="text-sm text-gray-500">{t('descriptions.publicDescription')}</p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.public')}</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.publicDescription')}</p>
             </span>
           </label>
 
@@ -624,11 +624,11 @@ export function DiseaseForm({
               name="is_searchable"
               checked={formData.is_searchable ?? true}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700">{t('fields.searchable')}</span>
-              <p className="text-sm text-gray-500">{t('descriptions.searchableDescription')}</p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.searchable')}</span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.searchableDescription')}</p>
             </span>
           </label>
 
@@ -639,11 +639,11 @@ export function DiseaseForm({
                 name="is_active"
                 checked={(formData as UserDiseaseUpdate).is_active ?? true}
                 onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
               />
               <span className="ml-3">
-                <span className="font-medium text-gray-700">{t('fields.active')}</span>
-                <p className="text-sm text-gray-500">{t('descriptions.activeDescription')}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.active')}</span>
+                <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.activeDescription')}</p>
               </span>
             </label>
           )}
@@ -651,12 +651,12 @@ export function DiseaseForm({
       </div>
 
       {/* Form Actions */}
-      <div className="flex justify-end space-x-4 pt-6 border-t">
+      <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
         <button
           type="button"
           onClick={onCancel}
           disabled={submitting}
-          className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+          className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
         >
           {t('buttons.cancel')}
         </button>

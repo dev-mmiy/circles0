@@ -147,7 +147,7 @@ export default function AuthButton() {
     return (
       <div className="flex items-center space-x-2">
         <div className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-        <span className="text-sm text-gray-600">{t('loading')}</span>
+        <span className="text-sm text-gray-600 dark:text-gray-400">{t('loading')}</span>
       </div>
     );
   }
@@ -176,14 +176,14 @@ export default function AuthButton() {
               className="w-8 h-8 rounded-full"
             />
           )}
-          <span className="text-sm text-gray-700 font-medium">{displayName}</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{displayName}</span>
         </button>
 
         {isDropdownOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200 ring-1 ring-black ring-opacity-5">
+          <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-50 border border-gray-200 dark:border-gray-700 ring-1 ring-black dark:ring-gray-700 ring-opacity-5">
             <Link
               href="/profile/me"
-              className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left"
+              className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left"
               onClick={() => setIsDropdownOpen(false)}
             >
               {t('profile') || 'Profile'} {/* Fallback string if key missing */}
@@ -194,7 +194,7 @@ export default function AuthButton() {
                 handleLogout();
               }}
               disabled={isLoggingOut}
-              className="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left disabled:opacity-50"
+              className="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 w-full text-left disabled:opacity-50"
             >
               {isLoggingOut ? t('loggingOut') : t('logout')}
             </button>
@@ -211,7 +211,7 @@ export default function AuthButton() {
       return (
         <div className="flex items-center space-x-2">
           <div className="w-4 h-4 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          <span className="text-sm text-gray-600">{t('loading')}</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">{t('loading')}</span>
         </div>
       );
     }
@@ -219,11 +219,11 @@ export default function AuthButton() {
     console.error('Auth0 error in AuthButton:', error);
     return (
       <div className="flex flex-col items-center space-y-2">
-        <div className="text-red-600 text-sm font-bold">{t('loginError')}</div>
-        <div className="text-red-600 text-sm">{t('authError')}: {error?.message || t('unknownError')}</div>
-        <div className="text-xs text-gray-500">{t('errorType')}: {error?.name || t('unknown')}</div>
-        <div className="text-xs text-gray-500">{t('timestamp')}: {new Date().toISOString()}</div>
-        <div className="text-xs text-blue-500">{t('autoClearingCache')}</div>
+        <div className="text-red-600 dark:text-red-400 text-sm font-bold">{t('loginError')}</div>
+        <div className="text-red-600 dark:text-red-400 text-sm">{t('authError')}: {error?.message || t('unknownError')}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{t('errorType')}: {error?.name || t('unknown')}</div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">{t('timestamp')}: {new Date().toISOString()}</div>
+        <div className="text-xs text-blue-500 dark:text-blue-400">{t('autoClearingCache')}</div>
         <button
           onClick={() => {
             // Clear all Auth0 related cache and reload

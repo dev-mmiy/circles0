@@ -18,9 +18,9 @@ body {
 }
 
 body {
-  background-color: #f9fafb;
-  color: #111827;
+  @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100;
   line-height: 1.6;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* Ensure text is always visible */
@@ -39,12 +39,4 @@ textarea,
 select,
 button {
   color: inherit;
-}
-
-/* Override any potential dark mode issues */
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #f9fafb !important;
-    color: #111827 !important;
-  }
 }

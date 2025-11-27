@@ -81,47 +81,47 @@ export default function NotificationItem({
   return (
     <div
       onClick={handleClick}
-      className={`relative flex items-start gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-        !notification.is_read ? 'bg-blue-50' : ''
+      className={`relative flex items-start gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+        !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/30' : ''
       }`}
     >
       {/* アイコン */}
-      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white rounded-full border border-gray-200 text-xl">
+      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 text-xl">
         {getNotificationIcon(notification.type)}
       </div>
 
       {/* 通知内容 */}
       <div className="flex-1 min-w-0">
-        <p className="text-sm text-gray-900">{getNotificationText(notification)}</p>
+        <p className="text-sm text-gray-900 dark:text-gray-100">{getNotificationText(notification)}</p>
 
         {/* 投稿内容のプレビュー（あれば） */}
         {notification.post && (
-          <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
             「{notification.post.content}」
           </p>
         )}
 
         {/* コメント内容のプレビュー（あれば） */}
         {notification.comment && !notification.post && (
-          <p className="mt-1 text-xs text-gray-500 line-clamp-2">
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
             「{notification.comment.content}」
           </p>
         )}
 
         {/* 時間 */}
-        <p className="mt-1 text-xs text-gray-400">{timeAgo}</p>
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{timeAgo}</p>
       </div>
 
       {/* 未読インジケーター */}
       {!notification.is_read && (
-        <div className="flex-shrink-0 w-2 h-2 bg-blue-500 rounded-full" />
+        <div className="flex-shrink-0 w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full" />
       )}
 
       {/* 削除ボタン */}
       <button
         onClick={handleDelete}
         disabled={isDeleting}
-        className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-200 rounded transition-colors"
+        className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
         aria-label={t('delete')}
       >
         <X className="w-4 h-4" />

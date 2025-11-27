@@ -58,8 +58,8 @@ export default function ChatMessage({
   priority = false,
   ownMessageBgColor = 'bg-blue-600',
   ownMessageTextColor = 'text-white',
-  otherMessageBgColor = 'bg-white border border-gray-200',
-  otherMessageTextColor = 'text-gray-900',
+  otherMessageBgColor = 'bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600',
+  otherMessageTextColor = 'text-gray-900 dark:text-gray-100',
   avatarSize = 32,
 }: ChatMessageProps) {
   return (
@@ -85,7 +85,7 @@ export default function ChatMessage({
       >
         {/* Sender name (for group chats) */}
         {showSenderName && !isOwnMessage && (
-          <span className="text-xs text-gray-500 mb-1">
+          <span className="text-xs text-gray-500 dark:text-gray-400 mb-1">
             {sender?.nickname || 'Unknown'}
           </span>
         )}
@@ -99,7 +99,7 @@ export default function ChatMessage({
           }`}
         >
           {isDeleted ? (
-            <span className={`italic ${isOwnMessage ? 'opacity-70' : 'text-gray-500'}`}>
+            <span className={`italic ${isOwnMessage ? 'opacity-70' : 'text-gray-500 dark:text-gray-400'}`}>
               {deletedMessageText}
             </span>
           ) : (
@@ -127,20 +127,20 @@ export default function ChatMessage({
             isOwnMessage ? 'flex-row-reverse' : 'flex-row'
           }`}
         >
-          <span className={`text-xs text-gray-500 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
+          <span className={`text-xs text-gray-500 dark:text-gray-400 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
             {formatTime(createdAt)}
           </span>
           {isOwnMessage && !isDeleted && onDelete && (
             <button
               onClick={() => onDelete(id)}
               disabled={isDeleting}
-              className={`text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors ${
+              className={`text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors ${
                 isOwnMessage ? '' : ''
               }`}
               title={deleteMessageTitle}
             >
               {isDeleting ? (
-                <div className="w-3 h-3 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-3 h-3 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <Trash2 className="w-3 h-3" />
               )}
@@ -154,11 +154,11 @@ export default function ChatMessage({
         <button
           onClick={() => onDelete(id)}
           disabled={isDeleting}
-          className="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 disabled:opacity-50"
+          className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
           title={deleteMessageTitle}
         >
           {isDeleting ? (
-            <div className="w-4 h-4 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-4 h-4 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
           ) : (
             <Trash2 className="w-4 h-4" />
           )}

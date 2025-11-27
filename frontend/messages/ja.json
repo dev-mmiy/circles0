@@ -378,6 +378,12 @@
       "en": "English"
     }
   },
+  "themeSwitcher": {
+    "ariaLabel": "テーマを切り替え",
+    "light": "ライト",
+    "dark": "ダーク",
+    "system": "システムに合わせる"
+  },
   "myProfile": {
     "loading": "読み込み中...",
     "loadingProfile": "プロフィールを読み込み中...",
@@ -394,7 +400,11 @@
     "deleteConfirm": "「{diseaseName}」を削除しますか？",
     "deleteFailed": "疾患の削除に失敗しました",
     "privacySettings": "プライバシー設定",
-    "viewBlockedUsers": "ブロック済みユーザーを表示"
+    "viewBlockedUsers": "ブロック済みユーザーを表示",
+    "themeSettings": "テーマ設定",
+    "themeDescription": "アプリケーションの表示テーマを変更できます",
+    "languageSettings": "言語設定",
+    "languageDescription": "アプリケーションの表示言語を変更できます"
   },
   "groups": {
     "groupSettings": "グループ設定",

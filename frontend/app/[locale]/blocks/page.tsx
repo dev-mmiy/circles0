@@ -64,30 +64,30 @@ export default function BlocksPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <Header />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-          <p className="text-gray-600 mt-2">{t('subtitle')}</p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mt-2">{t('subtitle')}</p>
         </div>
 
         {/* Loading */}
         {loading && (
-          <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('loading')}</p>
+            <p className="text-gray-600 dark:text-gray-400">{t('loading')}</p>
           </div>
         )}
 
         {/* Error */}
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <p className="text-red-800">{error}</p>
+          <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <p className="text-red-800 dark:text-red-200">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="mt-2 text-red-600 hover:text-red-800 underline"
+              className="mt-2 text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 underline"
             >
               {t('retry')}
             </button>
@@ -96,21 +96,21 @@ export default function BlocksPage() {
 
         {/* Blocked Users List */}
         {!loading && !error && (
-          <div className="bg-white rounded-lg shadow-md">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
             {blockedUsers.length === 0 ? (
               <div className="p-8 text-center">
-                <p className="text-gray-600 mb-4">{t('noBlockedUsers')}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{t('noBlockedUsers')}</p>
                 <Link
                   href="/search"
-                  className="text-blue-600 hover:text-blue-800 underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
                 >
                   {t('searchUsers')}
                 </Link>
               </div>
             ) : (
-              <ul className="divide-y divide-gray-200">
+              <ul className="divide-y divide-gray-200 dark:divide-gray-700">
                 {blockedUsers.map((user) => (
-                  <li key={user.id} className="p-6 hover:bg-gray-50 transition-colors">
+                  <li key={user.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         {/* Avatar */}
@@ -130,13 +130,13 @@ export default function BlocksPage() {
 
                         {/* User Info */}
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                             {user.nickname}
                           </h3>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
                             {t('memberId')}: {user.member_id}
                           </p>
-                          <p className="text-xs text-gray-400 mt-1">
+                          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                             {t('blockedAt')}: {new Date(user.blocked_at).toLocaleString('ja-JP')}
                           </p>
                         </div>
@@ -188,7 +188,7 @@ export default function BlocksPage() {
         <div className="mt-8 text-center">
           <Link
             href="/profile/me"
-            className="text-blue-600 hover:text-blue-800 underline"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
           >
             {t('backToProfile')}
           </Link>

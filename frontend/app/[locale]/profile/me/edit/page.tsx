@@ -18,10 +18,10 @@ export default function EditProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('loading')}</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('loading')}</p>
         </div>
       </div>
     );
@@ -29,10 +29,10 @@ export default function EditProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pleaseLogIn')}</h1>
-          <p className="text-gray-600 mb-4">{t('loginRequired')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('pleaseLogIn')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{t('loginRequired')}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -46,10 +46,10 @@ export default function EditProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
-          <p className="text-gray-600 mb-4">{t('profileLoadFailed')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('profileNotFound')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{t('profileLoadFailed')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -72,20 +72,22 @@ export default function EditProfilePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <>
       <Header />
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-            <p className="text-gray-600 mt-2">{t('description')}</p>
-          </div>
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            {/* Header */}
+            <div className="mb-6">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">{t('description')}</p>
+            </div>
 
-          {/* Edit Form */}
-          <UserProfileEditForm user={user} onSave={handleSave} onCancel={handleCancel} />
+            {/* Edit Form */}
+            <UserProfileEditForm user={user} onSave={handleSave} onCancel={handleCancel} />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -84,9 +84,9 @@ export function UserProfileCard({
   };
 
   return (
-    <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 shadow-lg rounded-lg overflow-hidden">
       {/* Header with avatar */}
-      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 p-6">
+      <div className="bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 p-6">
         <div className="flex items-center space-x-4">
           {showPrivateInfo && onAvatarUpdate ? (
             <button
@@ -160,8 +160,8 @@ export function UserProfileCard({
         {/* Bio */}
         {user.bio && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-500 uppercase mb-2">{t('bio')}</h3>
-            <p className="text-gray-700">{user.bio}</p>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('bio')}</h3>
+            <p className="text-gray-700 dark:text-gray-300">{user.bio}</p>
           </div>
         )}
 
@@ -169,60 +169,60 @@ export function UserProfileCard({
         <div className="grid grid-cols-2 gap-4 mb-6">
           {user.country && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('country')}</h3>
-              <p className="text-gray-700">{getCountryName(user.country, locale)}</p>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('country')}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{getCountryName(user.country, locale)}</p>
             </div>
           )}
           {user.preferred_language && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('language')}</h3>
-              <p className="text-gray-700">{formatLanguage(user.preferred_language)}</p>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('language')}</h3>
+              <p className="text-gray-700 dark:text-gray-300">{formatLanguage(user.preferred_language)}</p>
             </div>
           )}
         </div>
 
         {/* Private information (only shown to owner) */}
         {showPrivateInfo && (
-          <div className="border-t pt-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">{t('privateInfo')}</h3>
+          <div className="border-t dark:border-gray-700 pt-6">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{t('privateInfo')}</h3>
             <div className="grid grid-cols-2 gap-4">
               {user.first_name && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('firstName')}</h4>
-                  <p className="text-gray-700">{user.first_name}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('firstName')}</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{user.first_name}</p>
                 </div>
               )}
               {user.last_name && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('lastName')}</h4>
-                  <p className="text-gray-700">{user.last_name}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('lastName')}</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{user.last_name}</p>
                 </div>
               )}
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('email')}</h4>
-                <p className="text-gray-700">{user.email}</p>
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('email')}</h4>
+                <p className="text-gray-700 dark:text-gray-300">{user.email}</p>
                 {user.email_verified && (
-                  <span className="inline-block mt-1 px-2 py-1 bg-green-100 text-green-800 text-xs rounded">
+                  <span className="inline-block mt-1 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
                     {t('emailVerified')}
                   </span>
                 )}
               </div>
               {user.phone && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('phone')}</h4>
-                  <p className="text-gray-700">{user.phone}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('phone')}</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{user.phone}</p>
                 </div>
               )}
               {user.date_of_birth && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('dateOfBirth')}</h4>
-                  <p className="text-gray-700">{formatDate(user.date_of_birth)}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('dateOfBirth')}</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{formatDate(user.date_of_birth)}</p>
                 </div>
               )}
               {user.gender && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 uppercase mb-1">{t('gender')}</h4>
-                  <p className="text-gray-700">{formatGender(user.gender)}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('gender')}</h4>
+                  <p className="text-gray-700 dark:text-gray-300">{formatGender(user.gender)}</p>
                 </div>
               )}
             </div>
@@ -230,13 +230,13 @@ export function UserProfileCard({
  
             {/* User Diseases - shown at the end of private information */}
             {userDiseases !== undefined && (
-              <div className="mt-6 pt-6 border-t">
+              <div className="mt-6 pt-6 border-t dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-500 uppercase">{t('myDiseases')}</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">{t('myDiseases')}</h3>
                   {addDiseaseButtonHref && (
                     <Link
                       href={addDiseaseButtonHref}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                      className="px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors text-sm"
                     >
                       {addDiseaseButtonLabel || t('addDisease')}
                     </Link>
@@ -244,8 +244,8 @@ export function UserProfileCard({
                 </div>
               {/* Disease count */}
                 {user.diseases && user.diseases.length > 0 && (
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-800">
+                  <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+                    <p className="text-sm text-blue-800 dark:text-blue-200">
                       {t('diseaseCount')}: <span className="font-semibold">{user.diseases.length}</span>
                     </p>
                   </div>
@@ -253,7 +253,7 @@ export function UserProfileCard({
                 {loadingUserDiseases ? (
                   <div className="text-center py-4">
                     <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
-                    <p className="text-sm text-gray-600">{t('loading')}</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{t('loading')}</p>
                   </div>
                 ) : userDiseases.length > 0 ? (
                   <DiseaseList
@@ -266,7 +266,7 @@ export function UserProfileCard({
                     editForm={editForm}
                   />
                 ) : (
-                  <p className="text-sm text-gray-500">{t('noDiseases')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">{t('noDiseases')}</p>
                 )}
               </div>
             )}
@@ -274,16 +274,16 @@ export function UserProfileCard({
         )}
 
         {/* Account information */}
-        <div className="border-t pt-6 mt-6">
+        <div className="border-t dark:border-gray-700 pt-6 mt-6">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
-              <h4 className="text-gray-500 mb-1">{t('accountCreated')}</h4>
-              <p className="text-gray-700">{formatDate(user.created_at)}</p>
+              <h4 className="text-gray-500 dark:text-gray-400 mb-1">{t('accountCreated')}</h4>
+              <p className="text-gray-700 dark:text-gray-300">{formatDate(user.created_at)}</p>
             </div>
             {user.last_login_at && (
               <div>
-                <h4 className="text-gray-500 mb-1">{t('lastLogin')}</h4>
-                <p className="text-gray-700">{formatDate(user.last_login_at)}</p>
+                <h4 className="text-gray-500 dark:text-gray-400 mb-1">{t('lastLogin')}</h4>
+                <p className="text-gray-700 dark:text-gray-300">{formatDate(user.last_login_at)}</p>
               </div>
             )}
           </div>

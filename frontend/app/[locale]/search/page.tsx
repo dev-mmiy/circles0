@@ -8,7 +8,6 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/routing';
 import { useSearchParams } from 'next/navigation';
 import Header from '@/components/Header';
 import { DiseaseSearch } from '@/components/DiseaseSearch';
@@ -113,24 +112,24 @@ export default function SearchPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{t('title')}</h1>
-            <p className="text-gray-600">{t('subtitle')}</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
+            <p className="text-gray-600 dark:text-gray-400">{t('subtitle')}</p>
           </div>
 
           {/* Tab Navigation */}
-          <div className="bg-white rounded-lg shadow-md mb-6">
-            <div className="border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+            <div className="border-b border-gray-200 dark:border-gray-700">
               <nav className="flex -mb-px">
                 <button
                   onClick={() => setActiveTab('diseases')}
                   className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'diseases'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {t('tabDiseases')}
@@ -139,8 +138,8 @@ export default function SearchPage() {
                   onClick={() => setActiveTab('users')}
                   className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'users'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {t('tabUsers')}
@@ -149,8 +148,8 @@ export default function SearchPage() {
                   onClick={() => setActiveTab('hashtags')}
                   className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
                     activeTab === 'hashtags'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                      ? 'border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
                   {t('tabHashtags')}
@@ -188,9 +187,9 @@ export default function SearchPage() {
           </div>
 
           {/* Info Card */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">{t('hintsTitle')}</h3>
-            <ul className="space-y-2 text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('hintsTitle')}</h3>
+            <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
               {activeTab === 'diseases' ? (
                 <>
                   <li>• {t('hintsDiseases.hint1')}</li>
@@ -214,13 +213,6 @@ export default function SearchPage() {
                 </>
               )}
             </ul>
-          </div>
-
-          {/* Back to Home */}
-          <div className="mt-8 text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
-              {t('backToHome')}
-            </Link>
           </div>
         </div>
       </div>

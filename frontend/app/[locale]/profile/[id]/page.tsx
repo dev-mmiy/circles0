@@ -201,10 +201,10 @@ export default function PublicProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">{t('loading')}</p>
+            <p className="text-gray-600 dark:text-gray-400">{t('loading')}</p>
           </div>
         </div>
       </>
@@ -215,10 +215,10 @@ export default function PublicProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-red-600 mb-4">{t('error')}</h1>
-            <p className="text-gray-600 mb-4">{error}</p>
+            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 mb-4">{t('error')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{error}</p>
             <Link
               href="/"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
@@ -235,10 +235,10 @@ export default function PublicProfilePage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen flex items-center justify-center">
+        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
-            <p className="text-gray-600 mb-4">{t('profileNotFoundMessage')}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('profileNotFound')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">{t('profileNotFoundMessage')}</p>
             <Link
               href="/"
               className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors inline-block"
@@ -254,10 +254,10 @@ export default function PublicProfilePage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Profile Header */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-start space-x-6">
             {/* Avatar */}
             <div className="relative">
@@ -280,8 +280,8 @@ export default function PublicProfilePage() {
             <div className="flex-1">
               <div className="flex items-center justify-between">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">{profile.nickname}</h1>
-                  {profile.username && <p className="text-gray-600 mt-1">@{profile.username}</p>}
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{profile.nickname}</h1>
+                  {profile.username && <p className="text-gray-600 dark:text-gray-400 mt-1">@{profile.username}</p>}
                 </div>
                 {/* Action Buttons */}
                 {!isOwnProfile && profile && isAuthenticated && (
@@ -344,22 +344,22 @@ export default function PublicProfilePage() {
                 <div className="mt-4 flex items-center space-x-6 text-sm">
                   <button
                     onClick={() => setActiveTab('followers')}
-                    className="hover:text-blue-600 transition-colors"
+                    className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-gray-700 dark:text-gray-300"
                   >
                     <span className="font-bold">{followStats.follower_count}</span>{' '}
-                    <span className="text-gray-500">{t('followers')}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('followers')}</span>
                   </button>
                   <button
                     onClick={() => setActiveTab('following')}
-                    className="hover:text-blue-600 transition-colors"
+                    className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-gray-700 dark:text-gray-300"
                   >
                     <span className="font-bold">{followStats.following_count}</span>{' '}
-                    <span className="text-gray-500">{t('following')}</span>
+                    <span className="text-gray-500 dark:text-gray-400">{t('following')}</span>
                   </button>
                 </div>
               )}
 
-              <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500">
+              <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
                 {profile.country && <span>📍 {getCountryName(profile.country, locale)}</span>}
                 <span>📅 {t('registered')} {new Date(profile.created_at).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US')}</span>
               </div>
@@ -368,16 +368,16 @@ export default function PublicProfilePage() {
 
           {/* Bio */}
           {profile.bio && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">{t('bio')}</h2>
-              <p className="text-gray-700 whitespace-pre-wrap">{profile.bio}</p>
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">{t('bio')}</h2>
+              <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{profile.bio}</p>
             </div>
           )}
 
           {/* Registered Diseases */}
           {profile.diseases && profile.diseases.length > 0 && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">{t('registeredDiseases')}</h2>
+            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('registeredDiseases')}</h2>
               <div className="space-y-2">
                 {profile.diseases.map(disease => {
                   // Get localized disease name
@@ -403,10 +403,10 @@ export default function PublicProfilePage() {
                   return (
                     <div
                       key={disease.id}
-                      className="flex items-center space-x-2 p-3 bg-gray-50 rounded-lg"
+                      className="flex items-center space-x-2 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
                     >
-                      <span className="text-blue-600">•</span>
-                      <span className="text-gray-800">{getDiseaseName()}</span>
+                      <span className="text-blue-600 dark:text-blue-400">•</span>
+                      <span className="text-gray-800 dark:text-gray-200">{getDiseaseName()}</span>
                     </div>
                   );
                 })}
@@ -416,15 +416,15 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Tabs */}
-          <div className="bg-white rounded-lg shadow-md mb-6">
-          <div className="border-b border-gray-200">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+          <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex -mb-px">
               <button
                 onClick={() => setActiveTab('posts')}
                 className={`py-4 px-6 text-sm font-medium transition-colors ${
                   activeTab === 'posts'
-                    ? 'border-b-2 border-blue-600 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {t('tabs.posts')}
@@ -433,8 +433,8 @@ export default function PublicProfilePage() {
                 onClick={() => setActiveTab('followers')}
                 className={`py-4 px-6 text-sm font-medium transition-colors ${
                   activeTab === 'followers'
-                    ? 'border-b-2 border-blue-600 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {t('tabs.followers')}
@@ -443,8 +443,8 @@ export default function PublicProfilePage() {
                 onClick={() => setActiveTab('following')}
                 className={`py-4 px-6 text-sm font-medium transition-colors ${
                   activeTab === 'following'
-                    ? 'border-b-2 border-blue-600 text-blue-600'
-                    : 'text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-b-2 border-blue-600 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {t('tabs.following')}
@@ -460,11 +460,11 @@ export default function PublicProfilePage() {
                   {isLoadingPosts && posts.length === 0 ? (
                     <div className="text-center py-8">
                       <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                      <p className="text-gray-600">{t('loadingPosts')}</p>
+                      <p className="text-gray-600 dark:text-gray-400">{t('loadingPosts')}</p>
                     </div>
                   ) : postsError ? (
                     <div className="text-center py-8">
-                      <p className="text-red-600 mb-4">{t('errorLoadingPosts')}</p>
+                      <p className="text-red-600 dark:text-red-400 mb-4">{t('errorLoadingPosts')}</p>
                       <button
                         onClick={() => loadPosts(true)}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -474,8 +474,8 @@ export default function PublicProfilePage() {
                     </div>
                   ) : posts.length === 0 ? (
                     <div className="text-center py-8">
-                      <p className="text-gray-600">{t('noPosts')}</p>
-                      <p className="text-gray-500 text-sm mt-2">{t('noPostsMessage')}</p>
+                      <p className="text-gray-600 dark:text-gray-400">{t('noPosts')}</p>
+                      <p className="text-gray-500 dark:text-gray-500 text-sm mt-2">{t('noPostsMessage')}</p>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -518,7 +518,7 @@ export default function PublicProfilePage() {
 
           {/* Back to Home */}
           <div className="mt-8 text-center">
-            <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
+            <Link href="/" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline">
               {t('backToHome')}
             </Link>
           </div>

@@ -120,16 +120,16 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-50"
+      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
     >
       {/* ヘッダー */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900">{t('title')}</h3>
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t('title')}</h3>
         {unreadCount > 0 && (
           <button
             onClick={handleMarkAllAsRead}
             disabled={isMarkingAllRead}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
+            className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50"
           >
             <Check className="w-4 h-4" />
             {t('markAllAsRead')}
@@ -144,11 +144,11 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : notifications.length === 0 ? (
-          <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+          <div className="flex flex-col items-center justify-center p-8 text-gray-500 dark:text-gray-400">
             <p className="text-sm">{t('noNotifications')}</p>
           </div>
         ) : (
-          <div className="divide-y divide-gray-100">
+          <div className="divide-y divide-gray-100 dark:divide-gray-700">
             {notifications.map((notification) => (
               <NotificationItem
                 key={notification.id}
@@ -163,10 +163,10 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
 
       {/* フッター */}
       {notifications.length > 0 && (
-        <div className="p-3 border-t border-gray-200 text-center">
+        <div className="p-3 border-t border-gray-200 dark:border-gray-700 text-center">
           <Link
             href="/notifications"
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
             onClick={onClose}
           >
             {t('viewAll')}

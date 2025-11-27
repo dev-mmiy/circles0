@@ -185,14 +185,14 @@ export default function PostForm({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <form onSubmit={handleSubmit}>
         {/* Textarea for post content */}
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder={placeholder || t('placeholder')}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={4}
           maxLength={5000}
           disabled={isSubmitting}
@@ -201,13 +201,13 @@ export default function PostForm({
         {/* Detected hashtags */}
         {detectedHashtags.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
-            <span className="text-sm text-gray-600 font-medium">
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {t('detectedHashtags')}:
             </span>
             {detectedHashtags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-sm font-medium"
+                className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
               >
                 #{tag}
               </span>
@@ -218,13 +218,13 @@ export default function PostForm({
         {/* Detected mentions */}
         {detectedMentions.length > 0 && (
           <div className="mt-2 flex flex-wrap gap-2">
-            <span className="text-sm text-gray-600 font-medium">
+            <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {t('detectedMentions')}:
             </span>
             {detectedMentions.map((mention, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium"
+                className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
               >
                 @{mention}
               </span>
@@ -234,7 +234,7 @@ export default function PostForm({
 
         {/* Images */}
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('imagesLabel')} ({imageUrls.length}/5)
           </label>
           
@@ -251,7 +251,7 @@ export default function PostForm({
                     alt={`Image ${index + 1}`}
                     width={80}
                     height={80}
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                    className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                   />
                   {uploadingImages && preview.file && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
@@ -287,15 +287,15 @@ export default function PostForm({
               />
               <label
                 htmlFor="image-upload"
-                className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
                   isSubmitting || uploadingImages || imageUrls.length >= 5
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
               >
                 {uploadingImages ? (
                   <>
-                    <div className="w-4 h-4 border-4 border-gray-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
                     {t('uploading')}
                   </>
                 ) : (
@@ -315,7 +315,7 @@ export default function PostForm({
         <div className="flex justify-end mt-1">
           <span
             className={`text-sm ${
-              content.length > 4500 ? 'text-red-500' : 'text-gray-500'
+              content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             {content.length} / 5000
@@ -325,7 +325,7 @@ export default function PostForm({
         {/* Visibility selector and submit button */}
         <div className="flex items-center justify-between mt-4">
           <div className="flex items-center space-x-2">
-            <label htmlFor="visibility" className="text-sm font-medium text-gray-700">
+            <label htmlFor="visibility" className="text-sm font-medium text-gray-700 dark:text-gray-300">
               {t('visibilityLabel')}
             </label>
             <select
@@ -336,7 +336,7 @@ export default function PostForm({
                   e.target.value as 'public' | 'followers_only' | 'private'
                 )
               }
-              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               disabled={isSubmitting}
             >
               <option value="public">{t('visibility.public')}</option>
@@ -350,7 +350,7 @@ export default function PostForm({
             disabled={isSubmitting || !content.trim()}
             className={`px-6 py-2 rounded-lg font-medium transition-colors ${
               isSubmitting || !content.trim()
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
@@ -360,8 +360,8 @@ export default function PostForm({
 
         {/* Error message */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-4 p-3 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
       </form>

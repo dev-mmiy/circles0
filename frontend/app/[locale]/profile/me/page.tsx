@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
 import { UserProfileCard } from '@/components/UserProfileCard';
@@ -11,10 +11,13 @@ import { useRouter } from '@/i18n/routing';
 import { EditDiseaseForm } from '@/components/EditDiseaseForm';
 import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import Header from '@/components/Header';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import ThemeSwitcher from '@/components/ThemeSwitcher';
 
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const t = useTranslations('myProfile');
+  const locale = useLocale();
   const { user, loading: userLoading, updateUserProfile, refreshUser } = useUser();
   const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } =
     useDisease();
@@ -28,10 +31,10 @@ export default function MyProfilePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">{t('loadingProfile')}</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('loadingProfile')}</p>
         </div>
       </div>
     );
@@ -39,10 +42,10 @@ export default function MyProfilePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('pleaseLogIn')}</h1>
-          <p className="text-gray-600 mb-4">{t('loginRequired')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('pleaseLogIn')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{t('loginRequired')}</p>
           <Link
             href="/"
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -56,10 +59,10 @@ export default function MyProfilePage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('profileNotFound')}</h1>
-          <p className="text-gray-600 mb-4">{t('profileLoadFailed')}</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('profileNotFound')}</h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-4">{t('profileLoadFailed')}</p>
           <button
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -103,11 +106,11 @@ export default function MyProfilePage() {
   };
 
   const handleDeleteDisease = async (disease: UserDiseaseDetailed) => {
-    // Get localized disease name
+    // Get localized disease name based on current locale
     let diseaseName = disease.disease?.name || '';
     if (disease.disease?.translations && disease.disease.translations.length > 0) {
       const translation = disease.disease.translations.find(
-        (t) => t.language_code === user.preferred_language
+        (t) => t.language_code === locale
       );
       if (translation) {
         diseaseName = translation.translated_name;
@@ -138,7 +141,7 @@ export default function MyProfilePage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Profile Card */}
         <div className="mb-6">
@@ -169,21 +172,32 @@ export default function MyProfilePage() {
         </div>
 
         {/* Blocked Users Link */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">{t('privacySettings')}</h2>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('privacySettings')}</h2>
           <Link
             href="/blocks"
-            className="text-blue-600 hover:text-blue-800 underline"
+            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
           >
             {t('viewBlockedUsers')}
           </Link>
         </div>
 
-        {/* Back to Home */}
-        <div className="mt-8 text-center">
-          <Link href="/" className="text-blue-600 hover:text-blue-700 hover:underline">
-            {t('backToHome')}
-          </Link>
+        {/* Theme Settings */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('themeSettings')}</h2>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">{t('themeDescription')}</p>
+            <ThemeSwitcher />
+          </div>
+        </div>
+
+        {/* Language Settings */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('languageSettings')}</h2>
+          <div className="flex items-center justify-between">
+            <p className="text-gray-600 dark:text-gray-400 text-sm">{t('languageDescription')}</p>
+            <LanguageSwitcher />
+          </div>
         </div>
         </div>
       </div>

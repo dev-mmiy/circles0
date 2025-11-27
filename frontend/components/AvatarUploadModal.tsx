@@ -360,20 +360,20 @@ export function AvatarUploadModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">{t('title')}</h2>
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-lg w-full mx-4 p-6 max-h-[90vh] overflow-y-auto">
+        <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('title')}</h2>
 
         {/* Crop Area */}
         {previewUrl ? (
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('adjustImage')}
             </label>
             <div className="relative w-full flex justify-center">
               {/* Crop container with circular mask */}
               <div
                 ref={containerRef}
-                className="relative w-[300px] h-[300px] rounded-full overflow-hidden border-4 border-gray-300 bg-gray-100 cursor-move"
+                className="relative w-[300px] h-[300px] rounded-full overflow-hidden border-4 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 cursor-move"
                 onMouseDown={handleMouseDown}
                 onMouseMove={handleMouseMove}
                 onMouseUp={handleMouseUp}
@@ -418,7 +418,7 @@ export function AvatarUploadModal({
                 />
               </div>
             </div>
-            <div className="mt-2 text-xs text-gray-500 text-center mb-4">
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center mb-4">
               <p>{t('dragToMove')}</p>
               <p>{t('scrollToZoom')}</p>
             </div>
@@ -428,16 +428,16 @@ export function AvatarUploadModal({
               <button
                 type="button"
                 onClick={() => setCropState(prev => ({ ...prev, scale: Math.max(0.5, prev.scale - 0.05) }))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50"
                 disabled={cropState.scale <= 0.5}
               >
                 {t('zoomOut')}
               </button>
-              <span className="text-sm text-gray-600">{Math.round(cropState.scale * 100)}%</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round(cropState.scale * 100)}%</span>
               <button
                 type="button"
                 onClick={() => setCropState(prev => ({ ...prev, scale: Math.min(3, prev.scale + 0.05) }))}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50"
                 disabled={cropState.scale >= 3}
               >
                 {t('zoomIn')}
@@ -455,7 +455,7 @@ export function AvatarUploadModal({
                     setBaseScale(initialScale);
                   }
                 }}
-                className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300"
               >
                 {t('reset')}
               </button>
@@ -464,7 +464,7 @@ export function AvatarUploadModal({
         ) : (
           /* Preview when no image selected */
           <div className="mb-4 flex justify-center">
-            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200">
+            <div className="relative w-32 h-32 rounded-full overflow-hidden border-4 border-gray-200 dark:border-gray-600">
               {currentAvatarUrl ? (
                 <Image
                   src={currentAvatarUrl}
@@ -473,8 +473,8 @@ export function AvatarUploadModal({
                   className="object-cover"
                 />
               ) : (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-400 text-2xl">?</span>
+                <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
+                  <span className="text-gray-400 dark:text-gray-500 text-2xl">?</span>
                 </div>
               )}
             </div>
@@ -483,7 +483,7 @@ export function AvatarUploadModal({
 
         {/* File input */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             {t('selectImage')}
           </label>
           <input
@@ -491,15 +491,15 @@ export function AvatarUploadModal({
             type="file"
             accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
             onChange={handleFileSelect}
-            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+            className="block w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 dark:file:bg-blue-900/30 file:text-blue-700 dark:file:text-blue-300 hover:file:bg-blue-100 dark:hover:file:bg-blue-900/50"
           />
-          <p className="mt-1 text-xs text-gray-500">{t('fileRequirements')}</p>
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{t('fileRequirements')}</p>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-            <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
           </div>
         )}
 
@@ -510,7 +510,7 @@ export function AvatarUploadModal({
             <button
               onClick={handleRemove}
               disabled={uploading}
-              className="px-4 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors disabled:opacity-50"
             >
               {uploading ? t('removing') : t('remove')}
             </button>
@@ -520,7 +520,7 @@ export function AvatarUploadModal({
             <button
               onClick={handleClose}
               disabled={uploading}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
               {t('cancel')}
             </button>

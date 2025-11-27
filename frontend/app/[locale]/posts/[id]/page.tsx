@@ -13,11 +13,11 @@ import { getPost, type PostDetail } from '@/lib/api/posts';
 // Dynamically import CommentSection to reduce initial bundle size
 const CommentSection = dynamic(() => import('@/components/CommentSection'), {
   loading: () => (
-    <div className="mt-6 bg-white rounded-lg shadow p-4">
+    <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
       <div className="animate-pulse">
-        <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
-        <div className="h-20 bg-gray-200 rounded mb-2"></div>
-        <div className="h-20 bg-gray-200 rounded"></div>
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
+        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded"></div>
       </div>
     </div>
   ),
@@ -66,7 +66,7 @@ export default function PostDetailPage() {
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -78,12 +78,12 @@ export default function PostDetailPage() {
 
   if (error || !post) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back button */}
           <button
             onClick={() => router.back()}
-            className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+            className="mb-4 flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
           >
             <svg
               className="w-5 h-5 mr-1"
@@ -101,9 +101,9 @@ export default function PostDetailPage() {
             {t('back')}
           </button>
 
-          <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-12 text-center">
             <svg
-              className="mx-auto h-12 w-12 text-red-400"
+              className="mx-auto h-12 w-12 text-red-400 dark:text-red-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -115,10 +115,10 @@ export default function PostDetailPage() {
                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
               />
             </svg>
-            <h3 className="mt-4 text-lg font-medium text-gray-900">
+            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
               {t('postNotFound')}
             </h3>
-            <p className="mt-2 text-gray-500">
+            <p className="mt-2 text-gray-500 dark:text-gray-400">
               {error || t('postNotFoundMessage')}
             </p>
             <div className="mt-6">
@@ -136,12 +136,12 @@ export default function PostDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Back button */}
         <button
           onClick={() => router.back()}
-          className="mb-4 flex items-center text-gray-600 hover:text-gray-900"
+          className="mb-4 flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
         >
           <svg
             className="w-5 h-5 mr-1"
@@ -165,7 +165,7 @@ export default function PostDetailPage() {
         </div>
 
         {/* Comments section */}
-        <div className="bg-white rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
           <CommentSection
             postId={post.id}
             initialComments={post.comments || []}

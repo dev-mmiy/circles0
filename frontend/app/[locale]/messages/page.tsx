@@ -318,7 +318,7 @@ export default function MessagesPage() {
   // 認証チェック中またはリダイレクト中のみページ全体をローディング
   if ((authLoading && !isAuthenticated) || isRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -331,13 +331,13 @@ export default function MessagesPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
-              <p className="text-gray-600 mt-2">{t('conversations')}</p>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+              <p className="text-gray-600 dark:text-gray-400 mt-2">{t('conversations')}</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -393,7 +393,7 @@ export default function MessagesPage() {
                     }
                   }}
                   placeholder={t('searchUsersAndGroups')}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 />
                 {searchUsersAndGroupsQuery && (
                   <button
@@ -403,7 +403,7 @@ export default function MessagesPage() {
                       setUserSearchResults([]);
                       setGroupSearchResults([]);
                     }}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -412,10 +412,10 @@ export default function MessagesPage() {
               
               {/* Search results dropdown */}
               {showSearchResults && (userSearchResults.length > 0 || groupSearchResults.length > 0) && (
-                <div className="absolute z-10 mt-2 w-full bg-white rounded-lg shadow-lg border border-gray-200 max-h-96 overflow-y-auto">
+                <div className="absolute z-10 mt-2 w-full bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto">
                   {userSearchResults.length > 0 && (
                     <div className="p-2">
-                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 border-b border-gray-200">
+                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                         {t('users')}
                       </div>
                       {userSearchResults.map((user) => (
@@ -433,7 +433,7 @@ export default function MessagesPage() {
                               debugLog.error('Failed to create conversation:', err);
                             }
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
                           {user.avatar_url ? (
                             <Image
@@ -444,16 +444,16 @@ export default function MessagesPage() {
                               className="rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
-                              <span className="text-gray-600 text-xs font-medium">
+                            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                              <span className="text-gray-600 dark:text-gray-300 text-xs font-medium">
                                 {user.nickname?.[0]?.toUpperCase() || '?'}
                               </span>
                             </div>
                           )}
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900">{user.nickname}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.nickname}</p>
                             {user.username && (
-                              <p className="text-xs text-gray-500">@{user.username}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</p>
                             )}
                           </div>
                         </button>
@@ -462,7 +462,7 @@ export default function MessagesPage() {
                   )}
                   {groupSearchResults.length > 0 && (
                     <div className="p-2">
-                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 border-b border-gray-200">
+                      <div className="px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
                         {t('groups')}
                       </div>
                       {groupSearchResults.map((group) => (
@@ -473,17 +473,17 @@ export default function MessagesPage() {
                             setSearchUsersAndGroupsQuery('');
                             setShowSearchResults(false);
                           }}
-                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 transition-colors"
+                          className="w-full flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
-                          <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 text-xs font-medium">
+                          <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
                               {group.name[0]?.toUpperCase() || 'G'}
                             </span>
                           </div>
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900">{group.name}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{group.name}</p>
                             {group.description && (
-                              <p className="text-xs text-gray-500 truncate">{group.description}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{group.description}</p>
                             )}
                           </div>
                         </button>
@@ -496,19 +496,19 @@ export default function MessagesPage() {
           )}
 
           {/* Conversations and Groups list */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
             {/* ローディング状態 */}
             {isLoading && allItems.length === 0 ? (
               <div className="p-12 text-center">
                 <div className="flex justify-center items-center">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
-                <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+                <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loading') || '読み込み中...'}</p>
               </div>
             ) : allItems.length === 0 ? (
               <div className="p-12 text-center">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
+                  className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -520,22 +520,22 @@ export default function MessagesPage() {
                     d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                   />
                 </svg>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">
+                <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                   {t('noConversations')}
                 </h3>
-                <p className="mt-2 text-gray-500">
+                <p className="mt-2 text-gray-500 dark:text-gray-400">
                   {t('noConversationsMessage')}
                 </p>
               </div>
             ) : (
               <>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {allItems.map((item) => {
                         if (item.type === 'conversation') {
                           return (
                             <div
                               key={item.id}
-                              className="p-4 hover:bg-gray-50 transition-colors"
+                              className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <Link
@@ -553,8 +553,8 @@ export default function MessagesPage() {
                                         className="rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
-                                        <span className="text-gray-600 font-medium">
+                                      <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium">
                                           {item.other_user?.nickname?.[0]?.toUpperCase() || '?'}
                                         </span>
                                       </div>
@@ -564,17 +564,17 @@ export default function MessagesPage() {
                                   {/* Conversation info */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                         {item.other_user?.nickname || 'Unknown User'}
                                       </h3>
                                       {item.last_message_at && (
-                                        <span className="text-sm text-gray-500 ml-2">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                                           {formatTime(item.last_message_at)}
                                         </span>
                                       )}
                                     </div>
                                     {item.last_message && (
-                                      <p className="text-sm text-gray-600 truncate mt-1">
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
                                         {item.last_message.is_deleted
                                           ? `(${t('conversation.deletedMessage')})`
                                           : item.last_message.content}
@@ -595,11 +595,11 @@ export default function MessagesPage() {
                                     handleDeleteConversation(item.id);
                                   }}
                                   disabled={deletingConversationId === item.id}
-                                  className="ml-4 p-2 text-gray-400 hover:text-red-600 disabled:opacity-50 transition-colors"
+                                  className="ml-4 p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
                                   title={t('deleteConversation')}
                                 >
                                   {deletingConversationId === item.id ? (
-                                    <div className="w-5 h-5 border-4 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+                                    <div className="w-5 h-5 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
                                   ) : (
                                     <Trash2 className="w-5 h-5" />
                                   )}
@@ -612,7 +612,7 @@ export default function MessagesPage() {
                           return (
                             <div
                               key={item.id}
-                              className="p-4 hover:bg-gray-50 transition-colors"
+                              className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                               <div className="flex items-center justify-between">
                                 <Link
@@ -630,8 +630,8 @@ export default function MessagesPage() {
                                         className="rounded-full object-cover"
                                       />
                                     ) : (
-                                      <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                                        <Users className="w-6 h-6 text-blue-600" />
+                                      <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                        <Users className="w-6 h-6 text-blue-600 dark:text-blue-300" />
                                       </div>
                                     )}
                                   </div>
@@ -639,17 +639,17 @@ export default function MessagesPage() {
                                   {/* Group info */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                      <h3 className="text-lg font-medium text-gray-900 truncate">
+                                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                         {item.name}
                                       </h3>
                                       {item.last_message_at && (
-                                        <span className="text-sm text-gray-500 ml-2">
+                                        <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                                           {formatTime(item.last_message_at)}
                                         </span>
                                       )}
                                     </div>
                                     {item.last_message && (
-                                      <p className="text-sm text-gray-600 truncate mt-1">
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
                                         {item.last_message.is_deleted
                                           ? `(${t('conversation.deletedMessage')})`
                                           : item.last_message.content}
@@ -671,7 +671,7 @@ export default function MessagesPage() {
                                     setEditingGroup(item);
                                     setEditingGroupId(item.id);
                                   }}
-                                  className="ml-4 p-2 text-gray-400 hover:text-blue-600 transition-colors"
+                                  className="ml-4 p-2 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
                                   title={t('editGroup') || 'Edit Group'}
                                 >
                                   <Settings className="w-5 h-5" />
@@ -685,14 +685,14 @@ export default function MessagesPage() {
 
                 {/* Load more button */}
                 {hasMore && (
-                  <div className="flex justify-center p-6 border-t border-gray-200">
+                  <div className="flex justify-center p-6 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={loadMore}
                       disabled={isLoadingMore}
                       className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                         isLoadingMore
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       {isLoadingMore ? (
@@ -727,8 +727,8 @@ export default function MessagesPage() {
 
                 {/* End of conversations and groups message */}
                 {!hasMore && allItems.length > 0 && (
-                  <div className="text-center py-6 border-t border-gray-200">
-                    <p className="text-gray-500">{t('allConversationsShown')}</p>
+                  <div className="text-center py-6 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-500 dark:text-gray-400">{t('allConversationsShown')}</p>
                   </div>
                 )}
               </>
@@ -743,7 +743,7 @@ export default function MessagesPage() {
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
             <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              className="fixed inset-0 bg-gray-500 dark:bg-gray-900 bg-opacity-75 dark:bg-opacity-80 transition-opacity"
               onClick={() => {
                 setShowNewMessageModal(false);
                 setSearchQuery('');
@@ -752,10 +752,10 @@ export default function MessagesPage() {
             />
 
             {/* Modal panel */}
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white dark:bg-gray-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">{t('selectUserOrGroup')}</h3>
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">{t('selectUserOrGroup')}</h3>
                   <button
                     onClick={() => {
                       setShowNewMessageModal(false);
@@ -764,14 +764,14 @@ export default function MessagesPage() {
                       setModalGroupSearchResults([]);
                       setModalTab('user');
                     }}
-                    className="text-gray-400 hover:text-gray-500"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300"
                   >
                     <X className="w-6 h-6" />
                   </button>
                 </div>
 
                 {/* Tab selection */}
-                <div className="mb-4 flex border-b border-gray-200">
+                <div className="mb-4 flex border-b border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => {
                       setModalTab('user');
@@ -780,8 +780,8 @@ export default function MessagesPage() {
                     }}
                     className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
                       modalTab === 'user'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
                     {t('tabUser')}
@@ -794,8 +794,8 @@ export default function MessagesPage() {
                     }}
                     className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
                       modalTab === 'group'
-                        ? 'border-blue-500 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
                     {t('tabGroup')}
@@ -806,7 +806,7 @@ export default function MessagesPage() {
                 <div className="mb-4">
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <Search className="h-5 w-5 text-gray-400" />
+                      <Search className="h-5 w-5 text-gray-400 dark:text-gray-500" />
                     </div>
                     <input
                       type="text"
@@ -823,7 +823,7 @@ export default function MessagesPage() {
                         }
                       }}
                       placeholder={modalTab === 'user' ? t('selectUserPlaceholder') : t('selectGroupPlaceholder')}
-                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 dark:focus:placeholder-gray-500 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
                   <button
@@ -881,14 +881,14 @@ export default function MessagesPage() {
 
                 {/* Search results */}
                 {modalTab === 'user' && searchResults.length > 0 && (
-                  <div className="max-h-96 overflow-y-auto border-t border-gray-200">
+                  <div className="max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
                     <div className="py-2">
                       {searchResults.map((user) => (
                         <button
                           key={user.id}
                           onClick={() => handleSelectUser(user)}
                           disabled={isCreatingConversation}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {user.avatar_url ? (
                             <Image
@@ -899,16 +899,16 @@ export default function MessagesPage() {
                               className="rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                              <span className="text-gray-600 font-medium">
+                            <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                              <span className="text-gray-600 dark:text-gray-300 font-medium">
                                 {user.nickname?.[0]?.toUpperCase() || '?'}
                               </span>
                             </div>
                           )}
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900">{user.nickname}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{user.nickname}</p>
                             {user.username && (
-                              <p className="text-xs text-gray-500">@{user.username}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">@{user.username}</p>
                             )}
                           </div>
                           {isCreatingConversation && (
@@ -939,7 +939,7 @@ export default function MessagesPage() {
                 )}
 
                 {modalTab === 'group' && modalGroupSearchResults.length > 0 && (
-                  <div className="max-h-96 overflow-y-auto border-t border-gray-200">
+                  <div className="max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
                     <div className="py-2">
                       {modalGroupSearchResults.map((group) => (
                         <button
@@ -950,17 +950,17 @@ export default function MessagesPage() {
                             setSearchQuery('');
                             setModalGroupSearchResults([]);
                           }}
-                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
+                          className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
-                          <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                            <span className="text-blue-600 font-medium">
+                          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                            <span className="text-blue-600 dark:text-blue-300 font-medium">
                               {group.name[0]?.toUpperCase() || 'G'}
                             </span>
                           </div>
                           <div className="flex-1 text-left">
-                            <p className="text-sm font-medium text-gray-900">{group.name}</p>
+                            <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{group.name}</p>
                             {group.description && (
-                              <p className="text-xs text-gray-500 truncate">{group.description}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{group.description}</p>
                             )}
                           </div>
                         </button>
@@ -970,13 +970,13 @@ export default function MessagesPage() {
                 )}
 
                 {searchQuery && modalTab === 'user' && searchResults.length === 0 && !isSearching && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <p>{t('noUsersFound')}</p>
                   </div>
                 )}
 
                 {searchQuery && modalTab === 'group' && modalGroupSearchResults.length === 0 && !isSearching && (
-                  <div className="text-center py-8 text-gray-500">
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <p>{t('noGroupsFound')}</p>
                   </div>
                 )}

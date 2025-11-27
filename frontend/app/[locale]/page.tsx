@@ -64,18 +64,18 @@ export default function Home() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl font-bold text-center mb-8">{t('title')}</h1>
-          <p className="text-center text-gray-600 mb-8">{t('subtitle')}</p>
+          <h1 className="text-4xl font-bold text-center mb-8 text-gray-900 dark:text-gray-100">{t('title')}</h1>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-8">{t('subtitle')}</p>
 
           {/* Recent Posts Section */}
           <div className="mt-12 mb-8">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-semibold text-gray-900">{t('recentPosts')}</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{t('recentPosts')}</h2>
               <I18nLink
                 href="/feed"
-                className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium transition-colors"
               >
                 {t('viewAllPosts')} →
               </I18nLink>
@@ -86,14 +86,14 @@ export default function Home() {
                 <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             ) : postsError ? (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center">
-                <p className="text-red-800 text-sm">{postsError}</p>
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 text-center">
+                <p className="text-red-800 dark:text-red-200 text-sm">{postsError}</p>
               </div>
             ) : posts.length === 0 ? (
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
-                <p className="text-gray-600">{t('noPostsYet')}</p>
+              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-12 text-center">
+                <p className="text-gray-600 dark:text-gray-400">{t('noPostsYet')}</p>
                 {!isAuthenticated && (
-                  <p className="text-sm text-gray-500 mt-2">{t('loginToSeePosts')}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">{t('loginToSeePosts')}</p>
                 )}
               </div>
             ) : (

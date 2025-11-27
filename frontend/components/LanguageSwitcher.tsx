@@ -50,7 +50,7 @@ export default function LanguageSwitcher() {
     <div className="relative inline-block" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+        className="flex items-center space-x-2 px-3 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors border border-gray-300 dark:border-gray-600"
         disabled={isPending}
         aria-label={t('ariaLabel')}
         aria-expanded={isOpen}
@@ -62,11 +62,11 @@ export default function LanguageSwitcher() {
 
       {/* Dropdown menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+        <div className="absolute right-0 mt-2 w-40 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
           <button
             onClick={() => handleLanguageChange('ja')}
-            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors flex items-center justify-between ${
-              locale === 'ja' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
+              locale === 'ja' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'
             }`}
             disabled={isPending || locale === 'ja'}
           >
@@ -75,8 +75,8 @@ export default function LanguageSwitcher() {
           </button>
           <button
             onClick={() => handleLanguageChange('en')}
-            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors flex items-center justify-between ${
-              locale === 'en' ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700'
+            className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
+              locale === 'en' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'
             }`}
             disabled={isPending || locale === 'en'}
           >

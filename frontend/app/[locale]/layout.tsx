@@ -8,6 +8,7 @@ import Auth0ProviderWithConfig from '@/contexts/Auth0ProviderWithConfig';
 import { UserProvider } from '@/contexts/UserContext';
 import { DiseaseProvider } from '@/contexts/DiseaseContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 export const metadata: Metadata = {
   title: 'Disease Community Platform',
@@ -29,19 +30,21 @@ export default async function LocaleLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale}>
+    <html lang={locale} suppressHydrationWarning>
       <body className="font-sans">
-        <NextIntlClientProvider messages={messages}>
-          <Auth0ProviderWithConfig>
-            <UserProvider>
-              <DiseaseProvider>
-                <NotificationProvider>
-                  <ApiProvider>{children}</ApiProvider>
-                </NotificationProvider>
-              </DiseaseProvider>
-            </UserProvider>
-          </Auth0ProviderWithConfig>
-        </NextIntlClientProvider>
+        <ThemeProvider>
+          <NextIntlClientProvider messages={messages}>
+            <Auth0ProviderWithConfig>
+              <UserProvider>
+                <DiseaseProvider>
+                  <NotificationProvider>
+                    <ApiProvider>{children}</ApiProvider>
+                  </NotificationProvider>
+                </DiseaseProvider>
+              </UserProvider>
+            </Auth0ProviderWithConfig>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

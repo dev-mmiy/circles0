@@ -346,7 +346,7 @@ export default function GroupChatPage() {
 
   if (authLoading || isLoading || isRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -360,7 +360,7 @@ export default function GroupChatPage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <ErrorDisplay
               error={error}
@@ -379,15 +379,15 @@ export default function GroupChatPage() {
   return (
     <>
       <Header />
-      <div className="h-[calc(100vh-4rem)] bg-gray-50 flex flex-col">
+      <div className="h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col">
         <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1 min-h-0">
           {/* Header */}
-          <div className="py-4 border-b border-gray-200 bg-white flex-shrink-0">
+          <div className="py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Link
                   href="/messages"
-                  className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Link>
@@ -402,16 +402,16 @@ export default function GroupChatPage() {
                     />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                    <Users className="w-5 h-5 text-blue-600" />
+                  <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center flex-shrink-0">
+                    <Users className="w-5 h-5 text-blue-600 dark:text-blue-300" />
                   </div>
                 )}
                 <div className="min-w-0">
-                  <h2 className="text-lg font-semibold text-gray-900 truncate">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
                     {group?.name || t('group')}
                   </h2>
                   {group && (
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Users className="w-4 h-4" />
                       <span>{group.member_count} {t('members')}</span>
                     </div>
@@ -420,7 +420,7 @@ export default function GroupChatPage() {
               </div>
               <button
                 onClick={() => setIsSettingsOpen(true)}
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 title={t('groupSettings')}
               >
                 <Settings className="w-5 h-5" />
@@ -438,7 +438,7 @@ export default function GroupChatPage() {
                 <button
                   onClick={handleLoadMore}
                   disabled={isLoadingMore}
-                  className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+                  className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100"
                 >
                   {tChat('loadingMore')}
                 </button>
@@ -476,7 +476,7 @@ export default function GroupChatPage() {
               return (
                 <div key={message.id}>
                   {showDate && (
-                    <div className="text-center text-xs text-gray-500 py-2">
+                    <div className="text-center text-xs text-gray-500 dark:text-gray-400 py-2">
                       {formatDateInTimezone(
                         message.created_at,
                         locale,
@@ -519,7 +519,7 @@ export default function GroupChatPage() {
           </div>
 
           {/* Message Form */}
-          <div className="border-t border-gray-200 bg-white p-4 flex-shrink-0">
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="flex gap-2">
               <div className="flex-1">
                 <input
@@ -527,7 +527,7 @@ export default function GroupChatPage() {
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
                   placeholder={tChat('typeMessage')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={5000}
                 />
                 {imagePreview && (
@@ -538,7 +538,7 @@ export default function GroupChatPage() {
                   />
                 )}
                 {uploadingImage && (
-                  <div className="mt-2 text-sm text-gray-500">
+                  <div className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                     {tChat('uploading') || 'Uploading...'}
                   </div>
                 )}
@@ -554,7 +554,7 @@ export default function GroupChatPage() {
                 />
                 <label
                   htmlFor="group-image-upload"
-                  className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 cursor-pointer transition-colors flex items-center"
+                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center"
                   title={tChat('attachImage') || 'Attach image'}
                 >
                   <ImageIcon className="w-5 h-5" />

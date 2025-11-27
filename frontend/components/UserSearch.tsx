@@ -202,38 +202,38 @@ export function UserSearch({
             }}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={t('placeholder')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
           
           {/* Search History Dropdown */}
           {showHistory && searchHistory.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2 border-b border-gray-200 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {t('searchHistory')}
                 </span>
                 <button
                   onClick={handleClearHistory}
-                  className="text-xs text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   {t('clearHistory')}
                 </button>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {searchHistory.map((item) => (
                   <button
                     key={`${item.query}-${item.timestamp}`}
                     onClick={() => handleHistoryClick(item)}
-                    className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
                   >
-                    <span className="text-sm text-gray-700 flex-1">{item.query}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
                     <button
                       onClick={(e) => handleRemoveHistoryItem(e, item.query)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
                       aria-label="Remove"
                     >
-                      <X className="w-3 h-3 text-gray-500" />
+                      <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </button>
                   </button>
                 ))}
@@ -250,7 +250,7 @@ export function UserSearch({
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
         >
           {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
@@ -266,7 +266,7 @@ export function UserSearch({
 
       {/* Advanced Search Options */}
       {showAdvanced && (
-        <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
           {/* Clear Filters Button */}
           <div className="flex justify-end">
             <button
@@ -276,7 +276,7 @@ export function UserSearch({
                 setSortOrder('desc');
                 clearUserSearchFilterSettings();
               }}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-white transition-colors"
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
             >
               {t('clearFilters')}
             </button>
@@ -285,14 +285,14 @@ export function UserSearch({
           {/* Disease Filter */}
           {diseases.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('diseaseFilterLabel')}
               </label>
               <div className="max-h-60 overflow-y-auto space-y-1">
                 {diseases.map((disease) => (
                   <label
                     key={disease.id}
-                    className="flex items-center p-2 border rounded cursor-pointer hover:bg-white transition-colors"
+                    className="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
                   >
                     <input
                       type="checkbox"
@@ -300,7 +300,7 @@ export function UserSearch({
                       onChange={() => toggleDisease(disease.id)}
                       className="mr-2"
                     />
-                    <span className="text-sm">
+                    <span className="text-sm text-gray-900 dark:text-gray-100">
                       {disease.translations && disease.translations.length > 0
                         ? disease.translations.find((t) => t.language_code === preferredLanguage)
                             ?.translated_name ||
@@ -318,13 +318,13 @@ export function UserSearch({
           {/* Sort Options */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('sortByLabel')}
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname' | 'post_count')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="created_at">{t('sortByDate')}</option>
                 <option value="last_login_at">{t('sortByLogin')}</option>
@@ -333,13 +333,13 @@ export function UserSearch({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('sortOrderAsc')} / {t('sortOrderDesc')}
               </label>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="asc">{t('sortOrderAsc')}</option>
                 <option value="desc">{t('sortOrderDesc')}</option>
@@ -351,15 +351,15 @@ export function UserSearch({
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
       {/* Search Results */}
       {results.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-4">
@@ -367,7 +367,7 @@ export function UserSearch({
               <Link
                 key={user.id}
                 href={`/profile/${user.id}`}
-                className="block p-4 border rounded-lg hover:shadow-md hover:bg-blue-50 transition-all"
+                className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all bg-white dark:bg-gray-800"
               >
                 <div className="flex items-start gap-4">
                   {/* Avatar */}
@@ -380,8 +380,8 @@ export function UserSearch({
                       className="w-16 h-16 rounded-full object-cover"
                     />
                   ) : (
-                    <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-2xl text-gray-600 font-bold">
+                    <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                      <span className="text-2xl text-gray-600 dark:text-gray-300 font-bold">
                         {user.nickname?.charAt(0).toUpperCase() || '?'}
                       </span>
                     </div>
@@ -391,19 +391,19 @@ export function UserSearch({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-900">{user.nickname}</h4>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{user.nickname}</h4>
                         {user.username && (
-                          <p className="text-sm text-gray-600">@{user.username}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">@{user.username}</p>
                         )}
                       </div>
                       {user.post_count !== undefined && (
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
                           {t('postCount', { count: user.post_count })}
                         </div>
                       )}
                     </div>
 
-                    {user.bio && <p className="text-sm text-gray-700 mt-2">{user.bio}</p>}
+                    {user.bio && <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">{user.bio}</p>}
 
                     {/* Diseases */}
                     {user.diseases && user.diseases.length > 0 && (
@@ -422,7 +422,7 @@ export function UserSearch({
                           return (
                             <span
                               key={disease.id}
-                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
+                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
                             >
                               {diseaseName}
                             </span>
@@ -440,7 +440,7 @@ export function UserSearch({
 
       {/* No Results */}
       {!loading && results.length === 0 && (searchQuery || selectedDiseases.length > 0) && (
-        <div className="text-center py-8 text-gray-500">{t('noResults')}</div>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('noResults')}</div>
       )}
     </div>
   );

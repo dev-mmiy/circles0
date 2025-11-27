@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/routing';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Newspaper, Search, MessageCircle } from 'lucide-react';
 import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
@@ -118,7 +118,7 @@ export default function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-40 w-full border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           {/* 左側: ハンバーガーメニュー + ロゴ */}
@@ -127,7 +127,7 @@ export default function Header() {
             {showAuthenticatedUI && (
               <button
                 onClick={handleMobileMenuToggle}
-                className="md:hidden p-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="md:hidden p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                 aria-label={isMobileMenuOpen ? t('closeMenu') : t('openMenu')}
                 aria-expanded={isMobileMenuOpen}
               >
@@ -140,37 +140,44 @@ export default function Header() {
             )}
 
             {/* ロゴ・ホーム */}
-            <Link href="/" className="text-xl font-bold text-gray-900 hover:text-gray-700">
+            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300">
               Lifry
             </Link>
           </div>
 
           {/* Navigation (デスクトップ) */}
           {showAuthenticatedUI && (
-            <nav className="hidden md:flex items-center space-x-6">
+            <nav className="hidden md:flex items-center space-x-4">
               <Link
                 href="/feed"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label={t('feed')}
+                title={t('feed')}
               >
-                {t('feed')}
+                <Newspaper className="w-5 h-5" />
               </Link>
               <Link
                 href="/search"
-                className="text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                aria-label={t('userSearch')}
+                title={t('userSearch')}
               >
-                {t('userSearch')}
+                <Search className="w-5 h-5" />
               </Link>
 
               <Link
                 href="/messages"
-                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium relative ${pathname.startsWith('/messages')
-                  ? 'border-blue-500 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
+                className={`p-2 rounded-lg transition-colors relative ${
+                  pathname.startsWith('/messages')
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-label={t('messages')}
+                title={t('messages')}
               >
-                {t('messages')}
+                <MessageCircle className="w-5 h-5" />
                 {unreadMessageCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
                 )}
               </Link>
             </nav>
@@ -210,32 +217,35 @@ export default function Header() {
           {/* メニューコンテンツ */}
           <div
             ref={mobileMenuRef}
-            className="fixed top-16 left-0 right-0 bg-white border-b border-gray-200 shadow-lg z-50 md:hidden"
+            className="fixed top-16 left-0 right-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-lg z-50 md:hidden"
           >
             <nav className="flex flex-col py-2">
               <Link
                 href="/feed"
                 onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
+                className="px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
               >
+                <Newspaper className="w-5 h-5" />
                 {t('feed')}
               </Link>
               <Link
                 href="/search"
                 onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors"
+                className="px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
               >
+                <Search className="w-5 h-5" />
                 {t('userSearch')}
               </Link>
 
               <Link
                 href="/messages"
                 onClick={handleMobileMenuClose}
-                className="px-4 py-3 text-gray-700 hover:bg-gray-100 hover:text-gray-900 font-medium transition-colors relative"
+                className="px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors relative"
               >
+                <MessageCircle className="w-5 h-5" />
                 {t('messages')}
                 {unreadMessageCount > 0 && (
-                  <span className="absolute top-2 right-4 h-2 w-2 bg-red-600 rounded-full border-2 border-white"></span>
+                  <span className="absolute top-2 right-4 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
                 )}
               </Link>
             </nav>

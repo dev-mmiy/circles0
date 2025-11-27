@@ -81,7 +81,7 @@ export default function CommentSection({
 
   return (
     <div className="mt-6">
-      <h3 className="text-lg font-semibold mb-4">
+      <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-gray-100">
         {t('title', { count: comments.length })}
       </h3>
 
@@ -91,7 +91,7 @@ export default function CommentSection({
           value={newCommentContent}
           onChange={(e) => setNewCommentContent(e.target.value)}
           placeholder={t('placeholder')}
-          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
           maxLength={2000}
           disabled={isSubmitting || !isAuthenticated}
@@ -100,7 +100,7 @@ export default function CommentSection({
         <div className="flex items-center justify-between mt-2">
           <span
             className={`text-sm ${
-              newCommentContent.length > 1800 ? 'text-red-500' : 'text-gray-500'
+              newCommentContent.length > 1800 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             {newCommentContent.length} / 2000
@@ -111,7 +111,7 @@ export default function CommentSection({
             disabled={isSubmitting || !newCommentContent.trim() || !isAuthenticated}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               isSubmitting || !newCommentContent.trim() || !isAuthenticated
-                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
@@ -120,16 +120,16 @@ export default function CommentSection({
         </div>
 
         {error && (
-          <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded">
-            <p className="text-sm text-red-600">{error}</p>
+          <div className="mt-2 p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           </div>
         )}
 
         {!isAuthenticated && (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             {t.rich('loginPrompt', {
               login: (chunks) => (
-                <I18nLink href="/login" className="text-blue-600 hover:underline">
+                <I18nLink href="/login" className="text-blue-600 dark:text-blue-400 hover:underline">
                   {chunks}
                 </I18nLink>
               ),
@@ -141,7 +141,7 @@ export default function CommentSection({
       {/* Comments list */}
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">
             {t('noComments')}
           </p>
         ) : (
@@ -291,8 +291,8 @@ function CommentItem({
               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
-              <span className="text-gray-600 font-semibold text-xs">
+            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">
+              <span className="text-gray-600 dark:text-gray-300 font-semibold text-xs">
                 {comment.author?.nickname?.charAt(0).toUpperCase() || '?'}
               </span>
             </div>
@@ -301,19 +301,19 @@ function CommentItem({
 
         {/* Comment content */}
         <div className="flex-1">
-          <div className="bg-gray-50 rounded-lg p-3">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
             <div className="flex items-center space-x-2 mb-1">
               <Link
                 href={`/profile/${comment.user_id}`}
-                className="font-semibold text-sm text-gray-900 hover:underline"
+                className="font-semibold text-sm text-gray-900 dark:text-gray-100 hover:underline"
               >
                 {comment.author?.nickname || t('unknownUser')}
               </Link>
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 {formatDate(comment.created_at)}
               </span>
             </div>
-            <p className="text-gray-800 text-sm whitespace-pre-wrap break-words">
+            <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
               {comment.content}
             </p>
           </div>
@@ -322,7 +322,7 @@ function CommentItem({
           <div className="flex items-center space-x-4 mt-1 ml-2">
             <button
               onClick={() => setShowReplyForm(!showReplyForm)}
-              className="text-sm text-gray-500 hover:text-blue-600"
+              className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400"
               disabled={!isAuthenticated}
             >
               {t('reply')}
@@ -331,7 +331,7 @@ function CommentItem({
             {comment.reply_count > 0 && !isReply && (
               <button
                 onClick={handleLoadReplies}
-                className="text-sm text-blue-600 hover:underline"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 disabled={loadingReplies}
               >
                 {loadingReplies
@@ -350,7 +350,7 @@ function CommentItem({
                 value={replyContent}
                 onChange={(e) => setReplyContent(e.target.value)}
                 placeholder={t('replyPlaceholder')}
-                className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 rows={2}
                 maxLength={2000}
                 disabled={isSubmitting}
@@ -362,7 +362,7 @@ function CommentItem({
                     setShowReplyForm(false);
                     setReplyContent('');
                   }}
-                  className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                  className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200"
                   disabled={isSubmitting}
                 >
                   {t('cancel')}
@@ -372,7 +372,7 @@ function CommentItem({
                   disabled={isSubmitting || !replyContent.trim()}
                   className={`px-3 py-1 text-sm rounded-lg ${
                     isSubmitting || !replyContent.trim()
-                      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                      ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                       : 'bg-blue-600 text-white hover:bg-blue-700'
                   }`}
                 >

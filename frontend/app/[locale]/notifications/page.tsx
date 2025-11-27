@@ -128,7 +128,7 @@ export default function NotificationsPage() {
 
   if (authLoading || isLoading || isRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
@@ -141,23 +141,23 @@ export default function NotificationsPage() {
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">{t('pageTitle')}</h1>
-            <p className="text-gray-600 mt-2">{t('pageSubtitle')}</p>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+            <p className="text-gray-600 dark:text-gray-400 mt-2">{t('pageSubtitle')}</p>
           </div>
 
           {/* Filter Tabs and Mark All Read */}
-          <div className="mb-6 flex items-center justify-between border-b border-gray-200">
+          <div className="mb-6 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
             <nav className="flex space-x-8" aria-label="Notification filter">
               <button
                 onClick={() => setFilterType('all')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   filterType === 'all'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {t('filterAll')}
@@ -166,13 +166,13 @@ export default function NotificationsPage() {
                 onClick={() => setFilterType('unread')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                   filterType === 'unread'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                 }`}
               >
                 {t('filterUnread')}
                 {unreadCount > 0 && (
-                  <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
+                  <span className="ml-2 inline-flex items-center justify-center px-2 py-0.5 text-xs font-medium leading-none text-white bg-blue-600 dark:bg-blue-500 rounded-full">
                     {unreadCount}
                   </span>
                 )}
@@ -183,7 +183,7 @@ export default function NotificationsPage() {
               <button
                 onClick={handleMarkAllAsRead}
                 disabled={isMarkingAllRead}
-                className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 disabled:opacity-50 transition-colors"
               >
                 <Check className="w-4 h-4" />
                 {t('markAllAsRead')}
@@ -203,11 +203,11 @@ export default function NotificationsPage() {
           )}
 
           {/* Notifications list */}
-          <div className="bg-white rounded-lg shadow">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
             {notifications.length === 0 ? (
               <div className="p-12 text-center">
                 <svg
-                  className="mx-auto h-12 w-12 text-gray-400"
+                  className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -219,12 +219,12 @@ export default function NotificationsPage() {
                     d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
                   />
                 </svg>
-                <h3 className="mt-4 text-lg font-medium text-gray-900">
+                <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                   {filterType === 'unread'
                     ? t('noUnreadNotifications')
                     : t('noNotifications')}
                 </h3>
-                <p className="mt-2 text-gray-500">
+                <p className="mt-2 text-gray-500 dark:text-gray-400">
                   {filterType === 'unread'
                     ? t('noUnreadNotificationsMessage')
                     : t('noNotifications')}
@@ -232,7 +232,7 @@ export default function NotificationsPage() {
               </div>
             ) : (
               <>
-                <div className="divide-y divide-gray-100">
+                <div className="divide-y divide-gray-100 dark:divide-gray-700">
                   {notifications.map((notification) => (
                     <NotificationItem
                       key={notification.id}
@@ -245,20 +245,20 @@ export default function NotificationsPage() {
 
                 {/* Load more button */}
                 {hasMore && (
-                  <div className="flex justify-center p-6 border-t border-gray-200">
+                  <div className="flex justify-center p-6 border-t border-gray-200 dark:border-gray-700">
                     <button
                       onClick={handleLoadMore}
                       disabled={isLoadingMore}
                       className={`px-6 py-3 rounded-lg font-medium transition-colors ${
                         isLoadingMore
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       {isLoadingMore ? (
                         <span className="flex items-center">
                           <svg
-                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500"
+                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-gray-500 dark:text-gray-400"
                             fill="none"
                             viewBox="0 0 24 24"
                           >
@@ -287,8 +287,8 @@ export default function NotificationsPage() {
 
                 {/* End of notifications message */}
                 {!hasMore && notifications.length > 0 && (
-                  <div className="text-center py-6 border-t border-gray-200">
-                    <p className="text-gray-500">{t('allNotificationsShown')}</p>
+                  <div className="text-center py-6 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-gray-500 dark:text-gray-400">{t('allNotificationsShown')}</p>
                   </div>
                 )}
               </>

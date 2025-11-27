@@ -288,38 +288,38 @@ export function DiseaseSearch({
             }}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={t('placeholder')}
-            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
           
           {/* Search History Dropdown */}
           {showHistory && searchHistory.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div className="p-2 border-b border-gray-200 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700 flex items-center gap-1">
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
                   <Clock className="w-4 h-4" />
                   {t('searchHistory')}
                 </span>
                 <button
                   onClick={handleClearHistory}
-                  className="text-xs text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
                 >
                   {t('clearHistory')}
                 </button>
               </div>
-              <div className="divide-y divide-gray-100">
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {searchHistory.map((item) => (
                   <button
                     key={`${item.query}-${item.timestamp}`}
                     onClick={() => handleHistoryClick(item)}
-                    className="w-full px-3 py-2 text-left hover:bg-gray-50 transition-colors flex items-center justify-between group"
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
                   >
-                    <span className="text-sm text-gray-700 flex-1">{item.query}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
                     <button
                       onClick={(e) => handleRemoveHistoryItem(e, item.query)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 rounded transition-opacity"
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
                       aria-label="Remove"
                     >
-                      <X className="w-3 h-3 text-gray-500" />
+                      <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </button>
                   </button>
                 ))}
@@ -336,7 +336,7 @@ export function DiseaseSearch({
         </button>
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
         >
           {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
@@ -366,7 +366,7 @@ export function DiseaseSearch({
                 setSortOrder('asc');
                 clearDiseaseSearchFilterSettings();
               }}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg hover:bg-white transition-colors"
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
             >
               {t('clearFilters')}
             </button>
@@ -387,7 +387,7 @@ export function DiseaseSearch({
                   }}
                   className="w-4 h-4"
                 />
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('useRangeSearch')}
                 </span>
               </label>
@@ -396,7 +396,7 @@ export function DiseaseSearch({
             {useRangeSearch ? (
               <div className="grid grid-cols-2 gap-4">
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('icdCodeFromLabel')}
                   </label>
                   <input
@@ -408,11 +408,11 @@ export function DiseaseSearch({
                     onFocus={() => setShowAutocompleteFrom(icdCodeFrom.length >= 1 && icdCodeFromSuggestions.length > 0)}
                     onBlur={() => setTimeout(() => setShowAutocompleteFrom(false), 200)}
                     placeholder={t('icdCodeFromPlaceholder')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   />
                   {showAutocompleteFrom && icdCodeFromSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      <div className="p-2 text-xs text-gray-500 border-b">
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                         {t('autocompleteSuggestions')}
                       </div>
                       {icdCodeFromSuggestions.map((code) => (
@@ -422,7 +422,7 @@ export function DiseaseSearch({
                             setIcdCodeFrom(code);
                             setShowAutocompleteFrom(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-900 dark:text-gray-100"
                         >
                           {code}
                         </button>
@@ -431,7 +431,7 @@ export function DiseaseSearch({
                   )}
                 </div>
                 <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     {t('icdCodeToLabel')}
                   </label>
                   <input
@@ -443,11 +443,11 @@ export function DiseaseSearch({
                     onFocus={() => setShowAutocompleteTo(icdCodeTo.length >= 1 && icdCodeToSuggestions.length > 0)}
                     onBlur={() => setTimeout(() => setShowAutocompleteTo(false), 200)}
                     placeholder={t('icdCodeToPlaceholder')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   />
                   {showAutocompleteTo && icdCodeToSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                      <div className="p-2 text-xs text-gray-500 border-b">
+                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                      <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                         {t('autocompleteSuggestions')}
                       </div>
                       {icdCodeToSuggestions.map((code) => (
@@ -457,7 +457,7 @@ export function DiseaseSearch({
                             setIcdCodeTo(code);
                             setShowAutocompleteTo(false);
                           }}
-                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-900 dark:text-gray-100"
                         >
                           {code}
                         </button>
@@ -468,7 +468,7 @@ export function DiseaseSearch({
               </div>
             ) : (
               <div className="relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('icdCodeLabel')}
                 </label>
                 <input
@@ -481,11 +481,11 @@ export function DiseaseSearch({
                   onFocus={() => setShowAutocomplete(icdCode.length >= 1 && icdCodeSuggestions.length > 0)}
                   onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
                   placeholder={t('icdCodePlaceholder')}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 />
                 {showAutocomplete && icdCodeSuggestions.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-40 overflow-y-auto">
-                    <div className="p-2 text-xs text-gray-500 border-b">
+                  <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-40 overflow-y-auto">
+                    <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                       {t('autocompleteSuggestions')}
                     </div>
                     {icdCodeSuggestions.map((code) => (
@@ -495,7 +495,7 @@ export function DiseaseSearch({
                           setIcdCode(code);
                           setShowAutocomplete(false);
                         }}
-                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors"
+                        className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-900 dark:text-gray-100"
                       >
                         {code}
                       </button>
@@ -509,14 +509,14 @@ export function DiseaseSearch({
           {/* Category Filter */}
           {categories.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('categoryLabel')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                 {categories.map((category) => (
                   <label
                     key={category.id}
-                    className="flex items-center p-2 border rounded cursor-pointer hover:bg-white transition-colors"
+                    className="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
                   >
                     <input
                       type="checkbox"
@@ -524,7 +524,7 @@ export function DiseaseSearch({
                       onChange={() => toggleCategory(category.id)}
                       className="mr-2"
                     />
-                    <span className="text-sm">{category.name}</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100">{category.name}</span>
                   </label>
                 ))}
               </div>
@@ -534,13 +534,13 @@ export function DiseaseSearch({
           {/* Sort Options */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('sortByLabel')}
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'name' | 'disease_code' | 'created_at')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="name">{t('sortByName')}</option>
                 <option value="disease_code">{t('sortByCode')}</option>
@@ -548,13 +548,13 @@ export function DiseaseSearch({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('sortOrderAsc')} / {t('sortOrderDesc')}
               </label>
               <select
                 value={sortOrder}
                 onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="asc">{t('sortOrderAsc')}</option>
                 <option value="desc">{t('sortOrderDesc')}</option>
@@ -566,15 +566,15 @@ export function DiseaseSearch({
 
       {/* Error Message */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-800">{error}</p>
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
         </div>
       )}
 
       {/* Search Results */}
       {results.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold text-gray-900">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-2">
@@ -582,22 +582,22 @@ export function DiseaseSearch({
               <div
                 key={disease.id}
                 onClick={() => onSelect && onSelect(disease)}
-                className={`p-4 border rounded-lg hover:shadow-md transition-shadow ${
-                  onSelect ? 'cursor-pointer hover:bg-blue-50' : ''
-                }`}
+                className={`p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md transition-shadow ${
+                  onSelect ? 'cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/30' : ''
+                } bg-white dark:bg-gray-800`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
-                    <h4 className="text-lg font-medium text-gray-900">
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100">
                       {getDiseaseName(disease)}
                     </h4>
                     {disease.disease_code && (
-                      <p className="text-sm text-gray-500 mt-1">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                         {t('code')}: {disease.disease_code}
                       </p>
                     )}
                     {disease.description && (
-                      <p className="text-sm text-gray-600 mt-2">{disease.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{disease.description}</p>
                     )}
                   </div>
                   {onSelect && (
@@ -614,7 +614,7 @@ export function DiseaseSearch({
 
       {/* No Results */}
       {!loading && results.length === 0 && searchQuery && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
           {t('noResults')}
         </div>
       )}

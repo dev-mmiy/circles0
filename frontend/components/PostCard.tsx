@@ -80,19 +80,19 @@ export default function PostCard({
     switch (visibility) {
       case 'public':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
             {t('visibility.public')}
           </span>
         );
       case 'followers_only':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
             {t('visibility.followersOnly')}
           </span>
         );
       case 'private':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
             {t('visibility.private')}
           </span>
         );
@@ -179,7 +179,7 @@ export default function PostCard({
     : post.content;
 
   return (
-    <div className="bg-white rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-md transition-shadow">
       {/* Header: Author info and timestamp */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center space-x-3">
@@ -195,8 +195,8 @@ export default function PostCard({
                 className="w-10 h-10 rounded-full object-cover"
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                <span className="text-gray-600 font-semibold text-sm">
+              <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
+                <span className="text-gray-600 dark:text-gray-300 font-semibold text-sm">
                   {post.author?.nickname?.charAt(0).toUpperCase() || '?'}
                 </span>
               </div>
@@ -207,16 +207,16 @@ export default function PostCard({
           <div>
             <Link
               href={`/profile/${post.user_id}`}
-              className="font-semibold text-gray-900 hover:underline"
+              className="font-semibold text-gray-900 dark:text-gray-100 hover:underline"
             >
               {post.author?.nickname || t('unknownUser')}
             </Link>
             {post.author?.username && (
-              <span className="text-gray-500 text-sm ml-1">
+              <span className="text-gray-500 dark:text-gray-400 text-sm ml-1">
                 @{post.author.username}
               </span>
             )}
-            <div className="flex items-center space-x-2 text-sm text-gray-500">
+            <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
               <span>{formatDate(post.created_at)}</span>
               {getVisibilityBadge(post.visibility)}
             </div>
@@ -228,7 +228,7 @@ export default function PostCard({
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsEditModalOpen(true)}
-              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
               title={t('edit')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -242,7 +242,7 @@ export default function PostCard({
             </button>
             <button
               onClick={() => setIsDeleteConfirmOpen(true)}
-              className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
               title={t('delete')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -260,13 +260,13 @@ export default function PostCard({
 
       {/* Post content */}
       <div className="mb-4">
-        <p className="text-gray-800 whitespace-pre-wrap break-words">
+        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
           {displayContent}
         </p>
         {!showFullContent && post.content.length > 300 && (
           <Link
             href={`/posts/${post.id}`}
-            className="text-blue-600 hover:underline text-sm mt-2 inline-block"
+            className="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 inline-block"
           >
             {t('readMore')}
           </Link>
@@ -280,7 +280,7 @@ export default function PostCard({
             <Link
               key={hashtag.id}
               href={`/search?q=${encodeURIComponent(hashtag.name)}&type=hashtags`}
-              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-sm font-medium hover:bg-blue-100 transition-colors"
+              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             >
               #{hashtag.name}
             </Link>
@@ -291,14 +291,14 @@ export default function PostCard({
       {/* Mentions */}
       {post.mentions && post.mentions.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          <span className="text-sm text-gray-600 font-medium mr-1">
+          <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-1">
             {t('mentions')}:
           </span>
           {post.mentions.map((mention) => (
             <Link
               key={mention.id}
               href={`/profile/${mention.id}`}
-              className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium hover:bg-purple-100 transition-colors"
+              className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
             >
               @{mention.nickname}
             </Link>
@@ -319,7 +319,7 @@ export default function PostCard({
             {post.images.map((image, index) => (
               <div
                 key={image.id}
-                className={`relative overflow-hidden rounded-lg border border-gray-200 bg-gray-100 ${
+                className={`relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 ${
                   post.images!.length === 1
                     ? 'w-full aspect-video'
                     : 'aspect-square'
@@ -373,15 +373,15 @@ export default function PostCard({
       )}
 
       {/* Actions: Like and Comment */}
-      <div className="flex items-center space-x-6 pt-3 border-t border-gray-200">
+      <div className="flex items-center space-x-6 pt-3 border-t border-gray-200 dark:border-gray-700">
         {/* Like button */}
         <button
           onClick={handleLikeToggle}
           disabled={isLiking}
           className={`flex items-center space-x-2 transition-colors ${
             isLiked
-              ? 'text-red-600 hover:text-red-700'
-              : 'text-gray-500 hover:text-red-600'
+              ? 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300'
+              : 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
           } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           <svg
@@ -403,7 +403,7 @@ export default function PostCard({
         {/* Comment button/link */}
         <Link
           href={`/posts/${post.id}`}
-          className="flex items-center space-x-2 text-gray-500 hover:text-blue-600 transition-colors"
+          className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
         >
           <svg
             className="w-5 h-5"
@@ -440,19 +440,19 @@ export default function PostCard({
             onClick={() => setIsDeleteConfirmOpen(false)}
           />
           <div className="flex min-h-full items-center justify-center p-4">
-            <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                   {t('deleteConfirm')}
                 </h3>
-                <p className="text-sm text-gray-600 mb-6">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
                   {t('deleteConfirmMessage')}
                 </p>
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setIsDeleteConfirmOpen(false)}
                     disabled={isDeleting}
-                    className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {t('cancel')}
                   </button>

@@ -646,7 +646,7 @@ export default function ConversationPage() {
   // 認証チェック中またはリダイレクト中のみページ全体をローディング
   if ((authLoading && !isAuthenticated) || isRedirecting) {
     return (
-      <div className="min-h-screen bg-gray-50 py-8">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-center items-center py-12">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -660,7 +660,7 @@ export default function ConversationPage() {
     return (
       <>
         <Header />
-        <div className="min-h-screen bg-gray-50 py-8">
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <ErrorDisplay
               error={error}
@@ -679,14 +679,14 @@ export default function ConversationPage() {
   return (
     <>
       <Header />
-      <div className="h-[calc(100vh-4rem)] bg-gray-50 flex flex-col">
+      <div className="h-[calc(100vh-4rem)] bg-gray-50 dark:bg-gray-900 flex flex-col">
         <div className="max-w-5xl mx-auto w-full px-4 sm:px-6 lg:px-8 flex flex-col flex-1 min-h-0">
           {/* Header */}
-          <div className="py-4 border-b border-gray-200 bg-white flex-shrink-0">
+          <div className="py-4 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-shrink-0">
             <div className="flex items-center gap-4">
               <Link
                 href="/messages"
-                className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
@@ -700,11 +700,11 @@ export default function ConversationPage() {
                     alt={conversation.other_user.nickname}
                   />
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
                       {conversation.other_user.nickname}
                     </h1>
                     {conversation.unread_count > 0 && (
-                      <p className="text-sm text-blue-600">
+                      <p className="text-sm text-blue-600 dark:text-blue-400">
                         {conversation.unread_count} {tConv('markAsRead')}
                       </p>
                     )}
@@ -717,19 +717,19 @@ export default function ConversationPage() {
             {!initialLoading && !isLoading && (
               <div className="mt-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 w-5 h-5" />
                   <input
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder={tConv('searchMessages')}
-                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     disabled={isSearching}
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                       disabled={isSearching}
                     >
                       <X className="w-5 h-5" />
@@ -765,7 +765,7 @@ export default function ConversationPage() {
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="mt-4 text-gray-500">{t('loading') || '読み込み中...'}</p>
+                  <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loading') || '読み込み中...'}</p>
                 </div>
               </div>
             ) : (
@@ -778,8 +778,8 @@ export default function ConversationPage() {
                       disabled={isLoadingMore}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                         isLoadingMore
-                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
+                          ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
                       }`}
                     >
                       {isLoadingMore ? (
@@ -816,18 +816,18 @@ export default function ConversationPage() {
                   <div className="text-center py-12">
                     {searchQuery ? (
                       <>
-                        <Search className="mx-auto h-12 w-12 text-gray-400" />
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">
+                        <Search className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500" />
+                        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                           {tConv('noSearchResults')}
                         </h3>
-                        <p className="mt-2 text-gray-500">
+                        <p className="mt-2 text-gray-500 dark:text-gray-400">
                           {tConv('noSearchResultsMessage')}
                         </p>
                       </>
                     ) : (
                       <>
                         <svg
-                          className="mx-auto h-12 w-12 text-gray-400"
+                          className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -839,10 +839,10 @@ export default function ConversationPage() {
                             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                           />
                         </svg>
-                        <h3 className="mt-4 text-lg font-medium text-gray-900">
+                        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                           {tConv('noMessages')}
                         </h3>
-                        <p className="mt-2 text-gray-500">
+                        <p className="mt-2 text-gray-500 dark:text-gray-400">
                           {tConv('noMessagesMessage')}
                         </p>
                       </>
@@ -861,7 +861,7 @@ export default function ConversationPage() {
                     <div key={message.id}>
                       {showDateSeparator && (
                         <div className="text-center py-2">
-                          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
                             {formatDate(message.created_at)}
                           </span>
                         </div>
@@ -904,7 +904,7 @@ export default function ConversationPage() {
           </div>
 
           {/* Message form */}
-          <div className="border-t border-gray-200 bg-white py-4 flex-shrink-0">
+          <div className="border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-4 flex-shrink-0">
             <form onSubmit={handleSendMessage} className="space-y-2">
               {imagePreview && (
                 <ImageUploadPreview
@@ -919,7 +919,7 @@ export default function ConversationPage() {
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
                   placeholder={tConv('messagePlaceholder')}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   rows={1}
                   maxLength={5000}
                   disabled={isSending || uploadingImage}
@@ -942,7 +942,7 @@ export default function ConversationPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isSending || uploadingImage}
-                  className="px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                   title={tConv('attachImage')}
                 >
                   <ImageIcon className="w-4 h-4" />
