@@ -25,8 +25,19 @@ DATABASE_URL = (
 if "+asyncpg" in DATABASE_URL:
     DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 
-# Create engine
-engine = create_engine(DATABASE_URL)
+# Create engine with connection pool settings
+# These settings help prevent connection timeouts in Cloud Run environment
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=5,  # Number of connections to maintain in the pool
+    max_overflow=10,  # Maximum number of connections to allow beyond pool_size
+    pool_timeout=30,  # Seconds to wait before giving up on getting a connection from the pool
+    pool_recycle=3600,  # Recycle connections after 1 hour (prevent stale connections)
+    pool_pre_ping=True,  # Verify connections before using them (detect stale connections)
+    connect_args={
+        "connect_timeout": 10,  # PostgreSQL connection timeout in seconds
+    },
+)
 
 # Create async engine for fastapi-users (temporarily disabled)
 # async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")
