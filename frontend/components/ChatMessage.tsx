@@ -148,22 +148,6 @@ export default function ChatMessage({
           )}
         </div>
       </div>
-
-      {/* Delete button for own messages (alternative position) */}
-      {isOwnMessage && !isDeleted && onDelete && (
-        <button
-          onClick={() => onDelete(id)}
-          disabled={isDeleting}
-          className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
-          title={deleteMessageTitle}
-        >
-          {isDeleting ? (
-            <div className="w-4 h-4 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
-          ) : (
-            <Trash2 className="w-4 h-4" />
-          )}
-        </button>
-      )}
     </div>
   );
 }
