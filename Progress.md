@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-25（グループアバター機能実装完了、コメントいいね機能実装完了）
+## 最終更新日: 2025-11-27（本番環境GCS設定修正完了、データベースタイムアウト問題修正完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装中、本番環境稼働中
 
@@ -1892,6 +1892,76 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/components/AvatarUploadModal.tsx](frontend/components/AvatarUploadModal.tsx) - 画像クロッピングロジックのコメント追加
     - [frontend/lib/hooks/useDataLoader.ts](frontend/lib/hooks/useDataLoader.ts) - データローダーフックのコメント追加
 
+### 2025-11-27
+- **本番環境GCS設定の修正** ✅ 完了
+  - **問題**: iPhoneから本番環境にアクセスして画像をアップロードしようとすると、「画像アップロードサービスが設定されていません」というエラーが発生
+  - **原因**: `GOOGLE_APPLICATION_CREDENTIALS`がSecret Managerから参照されていたが、ファイルが存在しない
+  - **解決策**:
+    - Secret参照を削除（`--remove-secrets="GOOGLE_APPLICATION_CREDENTIALS"`）
+    - Cloud RunのデフォルトサービスアカウントにGCS権限を付与
+    - `GCS_BUCKET_NAME`と`GCS_PROJECT_ID`環境変数を確認・設定
+  - **実装ファイル**:
+    - `scripts/check-production-gcs-config.sh` - 設定確認用スクリプト
+    - `scripts/set-production-gcs-env.sh` - 環境変数設定用スクリプト
+    - `scripts/fix-production-gcs.sh` - 自動修正用スクリプト
+    - `docs/PRODUCTION_GCS_SETUP.md` - 詳細な設定ガイド
+    - `docs/MANUAL_GCS_FIX.md` - 手動修正手順
+
+- **本番環境データベースタイムアウト問題の修正** ✅ 完了
+  - **問題**: 本番環境でタイムラインのフィードが読めず、タイムアウトエラーが発生
+  - **原因**: データベース接続プールの設定が不足しており、SQLAlchemyの接続プールから接続を取得する際にタイムアウトが発生
+  - **解決策**:
+    - `backend/app/database.py`に接続プール設定を追加
+      - `pool_size=5`: プール内の接続数
+      - `max_overflow=10`: pool_sizeを超える最大接続数
+      - `pool_timeout=30`: プールから接続を取得する際のタイムアウト（秒）
+      - `pool_recycle=3600`: 接続を1時間後にリサイクル（古い接続を防ぐ）
+      - `pool_pre_ping=True`: 使用前に接続を検証（古い接続を検出）
+      - `connect_timeout=10`: PostgreSQL接続タイムアウト（秒）
+  - **効果**: タイムアウトエラーが解消され、フィードが正常に読み込めるようになった
+  - **実装ファイル**:
+    - `backend/app/database.py` - 接続プール設定追加
+    - `docs/PRODUCTION_DATABASE_TIMEOUT_FIX.md` - 詳細な修正手順とトラブルシューティングガイド
+
+- **ローディングアイコンの統一** ✅ 完了
+  - **実装内容**:
+    - すべてのコンポーネントで使用されているローディングスピナーを統一パターンに置き換え
+    - 通知・メッセージで使用している標準パターンに統一
+    - **統一パターン**:
+      - 標準サイズ: `w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin`
+      - 小さいサイズ: `w-5 h-5 border-4 border-[color] border-t-transparent rounded-full animate-spin`
+      - 大きいサイズ: `w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin`
+    - **修正ファイル数**: 27ファイル
+      - ページ: notifications, messages, groups, profile, posts, blocks, callback, register, diseases/add など
+      - コンポーネント: PostForm, EditPostModal, UserProfileEditForm, GroupSettingsModal, ChatMessage, AuthButton, HashtagSearch など
+  - **効果**:
+    - UIの一貫性が向上
+    - ユーザー体験の統一化
+    - メンテナンス性の向上
+  - **実装ファイル**:
+    - 27ファイルのローディングアイコンを統一
+
+- **CIビルドエラーの修正** ✅ 完了
+  - **TypeScriptエラーの修正**:
+    - `frontend/app/[locale]/messages/page.tsx`: `handleSearchGroups`関数の未定義エラーを修正
+      - グループ検索機能の実装
+      - `modalGroupSearchResults`状態変数の使用を修正
+    - `frontend/components/DiseaseForm.tsx`: `disease_id`プロパティの型エラーを修正
+      - `UserDiseaseUpdate`型では`disease_id`が存在しないため、`mode === 'add'`の条件チェックを追加
+    - `frontend/lib/utils/filterSettings.ts`: `sortBy`型に`'post_count'`を追加
+  - **ESLint警告の修正**:
+    - `frontend/app/[locale]/messages/[conversationId]/page.tsx`: `useEffect`の依存配列に`messages.length`を追加
+    - `frontend/app/[locale]/messages/page.tsx`: `useEffect`の依存配列に`messages.length`を追加
+  - **効果**:
+    - CI/CDパイプラインが正常に動作するようになった
+    - TypeScriptの型安全性が向上
+    - ESLint警告が解消され、コード品質が向上
+  - **実装ファイル**:
+    - [frontend/app/[locale]/messages/page.tsx](frontend/app/[locale]/messages/page.tsx) - グループ検索機能とESLint警告修正
+    - [frontend/app/[locale]/messages/[conversationId]/page.tsx](frontend/app/[locale]/messages/[conversationId]/page.tsx) - ESLint警告修正
+    - [frontend/components/DiseaseForm.tsx](frontend/components/DiseaseForm.tsx) - TypeScript型エラー修正
+    - [frontend/lib/utils/filterSettings.ts](frontend/lib/utils/filterSettings.ts) - 型定義修正
+
 ### 2025-11-25
 - **グループアバター機能の実装** ✅ 完了
   - **グループ設定でのアバター画像設定機能**:
@@ -2005,16 +2075,16 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+[最新] - refactor: Unify loading spinner icons across all components (2025-11-27)
+[最新] - fix: Resolve TypeScript and ESLint errors in CI build (2025-11-27)
+[最新] - docs: Update commit history in Progress.md (2025-11-27)
+[最新] - docs: Update Progress.md header and commit history (2025-11-25)
 [最新] - feat: Add group avatar functionality and improve UI (2025-11-25)
 [最新] - docs: Update Progress.md with group avatar and comment like features (2025-11-25)
-[最新] - docs: Update Progress.md header and commit history (2025-11-25)
 [最新] - Fix TODO items: Implement total counts and followers_only visibility check (2025-11-23)
 [最新] - Performance optimization: Image optimization and code splitting (2025-11-23)
 [最新] - Fix TypeScript type errors in test files (2025-11-23)
 [最新] - Fix .next directory permissions and build-manifest.json error (2025-11-23)
-2c2fcb8 - Fix useDataLoader tests - simplify and adjust expectations (2025-11-21)
-2c2fcb8 - Add unit tests for tokenManager and useDataLoader (2025-11-21)
-cb03d6b - Add performance measurement and monitoring (2025-11-21)
 8f51b16 - Improve error handling with detailed timeout logging (2025-11-21)
 aab0af4 - Optimize get_feed to eliminate N+1 queries (2025-11-21)
 d2b0a44 - fix: Fix missing imports in messages.py (2025-11-21)
@@ -2045,6 +2115,6 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-25（グループアバター機能実装完了、コメントいいね機能実装完了）
+**最終更新日**: 2025-11-27（本番環境GCS設定修正完了、データベースタイムアウト問題修正完了）
 **最終更新者**: Claude Code
-**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了、エラーハンドリング改善完了（翻訳キー追加、debugLog統一）、グループアバター機能実装完了、コメントいいね機能実装完了
+**ステータス**: ✅ 基本機能実装完了、本番環境稼働中、投稿機能拡張（ハッシュタグ・メンション・疾患別フィード・画像添付・GCS画像アップロード）実装完了、多言語対応拡充中、プロフィール公開範囲制御機能実装完了、自動テスト導入完了、ICD-10コード範囲検索・補完機能実装完了、投稿画像削除機能のバグ修正完了、画像削除機能のテスト追加完了、ダイレクトメッセージ機能（バックエンド）実装完了、ユーザープロフィールページの投稿表示機能実装完了、i18nロケールプレフィックス対応完了、CI/CDパイプライン最適化完了、グループチャット・検索機能実装完了、グループメッセージのリアルタイム配信改善完了、ユーザー検索機能改善完了、Web Push Notifications機能実装完了、ダイレクトメッセージ検索機能実装完了、デバッグログ整理完了、TypeScriptビルドエラー修正完了、バックエンドインポートエラー修正完了、get_feedのN+1クエリ最適化完了、エラーハンドリング改善完了、パフォーマンス測定機能追加完了、画像最適化（WebP・遅延読み込み）完了、コードスプリッティング最適化完了、TODO項目修正完了（totalカウント・followers_only可視性チェック）、コメント充実完了、統合テスト追加完了、エラーハンドリング改善完了（翻訳キー追加、debugLog統一）、グループアバター機能実装完了、コメントいいね機能実装完了、ローディングアイコン統一完了、CIビルドエラー修正完了、本番環境GCS設定修正完了、データベースタイムアウト問題修正完了
