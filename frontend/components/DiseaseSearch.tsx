@@ -330,7 +330,7 @@ export function DiseaseSearch({
         <button
           onClick={handleSearch}
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="px-6 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? t('searching') : t('search')}
         </button>
@@ -352,7 +352,7 @@ export function DiseaseSearch({
 
       {/* Advanced Search Options */}
       {showAdvanced && (
-        <div className="p-4 bg-gray-50 rounded-lg space-y-4">
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
           {/* Clear Filters Button */}
           <div className="flex justify-end">
             <button
@@ -385,7 +385,7 @@ export function DiseaseSearch({
                       setIcdCodeTo('');
                     }
                   }}
-                  className="w-4 h-4"
+                  className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
                 />
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('useRangeSearch')}
@@ -522,7 +522,7 @@ export function DiseaseSearch({
                       type="checkbox"
                       checked={selectedCategories.includes(category.id)}
                       onChange={() => toggleCategory(category.id)}
-                      className="mr-2"
+                      className="mr-2 w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
                     />
                     <span className="text-sm text-gray-900 dark:text-gray-100">{category.name}</span>
                   </label>

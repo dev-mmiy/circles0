@@ -93,6 +93,12 @@
       "noSearchResults": "No search results found",
       "noSearchResultsMessage": "No messages match your search. Try different keywords."
     },
+    "reactions": {
+      "addReaction": "Add reaction",
+      "usersWhoReacted": "Users who reacted",
+      "noReactions": "No reactions",
+      "errorAddingReaction": "Failed to add reaction"
+    },
     "backToConversations": "Back to conversations",
     "sendMessage": "Send Message",
     "newMessage": "New Message",

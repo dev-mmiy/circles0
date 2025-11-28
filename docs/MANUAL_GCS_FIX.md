@@ -119,3 +119,4 @@ gcloud logging read "resource.type=cloud_run_revision AND resource.labels.servic
   --freshness=10m
 ```
 
+

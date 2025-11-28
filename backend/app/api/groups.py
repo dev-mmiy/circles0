@@ -10,13 +10,15 @@ from sqlalchemy.orm import Session, joinedload
 
 from app.auth.dependencies import get_current_user
 from app.database import get_db
-from app.models.group import Group, GroupMember, GroupMessage
+from app.models.group import Group, GroupMember, GroupMessage, GroupMessageReaction
 from app.schemas.group import (
     AddMemberRequest,
     GroupCreate,
     GroupListResponse,
     GroupMessageCreate,
     GroupMessageListResponse,
+    GroupMessageReactionCreate,
+    GroupMessageReactionResponse,
     GroupMessageResponse,
     GroupResponse,
     GroupUpdate,
@@ -82,6 +84,62 @@ def _build_group_message_response(
             is_read = True
             read_at = read_record.read_at
 
+    # Build reactions list
+    reactions_data = []
+    try:
+        reactions_list = list(message.reactions) if hasattr(message, 'reactions') else []
+        for reaction in reactions_list:
+            reaction_user = reaction.user
+            user_data = None
+            if reaction_user:
+                user_data = {
+                    "id": reaction_user.id,
+                    "nickname": reaction_user.nickname,
+                    "username": reaction_user.username,
+                    "avatar_url": reaction_user.avatar_url,
+                }
+            reactions_data.append(
+                GroupMessageReactionResponse(
+                    id=reaction.id,
+                    message_id=reaction.message_id,
+                    user_id=reaction.user_id,
+                    reaction_type=reaction.reaction_type,
+                    created_at=reaction.created_at,
+                    user=user_data,
+                )
+            )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"[_build_group_message_response] Error accessing message.reactions: {e}")
+        # Fallback: query the database directly
+        reactions_query = (
+            db.query(GroupMessageReaction)
+            .options(joinedload(GroupMessageReaction.user))
+            .filter(GroupMessageReaction.message_id == message.id)
+            .all()
+        )
+        for reaction in reactions_query:
+            reaction_user = reaction.user
+            user_data = None
+            if reaction_user:
+                user_data = {
+                    "id": reaction_user.id,
+                    "nickname": reaction_user.nickname,
+                    "username": reaction_user.username,
+                    "avatar_url": reaction_user.avatar_url,
+                }
+            reactions_data.append(
+                GroupMessageReactionResponse(
+                    id=reaction.id,
+                    message_id=reaction.message_id,
+                    user_id=reaction.user_id,
+                    reaction_type=reaction.reaction_type,
+                    created_at=reaction.created_at,
+                    user=user_data,
+                )
+            )
+
     return GroupMessageResponse(
         id=message.id,
         group_id=message.group_id,
@@ -94,6 +152,7 @@ def _build_group_message_response(
         sender=sender_data,
         is_read=is_read,
         read_at=read_at,
+        reactions=reactions_data if reactions_data else None,
     )
 
 
@@ -544,6 +603,7 @@ async def send_group_message(
         .options(
             joinedload(GroupMessage.sender),
             joinedload(GroupMessage.reads),
+            joinedload(GroupMessage.reactions).joinedload(GroupMessageReaction.user),
         )
         .filter(GroupMessage.id == message.id)
         .first()
@@ -587,9 +647,23 @@ async def get_group_messages(
     # Get actual total count
     total = GroupService.count_group_messages(db, group_id, user_id)
 
+    # Load messages with reactions
+    messages_with_reactions = (
+        db.query(GroupMessage)
+        .options(
+            joinedload(GroupMessage.sender),
+            joinedload(GroupMessage.reads),
+            joinedload(GroupMessage.reactions).joinedload(GroupMessageReaction.user),
+        )
+        .filter(GroupMessage.id.in_([msg.id for msg in messages]))
+        .all()
+    )
+    # Create a map for quick lookup
+    message_map = {msg.id: msg for msg in messages_with_reactions}
+    # Build response using messages with reactions
     return GroupMessageListResponse(
         messages=[
-            _build_group_message_response(db, msg, user_id) for msg in messages
+            _build_group_message_response(db, message_map.get(msg.id, msg), user_id) for msg in messages
         ],
         total=total,
         skip=skip,
@@ -656,6 +730,302 @@ async def delete_group_message(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Message not found or not accessible",
         )
+
+
+# ========== Group Message Reaction Endpoints ==========
+
+
+@router.post(
+    "/{group_id}/messages/{message_id}/reactions",
+    response_model=GroupMessageReactionResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Add or update a reaction to a group message",
+)
+async def add_group_message_reaction(
+    group_id: UUID,
+    message_id: UUID,
+    reaction_data: GroupMessageReactionCreate,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Add or update a reaction to a group message.
+    
+    If the user has already reacted to the message, the reaction type will be updated.
+    If the same reaction type is sent, the reaction will be removed (toggle off).
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    # Check if user is a member of the group
+    member = (
+        db.query(GroupMember)
+        .filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id,
+            GroupMember.left_at.is_(None),
+        )
+        .first()
+    )
+    
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of the group",
+        )
+    
+    # Check if message exists and belongs to the group
+    message = (
+        db.query(GroupMessage)
+        .filter(
+            GroupMessage.id == message_id,
+            GroupMessage.group_id == group_id,
+        )
+        .first()
+    )
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found",
+        )
+    
+    # Check if user already reacted
+    existing_reaction = (
+        db.query(GroupMessageReaction)
+        .filter(
+            GroupMessageReaction.message_id == message_id,
+            GroupMessageReaction.user_id == user_id,
+        )
+        .first()
+    )
+    
+    if existing_reaction:
+        # If same reaction type, remove it (toggle off)
+        if existing_reaction.reaction_type == reaction_data.reaction_type:
+            db.delete(existing_reaction)
+            db.commit()
+            from fastapi import Response
+            return Response(status_code=status.HTTP_204_NO_CONTENT)
+        # Otherwise, update reaction type
+        existing_reaction.reaction_type = reaction_data.reaction_type
+        db.commit()
+        db.refresh(existing_reaction)
+        
+        # Load user for response
+        existing_reaction = (
+            db.query(GroupMessageReaction)
+            .options(joinedload(GroupMessageReaction.user))
+            .filter(GroupMessageReaction.id == existing_reaction.id)
+            .first()
+        )
+        
+        reaction_user = existing_reaction.user
+        user_data = None
+        if reaction_user:
+            user_data = {
+                "id": reaction_user.id,
+                "nickname": reaction_user.nickname,
+                "username": reaction_user.username,
+                "avatar_url": reaction_user.avatar_url,
+            }
+        
+        return GroupMessageReactionResponse(
+            id=existing_reaction.id,
+            message_id=existing_reaction.message_id,
+            user_id=existing_reaction.user_id,
+            reaction_type=existing_reaction.reaction_type,
+            created_at=existing_reaction.created_at,
+            user=user_data,
+        )
+    else:
+        # Create new reaction
+        new_reaction = GroupMessageReaction(
+            message_id=message_id,
+            user_id=user_id,
+            reaction_type=reaction_data.reaction_type,
+        )
+        db.add(new_reaction)
+        db.commit()
+        db.refresh(new_reaction)
+        
+        # Load user for response
+        new_reaction = (
+            db.query(GroupMessageReaction)
+            .options(joinedload(GroupMessageReaction.user))
+            .filter(GroupMessageReaction.id == new_reaction.id)
+            .first()
+        )
+        
+        reaction_user = new_reaction.user
+        user_data = None
+        if reaction_user:
+            user_data = {
+                "id": reaction_user.id,
+                "nickname": reaction_user.nickname,
+                "username": reaction_user.username,
+                "avatar_url": reaction_user.avatar_url,
+            }
+        
+        return GroupMessageReactionResponse(
+            id=new_reaction.id,
+            message_id=new_reaction.message_id,
+            user_id=new_reaction.user_id,
+            reaction_type=new_reaction.reaction_type,
+            created_at=new_reaction.created_at,
+            user=user_data,
+        )
+
+
+@router.delete(
+    "/{group_id}/messages/{message_id}/reactions",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Remove a reaction from a group message",
+)
+async def remove_group_message_reaction(
+    group_id: UUID,
+    message_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Remove a reaction from a group message.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    # Check if user is a member of the group
+    member = (
+        db.query(GroupMember)
+        .filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id,
+            GroupMember.left_at.is_(None),
+        )
+        .first()
+    )
+    
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of the group",
+        )
+    
+    # Check if message exists and belongs to the group
+    message = (
+        db.query(GroupMessage)
+        .filter(
+            GroupMessage.id == message_id,
+            GroupMessage.group_id == group_id,
+        )
+        .first()
+    )
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found",
+        )
+    
+    # Find and delete reaction
+    reaction = (
+        db.query(GroupMessageReaction)
+        .filter(
+            GroupMessageReaction.message_id == message_id,
+            GroupMessageReaction.user_id == user_id,
+        )
+        .first()
+    )
+    
+    if not reaction:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Reaction not found",
+        )
+    
+    db.delete(reaction)
+    db.commit()
+    return None
+
+
+@router.get(
+    "/{group_id}/messages/{message_id}/reactions",
+    response_model=List[GroupMessageReactionResponse],
+    summary="Get all reactions for a group message",
+)
+async def get_group_message_reactions(
+    group_id: UUID,
+    message_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get all reactions for a group message.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    # Check if user is a member of the group
+    member = (
+        db.query(GroupMember)
+        .filter(
+            GroupMember.group_id == group_id,
+            GroupMember.user_id == user_id,
+            GroupMember.left_at.is_(None),
+        )
+        .first()
+    )
+    
+    if not member:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You must be a member of the group",
+        )
+    
+    # Check if message exists and belongs to the group
+    message = (
+        db.query(GroupMessage)
+        .filter(
+            GroupMessage.id == message_id,
+            GroupMessage.group_id == group_id,
+        )
+        .first()
+    )
+    
+    if not message:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Message not found",
+        )
+    
+    # Get all reactions with user information
+    reactions = (
+        db.query(GroupMessageReaction)
+        .options(joinedload(GroupMessageReaction.user))
+        .filter(GroupMessageReaction.message_id == message_id)
+        .all()
+    )
+    
+    reactions_data = []
+    for reaction in reactions:
+        reaction_user = reaction.user
+        user_data = None
+        if reaction_user:
+            user_data = {
+                "id": reaction_user.id,
+                "nickname": reaction_user.nickname,
+                "username": reaction_user.username,
+                "avatar_url": reaction_user.avatar_url,
+            }
+        reactions_data.append(
+            GroupMessageReactionResponse(
+                id=reaction.id,
+                message_id=reaction.message_id,
+                user_id=reaction.user_id,
+                reaction_type=reaction.reaction_type,
+                created_at=reaction.created_at,
+                user=user_data,
+            )
+        )
+    
+    return reactions_data
 
 
 @router.get(

@@ -93,6 +93,12 @@
       "noSearchResults": "検索結果が見つかりませんでした",
       "noSearchResultsMessage": "検索条件に一致するメッセージが見つかりませんでした。別のキーワードで検索してください。"
     },
+    "reactions": {
+      "addReaction": "リアクションを追加",
+      "usersWhoReacted": "リアクションしたユーザー",
+      "noReactions": "リアクションがありません",
+      "errorAddingReaction": "リアクションの追加に失敗しました"
+    },
     "backToConversations": "会話一覧に戻る",
     "sendMessage": "メッセージを送る",
     "newMessage": "メッセージ",

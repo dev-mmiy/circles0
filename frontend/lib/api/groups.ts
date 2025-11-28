@@ -21,6 +21,15 @@ export interface GroupMember {
   user: GroupMemberInfo | null;
 }
 
+export interface GroupMessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+  user: GroupMemberInfo | null;
+}
+
 export interface GroupMessage {
   id: string;
   group_id: string;
@@ -33,6 +42,7 @@ export interface GroupMessage {
   sender: GroupMemberInfo | null;
   is_read: boolean;
   read_at: string | null;
+  reactions?: GroupMessageReaction[] | null;
 }
 
 export interface Group {
@@ -280,6 +290,63 @@ export async function getGroupUnreadCount(groupId: string): Promise<number> {
     `/api/v1/groups/${groupId}/unread-count`
   );
   return response.data.unread_count;
+}
+
+/**
+ * Add or update a reaction to a group message
+ */
+export async function addGroupMessageReaction(
+  groupId: string,
+  messageId: string,
+  data: CreateGroupMessageReactionData
+): Promise<GroupMessageReaction | null> {
+  try {
+    const response = await apiClient.post<GroupMessageReaction>(
+      `/api/v1/groups/${groupId}/messages/${messageId}/reactions`,
+      data
+    );
+    return response.data;
+  } catch (error: any) {
+    // 204 No Content means reaction was removed (toggle off)
+    if (error.response?.status === 204) {
+      return null;
+    }
+    // 422エラーの詳細をログに出力
+    if (error.response?.status === 422) {
+      debugLog.error('[addGroupMessageReaction] Validation error:', {
+        status: error.response.status,
+        data: error.response.data,
+        requestData: data,
+      });
+    }
+    debugLog.error('[addGroupMessageReaction] API error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remove a reaction from a group message
+ */
+export async function removeGroupMessageReaction(
+  groupId: string,
+  messageId: string
+): Promise<void> {
+  await apiClient.delete(
+    `/api/v1/groups/${groupId}/messages/${messageId}/reactions`
+  );
+}
+
+/**
+ * Get all reactions for a group message
+ */
+export async function getGroupMessageReactions(
+  groupId: string,
+  messageId: string
+): Promise<GroupMessageReaction[]> {
+  const response = await apiClient.get<GroupMessageReaction[]>(
+    `/api/v1/groups/${groupId}/messages/${messageId}/reactions`
+  );
+  return response.data;
 }
 
 

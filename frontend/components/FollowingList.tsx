@@ -1,10 +1,9 @@
 'use client';
 
-import { Link } from '@/i18n/routing';
-import Image from 'next/image';
 import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
+import UserListItem from './UserListItem';
 import { getFollowing, type FollowingResponse } from '@/lib/api/follows';
 import { useUser } from '@/contexts/UserContext';
 
@@ -47,7 +46,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-8">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <div className="w-8 h-8 border-4 border-blue-500 dark:border-blue-400 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -55,7 +54,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
   if (error) {
     return (
       <div className="text-center py-8">
-        <p className="text-red-600">{error}</p>
+        <p className="text-red-600 dark:text-red-400">{error}</p>
       </div>
     );
   }
@@ -63,7 +62,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
   if (following.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500">{t('noFollowing')}</p>
+        <p className="text-gray-500 dark:text-gray-400">{t('noFollowing')}</p>
       </div>
     );
   }
@@ -76,54 +75,13 @@ export default function FollowingList({ userId }: FollowingListProps) {
         const isCurrentUser = follow.following.id === currentUserId;
 
         return (
-          <div
+          <UserListItem
             key={follow.id}
-            className="flex items-center justify-between p-4 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
-          >
-            <Link
-              href={isCurrentUser ? '/profile/me' : `/profile/${follow.following.member_id}`}
-              className="flex items-center space-x-4 flex-1 min-w-0"
-            >
-              {/* Avatar */}
-              <div className="flex-shrink-0">
-                {follow.following.avatar_url ? (
-                  <Image
-                    src={follow.following.avatar_url}
-                    alt={follow.following.nickname}
-                    width={48}
-                    height={48}
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-lg">
-                      {follow.following.nickname.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* User info */}
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {follow.following.nickname}
-                </p>
-                {follow.following.username && (
-                  <p className="text-sm text-gray-500 truncate">
-                    @{follow.following.username}
-                  </p>
-                )}
-                {follow.following.bio && (
-                  <p className="text-sm text-gray-600 truncate mt-1">
-                    {follow.following.bio}
-                  </p>
-                )}
-              </div>
-            </Link>
-
-            {/* Follow button */}
-            {!isCurrentUser && (
-              <div className="ml-4">
+            user={follow.following}
+            currentUserId={currentUserId}
+            showBio={true}
+            actionButton={
+              !isCurrentUser ? (
                 <FollowButton
                   userId={follow.following.id}
                   initialIsFollowing={true}
@@ -134,9 +92,9 @@ export default function FollowingList({ userId }: FollowingListProps) {
                   }}
                   className="text-sm px-3 py-1.5"
                 />
-              </div>
-            )}
-          </div>
+              ) : undefined
+            }
+          />
         );
       })}
     </div>

@@ -141,3 +141,4 @@ echo "   - ログを確認: gcloud logging read \"resource.type=cloud_run_revisi
 echo "   - 詳細は docs/PRODUCTION_GCS_SETUP.md を参照してください"
 echo ""
 
+

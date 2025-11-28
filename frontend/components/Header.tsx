@@ -150,24 +150,34 @@ export default function Header() {
             <nav className="hidden md:flex items-center space-x-4">
               <Link
                 href="/feed"
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                  pathname.startsWith('/feed')
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
                 aria-label={t('feed')}
                 title={t('feed')}
               >
                 <Newspaper className="w-5 h-5" />
+                <span className="text-xs font-medium">{t('feed')}</span>
               </Link>
               <Link
                 href="/search"
-                className="p-2 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                  pathname.startsWith('/search')
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
                 aria-label={t('userSearch')}
                 title={t('userSearch')}
               >
                 <Search className="w-5 h-5" />
+                <span className="text-xs font-medium">{t('userSearch')}</span>
               </Link>
 
               <Link
                 href="/messages"
-                className={`p-2 rounded-lg transition-colors relative ${
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors relative ${
                   pathname.startsWith('/messages')
                     ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
                     : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
@@ -176,8 +186,9 @@ export default function Header() {
                 title={t('messages')}
               >
                 <MessageCircle className="w-5 h-5" />
+                <span className="text-xs font-medium">{t('messages')}</span>
                 {unreadMessageCount > 0 && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
+                  <span className="absolute top-0 right-0 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
                 )}
               </Link>
             </nav>

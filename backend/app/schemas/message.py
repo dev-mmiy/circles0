@@ -46,6 +46,7 @@ class MessageResponse(BaseModel):
     sender: Optional[MessageSender] = None
     is_read: bool = False
     read_at: Optional[datetime] = None
+    reactions: Optional[List["MessageReactionResponse"]] = None
 
     model_config = {"from_attributes": True}
 
@@ -138,4 +139,38 @@ class ConversationCreate(BaseModel):
     """Schema for creating a new conversation."""
 
     recipient_id: UUID = Field(..., description="ID of the conversation recipient")
+
+
+class MessageReactionCreate(BaseModel):
+    """Schema for creating a message reaction."""
+
+    reaction_type: str = Field(
+        default="like",
+        pattern="^(like|love|haha|wow|sad|angry|thumbs_up|thumbs_down|clap|fire|party|pray|heart_eyes|kiss|thinking|cool|ok_hand|victory|muscle|point_up|point_down|wave|handshake|fist_bump|rocket|star|trophy|medal|crown|gem|balloon|cake|gift|confetti|sparkles|rainbow)$",
+        description="Type of reaction (36 types available)"
+    )
+
+
+class MessageReactionResponse(BaseModel):
+    """Schema for message reaction responses."""
+
+    id: UUID
+    message_id: UUID
+    user_id: UUID
+    reaction_type: str
+    created_at: datetime
+    user: Optional[MessageSender] = None
+
+    model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value is None:
+            return None
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
 

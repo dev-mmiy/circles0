@@ -12,6 +12,15 @@ export interface MessageSender {
   avatar_url: string | null;
 }
 
+export interface MessageReaction {
+  id: string;
+  message_id: string;
+  user_id: string;
+  reaction_type: string;
+  created_at: string;
+  user: MessageSender | null;
+}
+
 export interface Message {
   id: string;
   conversation_id: string;
@@ -24,6 +33,7 @@ export interface Message {
   sender: MessageSender | null;
   is_read: boolean;
   read_at: string | null;
+  reactions?: MessageReaction[] | null;
 }
 
 export interface ConversationParticipant {
@@ -77,6 +87,10 @@ export interface MarkReadRequest {
 export interface MarkReadResponse {
   marked_count: number;
   message_ids: string[];
+}
+
+export interface CreateMessageReactionData {
+  reaction_type: string;
 }
 
 /**
@@ -323,6 +337,56 @@ export async function findOrCreateConversation(recipientId: string): Promise<str
   });
 
   return conversation.id;
+}
+
+/**
+ * Add or update a reaction to a message
+ */
+export async function addMessageReaction(
+  messageId: string,
+  data: CreateMessageReactionData
+): Promise<MessageReaction | null> {
+  try {
+    const response = await apiClient.post<MessageReaction>(
+      `/api/v1/messages/${messageId}/reactions`,
+      data
+    );
+    return response.data;
+  } catch (error: any) {
+    // 204 No Content means reaction was removed (toggle off)
+    if (error.response?.status === 204) {
+      return null;
+    }
+    // 422エラーの詳細をログに出力
+    if (error.response?.status === 422) {
+      debugLog.error('[addMessageReaction] Validation error:', {
+        status: error.response.status,
+        data: error.response.data,
+        requestData: data,
+      });
+    }
+    debugLog.error('[addMessageReaction] API error:', error);
+    throw error;
+  }
+}
+
+/**
+ * Remove a reaction from a message
+ */
+export async function removeMessageReaction(messageId: string): Promise<void> {
+  await apiClient.delete(`/api/v1/messages/${messageId}/reactions`);
+}
+
+/**
+ * Get all reactions for a message
+ */
+export async function getMessageReactions(
+  messageId: string
+): Promise<MessageReaction[]> {
+  const response = await apiClient.get<MessageReaction[]>(
+    `/api/v1/messages/${messageId}/reactions`
+  );
+  return response.data;
 }
 
 

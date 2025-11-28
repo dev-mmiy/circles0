@@ -5,7 +5,7 @@ Group Chat models for group messaging between multiple users.
 from datetime import datetime
 from uuid import uuid4
 
-from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text
+from sqlalchemy import Boolean, Column, DateTime, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
@@ -160,6 +160,11 @@ class GroupMessage(Base):
         back_populates="message",
         cascade="all, delete-orphan",
     )
+    reactions = relationship(
+        "GroupMessageReaction",
+        back_populates="message",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<GroupMessage {self.id} from {self.sender_id} in group {self.group_id}>"
@@ -196,5 +201,50 @@ class GroupMessageRead(Base):
     def __repr__(self):
         return f"<GroupMessageRead {self.id} - message {self.message_id} read by {self.reader_id}>"
 
+
+class GroupMessageReaction(Base):
+    """
+    Group message reaction model.
+
+    Tracks which users have reacted to which group messages.
+    Supports different reaction types (like, heart, etc.).
+    """
+
+    __tablename__ = "group_message_reactions"
+
+    id = Column(
+        PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
+    )
+    message_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("group_messages.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    user_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    reaction_type = Column(
+        String(20),
+        nullable=False,
+        default="like",
+        comment="36 reaction types: like, love, haha, wow, sad, angry, thumbs_up, thumbs_down, clap, fire, party, pray, heart_eyes, kiss, thinking, cool, ok_hand, victory, muscle, point_up, point_down, wave, handshake, fist_bump, rocket, star, trophy, medal, crown, gem, balloon, cake, gift, confetti, sparkles, rainbow",
+    )
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    message = relationship("GroupMessage", back_populates="reactions")
+    user = relationship("User", foreign_keys=[user_id])
+
+    # Ensure one user can only react once per message (but can change reaction type)
+    __table_args__ = (
+        UniqueConstraint("message_id", "user_id", name="uq_group_message_user_reaction"),
+    )
+
+    def __repr__(self):
+        return f"<GroupMessageReaction {self.id} - message {self.message_id} by {self.user_id} ({self.reaction_type})>"
 
 

@@ -17,6 +17,8 @@ import {
   sendGroupMessage,
   markGroupMessagesAsRead,
   deleteGroupMessage,
+  addGroupMessageReaction,
+  removeGroupMessageReaction,
   GroupMessage,
   Group,
   CreateGroupMessageData,
@@ -304,6 +306,83 @@ export default function GroupChatPage() {
   };
 
   // メッセージを削除
+  // Handle reaction
+  const handleReactionClick = async (messageId: string, reactionType: string) => {
+    try {
+      // 現在のメッセージのリアクション状態を確認
+      const currentMessage = messages.find(msg => msg.id === messageId);
+      const existingUserReaction = currentMessage?.reactions?.find(r => r.user_id === currentUser?.id);
+      const isSameReactionType = existingUserReaction?.reaction_type === reactionType;
+      
+      // 同じリアクションタイプの場合は、削除APIを呼び出す
+      if (isSameReactionType && existingUserReaction) {
+        try {
+          await removeGroupMessageReaction(groupId, messageId);
+          // 状態から削除
+          setMessages(prevMessages => 
+            prevMessages.map(msg => {
+              if (msg.id === messageId) {
+                return {
+                  ...msg,
+                  reactions: msg.reactions?.filter(r => r.user_id !== currentUser?.id) || null,
+                };
+              }
+              return msg;
+            })
+          );
+          return;
+        } catch (err) {
+          debugLog.error('Failed to remove reaction:', err);
+          // 削除に失敗した場合は、通常の追加処理を続行
+        }
+      }
+      
+      const updatedReaction = await addGroupMessageReaction(groupId, messageId, { reaction_type: reactionType });
+      
+      // Update message reactions in state
+      setMessages(prevMessages => 
+        prevMessages.map(msg => {
+          if (msg.id === messageId) {
+            // If reaction was removed (null), remove it from reactions
+            if (updatedReaction === null) {
+              return {
+                ...msg,
+                reactions: msg.reactions?.filter(r => r.user_id !== currentUser?.id) || null,
+              };
+            }
+            
+            // Otherwise, add or update reaction
+            const existingReactions = msg.reactions || [];
+            const existingIndex = existingReactions.findIndex(r => r.user_id === currentUser?.id);
+            
+            if (existingIndex >= 0) {
+              // Update existing reaction
+              const updated = [...existingReactions];
+              updated[existingIndex] = updatedReaction;
+              return { ...msg, reactions: updated };
+            } else {
+              // Add new reaction
+              return { ...msg, reactions: [...existingReactions, updatedReaction] };
+            }
+          }
+          return msg;
+        })
+      );
+    } catch (err: any) {
+      debugLog.error('Failed to add reaction:', err);
+      // 422エラーの場合は詳細を表示
+      if (err.response?.status === 422) {
+        const errorDetail = err.response?.data?.detail;
+        const errorMessage = Array.isArray(errorDetail) 
+          ? errorDetail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
+          : errorDetail || 'Validation error';
+        alert(`${tChat('errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`);
+      } else {
+        alert(tChat('errorAddingReaction') || 'Failed to add reaction');
+      }
+    }
+  };
+
   const handleDeleteMessage = async (messageId: string) => {
     try {
       // 認証トークンを設定
@@ -511,6 +590,9 @@ export default function GroupChatPage() {
                     deleteMessageTitle={tChat('deleteMessage')}
                     deletedMessageText={tChat('deletedMessage')}
                     priority={index >= messages.length - 3}
+                    reactions={message.reactions || []}
+                    currentUserId={currentUser?.id}
+                    onReactionClick={(reactionType) => handleReactionClick(message.id, reactionType)}
                   />
                 </div>
               );

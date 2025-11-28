@@ -125,6 +125,8 @@ export default function MessagesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<UserPublicProfile[]>([]);
   const [modalGroupSearchResults, setModalGroupSearchResults] = useState<Group[]>([]);
+  const [userGroupsList, setUserGroupsList] = useState<Group[]>([]);
+  const [isLoadingUserGroups, setIsLoadingUserGroups] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
   
@@ -146,6 +148,30 @@ export default function MessagesPage() {
   useEffect(() => {
     currentUserRef.current = currentUser;
   }, [currentUser]);
+
+  // Load user's groups function
+  const loadUserGroups = useCallback(async () => {
+    setIsLoadingUserGroups(true);
+    try {
+      const groupsResponse = await getGroups(0, 50);
+      setUserGroupsList(groupsResponse.groups || []);
+    } catch (err) {
+      debugLog.error('Failed to load user groups:', err);
+      setUserGroupsList([]);
+    } finally {
+      setIsLoadingUserGroups(false);
+    }
+  }, []);
+
+  // Load user's groups when group tab is selected
+  useEffect(() => {
+    if (showNewMessageModal && modalTab === 'group' && !searchQuery.trim()) {
+      loadUserGroups();
+    } else if (!showNewMessageModal || modalTab !== 'group') {
+      // Clear groups list when modal is closed or tab changes
+      setUserGroupsList([]);
+    }
+  }, [showNewMessageModal, modalTab, searchQuery, loadUserGroups]);
 
   // リアルタイムメッセージ更新（会話とグループの両方に対応）
   const handleNewMessage = useCallback((messageEvent: MessageEvent) => {
@@ -244,6 +270,10 @@ export default function MessagesPage() {
   const handleSearchGroups = async () => {
     if (!searchQuery.trim()) {
       setModalGroupSearchResults([]);
+      // Reload user's groups when search is cleared
+      if (modalTab === 'group') {
+        loadUserGroups();
+      }
       return;
     }
 
@@ -748,6 +778,8 @@ export default function MessagesPage() {
                 setShowNewMessageModal(false);
                 setSearchQuery('');
                 setSearchResults([]);
+                setModalGroupSearchResults([]);
+                setUserGroupsList([]);
               }}
             />
 
@@ -762,6 +794,7 @@ export default function MessagesPage() {
                       setSearchQuery('');
                       setSearchResults([]);
                       setModalGroupSearchResults([]);
+                      setUserGroupsList([]);
                       setModalTab('user');
                     }}
                     className="text-gray-400 dark:text-gray-500 hover:text-gray-500 dark:hover:text-gray-300"
@@ -777,6 +810,7 @@ export default function MessagesPage() {
                       setModalTab('user');
                       setSearchQuery('');
                       setSearchResults([]);
+                      setUserGroupsList([]);
                     }}
                     className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
                       modalTab === 'user'
@@ -791,6 +825,10 @@ export default function MessagesPage() {
                       setModalTab('group');
                       setSearchQuery('');
                       setModalGroupSearchResults([]);
+                      // Load user's groups when switching to group tab
+                      if (!searchQuery.trim()) {
+                        loadUserGroups();
+                      }
                     }}
                     className={`flex-1 px-4 py-2 text-sm font-medium text-center border-b-2 transition-colors ${
                       modalTab === 'group'
@@ -811,7 +849,14 @@ export default function MessagesPage() {
                     <input
                       type="text"
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onChange={(e) => {
+                        const query = e.target.value;
+                        setSearchQuery(query);
+                        // Clear user groups list when starting to search
+                        if (modalTab === 'group' && query.trim()) {
+                          setUserGroupsList([]);
+                        }
+                      }}
                       onKeyPress={(e) => {
                         if (e.key === 'Enter') {
                           e.preventDefault();
@@ -938,9 +983,91 @@ export default function MessagesPage() {
                   </div>
                 )}
 
-                {modalTab === 'group' && modalGroupSearchResults.length > 0 && (
+                {/* User's groups list (shown when group tab is selected and not searching) */}
+                {modalTab === 'group' && !searchQuery.trim() && (
+                  <div className="max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
+                    {isLoadingUserGroups ? (
+                      <div className="py-8 text-center">
+                        <div className="flex justify-center items-center">
+                          <svg
+                            className="animate-spin h-6 w-6 text-blue-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        </div>
+                        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">{t('loading')}</p>
+                      </div>
+                    ) : userGroupsList.length > 0 ? (
+                      <div className="py-2">
+                        <div className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                          {t('groups')}
+                        </div>
+                        {userGroupsList.map((group) => (
+                          <button
+                            key={group.id}
+                            onClick={() => {
+                              router.push(`/groups/${group.id}`);
+                              setShowNewMessageModal(false);
+                              setSearchQuery('');
+                              setModalGroupSearchResults([]);
+                              setUserGroupsList([]);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                          >
+                            {group.avatar_url ? (
+                              <Image
+                                src={group.avatar_url}
+                                alt={group.name}
+                                width={40}
+                                height={40}
+                                className="rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                                <span className="text-blue-600 dark:text-blue-300 font-medium">
+                                  {group.name[0]?.toUpperCase() || 'G'}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex-1 text-left">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{group.name}</p>
+                              {group.description && (
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{group.description}</p>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center text-gray-500 dark:text-gray-400">
+                        <p className="text-sm">{t('noGroupsFound')}</p>
+                        <p className="text-xs mt-1">{t('createGroup')}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Group search results */}
+                {modalTab === 'group' && searchQuery.trim() && modalGroupSearchResults.length > 0 && (
                   <div className="max-h-96 overflow-y-auto border-t border-gray-200 dark:border-gray-700">
                     <div className="py-2">
+                      <div className="px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700">
+                        {t('searchResults')}
+                      </div>
                       {modalGroupSearchResults.map((group) => (
                         <button
                           key={group.id}
@@ -949,14 +1076,25 @@ export default function MessagesPage() {
                             setShowNewMessageModal(false);
                             setSearchQuery('');
                             setModalGroupSearchResults([]);
+                            setUserGroupsList([]);
                           }}
                           className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                         >
-                          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                            <span className="text-blue-600 dark:text-blue-300 font-medium">
-                              {group.name[0]?.toUpperCase() || 'G'}
-                            </span>
-                          </div>
+                          {group.avatar_url ? (
+                            <Image
+                              src={group.avatar_url}
+                              alt={group.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
+                              <span className="text-blue-600 dark:text-blue-300 font-medium">
+                                {group.name[0]?.toUpperCase() || 'G'}
+                              </span>
+                            </div>
+                          )}
                           <div className="flex-1 text-left">
                             <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{group.name}</p>
                             {group.description && (
@@ -976,8 +1114,8 @@ export default function MessagesPage() {
                 )}
 
                 {searchQuery && modalTab === 'group' && modalGroupSearchResults.length === 0 && !isSearching && (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <p>{t('noGroupsFound')}</p>
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-sm">{t('noGroupsFound')}</p>
                   </div>
                 )}
               </div>

@@ -16,10 +16,10 @@ from .disease import (
     UserDisease,
 )
 from .follow import Follow
-from .group import Group, GroupMember, GroupMessage, GroupMessageRead
+from .group import Group, GroupMember, GroupMessage, GroupMessageRead, GroupMessageReaction
 from .hashtag import Hashtag, PostHashtag
 from .mention import CommentMention, PostMention
-from .message import Conversation, Message, MessageRead
+from .message import Conversation, Message, MessageRead, MessageReaction
 from .notification import Notification, NotificationType
 from .post import Post, PostComment, PostCommentLike, PostImage, PostLike
 from .push_subscription import PushSubscription
@@ -54,9 +54,11 @@ __all__ = [
     "Conversation",
     "Message",
     "MessageRead",
+    "MessageReaction",
     "Group",
     "GroupMember",
     "GroupMessage",
     "GroupMessageRead",
+    "GroupMessageReaction",
     "PushSubscription",
 ]

@@ -108,3 +108,4 @@ echo "4. リアルタイムログを監視:"
 echo "   gcloud logging tail \"resource.type=cloud_run_revision AND resource.labels.service_name=$SERVICE_NAME\" --project=$PROJECT_ID"
 echo ""
 
+

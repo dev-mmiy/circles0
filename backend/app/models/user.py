@@ -178,6 +178,10 @@ class User(Base):
         back_populates="sender",
         cascade="all, delete-orphan",
     )
+    # Message reactions by this user
+    message_reactions = relationship(
+        "MessageReaction", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Group relationships
     # Groups created by this user
@@ -200,6 +204,10 @@ class User(Base):
         foreign_keys="GroupMessage.sender_id",
         back_populates="sender",
         cascade="all, delete-orphan",
+    )
+    # Group message reactions by this user
+    group_message_reactions = relationship(
+        "GroupMessageReaction", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Push subscriptions for Web Push notifications
