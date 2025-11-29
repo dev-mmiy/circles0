@@ -571,7 +571,12 @@ class UserService:
         Raises:
             HTTPException: If profile is not visible
         """
-        is_own_profile = current_user and current_user.get("sub") == user.auth0_id
+        # Check if this is the user's own profile
+        is_own_profile = False
+        if current_user and user.auth0_id:
+            current_user_sub = current_user.get("sub")
+            if current_user_sub:
+                is_own_profile = current_user_sub == user.auth0_id
 
         # Check if blocked (if db is provided and current_user exists)
         if db and current_user and not is_own_profile:
