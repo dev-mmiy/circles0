@@ -2,36 +2,63 @@
 
 疾患を持つユーザー同士のコミュニティサイト
 
+## 概要
+
+Disease Community Platformは、同じ疾患を持つユーザー同士が情報を共有し、コミュニティを形成できるプラットフォームです。投稿・コメント、メッセージング、グループチャットなどの機能を提供し、ユーザー同士のつながりを支援します。
+
+## 主な機能
+
+- ✅ **認証・ユーザー管理**: Auth0によるOAuth2.0認証、ユーザープロフィール管理
+- ✅ **投稿・フィード**: テキスト投稿、画像添付（最大5枚）、ハッシュタグ、メンション機能
+- ✅ **コメント・リアクション**: 投稿へのコメント、返信、いいね機能
+- ✅ **フォロー・フォロワー**: ユーザー間のフォロー関係、相互フォロー表示
+- ✅ **通知システム**: リアルタイム通知（SSE）、Web Push通知
+- ✅ **メッセージング**: 1対1のダイレクトメッセージ、グループチャット
+- ✅ **検索機能**: ユーザー検索、疾患検索、ハッシュタグ検索
+- ✅ **国際化対応**: 日本語・英語の多言語対応（next-intl）
+- ✅ **プロフィール公開範囲制御**: 詳細なプライバシー設定
+
 ## プロジェクト構成
 
 ```
-disease-community/
+circles0/
 ├── backend/                 # FastAPI バックエンド
-├── frontend/               # Next.js フロントエンド
+├── frontend/               # Next.js 14 フロントエンド
 ├── infrastructure/         # インフラストラクチャ設定
 ├── .github/               # GitHub Actions CI/CD
 ├── docker-compose.yml     # ローカル開発用
+├── Progress.md            # 開発進捗記録
 └── README.md
 ```
 
 ## 技術スタック
 
+### フロントエンド
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **認証**: Auth0 React SDK
+- **状態管理**: React Context API
+- **国際化**: next-intl v3.x
+- **HTTP クライアント**: Axios
+- **Deployment**: GCP Cloud Run
+
 ### バックエンド
 - **Framework**: FastAPI
 - **Language**: Python 3.11
-- **Database**: PostgreSQL
+- **ORM**: SQLAlchemy
+- **Database**: PostgreSQL 15
+- **マイグレーション**: Alembic
+- **認証**: Auth0 (JWT検証)
+- **リアルタイム**: Server-Sent Events (SSE)
 - **Deployment**: GCP Cloud Run
 
-### フロントエンド
-- **Framework**: Next.js 14
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **Deployment**: Vercel
-
-### CI/CD
+### インフラ
+- **コンテナ**: Docker / Docker Compose
 - **CI/CD**: GitHub Actions
 - **Container Registry**: Google Container Registry
 - **Cloud Provider**: Google Cloud Platform
+- **Storage**: Google Cloud Storage (画像アップロード)
 
 ## 開発環境セットアップ
 
@@ -87,36 +114,56 @@ npm run dev
 ### アクセスURL
 - **フロントエンド**: http://localhost:3000
 - **バックエンドAPI**: http://localhost:8000
-- **API ドキュメント**: http://localhost:8000/docs (開発環境のみ)
+- **API ドキュメント**: http://localhost:8000/docs
+
+**注意**: フロントエンドは多言語対応のため、URLにロケールプレフィックスが含まれます。
+- 日本語: http://localhost:3000/ja
+- 英語: http://localhost:3000/en
+- ルートアクセス: http://localhost:3000/ → `/ja`に自動リダイレクト
 
 ## デプロイメント
 
-### 環境
-- **開発環境**: `https://disease-community-api-dev-asia-northeast1-disease-community-platform.a.run.app`
-- **本番環境**: `https://disease-community-api-asia-northeast1-disease-community-platform.a.run.app`
+### 本番環境
+- **Frontend**: https://disease-community-frontend-508246122017.asia-northeast1.run.app
+- **Backend API**: https://disease-community-api-508246122017.asia-northeast1.run.app
+- **API Docs**: https://disease-community-api-508246122017.asia-northeast1.run.app/docs
 
 ### 自動デプロイ（GitHub Actions）
-- **develop ブランチ**: 開発環境に自動デプロイ
 - **main ブランチ**: 本番環境に自動デプロイ
+- CI/CDパイプラインで自動テスト、ビルド、デプロイを実行
 
 ### 手動デプロイ
 ```bash
-# 開発環境
-./scripts/deploy.sh dev all
-
 # 本番環境
 ./scripts/deploy.sh prod all
 
 # 個別サービス
-./scripts/deploy.sh dev backend
+./scripts/deploy.sh prod backend
 ./scripts/deploy.sh prod frontend
 ```
 
 ### 必要な環境変数
 GitHub Secretsに以下を設定：
 - `GCP_SA_KEY`: Google Cloud サービスアカウントキー
-- `DATABASE_URL_DEV`: 開発環境データベースURL
 - `DATABASE_URL_PROD`: 本番環境データベースURL
+- `AUTH0_DOMAIN`: Auth0ドメイン
+- `AUTH0_CLIENT_ID`: Auth0クライアントID
+- `AUTH0_CLIENT_SECRET`: Auth0クライアントシークレット
+- `GCS_BUCKET_NAME`: Google Cloud Storageバケット名
+- `VAPID_PRIVATE_KEY`: Web Push通知用VAPID秘密鍵
+- `VAPID_PUBLIC_KEY`: Web Push通知用VAPID公開鍵
+
+## 開発ドキュメント
+
+- [Progress.md](Progress.md) - 詳細な開発進捗記録
+- [INTERNATIONALIZATION.md](INTERNATIONALIZATION.md) - 国際化実装ガイド
+
+## リンク
+
+- **GitHub Repository**: https://github.com/dev-mmiy/circles0
+- **GitHub Actions**: https://github.com/dev-mmiy/circles0/actions
+- **Auth0 Dashboard**: https://manage.auth0.com
+- **GCP Console**: https://console.cloud.google.com/run?project=circles-202510
 
 ## ライセンス
 
