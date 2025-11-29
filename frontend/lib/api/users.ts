@@ -191,6 +191,10 @@ export interface UserPublicProfile {
   bio?: string;
   avatar_url?: string;
   country?: string;
+  date_of_birth?: string;
+  gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say';
+  language?: string;
+  preferred_language?: string;
   created_at: string;
   diseases: UserDisease[];
   post_count?: number; // Number of posts in feed

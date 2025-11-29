@@ -296,7 +296,7 @@ export default function MessageReactions({
                   ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 ring-2 ring-blue-400 dark:ring-blue-600'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
-              title={`${REACTION_EMOJI_MAP[reactionType] || '👍'} ${typeReactions.length}`}
+              title={`${REACTION_EMOJI_MAP[reactionType] || '👍'} ${t(`types.${reactionType}` as any) || reactionType} ${typeReactions.length}`}
             >
               <span className="text-base">{REACTION_EMOJI_MAP[reactionType] || '👍'}</span>
               {typeReactions.length > 1 && (
@@ -349,7 +349,7 @@ export default function MessageReactions({
                         className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
                           isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
                         }`}
-                        title={type}
+                        title={t(`types.${type}` as any) || type}
                       >
                         <span className="text-2xl">{REACTION_EMOJI_MAP[type]}</span>
                       </button>
@@ -376,7 +376,7 @@ export default function MessageReactions({
                         className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
                           isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
                         } ${isQuickReaction ? 'opacity-60' : ''}`}
-                        title={type}
+                        title={t(`types.${type}` as any) || type}
                       >
                         <span className="text-xl">{REACTION_EMOJI_MAP[type]}</span>
                       </button>

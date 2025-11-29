@@ -23,6 +23,7 @@ class UserFieldVisibilityService:
         "avatar_url": "public",
         "country": "public",
         "language": "public",
+        "preferred_language": "public",
         "username": "public",
         "online_status": "private",
     }

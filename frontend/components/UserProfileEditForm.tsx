@@ -5,10 +5,9 @@
 
 'use client';
 
-import React, { useState, FormEvent, useEffect } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
+import React, { useState, FormEvent } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { UserProfile, UserProfileUpdate, getFieldVisibilities, setFieldVisibility, AllFieldVisibilityResponse } from '@/lib/api/users';
+import { UserProfile, UserProfileUpdate } from '@/lib/api/users';
 import { COUNTRIES, getCountryName } from '@/lib/utils/countries';
 import { debugLog } from '@/lib/utils/debug';
 
@@ -19,7 +18,6 @@ interface UserProfileEditFormProps {
 }
 
 export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditFormProps) {
-  const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('userProfileEdit');
   const locale = useLocale();
   const [formData, setFormData] = useState<UserProfileUpdate>({
@@ -41,26 +39,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fieldVisibilities, setFieldVisibilities] = useState<Record<string, string>>({});
-  const [loadingVisibilities, setLoadingVisibilities] = useState(true);
-  const [updatingVisibility, setUpdatingVisibility] = useState<string | null>(null);
-
-  // Load field visibilities on mount
-  useEffect(() => {
-    const loadFieldVisibilities = async () => {
-      try {
-        const accessToken = await getAccessTokenSilently();
-        const response = await getFieldVisibilities(accessToken);
-        setFieldVisibilities(response.field_visibilities);
-      } catch (err) {
-        debugLog.error('Failed to load field visibilities:', err);
-      } finally {
-        setLoadingVisibilities(false);
-      }
-    };
-
-    loadFieldVisibilities();
-  }, [getAccessTokenSilently]);
 
   // Handle input changes
   const handleChange = (
@@ -73,50 +51,6 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value || undefined }));
-    }
-  };
-
-  // Handle preset selection
-  const handlePresetSelect = async (preset: 'public' | 'limited' | 'private' | 'same_disease_only') => {
-    try {
-      const accessToken = await getAccessTokenSilently();
-      
-      // Update profile visibility
-      let profileVisibility: 'public' | 'limited' | 'private' = 'limited';
-      if (preset === 'public') {
-        profileVisibility = 'public';
-      } else if (preset === 'private') {
-        profileVisibility = 'private';
-      } else {
-        profileVisibility = 'limited';
-      }
-      
-      setFormData(prev => ({ ...prev, profile_visibility: profileVisibility }));
-      
-      // Update field visibilities based on preset
-      const fieldVisibilityMap: Record<string, 'public' | 'limited' | 'private' | 'same_disease_only'> = {
-        username: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        bio: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        country: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        date_of_birth: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        gender: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        email: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        online_status: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-      };
-      
-      // Update all field visibilities
-      const updates = Object.entries(fieldVisibilityMap).map(([field, visibility]) =>
-        setFieldVisibility(accessToken, field, visibility)
-      );
-      
-      await Promise.all(updates);
-      
-      // Update local state
-      setFieldVisibilities(prev => ({ ...prev, ...fieldVisibilityMap }));
-    } catch (err) {
-      debugLog.error('Failed to apply preset:', err);
-      setError(err instanceof Error ? err.message : t('visibilityPresets.applyFailed'));
     }
   };
 
@@ -317,20 +251,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               <option value="prefer_not_to_say">{t('gender.preferNotToSay')}</option>
             </select>
           </div>
-        </div>
-      </div>
 
-      {/* Preferences */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.preferences')}</h3>
-
-        <div className="space-y-4">
           {/* Preferred Language */}
-          <div>
-            <label
-              htmlFor="preferred_language"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
+          <div className="col-span-2">
+            <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('fields.preferredLanguage')}
             </label>
             <select
@@ -347,51 +271,17 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               <option value="de">{t('languages.de')}</option>
             </select>
           </div>
+        </div>
+      </div>
 
-          {/* Profile Visibility Presets */}
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('visibilityPresets.title')}
-            </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('visibilityPresets.description')}</p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => handlePresetSelect('public')}
-                className="px-4 py-2 border-2 border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium"
-              >
-                {t('visibilityPresets.public')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePresetSelect('limited')}
-                className="px-4 py-2 border-2 border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors text-sm font-medium"
-              >
-                {t('visibilityPresets.limited')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePresetSelect('same_disease_only')}
-                className="px-4 py-2 border-2 border-green-200 dark:border-green-700 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/50 transition-colors text-sm font-medium"
-              >
-                {t('visibilityPresets.sameDiseaseOnly')}
-              </button>
-              <button
-                type="button"
-                onClick={() => handlePresetSelect('private')}
-                className="px-4 py-2 border-2 border-red-200 dark:border-red-700 bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-colors text-sm font-medium"
-              >
-                {t('visibilityPresets.private')}
-              </button>
-            </div>
-          </div>
+      {/* Privacy Settings */}
+      <div className="mb-8">
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.preferences')}</h3>
 
+        <div className="space-y-4">
           {/* Profile Visibility */}
           <div>
-            <label
-              htmlFor="profile_visibility"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-            >
+            <label htmlFor="profile_visibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
               {t('fields.profileVisibility')}
             </label>
             <select
@@ -407,61 +297,36 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
             </select>
           </div>
 
+          {/* Show Email */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="show_email"
+              name="show_email"
+              checked={formData.show_email || false}
+              onChange={handleChange}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label htmlFor="show_email" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('privacy.showEmail')}
+            </label>
+          </div>
+
+          {/* Show Online Status */}
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="show_online_status"
+              name="show_online_status"
+              checked={formData.show_online_status || false}
+              onChange={handleChange}
+              className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <label htmlFor="show_online_status" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('privacy.showOnlineStatus')}
+            </label>
+          </div>
         </div>
-      </div>
-
-      {/* Field-Level Visibility Settings */}
-      <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.fieldVisibility')}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">{t('fieldVisibility.description')}</p>
-
-        {loadingVisibilities ? (
-          <div className="text-center py-4">
-            <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{t('fieldVisibility.loading')}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {[
-              { field: 'username', label: t('fields.username') },
-              { field: 'bio', label: t('fields.bio') },
-              { field: 'country', label: t('fields.country') },
-              { field: 'date_of_birth', label: t('fields.dateOfBirth') },
-              { field: 'gender', label: t('fields.gender') },
-              { field: 'language', label: t('fields.language') },
-              { field: 'email', label: t('fields.email') },
-              { field: 'online_status', label: t('fields.onlineStatus') },
-            ].map(({ field, label }) => (
-              <div key={field} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
-                <select
-                  value={fieldVisibilities[field] || 'limited'}
-                  onChange={async (e) => {
-                    const newVisibility = e.target.value as 'public' | 'limited' | 'private' | 'same_disease_only';
-                    setUpdatingVisibility(field);
-                    try {
-                      const accessToken = await getAccessTokenSilently();
-                      await setFieldVisibility(accessToken, field, newVisibility);
-                      setFieldVisibilities(prev => ({ ...prev, [field]: newVisibility }));
-                    } catch (err) {
-                      debugLog.error(`Failed to update visibility for ${field}:`, err);
-                      setError(err instanceof Error ? err.message : t('fieldVisibility.updateFailed'));
-                    } finally {
-                      setUpdatingVisibility(null);
-                    }
-                  }}
-                  disabled={updatingVisibility === field}
-                  className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 bg-white dark:bg-gray-600 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="public">{t('fieldVisibility.options.public')}</option>
-                  <option value="limited">{t('fieldVisibility.options.limited')}</option>
-                  <option value="private">{t('fieldVisibility.options.private')}</option>
-                  <option value="same_disease_only">{t('fieldVisibility.options.sameDiseaseOnly')}</option>
-                </select>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
 
       {/* Form Actions */}

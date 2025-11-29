@@ -11,6 +11,7 @@ import { useTranslations } from 'next-intl';
 import { useLocale } from 'next-intl';
 import { useAuth0 } from '@auth0/auth0-react';
 import { Link } from '@/i18n/routing';
+import { ExternalLink, Pencil } from 'lucide-react';
 import { UserProfile, UserDiseaseDetailed } from '@/lib/api/users';
 import { getCountryName } from '@/lib/utils/countries';
 import { DiseaseList } from './DiseaseList';
@@ -145,12 +146,22 @@ export function UserProfileCard({
             <p className="text-sm text-blue-200 dark:text-blue-100 mt-1">{t('memberId')}: {user.member_id}</p>
           </div>
           {onEdit && (
-            <button
-              onClick={onEdit}
-              className="px-4 py-2 bg-white dark:bg-gray-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-200 transition-colors font-medium"
-            >
-              {t('editProfile')}
-            </button>
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/profile/${user.id}`}
+                className="p-2 bg-white dark:bg-gray-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-200 transition-colors"
+                title={t('viewPublicProfile')}
+              >
+                <ExternalLink className="w-5 h-5" />
+              </Link>
+              <button
+                onClick={onEdit}
+                className="p-2 bg-white dark:bg-gray-100 text-blue-600 dark:text-blue-700 rounded-lg hover:bg-blue-50 dark:hover:bg-gray-200 transition-colors"
+                title={t('editProfile')}
+              >
+                <Pencil className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
       </div>

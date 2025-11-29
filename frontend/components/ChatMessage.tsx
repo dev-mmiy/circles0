@@ -6,6 +6,8 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { Trash2, SmilePlus } from 'lucide-react';
+import { Link } from '@/i18n/routing';
+import { useTranslations } from 'next-intl';
 import Avatar from './Avatar';
 import MessageImage from './MessageImage';
 import MessageReactions from './MessageReactions';
@@ -73,6 +75,7 @@ export default function ChatMessage({
   currentUserId,
   onReactionClick,
 }: ChatMessageProps) {
+  const t = useTranslations('messages.reactions');
   const [showReactionButton, setShowReactionButton] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const messageRef = useRef<HTMLDivElement>(null);
@@ -119,13 +122,25 @@ export default function ChatMessage({
       {/* Avatar */}
       {showAvatar && (
         <div className="flex-shrink-0 relative" style={{ width: avatarSize, height: avatarSize }}>
-          <Avatar
-            avatarUrl={sender?.avatar_url}
-            nickname={sender?.nickname}
-            size={avatarSize}
-            className="rounded-full object-cover"
-            alt={sender?.nickname || 'Avatar'}
-          />
+          {!isOwnMessage && sender?.id ? (
+            <Link href={`/profile/${sender.id}`} className="block">
+              <Avatar
+                avatarUrl={sender?.avatar_url}
+                nickname={sender?.nickname}
+                size={avatarSize}
+                className="rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
+                alt={sender?.nickname || 'Avatar'}
+              />
+            </Link>
+          ) : (
+            <Avatar
+              avatarUrl={sender?.avatar_url}
+              nickname={sender?.nickname}
+              size={avatarSize}
+              className="rounded-full object-cover"
+              alt={sender?.nickname || 'Avatar'}
+            />
+          )}
         </div>
       )}
 
@@ -186,7 +201,7 @@ export default function ChatMessage({
                   setShowReactionPicker(!showReactionPicker);
                 }}
                 className="w-8 h-8 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-300 dark:border-gray-600 shadow-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-800 transition-colors"
-                title="Add reaction"
+                title={t('addReaction')}
               >
                 <SmilePlus className="w-5 h-5 text-gray-500 dark:text-gray-400 stroke-[2.5]" style={{ fill: 'none' }} />
               </button>
@@ -225,7 +240,7 @@ export default function ChatMessage({
                           className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
                             isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
                           }`}
-                          title={type}
+                          title={t(`types.${type}` as any) || type}
                         >
                           <span className="text-2xl">{emojiMap[type]}</span>
                         </button>
@@ -261,7 +276,7 @@ export default function ChatMessage({
                           className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
                             isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
                           } ${isQuickReaction ? 'opacity-60' : ''}`}
-                          title={type}
+                          title={t(`types.${type}` as any) || type}
                         >
                           <span className="text-xl">{emojiMap[type]}</span>
                         </button>

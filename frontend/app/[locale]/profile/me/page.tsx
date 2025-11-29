@@ -13,6 +13,7 @@ import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
 import Header from '@/components/Header';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
+import { PrivacySettings } from '@/components/PrivacySettings';
 
 export default function MyProfilePage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -171,15 +172,24 @@ export default function MyProfilePage() {
           />
         </div>
 
-        {/* Blocked Users Link */}
+        {/* Privacy Settings */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">{t('privacySettings')}</h2>
-          <Link
-            href="/blocks"
-            className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
-          >
-            {t('viewBlockedUsers')}
-          </Link>
+          <PrivacySettings 
+            user={user} 
+            onProfileVisibilityUpdate={(visibility) => {
+              // Update user context when visibility changes
+              updateUserProfile({ profile_visibility: visibility });
+            }}
+          />
+          <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <Link
+              href="/blocks"
+              className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline"
+            >
+              {t('viewBlockedUsers')}
+            </Link>
+          </div>
         </div>
 
         {/* Theme Settings */}

@@ -478,6 +478,7 @@ async def get_user_public_profile(
     }
 
     # Check visibility for each field
+    # Always include fields in response (set to None if not visible)
     fields_to_check = {
         "username": user.username,
         "bio": user.bio,
@@ -486,6 +487,7 @@ async def get_user_public_profile(
         "date_of_birth": user.date_of_birth,
         "gender": user.gender,
         "language": user.language,
+        "preferred_language": user.preferred_language,
     }
 
     for field_name, field_value in fields_to_check.items():
@@ -493,6 +495,9 @@ async def get_user_public_profile(
             db, user.id, field_name, viewer_id, viewer_disease_ids
         ):
             user_dict[field_name] = field_value
+        else:
+            # Set to None if field is not visible (to satisfy schema requirements)
+            user_dict[field_name] = None
 
     return user_dict
 

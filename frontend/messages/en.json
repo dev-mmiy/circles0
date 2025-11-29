@@ -679,6 +679,7 @@
   "userProfileCard": {
     "memberId": "Member ID",
     "editProfile": "Edit Profile",
+    "viewPublicProfile": "View Public Profile",
     "bio": "Bio",
     "country": "Country",
     "language": "Language",

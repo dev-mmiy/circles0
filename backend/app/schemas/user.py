@@ -169,10 +169,14 @@ class UserPublicResponse(BaseModel):
         None  # 12-digit member ID (public, nullable for incomplete profiles)
     )
     nickname: Optional[str] = None  # Public nickname (nullable for incomplete profiles)
-    username: Optional[str]
-    bio: Optional[str]
-    avatar_url: Optional[str]
+    username: Optional[str] = None
+    bio: Optional[str] = None
+    avatar_url: Optional[str] = None
     country: Optional[str] = "jp"
+    date_of_birth: Optional[date] = None
+    gender: Optional[str] = None
+    language: Optional[str] = "ja"
+    preferred_language: Optional[str] = "ja"
     created_at: datetime
     diseases: List[UserDiseaseResponse] = []  # Only public diseases
 
