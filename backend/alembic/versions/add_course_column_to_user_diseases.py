@@ -18,11 +18,37 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # Add course column to user_diseases table
-    op.add_column("user_diseases", sa.Column("course", sa.Text(), nullable=True))
+    # Add course column to user_diseases table if it doesn't exist
+    # This column may already exist from vjfpnzw7gojf migration, so we check first
+    op.execute("""
+        DO $$
+        BEGIN
+            IF NOT EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name = 'user_diseases' 
+                AND column_name = 'course'
+            ) THEN
+                ALTER TABLE user_diseases ADD COLUMN course TEXT;
+            END IF;
+        END $$;
+    """)
 
 
 def downgrade() -> None:
     # Remove course column from user_diseases table
-    op.drop_column("user_diseases", "course")
+    # Only drop if it exists
+    op.execute("""
+        DO $$
+        BEGIN
+            IF EXISTS (
+                SELECT 1 
+                FROM information_schema.columns 
+                WHERE table_name = 'user_diseases' 
+                AND column_name = 'course'
+            ) THEN
+                ALTER TABLE user_diseases DROP COLUMN course;
+            END IF;
+        END $$;
+    """)
 
