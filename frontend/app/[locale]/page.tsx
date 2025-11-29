@@ -8,9 +8,6 @@ import PostCard from '@/components/PostCard';
 import { getFeed, type Post } from '@/lib/api/posts';
 import { Link as I18nLink } from '@/i18n/routing';
 
-// Force dynamic rendering
-export const dynamic = 'force-dynamic';
-
 export default function Home() {
   const t = useTranslations('homePage');
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();

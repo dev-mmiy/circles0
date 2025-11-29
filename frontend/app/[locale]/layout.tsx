@@ -27,7 +27,14 @@ export default async function LocaleLayout({
 
   // Providing all messages to the client
   // side is the easiest way to get started
-  const messages = await getMessages();
+  let messages;
+  try {
+    messages = await getMessages();
+  } catch (error) {
+    console.error('Failed to load messages:', error);
+    // Fallback to empty messages object to prevent 500 error
+    messages = {};
+  }
 
   return (
     <html lang={locale} suppressHydrationWarning>
