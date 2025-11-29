@@ -199,11 +199,34 @@ def _build_group_response(
 
     # Get last message
     last_message = None
-    if group.messages:
-        last_message_data = group.messages[-1]
-        last_message = _build_group_message_response(
-            db, last_message_data, current_user_id
-        )
+    try:
+        # Check if messages relationship is loaded
+        if hasattr(group, 'messages') and group.messages:
+            messages_list = list(group.messages) if hasattr(group.messages, '__iter__') else []
+            if messages_list:
+                last_message_data = messages_list[-1]
+                last_message = _build_group_message_response(
+                    db, last_message_data, current_user_id
+                )
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"[_build_group_response] Error accessing group.messages: {e}")
+        # Fallback: query the last message directly from database
+        try:
+            from app.models.group import GroupMessage
+            last_message_obj = (
+                db.query(GroupMessage)
+                .filter(GroupMessage.group_id == group.id)
+                .order_by(GroupMessage.created_at.desc())
+                .first()
+            )
+            if last_message_obj:
+                last_message = _build_group_message_response(
+                    db, last_message_obj, current_user_id
+                )
+        except Exception as fallback_error:
+            logger.warning(f"[_build_group_response] Fallback query also failed: {fallback_error}")
 
     # Get unread count
     unread_count = GroupService.get_unread_count(db, group.id, current_user_id)
