@@ -394,7 +394,12 @@ export default function MessageReactions({
       </div>
 
       {/* Users panel (Facebook Messenger style - compact, below reaction icon) */}
-      {showUsersPanel && usersPanelPosition && reactionsByType[showUsersPanel] && (
+      {showUsersPanel && usersPanelPosition && (() => {
+        const reactionType = showUsersPanel as ReactionType;
+        const reactions = reactionsByType[reactionType];
+        if (!reactions) return null;
+        
+        return (
         <div
           ref={usersPanelRef}
           className="fixed bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 py-2 z-40"
@@ -419,11 +424,11 @@ export default function MessageReactions({
         >
           <div className="px-3 py-1 border-b border-gray-200 dark:border-gray-700">
             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {REACTION_EMOJI_MAP[showUsersPanel as ReactionType]} {reactionsByType[showUsersPanel].length} {t('usersWhoReacted') || 'users'}
+              {REACTION_EMOJI_MAP[reactionType]} {reactions.length} {t('usersWhoReacted') || 'users'}
             </span>
           </div>
           <div className="max-h-64 overflow-y-auto">
-            {reactionsByType[showUsersPanel].map((reaction) => (
+            {reactions.map((reaction: MessageReaction | GroupMessageReaction) => (
               <div
                 key={reaction.id}
                 className="px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -435,7 +440,8 @@ export default function MessageReactions({
             ))}
           </div>
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }

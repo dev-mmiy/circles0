@@ -3,6 +3,11 @@
  */
 
 import { apiClient } from './client';
+import { debugLog } from '@/lib/utils/debug';
+
+export interface CreateGroupMessageReactionData {
+  reaction_type: string;
+}
 
 export interface GroupMemberInfo {
   id: string;
