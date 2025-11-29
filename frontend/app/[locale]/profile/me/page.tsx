@@ -167,6 +167,7 @@ export default function MyProfilePage() {
                   initialData={editingDisease}
                   onSubmit={handleSaveDisease}
                   onCancel={handleCloseEditModal}
+                  compact={true}
                 />
               )
             }

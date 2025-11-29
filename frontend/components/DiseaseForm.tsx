@@ -28,6 +28,9 @@ interface DiseaseFormProps {
 
   // Search function for diseases
   onSearchDiseases?: (query: string) => Promise<Disease[]>;
+
+  // UI options
+  compact?: boolean; // If true, use compact styling for inline editing
 }
 
 export function DiseaseForm({
@@ -39,6 +42,7 @@ export function DiseaseForm({
   onSubmit,
   onCancel,
   onSearchDiseases,
+  compact = false,
 }: DiseaseFormProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('diseaseForm');
@@ -248,10 +252,12 @@ export function DiseaseForm({
     .sort((a, b) => a.display_order - b.display_order);
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
-        {mode === 'add' ? t('title.add') : t('title.edit')}
-      </h2>
+    <form onSubmit={handleSubmit} className={`${compact ? 'p-4' : 'bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6'}`}>
+      {!compact && (
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">
+          {mode === 'add' ? t('title.add') : t('title.edit')}
+        </h2>
+      )}
 
       {error && (
         <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
