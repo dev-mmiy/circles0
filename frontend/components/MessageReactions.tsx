@@ -136,11 +136,15 @@ export default function MessageReactions({
 
   // クリーンアップ: タイマーをクリア
   useEffect(() => {
+    // Copy ref values to variables to avoid stale closure issues
+    const hoverTimeouts = hoverTimeoutRef.current;
+    const longPressTimeouts = longPressTimeoutRef.current;
+    
     return () => {
-      Object.values(hoverTimeoutRef.current).forEach(timeout => {
+      Object.values(hoverTimeouts).forEach(timeout => {
         if (timeout) clearTimeout(timeout);
       });
-      Object.values(longPressTimeoutRef.current).forEach(timeout => {
+      Object.values(longPressTimeouts).forEach(timeout => {
         if (timeout) clearTimeout(timeout);
       });
     };

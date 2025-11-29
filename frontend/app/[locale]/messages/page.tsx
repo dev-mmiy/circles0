@@ -571,32 +571,32 @@ export default function MessagesPage() {
                                 <div className="flex-1 flex items-center gap-4">
                                   {/* Avatar - Clickable to profile */}
                                   {item.other_user ? (
-                                    <Link
+                                <Link
                                       href={`/profile/${item.other_user.id}`}
                                       onClick={(e) => e.stopPropagation()}
                                       className="flex-shrink-0 relative w-12 h-12 hover:opacity-80 transition-opacity"
-                                    >
+                                >
                                       {item.other_user.avatar_url ? (
-                                        <Image
-                                          src={item.other_user.avatar_url}
-                                          alt={item.other_user.nickname}
-                                          width={48}
-                                          height={48}
+                                      <Image
+                                        src={item.other_user.avatar_url}
+                                        alt={item.other_user.nickname}
+                                        width={48}
+                                        height={48}
                                           className="rounded-full object-cover cursor-pointer"
-                                        />
-                                      ) : (
+                                      />
+                                    ) : (
                                         <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center cursor-pointer">
-                                          <span className="text-gray-600 dark:text-gray-300 font-medium">
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium">
                                             {item.other_user.nickname?.[0]?.toUpperCase() || '?'}
-                                          </span>
-                                        </div>
-                                      )}
+                                        </span>
+                                      </div>
+                                    )}
                                     </Link>
                                   ) : (
                                     <div className="flex-shrink-0 relative w-12 h-12">
                                       <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                                         <span className="text-gray-600 dark:text-gray-300 font-medium">?</span>
-                                      </div>
+                                  </div>
                                     </div>
                                   )}
 
@@ -615,9 +615,9 @@ export default function MessagesPage() {
                                           </h3>
                                         </Link>
                                       ) : (
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
+                                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                           Unknown User
-                                        </h3>
+                                      </h3>
                                       )}
                                       {item.last_message_at && (
                                         <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
@@ -630,19 +630,19 @@ export default function MessagesPage() {
                                       href={`/messages/${item.id}`}
                                       className="block"
                                     >
-                                      {item.last_message && (
-                                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
-                                          {item.last_message.is_deleted
-                                            ? `(${t('conversation.deletedMessage')})`
-                                            : item.last_message.content}
-                                        </p>
-                                      )}
-                                      {item.unread_count > 0 && (
-                                        <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
-                                          {item.unread_count}
-                                        </span>
-                                      )}
-                                    </Link>
+                                    {item.last_message && (
+                                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
+                                        {item.last_message.is_deleted
+                                          ? `(${t('conversation.deletedMessage')})`
+                                          : item.last_message.content}
+                                      </p>
+                                    )}
+                                    {item.unread_count > 0 && (
+                                      <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
+                                        {item.unread_count}
+                                      </span>
+                                    )}
+                                </Link>
                                   </div>
                                 </div>
 

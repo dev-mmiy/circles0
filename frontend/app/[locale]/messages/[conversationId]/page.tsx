@@ -650,9 +650,9 @@ export default function ConversationPage() {
         const errorMessage = Array.isArray(errorDetail) 
           ? errorDetail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
           : errorDetail || 'Validation error';
-        alert(`${tReactions('errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`);
+        alert(`${tConv('reactions.errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`);
       } else {
-        alert(tReactions('errorAddingReaction') || 'Failed to add reaction');
+        alert(tConv('reactions.errorAddingReaction') || 'Failed to add reaction');
       }
     }
   };

@@ -555,17 +555,17 @@ class MessageService:
 
         # Build query with filters
         query = db.query(Conversation).filter(
-            or_(
-                and_(
-                    Conversation.user1_id == user_id,
-                    Conversation.user1_deleted_at.is_(None),
-                ),
-                and_(
-                    Conversation.user2_id == user_id,
-                    Conversation.user2_deleted_at.is_(None),
-                ),
+                or_(
+                    and_(
+                        Conversation.user1_id == user_id,
+                        Conversation.user1_deleted_at.is_(None),
+                    ),
+                    and_(
+                        Conversation.user2_id == user_id,
+                        Conversation.user2_deleted_at.is_(None),
+                    ),
+                )
             )
-        )
 
         # Filter out conversations with blocked users if any exist
         if blocked_user_ids:

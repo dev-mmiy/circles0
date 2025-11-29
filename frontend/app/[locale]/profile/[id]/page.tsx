@@ -351,85 +351,85 @@ export default function PublicProfilePage() {
           <div className="flex flex-col gap-6">
             {/* Avatar, Nickname, Username Row */}
             <div className="flex items-center gap-4 md:gap-6">
-              {/* Avatar */}
-              <div className="relative flex-shrink-0">
-                {profile.avatar_url ? (
-                  <Image
-                    src={profile.avatar_url}
-                    alt={profile.nickname}
-                    width={96}
-                    height={96}
-                    className="w-24 h-24 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                    {profile.nickname.charAt(0).toUpperCase()}
-                  </div>
-                )}
-              </div>
-
-              {/* Nickname and Username */}
-              <div className="flex-1 min-w-0">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 break-words">{profile.nickname}</h1>
-                {profile.username && <p className="text-gray-600 dark:text-gray-400 mt-1 break-words">@{profile.username}</p>}
-              </div>
-
-              {/* Action Buttons - Desktop only */}
-              {!isOwnProfile && profile && isAuthenticated && (
-                <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
-                  <button
-                    onClick={handleSendMessage}
-                    disabled={isCreatingConversation}
-                    className="flex flex-row items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={tMessages('sendMessage')}
-                  >
-                    {isCreatingConversation ? (
-                      <>
-                        <svg
-                          className="animate-spin h-4 w-4 mr-2"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                        >
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                          ></circle>
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          ></path>
-                        </svg>
-                        <span className="text-xs md:text-sm">{tMessages('creatingConversation')}</span>
-                      </>
-                    ) : (
-                      <>
-                        <MessageCircle className="h-4 w-4 mr-2" />
-                        <span className="text-xs md:text-sm">{tMessages('sendMessage')}</span>
-                      </>
-                    )}
-                  </button>
-                  <FollowButton
-                    userId={profile.id}
-                    initialIsFollowing={followStats?.is_following ?? false}
-                    onFollowChange={handleFollowChange}
-                  />
-                  <BlockButton
-                    userId={profile.id}
-                    onBlockChange={(isBlocked) => {
-                      // Refresh page if user is blocked/unblocked
-                      if (isBlocked) {
-                        window.location.reload();
-                      }
-                    }}
-                  />
+            {/* Avatar */}
+            <div className="relative flex-shrink-0">
+              {profile.avatar_url ? (
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.nickname}
+                  width={96}
+                  height={96}
+                  className="w-24 h-24 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                  {profile.nickname.charAt(0).toUpperCase()}
                 </div>
               )}
             </div>
+
+              {/* Nickname and Username */}
+            <div className="flex-1 min-w-0">
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 break-words">{profile.nickname}</h1>
+                  {profile.username && <p className="text-gray-600 dark:text-gray-400 mt-1 break-words">@{profile.username}</p>}
+                </div>
+
+              {/* Action Buttons - Desktop only */}
+                {!isOwnProfile && profile && isAuthenticated && (
+                <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
+                    <button
+                      onClick={handleSendMessage}
+                      disabled={isCreatingConversation}
+                    className="flex flex-row items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={tMessages('sendMessage')}
+                    >
+                      {isCreatingConversation ? (
+                        <>
+                          <svg
+                          className="animate-spin h-4 w-4 mr-2"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            ></path>
+                          </svg>
+                        <span className="text-xs md:text-sm">{tMessages('creatingConversation')}</span>
+                        </>
+                      ) : (
+                        <>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        <span className="text-xs md:text-sm">{tMessages('sendMessage')}</span>
+                        </>
+                      )}
+                    </button>
+                    <FollowButton
+                      userId={profile.id}
+                      initialIsFollowing={followStats?.is_following ?? false}
+                      onFollowChange={handleFollowChange}
+                    />
+                    <BlockButton
+                      userId={profile.id}
+                      onBlockChange={(isBlocked) => {
+                        // Refresh page if user is blocked/unblocked
+                        if (isBlocked) {
+                          window.location.reload();
+                        }
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
 
             {/* Action Buttons - Mobile only (below avatar) */}
             {!isOwnProfile && profile && isAuthenticated && (
