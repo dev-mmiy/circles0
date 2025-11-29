@@ -769,16 +769,19 @@ export default function ConversationPage() {
                 <ArrowLeft className="w-5 h-5" />
               </Link>
               {conversation?.other_user && (
-                <>
+                <Link
+                  href={`/profile/${conversation.other_user.id}`}
+                  className="flex items-center gap-4 hover:opacity-80 transition-opacity"
+                >
                   <Avatar
                     avatarUrl={conversation.other_user.avatar_url}
                     nickname={conversation.other_user.nickname}
                     size={40}
-                    className="rounded-full object-cover"
+                    className="rounded-full object-cover cursor-pointer"
                     alt={conversation.other_user.nickname}
                   />
                   <div>
-                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                       {conversation.other_user.nickname}
                     </h1>
                     {conversation.unread_count > 0 && (
@@ -787,7 +790,7 @@ export default function ConversationPage() {
                       </p>
                     )}
                   </div>
-                </>
+                </Link>
               )}
             </div>
             

@@ -4,6 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { followUser, unfollowUser } from '@/lib/api/follows';
+import { UserPlus, UserCheck } from 'lucide-react';
 
 interface FollowButtonProps {
   userId: string;
@@ -61,16 +62,17 @@ export default function FollowButton({
     <button
       onClick={handleFollowToggle}
       disabled={isLoading}
-      className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`flex flex-col md:flex-row items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         isFollowing
-          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+          ? 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+          : 'bg-blue-600 text-white hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600'
       } ${className}`}
+      title={isFollowing ? t('following') : t('follow')}
     >
       {isLoading ? (
-        <span className="flex items-center">
+        <>
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            className="animate-spin h-5 w-5 md:h-4 md:w-4 mb-1 md:mb-0 md:mr-2"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -89,12 +91,19 @@ export default function FollowButton({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          {t('processing')}
-        </span>
-      ) : isFollowing ? (
-        t('following')
+          <span className="hidden md:inline text-xs md:text-sm">{t('processing')}</span>
+        </>
       ) : (
-        t('follow')
+        <>
+          {isFollowing ? (
+            <UserCheck className="h-5 w-5 md:h-4 md:w-4 mb-1 md:mb-0 md:mr-2" />
+          ) : (
+            <UserPlus className="h-5 w-5 md:h-4 md:w-4 mb-1 md:mb-0 md:mr-2" />
+          )}
+          <span className="hidden md:inline text-xs md:text-sm">
+            {isFollowing ? t('following') : t('follow')}
+          </span>
+        </>
       )}
     </button>
   );

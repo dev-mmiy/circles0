@@ -4,6 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { blockUser, unblockUser, checkBlockStatus, BlockStatus } from '@/lib/api/users';
+import { Ban } from 'lucide-react';
 
 interface BlockButtonProps {
   userId: string;
@@ -103,16 +104,17 @@ export default function BlockButton({
     <button
       onClick={handleBlockToggle}
       disabled={isLoading}
-      className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+      className={`flex flex-col md:flex-row items-center justify-center px-3 py-2 md:px-4 md:py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
         blockStatus.is_blocked
-          ? 'bg-red-100 text-red-700 hover:bg-red-200'
-          : 'bg-red-600 text-white hover:bg-red-700'
+          ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/20 dark:text-red-400 dark:hover:bg-red-900/30'
+          : 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600'
       } ${className}`}
+      title={blockStatus.is_blocked ? t('unblock') : t('block')}
     >
       {isLoading ? (
-        <span className="flex items-center">
+        <>
           <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            className="animate-spin h-5 w-5 md:h-4 md:w-4 mb-1 md:mb-0 md:mr-2"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -131,12 +133,15 @@ export default function BlockButton({
               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
             />
           </svg>
-          {t('processing')}
-        </span>
-      ) : blockStatus.is_blocked ? (
-        t('unblock')
+          <span className="hidden md:inline text-xs md:text-sm">{t('processing')}</span>
+        </>
       ) : (
-        t('block')
+        <>
+          <Ban className="h-5 w-5 md:h-4 md:w-4 mb-1 md:mb-0 md:mr-2" />
+          <span className="hidden md:inline text-xs md:text-sm">
+            {blockStatus.is_blocked ? t('unblock') : t('block')}
+          </span>
+        </>
       )}
     </button>
   );

@@ -10,22 +10,32 @@ import Header from '@/components/Header';
 import { getUserPublicProfile, UserPublicProfile } from '@/lib/api/users';
 import { getFollowStats, type FollowStats } from '@/lib/api/follows';
 import { getUserPosts, type Post } from '@/lib/api/posts';
-import FollowButton from '@/components/FollowButton';
-import BlockButton from '@/components/BlockButton';
+import { followUser, unfollowUser } from '@/lib/api/follows';
+import { blockUser, unblockUser, checkBlockStatus, BlockStatus } from '@/lib/api/users';
 import FollowersList from '@/components/FollowersList';
 import FollowingList from '@/components/FollowingList';
 import PostCard from '@/components/PostCard';
+import FollowButton from '@/components/FollowButton';
+import BlockButton from '@/components/BlockButton';
 import { useUser } from '@/contexts/UserContext';
 import { findOrCreateConversation } from '@/lib/api/messages';
 import { setAuthToken } from '@/lib/api/client';
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, UserPlus, UserCheck, Ban } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { getCountryName } from '@/lib/utils/countries';
 
 export default function PublicProfilePage() {
   const t = useTranslations('publicProfilePage');
   const tMessages = useTranslations('messages');
+  const tLanguage = useTranslations('languageSwitcher');
   const locale = useLocale();
+  
+  // Format language for display
+  const formatLanguage = (languageCode?: string) => {
+    if (!languageCode) return null;
+    const languageKey = `languages.${languageCode}` as const;
+    return tLanguage(languageKey, { defaultValue: languageCode });
+  };
   const params = useParams();
   const userId = params.id as string;
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
@@ -37,6 +47,11 @@ export default function PublicProfilePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'posts' | 'followers' | 'following'>('posts');
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowingLoading, setIsFollowingLoading] = useState(false);
+  const [blockStatus, setBlockStatus] = useState<BlockStatus | null>(null);
+  const [isBlockLoading, setIsBlockLoading] = useState(false);
+  const [isCheckingBlock, setIsCheckingBlock] = useState(true);
   
   // Posts state
   const [posts, setPosts] = useState<Post[]>([]);
@@ -72,8 +87,28 @@ export default function PublicProfilePage() {
         try {
           const stats = await getFollowStats(data.id, token);
           setFollowStats(stats);
+          setIsFollowing(stats.is_following);
         } catch (err) {
           console.error('Failed to fetch follow stats:', err);
+        }
+        
+        // Check block status
+        if (isAuthenticated && token) {
+          try {
+            const status = await checkBlockStatus(token, data.id);
+            setBlockStatus(status);
+          } catch (err) {
+            console.error('Failed to check block status:', err);
+            setBlockStatus({
+              is_blocked: false,
+              is_blocked_by: false,
+              are_blocked: false,
+            });
+          } finally {
+            setIsCheckingBlock(false);
+          }
+        } else {
+          setIsCheckingBlock(false);
         }
       } catch (err) {
         console.error('Failed to fetch profile:', err);
@@ -88,22 +123,77 @@ export default function PublicProfilePage() {
     }
   }, [userId, isAuthenticated, getAccessTokenSilently, t]);
 
-  const handleFollowChange = async (isFollowing: boolean) => {
+  const handleFollowChange = async (newIsFollowing: boolean) => {
     // Update follower count optimistically
     if (followStats) {
       setFollowStats({
         ...followStats,
-        follower_count: followStats.follower_count + (isFollowing ? 1 : -1),
-        is_following: isFollowing,
+        follower_count: followStats.follower_count + (newIsFollowing ? 1 : -1),
+        is_following: newIsFollowing,
       });
     } else {
       // If followStats is not loaded yet, create a default one
       setFollowStats({
-        follower_count: isFollowing ? 1 : 0,
+        follower_count: newIsFollowing ? 1 : 0,
         following_count: 0,
-        is_following: isFollowing,
+        is_following: newIsFollowing,
         is_followed_by: false,
       });
+    }
+    setIsFollowing(newIsFollowing);
+  };
+  
+  // Handle follow toggle
+  const handleFollowToggle = async () => {
+    if (!isAuthenticated || !profile) return;
+    
+    setIsFollowingLoading(true);
+    try {
+      const token = await getAccessTokenSilently();
+      if (isFollowing) {
+        await unfollowUser(profile.id, token);
+        handleFollowChange(false);
+      } else {
+        await followUser(profile.id, token);
+        handleFollowChange(true);
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle follow:', error);
+      alert(error.message || t('followButton.errors.updateFailed'));
+    } finally {
+      setIsFollowingLoading(false);
+    }
+  };
+  
+  // Handle block toggle
+  const handleBlockToggle = async () => {
+    if (!isAuthenticated || !profile || !blockStatus) return;
+    
+    setIsBlockLoading(true);
+    try {
+      const token = await getAccessTokenSilently();
+      if (blockStatus.is_blocked) {
+        await unblockUser(token, profile.id);
+        setBlockStatus({
+          ...blockStatus,
+          is_blocked: false,
+          are_blocked: false,
+        });
+      } else {
+        await blockUser(token, profile.id);
+        setBlockStatus({
+          ...blockStatus,
+          is_blocked: true,
+          are_blocked: true,
+        });
+        // Refresh page if user is blocked
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error('Failed to toggle block:', error);
+      alert(error.message || t('blockButton.errors.updateFailed'));
+    } finally {
+      setIsBlockLoading(false);
     }
   };
 
@@ -258,86 +348,143 @@ export default function PublicProfilePage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Profile Header */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
-          <div className="flex items-start space-x-6">
-            {/* Avatar */}
-            <div className="relative">
-              {profile.avatar_url ? (
-                <Image
-                  src={profile.avatar_url}
-                  alt={profile.nickname}
-                  width={96}
-                  height={96}
-                  className="w-24 h-24 rounded-full object-cover"
-                />
-              ) : (
-                <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                  {profile.nickname.charAt(0).toUpperCase()}
+          <div className="flex flex-col gap-6">
+            {/* Avatar, Nickname, Username Row */}
+            <div className="flex items-center gap-4 md:gap-6">
+              {/* Avatar */}
+              <div className="relative flex-shrink-0">
+                {profile.avatar_url ? (
+                  <Image
+                    src={profile.avatar_url}
+                    alt={profile.nickname}
+                    width={96}
+                    height={96}
+                    className="w-24 h-24 rounded-full object-cover"
+                  />
+                ) : (
+                  <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                    {profile.nickname.charAt(0).toUpperCase()}
+                  </div>
+                )}
+              </div>
+
+              {/* Nickname and Username */}
+              <div className="flex-1 min-w-0">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 break-words">{profile.nickname}</h1>
+                {profile.username && <p className="text-gray-600 dark:text-gray-400 mt-1 break-words">@{profile.username}</p>}
+              </div>
+
+              {/* Action Buttons - Desktop only */}
+              {!isOwnProfile && profile && isAuthenticated && (
+                <div className="hidden md:flex items-center space-x-3 flex-shrink-0">
+                  <button
+                    onClick={handleSendMessage}
+                    disabled={isCreatingConversation}
+                    className="flex flex-row items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={tMessages('sendMessage')}
+                  >
+                    {isCreatingConversation ? (
+                      <>
+                        <svg
+                          className="animate-spin h-4 w-4 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        <span className="text-xs md:text-sm">{tMessages('creatingConversation')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <MessageCircle className="h-4 w-4 mr-2" />
+                        <span className="text-xs md:text-sm">{tMessages('sendMessage')}</span>
+                      </>
+                    )}
+                  </button>
+                  <FollowButton
+                    userId={profile.id}
+                    initialIsFollowing={followStats?.is_following ?? false}
+                    onFollowChange={handleFollowChange}
+                  />
+                  <BlockButton
+                    userId={profile.id}
+                    onBlockChange={(isBlocked) => {
+                      // Refresh page if user is blocked/unblocked
+                      if (isBlocked) {
+                        window.location.reload();
+                      }
+                    }}
+                  />
                 </div>
               )}
             </div>
 
-            {/* Basic Info */}
-            <div className="flex-1">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{profile.nickname}</h1>
-                  {profile.username && <p className="text-gray-600 dark:text-gray-400 mt-1">@{profile.username}</p>}
-                </div>
-                {/* Action Buttons */}
-                {!isOwnProfile && profile && isAuthenticated && (
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={handleSendMessage}
-                      disabled={isCreatingConversation}
-                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isCreatingConversation ? (
-                        <>
-                          <svg
-                            className="animate-spin -ml-1 mr-2 h-4 w-4"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          {tMessages('creatingConversation')}
-                        </>
-                      ) : (
-                        <>
-                          <MessageCircle className="w-4 h-4 mr-2" />
-                          {tMessages('sendMessage')}
-                        </>
-                      )}
-                    </button>
-                    <FollowButton
-                      userId={profile.id}
-                      initialIsFollowing={followStats?.is_following ?? false}
-                      onFollowChange={handleFollowChange}
-                    />
-                    <BlockButton
-                      userId={profile.id}
-                      onBlockChange={(isBlocked) => {
-                        // Refresh page if user is blocked/unblocked
-                        if (isBlocked) {
-                          window.location.reload();
-                        }
-                      }}
-                    />
-                  </div>
-                )}
+            {/* Action Buttons - Mobile only (below avatar) */}
+            {!isOwnProfile && profile && isAuthenticated && (
+              <div className="md:hidden flex items-center justify-center space-x-2">
+                <button
+                  onClick={handleSendMessage}
+                  disabled={isCreatingConversation}
+                  className="flex flex-col items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={tMessages('sendMessage')}
+                >
+                  {isCreatingConversation ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 mb-1"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                    </>
+                  ) : (
+                    <MessageCircle className="h-5 w-5 mb-1" />
+                  )}
+                </button>
+                <FollowButton
+                  userId={profile.id}
+                  initialIsFollowing={followStats?.is_following ?? false}
+                  onFollowChange={handleFollowChange}
+                />
+                <BlockButton
+                  userId={profile.id}
+                  onBlockChange={(isBlocked) => {
+                    // Refresh page if user is blocked/unblocked
+                    if (isBlocked) {
+                      window.location.reload();
+                    }
+                  }}
+                />
               </div>
+            )}
+
+            {/* Basic Info Section */}
+            <div className="flex-1 min-w-0">
 
               {/* Follow Stats */}
               {followStats && (
@@ -359,8 +506,11 @@ export default function PublicProfilePage() {
                 </div>
               )}
 
-              <div className="mt-4 flex items-center space-x-4 text-sm text-gray-500 dark:text-gray-400">
+              <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
                 {profile.country && <span>📍 {getCountryName(profile.country, locale)}</span>}
+                {profile.preferred_language && formatLanguage(profile.preferred_language) && (
+                  <span>🌐 {formatLanguage(profile.preferred_language)}</span>
+                )}
                 <span>📅 {t('registered')} {new Date(profile.created_at).toLocaleDateString(locale === 'ja' ? 'ja-JP' : 'en-US')}</span>
               </div>
             </div>
