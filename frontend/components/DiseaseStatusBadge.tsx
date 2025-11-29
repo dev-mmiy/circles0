@@ -42,6 +42,21 @@ const statusColors: Record<string, { bg: string; text: string; border: string }>
     text: 'text-purple-800',
     border: 'border-purple-200',
   },
+  TREATMENT: {
+    bg: 'bg-purple-100',
+    text: 'text-purple-800',
+    border: 'border-purple-200',
+  },
+  DIAGNOSED: {
+    bg: 'bg-blue-100',
+    text: 'text-blue-800',
+    border: 'border-blue-200',
+  },
+  MONITORING: {
+    bg: 'bg-yellow-100',
+    text: 'text-yellow-800',
+    border: 'border-yellow-200',
+  },
   DEFAULT: {
     bg: 'bg-gray-100',
     text: 'text-gray-800',
@@ -56,6 +71,9 @@ const statusLabels: Record<string, string> = {
   CURED: '完治',
   SUSPECTED: '疑い',
   UNDER_TREATMENT: '治療中',
+  TREATMENT: '治療中',
+  DIAGNOSED: '診断済み',
+  MONITORING: '経過観察中',
 };
 
 // Size classes

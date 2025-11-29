@@ -927,7 +927,10 @@
       "REMISSION": "Remission",
       "CURED": "Cured",
       "SUSPECTED": "Suspected",
-      "UNDER_TREATMENT": "Under Treatment"
+      "UNDER_TREATMENT": "Under Treatment",
+      "TREATMENT": "Under Treatment",
+      "DIAGNOSED": "Diagnosed",
+      "MONITORING": "Monitoring"
     },
     "severity": {
       "1": "Mild",

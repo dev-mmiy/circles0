@@ -216,20 +216,38 @@ class PostService:
 
         # Step 1: Filter by disease if specified
         # When disease_id is provided, we only show posts from users who have that disease
-        # and have made it public and searchable
+        # and have made it public and searchable (or current user's own disease)
         if disease_id is not None:
             # Get user IDs that have this disease (public and searchable)
             # This query is executed once and cached in disease_user_ids list
-            user_diseases = (
+            # Include current user's disease even if not public/searchable
+            user_diseases_query = (
                 db.query(UserDisease.user_id)
                 .filter(
                     UserDisease.disease_id == disease_id,
                     UserDisease.is_active == True,
+                )
+            )
+            
+            # If current_user_id is set, include their disease even if not public/searchable
+            if current_user_id:
+                user_diseases_query = user_diseases_query.filter(
+                    or_(
+                        and_(
+                            UserDisease.is_public == True,
+                            UserDisease.is_searchable == True,
+                        ),
+                        UserDisease.user_id == current_user_id,
+                    )
+                )
+            else:
+                # For unauthenticated users, only show public and searchable diseases
+                user_diseases_query = user_diseases_query.filter(
                     UserDisease.is_public == True,
                     UserDisease.is_searchable == True,
                 )
-                .all()
-            )
+            
+            user_diseases = user_diseases_query.all()
             disease_user_ids = [ud[0] for ud in user_diseases]
 
             if not disease_user_ids:

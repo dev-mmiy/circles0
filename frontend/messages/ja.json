@@ -964,7 +964,10 @@
       "REMISSION": "寛解期",
       "CURED": "完治",
       "SUSPECTED": "疑い",
-      "UNDER_TREATMENT": "治療中"
+      "UNDER_TREATMENT": "治療中",
+      "TREATMENT": "治療中",
+      "DIAGNOSED": "診断済み",
+      "MONITORING": "経過観察中"
     },
     "severity": {
       "1": "軽度",

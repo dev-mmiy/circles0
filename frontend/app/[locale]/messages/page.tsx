@@ -568,55 +568,83 @@ export default function MessagesPage() {
                               className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                             >
                               <div className="flex items-center justify-between">
-                                <Link
-                                  href={`/messages/${item.id}`}
-                                  className="flex-1 flex items-center gap-4"
-                                >
-                                  {/* Avatar */}
-                                  <div className="flex-shrink-0 relative w-12 h-12">
-                                    {item.other_user?.avatar_url ? (
-                                      <Image
-                                        src={item.other_user.avatar_url}
-                                        alt={item.other_user.nickname}
-                                        width={48}
-                                        height={48}
-                                        className="rounded-full object-cover"
-                                      />
-                                    ) : (
+                                <div className="flex-1 flex items-center gap-4">
+                                  {/* Avatar - Clickable to profile */}
+                                  {item.other_user ? (
+                                    <Link
+                                      href={`/profile/${item.other_user.id}`}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="flex-shrink-0 relative w-12 h-12 hover:opacity-80 transition-opacity"
+                                    >
+                                      {item.other_user.avatar_url ? (
+                                        <Image
+                                          src={item.other_user.avatar_url}
+                                          alt={item.other_user.nickname}
+                                          width={48}
+                                          height={48}
+                                          className="rounded-full object-cover cursor-pointer"
+                                        />
+                                      ) : (
+                                        <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center cursor-pointer">
+                                          <span className="text-gray-600 dark:text-gray-300 font-medium">
+                                            {item.other_user.nickname?.[0]?.toUpperCase() || '?'}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </Link>
+                                  ) : (
+                                    <div className="flex-shrink-0 relative w-12 h-12">
                                       <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
-                                        <span className="text-gray-600 dark:text-gray-300 font-medium">
-                                          {item.other_user?.nickname?.[0]?.toUpperCase() || '?'}
-                                        </span>
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium">?</span>
                                       </div>
-                                    )}
-                                  </div>
+                                    </div>
+                                  )}
 
                                   {/* Conversation info */}
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between">
-                                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
-                                        {item.other_user?.nickname || 'Unknown User'}
-                                      </h3>
+                                      {/* Nickname - Clickable to profile */}
+                                      {item.other_user ? (
+                                        <Link
+                                          href={`/profile/${item.other_user.id}`}
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                        >
+                                          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer">
+                                            {item.other_user.nickname || 'Unknown User'}
+                                          </h3>
+                                        </Link>
+                                      ) : (
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
+                                          Unknown User
+                                        </h3>
+                                      )}
                                       {item.last_message_at && (
                                         <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">
                                           {formatTime(item.last_message_at)}
                                         </span>
                                       )}
                                     </div>
-                                    {item.last_message && (
-                                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
-                                        {item.last_message.is_deleted
-                                          ? `(${t('conversation.deletedMessage')})`
-                                          : item.last_message.content}
-                                      </p>
-                                    )}
-                                    {item.unread_count > 0 && (
-                                      <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
-                                        {item.unread_count}
-                                      </span>
-                                    )}
+                                    {/* Message content - Clickable to conversation */}
+                                    <Link
+                                      href={`/messages/${item.id}`}
+                                      className="block"
+                                    >
+                                      {item.last_message && (
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
+                                          {item.last_message.is_deleted
+                                            ? `(${t('conversation.deletedMessage')})`
+                                            : item.last_message.content}
+                                        </p>
+                                      )}
+                                      {item.unread_count > 0 && (
+                                        <span className="inline-flex items-center justify-center px-2 py-0.5 mt-1 text-xs font-medium leading-none text-white bg-blue-600 rounded-full">
+                                          {item.unread_count}
+                                        </span>
+                                      )}
+                                    </Link>
                                   </div>
-                                </Link>
+                                </div>
 
                                 {/* Delete button */}
                                 <button

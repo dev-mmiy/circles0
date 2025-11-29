@@ -998,7 +998,7 @@ export default function ConversationPage() {
                   className="max-w-xs max-h-32 rounded-lg object-contain"
                 />
               )}
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-start">
                 <textarea
                   value={messageContent}
                   onChange={(e) => setMessageContent(e.target.value)}
@@ -1026,7 +1026,7 @@ export default function ConversationPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isSending || uploadingImage}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex-shrink-0"
                   title={tConv('attachImage')}
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -1034,7 +1034,7 @@ export default function ConversationPage() {
                 <button
                   type="submit"
                   disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 flex-shrink-0"
                 >
                   {isSending ? (
                     <>

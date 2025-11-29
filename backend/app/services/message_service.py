@@ -256,6 +256,41 @@ class MessageService:
         if not conversations:
             return conversations
 
+        # Filter out conversations with blocked users
+        # Get all blocked user IDs (both directions) in one query
+        from app.models.block import Block
+        blocked_user_ids = set()
+        blocked_relationships = (
+            db.query(Block)
+            .filter(
+                or_(
+                    Block.blocker_id == user_id,
+                    Block.blocked_id == user_id,
+                ),
+                Block.is_active == True,
+            )
+            .all()
+        )
+        # Build set of blocked user IDs (the "other" user in each block relationship)
+        for block in blocked_relationships:
+            if block.blocker_id == user_id:
+                # Current user blocked this user
+                blocked_user_ids.add(block.blocked_id)
+            else:
+                # This user blocked current user
+                blocked_user_ids.add(block.blocker_id)
+
+        # Filter conversations in memory (much faster than N queries)
+        # Set lookup is O(1), so this is O(n) where n is number of conversations
+        conversations = [
+            conv for conv in conversations
+            if (conv.user1_id != user_id and conv.user1_id not in blocked_user_ids) or
+               (conv.user2_id != user_id and conv.user2_id not in blocked_user_ids)
+        ]
+
+        if not conversations:
+            return conversations
+
         # Performance Optimization: Load all last messages in a single query using window function
         # This avoids N+1 query problem where we would query for last message per conversation
         # individually. Instead, we use SQL window functions to get the latest message
@@ -399,6 +434,12 @@ class MessageService:
         if not conversation:
             return []
 
+        # Check if users are blocked
+        other_user_id = conversation.user1_id if conversation.user2_id == user_id else conversation.user2_id
+        if BlockService.are_blocked(db, user_id, other_user_id):
+            # If users are blocked, return empty list (don't show messages)
+            return []
+
         # Get messages
         messages = (
             db.query(Message)
@@ -448,6 +489,12 @@ class MessageService:
         if not conversation:
             return []
 
+        # Check if users are blocked
+        other_user_id = conversation.user1_id if conversation.user2_id == user_id else conversation.user2_id
+        if BlockService.are_blocked(db, user_id, other_user_id):
+            # If users are blocked, return empty list (don't show messages)
+            return []
+
         # Search messages by content (case-insensitive partial match)
         messages = (
             db.query(Message)
@@ -474,7 +521,7 @@ class MessageService:
         user_id: UUID,
     ) -> int:
         """
-        Count total conversations for a user.
+        Count total conversations for a user (excluding blocked users).
 
         Args:
             db: Database session
@@ -483,22 +530,62 @@ class MessageService:
         Returns:
             Total number of conversations
         """
-        count = (
-            db.query(func.count(Conversation.id))
+        # Get all blocked user IDs (both directions) in one query
+        from app.models.block import Block
+        blocked_user_ids = set()
+        blocked_relationships = (
+            db.query(Block)
             .filter(
                 or_(
+                    Block.blocker_id == user_id,
+                    Block.blocked_id == user_id,
+                ),
+                Block.is_active == True,
+            )
+            .all()
+        )
+        # Build set of blocked user IDs (the "other" user in each block relationship)
+        for block in blocked_relationships:
+            if block.blocker_id == user_id:
+                # Current user blocked this user
+                blocked_user_ids.add(block.blocked_id)
+            else:
+                # This user blocked current user
+                blocked_user_ids.add(block.blocker_id)
+
+        # Build query with filters
+        query = db.query(Conversation).filter(
+            or_(
+                and_(
+                    Conversation.user1_id == user_id,
+                    Conversation.user1_deleted_at.is_(None),
+                ),
+                and_(
+                    Conversation.user2_id == user_id,
+                    Conversation.user2_deleted_at.is_(None),
+                ),
+            )
+        )
+
+        # Filter out conversations with blocked users if any exist
+        if blocked_user_ids:
+            blocked_list = list(blocked_user_ids)
+            query = query.filter(
+                ~(
                     and_(
                         Conversation.user1_id == user_id,
-                        Conversation.user1_deleted_at.is_(None),
-                    ),
+                        Conversation.user2_id.in_(blocked_list),
+                    )
+                ),
+                ~(
                     and_(
                         Conversation.user2_id == user_id,
-                        Conversation.user2_deleted_at.is_(None),
-                    ),
-                )
+                        Conversation.user1_id.in_(blocked_list),
+                    )
+                ),
             )
-            .scalar()
-        )
+
+        count = query.count()
         return count or 0
 
     @staticmethod
@@ -516,13 +603,19 @@ class MessageService:
             user_id: User ID (must be a participant)
 
         Returns:
-            Total number of messages
+            Total number of messages (0 if users are blocked)
         """
         # Verify user is a participant
         conversation = MessageService.get_conversation_by_id(
             db, conversation_id, user_id
         )
         if not conversation:
+            return 0
+
+        # Check if users are blocked
+        other_user_id = conversation.user1_id if conversation.user2_id == user_id else conversation.user2_id
+        if BlockService.are_blocked(db, user_id, other_user_id):
+            # If users are blocked, return 0
             return 0
 
         count = (
@@ -552,13 +645,19 @@ class MessageService:
             query: Search query string
 
         Returns:
-            Total number of matching messages
+            Total number of matching messages (0 if users are blocked)
         """
         # Verify user is a participant
         conversation = MessageService.get_conversation_by_id(
             db, conversation_id, user_id
         )
         if not conversation:
+            return 0
+
+        # Check if users are blocked
+        other_user_id = conversation.user1_id if conversation.user2_id == user_id else conversation.user2_id
+        if BlockService.are_blocked(db, user_id, other_user_id):
+            # If users are blocked, return 0
             return 0
 
         count = (
