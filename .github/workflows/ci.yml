@@ -205,30 +205,32 @@ jobs:
       run: |
         echo "🚀 Deploying to Cloud Run..."
         
-        # バックエンドデプロイ
+        # バックエンドデプロイ（コスト最適化: 1Gi memory, 1 CPU, max 5 instances）
         gcloud run deploy disease-community-api \
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
           --port 8080 \
-          --timeout 600 \
-          --memory 2Gi \
-          --cpu 2 \
-          --max-instances 10 \
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 1 \
+          --max-instances 5 \
+          --min-instances 0 \
           --allow-unauthenticated \
           --add-cloudsql-instances=circles-202510:asia-northeast1:disease-community-db \
           --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }},AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }},GCS_BUCKET_NAME=disease-community-images,GCS_PROJECT_ID=${{ env.PROJECT_ID }}"
         
-        # フロントエンドデプロイ
+        # フロントエンドデプロイ（コスト最適化: 512Mi memory, 1 CPU, max 3 instances）
         gcloud run deploy disease-community-frontend \
           --image gcr.io/${{ env.PROJECT_ID}}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
           --port 8080 \
-          --timeout 600 \
-          --memory 2Gi \
-          --cpu 2 \
-          --max-instances 10 \
+          --timeout 60 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 3 \
+          --min-instances 0 \
           --allow-unauthenticated \
           --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,NEXT_PUBLIC_AUTH0_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH0_DOMAIN }},NEXT_PUBLIC_AUTH0_CLIENT_ID=${{ secrets.NEXT_PUBLIC_AUTH0_CLIENT_ID }},NEXT_PUBLIC_AUTH0_AUDIENCE=${{ secrets.NEXT_PUBLIC_AUTH0_AUDIENCE }},NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback"
 
