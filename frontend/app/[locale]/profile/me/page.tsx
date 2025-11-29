@@ -8,8 +8,8 @@ import { useUser } from '@/contexts/UserContext';
 import { UserProfileCard } from '@/components/UserProfileCard';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useRouter } from '@/i18n/routing';
-import { EditDiseaseForm } from '@/components/EditDiseaseForm';
-import { UserDiseaseDetailed, UserDiseaseUpdate } from '@/lib/api/users';
+import { DiseaseForm } from '@/components/DiseaseForm';
+import { UserDiseaseDetailed, UserDiseaseUpdate, UserDiseaseCreate } from '@/lib/api/users';
 import Header from '@/components/Header';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import ThemeSwitcher from '@/components/ThemeSwitcher';
@@ -20,7 +20,7 @@ export default function MyProfilePage() {
   const t = useTranslations('myProfile');
   const locale = useLocale();
   const { user, loading: userLoading, updateUserProfile, refreshUser } = useUser();
-  const { userDiseases, loadingUserDiseases, statuses, removeDisease, updateDisease } =
+  const { userDiseases, loadingUserDiseases, statuses, diseases, categories, removeDisease, updateDisease } =
     useDisease();
   const router = useRouter();
 
@@ -90,14 +90,16 @@ export default function MyProfilePage() {
     }
   };
 
-  const handleSaveDisease = async (userDiseaseId: number, data: UserDiseaseUpdate) => {
+  const handleSaveDisease = async (data: UserDiseaseCreate | UserDiseaseUpdate) => {
+    if (!editingDisease) return;
     try {
-      await updateDisease(userDiseaseId, data);
+      // In edit mode, data is always UserDiseaseUpdate
+      await updateDisease(editingDisease.id, data as UserDiseaseUpdate);
       setIsEditModalOpen(false);
       setEditingDisease(null);
     } catch (error) {
       console.error('Failed to update disease:', error);
-      throw error; // Re-throw to let modal handle error display
+      throw error; // Re-throw to let form handle error display
     }
   };
 
@@ -157,10 +159,13 @@ export default function MyProfilePage() {
             editForm={
               editingDisease &&
               isEditModalOpen && (
-                <EditDiseaseForm
-                  userDisease={editingDisease}
+                <DiseaseForm
+                  mode="edit"
+                  diseases={diseases}
+                  categories={categories}
                   statuses={statuses}
-                  onSave={handleSaveDisease}
+                  initialData={editingDisease}
+                  onSubmit={handleSaveDisease}
                   onCancel={handleCloseEditModal}
                 />
               )
