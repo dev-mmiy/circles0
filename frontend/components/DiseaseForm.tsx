@@ -441,7 +441,7 @@ export function DiseaseForm({
               name="diagnosis_date"
               value={formData.diagnosis_date || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 [&::-webkit-calendar-picker-indicator]:invert dark:[&::-webkit-calendar-picker-indicator]:invert-0"
             />
           </div>
 
@@ -458,7 +458,7 @@ export function DiseaseForm({
               name="severity_level"
               value={formData.severity_level || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-gray-100"
             >
               <option value="">{t('placeholders.select')}</option>
               <option value="1">{t('options.severity.1')}</option>
@@ -517,7 +517,7 @@ export function DiseaseForm({
               name="status_id"
               value={formData.status_id || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-gray-100"
             >
               <option value="">{t('placeholders.select')}</option>
               {statuses.map(status => (
@@ -610,7 +610,7 @@ export function DiseaseForm({
               name="is_public"
               checked={formData.is_public || false}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
             />
             <span className="ml-3">
               <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.public')}</span>
@@ -624,7 +624,7 @@ export function DiseaseForm({
               name="is_searchable"
               checked={formData.is_searchable ?? true}
               onChange={handleChange}
-              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
+              className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
             />
             <span className="ml-3">
               <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.searchable')}</span>
@@ -639,7 +639,7 @@ export function DiseaseForm({
                 name="is_active"
                 checked={(formData as UserDiseaseUpdate).is_active ?? true}
                 onChange={handleChange}
-                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
+                className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
               />
               <span className="ml-3">
                 <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.active')}</span>
