@@ -193,6 +193,14 @@ export function DiseaseList({
               </div>
             )}
 
+            {/* Course */}
+            {disease.course && (
+              <div className="mb-3">
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('course')}</h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">{disease.course}</p>
+              </div>
+            )}
+
             {/* Notes */}
             {disease.notes && (
               <div className="mb-3">

@@ -782,6 +782,7 @@
     "symptoms": "症状",
     "limitations": "制限事項",
     "medications": "服薬情報",
+    "course": "経過",
     "notes": "備考",
     "public": "公開",
     "private": "非公開",
@@ -900,6 +901,7 @@
       "limitations": "制限事項",
       "medications": "服薬情報",
       "medicationsShort": "服用薬",
+      "course": "経過",
       "notes": "備考",
       "notesShort": "メモ",
       "public": "公開設定",
@@ -920,6 +922,7 @@
       "limitationsDetail": "日常生活での制限事項を記載してください",
       "medications": "現在服用中の薬やサプリメント",
       "medicationsDetail": "服用中の薬を記載してください",
+      "course": "疾患の経過を記載してください",
       "notes": "その他の情報",
       "notesOther": "その他のメモ",
       "select": "選択してください"

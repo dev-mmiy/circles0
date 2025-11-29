@@ -31,6 +31,7 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
     symptoms: userDisease.symptoms,
     limitations: userDisease.limitations,
     medications: userDisease.medications,
+    course: userDisease.course,
     notes: userDisease.notes,
     is_public: userDisease.is_public,
     is_searchable: userDisease.is_searchable,
@@ -250,6 +251,22 @@ export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: Edi
             value={formData.medications || ''}
             onChange={handleChange}
             placeholder={t('placeholders.medicationsDetail')}
+            rows={2}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
+          />
+        </div>
+
+        {/* Course */}
+        <div>
+          <label htmlFor="course" className="block text-sm font-medium text-gray-700 mb-1">
+            {t('fields.course')}
+          </label>
+          <textarea
+            id="course"
+            name="course"
+            value={formData.course || ''}
+            onChange={handleChange}
+            placeholder={t('placeholders.course')}
             rows={2}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm"
           />

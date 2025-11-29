@@ -69,8 +69,8 @@ export function useMessageStream(
 
   const closeConnection = () => {
     if (eventSourceRef.current) {
-      // Only log if we were connected (not just cleanup)
-      if (wasConnectedRef.current) {
+      // Only log in verbose mode
+      if (wasConnectedRef.current && typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true') {
         debugLog.log('[Message SSE] Closing connection');
       }
       eventSourceRef.current.close();
@@ -87,7 +87,7 @@ export function useMessageStream(
     }
 
     if (!isAuthenticated) {
-      debugLog.log('[Message SSE] Not authenticated, skipping connection');
+      // Silent skip, no log needed
       return;
     }
 
@@ -98,20 +98,12 @@ export function useMessageStream(
 
     try {
       // Get authentication token using tokenManager to prevent conflicts with other API calls
-      debugLog.log('[Message SSE] Getting token for SSE connection...', { timestamp: new Date().toISOString() });
-      const tokenStartTime = Date.now();
-      
+      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
       let token: string;
       try {
         token = await getAccessTokenFromManager(getAccessTokenSilently);
-        const tokenElapsed = Date.now() - tokenStartTime;
-        debugLog.log('[Message SSE] Token retrieved successfully', { elapsed: tokenElapsed, timestamp: new Date().toISOString() });
       } catch (tokenError: any) {
-        const tokenElapsed = Date.now() - tokenStartTime;
-        debugLog.error('[Message SSE] Failed to get token for SSE connection:', tokenError, {
-          elapsed: tokenElapsed,
-          timestamp: new Date().toISOString()
-        });
+        debugLog.error('[Message SSE] Failed to get token for SSE connection:', tokenError);
         
         // Don't throw - just set error and return
         // The connection will be retried automatically by the error handler
@@ -123,13 +115,17 @@ export function useMessageStream(
       // We'll append the token as a query parameter
       const urlWithAuth = `${SSE_ENDPOINT}?token=${encodeURIComponent(token)}`;
 
-      console.log('[Message SSE] Connecting to message stream...');
+      if (isVerbose) {
+        debugLog.log('[Message SSE] Connecting to message stream...');
+      }
       const eventSource = new EventSource(urlWithAuth);
       eventSourceRef.current = eventSource;
 
       // Connection established
       eventSource.addEventListener('connected', (event) => {
-        console.log('[Message SSE] Connected:', event.data);
+        if (isVerbose) {
+          debugLog.log('[Message SSE] Connected:', event.data);
+        }
         setIsConnected(true);
         wasConnectedRef.current = true;
         setError(null);
@@ -141,14 +137,16 @@ export function useMessageStream(
       eventSource.addEventListener('message', (event) => {
         try {
           const message: MessageEvent = JSON.parse(event.data);
-          console.log('[Message SSE] New message:', message);
+          if (isVerbose) {
+            debugLog.log('[Message SSE] New message:', message);
+          }
           setLastMessage(message);
 
           if (onMessageRef.current) {
             onMessageRef.current(message);
           }
         } catch (error) {
-          console.error('[Message SSE] Failed to parse message:', error);
+          debugLog.error('[Message SSE] Failed to parse message:', error);
         }
       });
 
@@ -156,14 +154,16 @@ export function useMessageStream(
       eventSource.addEventListener('group_message', (event) => {
         try {
           const message: MessageEvent = JSON.parse(event.data);
-          console.log('[Message SSE] New group message:', message);
+          if (isVerbose) {
+            debugLog.log('[Message SSE] New group message:', message);
+          }
           setLastMessage(message);
 
           if (onMessageRef.current) {
             onMessageRef.current(message);
           }
         } catch (error) {
-          console.error('[Message SSE] Failed to parse group message:', error);
+          debugLog.error('[Message SSE] Failed to parse group message:', error);
         }
       });
 
@@ -174,7 +174,9 @@ export function useMessageStream(
 
       // Server requests reconnection (before timeout)
       eventSource.addEventListener('reconnect', (event) => {
-        console.log('[Message SSE] Server requested reconnection:', event.data);
+        if (isVerbose) {
+          debugLog.log('[Message SSE] Server requested reconnection:', event.data);
+        }
         closeConnection();
         scheduleReconnectRef.current?.();
       });
@@ -191,17 +193,13 @@ export function useMessageStream(
         
         // Connection closed - check if it was a normal disconnect or an error
         if (readyState === EventSource.CLOSED) {
-          // Only log if we were previously connected (unexpected disconnect)
-          if (wasConnectedRef.current) {
-            console.log('[Message SSE] Connection closed, will reconnect');
-          } else {
-            // Connection failed to establish - log as warning, not error
-            // This is common during initial connection attempts
-            console.warn('[Message SSE] Connection failed to establish, will retry');
+          // Only log unexpected disconnects or in verbose mode
+          if (wasConnectedRef.current && isVerbose) {
+            debugLog.log('[Message SSE] Connection closed, will reconnect');
           }
         } else {
-          // Unexpected state
-          console.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
+          // Unexpected state - always log errors
+          debugLog.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
         }
         
         setIsConnected(false);
@@ -215,7 +213,7 @@ export function useMessageStream(
           MAX_RETRY_DELAY
         );
 
-        console.log(`[Message SSE] Scheduling reconnection in ${delay}ms`);
+        // Silent reconnection, no log needed
         setTimeout(() => {
           if (!eventSourceRef.current && isAuthenticated) {
             connect();

@@ -20,6 +20,7 @@ import {
 import { getUnreadCount } from '@/lib/api/notifications';
 import { setAuthToken } from '@/lib/api/client';
 import { addLocalePrefix } from '@/lib/utils/locale';
+import { debugLog } from '@/lib/utils/debug';
 import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
 
 interface NotificationContextValue {
@@ -63,7 +64,10 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   // Handle incoming real-time notifications
   const handleNotification = useCallback((notification: NotificationEvent) => {
-    console.log('[NotificationContext] New notification received:', notification);
+    // Only log in verbose mode
+    if (typeof window !== 'undefined' && localStorage.getItem('debugNotifications') === 'true') {
+      debugLog.log('[NotificationContext] New notification received:', notification);
+    }
 
     // Increment unread count (notification is unread by default)
     if (!notification.is_read) {
@@ -137,10 +141,12 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
           setAuthToken(token);
           
           const count = await getUnreadCount();
-          console.log('[NotificationContext] Initial unread count:', count);
+          if (typeof window !== 'undefined' && localStorage.getItem('debugNotifications') === 'true') {
+            debugLog.log('[NotificationContext] Initial unread count:', count);
+          }
           setUnreadCount(count);
         } catch (error) {
-          console.error('[NotificationContext] Failed to fetch unread count:', error);
+          debugLog.error('[NotificationContext] Failed to fetch unread count:', error);
           setUnreadCount(0);
         }
       };

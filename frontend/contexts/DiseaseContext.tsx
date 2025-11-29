@@ -27,6 +27,7 @@ import {
   removeUserDisease,
 } from '@/lib/api/users';
 import { getAccessToken as getAccessTokenFromManager } from '@/lib/utils/tokenManager';
+import { debugLog } from '@/lib/utils/debug';
 
 interface DiseaseContextType {
   // Master data
@@ -96,7 +97,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       setCategories(categoriesData);
       setStatuses(statusesData);
     } catch (err) {
-      console.error('Error fetching master data:', err);
+      debugLog.error('Error fetching master data:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch master data');
     } finally {
       setLoadingMasterData(false);
@@ -121,7 +122,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       const diseases = await getUserDiseasesDetailed(accessToken);
       setUserDiseases(diseases);
     } catch (err) {
-      console.error('Error fetching user diseases:', err);
+      debugLog.error('Error fetching user diseases:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch user diseases');
       setUserDiseases([]);
     } finally {
@@ -152,7 +153,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
     try {
       return await searchDiseases(query, 20);
     } catch (err) {
-      console.error('Error searching diseases:', err);
+      debugLog.error('Error searching diseases:', err);
       throw err;
     }
   };
@@ -179,7 +180,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
 
       return newDisease;
     } catch (err) {
-      console.error('Error adding disease:', err);
+      debugLog.error('Error adding disease:', err);
       throw err;
     }
   };
@@ -199,7 +200,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
 
       return updatedDisease;
     } catch (err) {
-      console.error('Error updating disease:', err);
+      debugLog.error('Error updating disease:', err);
       throw err;
     }
   };
@@ -214,7 +215,7 @@ export function DiseaseProvider({ children }: DiseaseProviderProps) {
       // Update local state
       setUserDiseases(prev => prev.filter(d => d.id !== diseaseId));
     } catch (err) {
-      console.error('Error removing disease:', err);
+      debugLog.error('Error removing disease:', err);
       throw err;
     }
   };

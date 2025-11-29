@@ -94,6 +94,7 @@ export interface UserDiseaseDetailed {
   symptoms?: string;
   limitations?: string;
   medications?: string;
+  course?: string; // Disease course/progress
   notes?: string;
   is_public: boolean;
   is_searchable: boolean;
@@ -130,6 +131,7 @@ export interface UserDiseaseCreate {
   symptoms?: string;
   limitations?: string;
   medications?: string;
+  course?: string; // Disease course/progress
   notes?: string;
   is_public?: boolean;
   is_searchable?: boolean;
@@ -144,6 +146,7 @@ export interface UserDiseaseUpdate {
   symptoms?: string;
   limitations?: string;
   medications?: string;
+  course?: string; // Disease course/progress
   notes?: string;
   is_public?: boolean;
   is_searchable?: boolean;

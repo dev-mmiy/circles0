@@ -208,6 +208,7 @@ class UserDiseaseBase(BaseModel):
     symptoms: Optional[str] = None
     limitations: Optional[str] = None
     medications: Optional[str] = None
+    course: Optional[str] = None  # Disease course/progress
     notes: Optional[str] = None
     is_public: bool = False
     is_searchable: bool = True
@@ -230,6 +231,7 @@ class UserDiseaseUpdate(BaseModel):
     symptoms: Optional[str] = None
     limitations: Optional[str] = None
     medications: Optional[str] = None
+    course: Optional[str] = None  # Disease course/progress
     notes: Optional[str] = None
     is_public: Optional[bool] = None
     is_searchable: Optional[bool] = None

@@ -11,6 +11,7 @@ import NotificationDropdown from './notifications/NotificationDropdown';
 import { getTotalUnreadCount } from '@/lib/api/messages';
 import { setAuthToken } from '@/lib/api/client';
 import { useMessageStream, MessageEvent } from '@/lib/hooks/useMessageStream';
+import { debugLog } from '@/lib/utils/debug';
 
 /**
  * Application Header Component with i18n support and mobile hamburger menu
@@ -28,10 +29,10 @@ export default function Header() {
   // Edgeなど一部ブラウザでisAuthenticatedがfalseのままになる問題への対策
   const showAuthenticatedUI = isAuthenticated || (!!user && !authLoading);
 
-  // デバッグログ（開発環境のみ）
+  // デバッグログ（verbose modeのみ）
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Header] Auth state:', { authLoading, isAuthenticated, hasUser: !!user, showAuthenticatedUI });
+    if (typeof window !== 'undefined' && localStorage.getItem('debugHeader') === 'true') {
+      debugLog.log('[Header] Auth state:', { authLoading, isAuthenticated, hasUser: !!user, showAuthenticatedUI });
     }
   }, [authLoading, isAuthenticated, user, showAuthenticatedUI]);
 
@@ -53,7 +54,7 @@ export default function Header() {
       const count = await getTotalUnreadCount();
       setUnreadMessageCount(count);
     } catch (error) {
-      console.error('Failed to load unread message count:', error);
+      debugLog.error('Failed to load unread message count:', error);
       setUnreadMessageCount(0);
     }
   }, [authLoading, isAuthenticated, getAccessTokenSilently]);

@@ -17,30 +17,15 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
     'https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback';
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com';
 
-  console.log('Auth0 Environment Variables:', {
-    domain: domain ? 'SET' : 'MISSING',
-    clientId: clientId ? 'SET' : 'MISSING',
-    redirectUri: redirectUri ? 'SET' : 'MISSING',
-    audience: audience ? 'SET' : 'MISSING',
-  });
-
   // 設定値が不足している場合はAuth0を無効化
   if (!domain || !clientId || !redirectUri) {
-    console.warn('Auth0 configuration missing. Authentication will be disabled.');
-    console.warn('Missing values:', {
-      domain: !!domain,
-      clientId: !!clientId,
-      redirectUri: !!redirectUri,
-    });
+    // Only warn in development or verbose mode
+    if (process.env.NODE_ENV === 'development' || 
+        (typeof window !== 'undefined' && localStorage.getItem('debugAuth0') === 'true')) {
+      console.warn('Auth0 configuration missing. Authentication will be disabled.');
+    }
     return <>{children}</>;
   }
-
-  console.log('Auth0 Configuration:', {
-    domain,
-    clientId,
-    redirectUri,
-    audience,
-  });
 
   try {
     return (
@@ -56,7 +41,10 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
         cacheLocation="memory"
         skipRedirectCallback={false}
         onRedirectCallback={appState => {
-          console.log('Auth0 redirect callback:', appState);
+          // Only log in verbose mode
+          if (typeof window !== 'undefined' && localStorage.getItem('debugAuth0') === 'true') {
+            console.log('Auth0 redirect callback:', appState);
+          }
           // Handle redirect after login - add locale prefix to URL
           let redirectUrl = '/';
           if (appState?.returnTo) {

@@ -11,6 +11,7 @@ import { useRouter, usePathname } from '@/i18n/routing';
 import { useLocale } from 'next-intl';
 import { UserProfile, UserProfileUpdate } from '@/lib/api/users';
 import { getCurrentUserProfile, updateCurrentUserProfile } from '@/lib/api/users';
+import { debugLog } from '@/lib/utils/debug';
 
 interface UserContextType {
   user: UserProfile | null;
@@ -96,7 +97,7 @@ export function UserProvider({ children }: UserProviderProps) {
     
     // Only switch if current locale differs from preferred locale
     if (locale !== preferredLocale) {
-      console.log(`Auto-switching locale from ${locale} to ${preferredLocale} based on user preference`);
+      // Silent locale switch, no log needed
       setHasAutoSwitched(true);
       
       // Navigate to the same pathname with the new locale
@@ -116,7 +117,10 @@ export function UserProvider({ children }: UserProviderProps) {
     }
 
     try {
-      console.log('Updating user profile with data:', updates);
+      // Only log in verbose mode
+      if (typeof window !== 'undefined' && localStorage.getItem('debugUser') === 'true') {
+        debugLog.log('Updating user profile with data:', updates);
+      }
 
       // Optimistic update
       setUser({ ...user, ...updates });
@@ -130,7 +134,7 @@ export function UserProvider({ children }: UserProviderProps) {
       // Update with actual response from server
       setUser(updatedUser);
     } catch (err) {
-      console.error('Error updating user profile:', err);
+      debugLog.error('Error updating user profile:', err);
       // Revert optimistic update on error
       await fetchUserProfile();
       throw err;

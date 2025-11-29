@@ -376,6 +376,7 @@ class UserDisease(Base):
     symptoms: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     limitations: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     medications: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    course: Mapped[Optional[str]] = mapped_column(Text, nullable=True)  # Disease course/progress
 
     # Legacy fields (for backward compatibility)
     severity: Mapped[Optional[str]] = mapped_column(

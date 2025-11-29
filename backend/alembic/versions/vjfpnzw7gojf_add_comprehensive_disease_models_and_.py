@@ -480,6 +480,7 @@ def upgrade() -> None:
     op.add_column("user_diseases", sa.Column("symptoms", sa.Text(), nullable=True))
     op.add_column("user_diseases", sa.Column("limitations", sa.Text(), nullable=True))
     op.add_column("user_diseases", sa.Column("medications", sa.Text(), nullable=True))
+    op.add_column("user_diseases", sa.Column("course", sa.Text(), nullable=True))  # Disease course/progress
 
     # Add privacy settings
     op.add_column(

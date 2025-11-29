@@ -59,6 +59,7 @@ export function DiseaseForm({
     symptoms: initialData?.symptoms,
     limitations: initialData?.limitations,
     medications: initialData?.medications,
+    course: initialData?.course,
     notes: initialData?.notes,
     is_public: initialData?.is_public ?? false,
     is_searchable: initialData?.is_searchable ?? true,
@@ -585,6 +586,22 @@ export function DiseaseForm({
             rows={3}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
             placeholder={t('placeholders.medications')}
+          />
+        </div>
+
+        {/* Course */}
+        <div>
+          <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {t('fields.course')}
+          </label>
+          <textarea
+            id="course"
+            name="course"
+            value={formData.course || ''}
+            onChange={handleChange}
+            rows={3}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+            placeholder={t('placeholders.course')}
           />
         </div>
 

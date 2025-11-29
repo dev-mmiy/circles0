@@ -9,6 +9,7 @@ import { UserProvider } from '@/contexts/UserContext';
 import { DiseaseProvider } from '@/contexts/DiseaseContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import ScrollHandler from '@/components/ScrollHandler';
 
 export const metadata: Metadata = {
   title: 'Disease Community Platform',
@@ -39,6 +40,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} suppressHydrationWarning>
       <body className="font-sans">
+        <ScrollHandler />
         <ThemeProvider>
           <NextIntlClientProvider messages={messages}>
             <Auth0ProviderWithConfig>

@@ -745,6 +745,7 @@
     "symptoms": "Symptoms",
     "limitations": "Limitations",
     "medications": "Medications",
+    "course": "Course",
     "notes": "Notes",
     "public": "Public",
     "private": "Private",
@@ -863,6 +864,7 @@
       "limitations": "Limitations",
       "medications": "Medications",
       "medicationsShort": "Medications",
+      "course": "Course",
       "notes": "Notes",
       "notesShort": "Memo",
       "public": "Public Setting",
@@ -883,6 +885,7 @@
       "limitationsDetail": "Please describe daily life restrictions",
       "medications": "Current medications and supplements",
       "medicationsDetail": "Please list medications being taken",
+      "course": "Please describe the course of the disease",
       "notes": "Other information",
       "notesOther": "Other notes",
       "select": "Please select"

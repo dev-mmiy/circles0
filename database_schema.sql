@@ -273,6 +273,7 @@ CREATE TABLE user_diseases (
     symptoms TEXT,
     limitations TEXT,
     medications TEXT,
+    course TEXT, -- 疾患の経過
     
     -- プライバシー設定
     is_public BOOLEAN DEFAULT false, -- 他のユーザーに公開するか

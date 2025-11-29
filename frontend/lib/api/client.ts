@@ -49,16 +49,13 @@ apiClient.interceptors.request.use(
     (config as any).__requestId = requestId;
     (config as any).__requestStartTime = requestStartTime;
     
-    debugLog.log('[apiClient] Request interceptor called:', {
-      requestId,
-      method: config.method,
-      url: config.url,
-      baseURL: config.baseURL,
-      fullURL: `${config.baseURL}${config.url}`,
-      hasAuth: !!config.headers?.Authorization,
-      timeout: config.timeout,
-      timestamp: new Date().toISOString(),
-    });
+    // Only log requests in verbose mode (set via localStorage.debugApiClient = 'true')
+    if (typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true') {
+      debugLog.log('[apiClient] Request:', {
+        method: config.method,
+        url: config.url,
+      });
+    }
     
     return config;
   },
@@ -75,60 +72,35 @@ apiClient.interceptors.request.use(
  */
 apiClient.interceptors.response.use(
   (response) => {
-    const requestId = (response.config as any).__requestId;
     const requestStartTime = (response.config as any).__requestStartTime;
     const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
     
-    // Log performance metrics for optimized endpoints
-    const url = response.config.url || '';
-    const isPerformanceEndpoint = 
-      url.includes('/api/v1/posts?') || 
-      url.includes('/api/v1/messages/conversations?');
+    // Only log slow requests (>1000ms) or when verbose mode is enabled
+    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
+    const isSlow = elapsed && elapsed > 1000;
     
-    if (isPerformanceEndpoint && elapsed) {
-      debugLog.log('[apiClient] Performance metrics:', {
-        requestId,
-        endpoint: url,
+    if (isVerbose || isSlow) {
+      const url = response.config.url || '';
+      debugLog.log('[apiClient] Response:', {
         status: response.status,
-        elapsed: `${elapsed}ms`,
-        dataSize: response.data ? JSON.stringify(response.data).length : 0,
-        itemsCount: Array.isArray(response.data) ? response.data.length : 
-                   (response.data?.conversations ? response.data.conversations.length : 
-                    response.data?.items ? response.data.items.length : undefined),
-        timestamp: new Date().toISOString(),
+        url,
+        elapsed: elapsed ? `${elapsed}ms` : undefined,
+        ...(isSlow && { warning: 'Slow request detected' }),
       });
     }
     
-    debugLog.log('[apiClient] Response received:', {
-      requestId,
-      status: response.status,
-      url: response.config.url,
-      elapsed: elapsed ? `${elapsed}ms` : undefined,
-      timestamp: new Date().toISOString(),
-    });
     return response;
   },
   async (error: AxiosError) => {
-    const requestId = error.config ? (error.config as any).__requestId : undefined;
-    debugLog.log('[apiClient] Response interceptor error handler called', {
-      requestId,
-      hasResponse: !!error.response,
-      hasRequest: !!error.request,
-      message: error.message,
-      code: error.code,
-      url: error.config?.url,
-      timestamp: new Date().toISOString(),
-    });
+    // Only log verbose error details in verbose mode
+    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
     
-    // Log more details about the request if available (debug only)
-    if (error.request && process.env.NODE_ENV === 'development') {
-      const xhr = error.request as XMLHttpRequest;
-      debugLog.log('[apiClient] Request details:', {
-        readyState: xhr?.readyState,
-        status: xhr?.status,
-        statusText: xhr?.statusText,
-        responseText: xhr?.responseText?.substring(0, 100),
-        responseURL: xhr?.responseURL,
+    if (isVerbose) {
+      debugLog.log('[apiClient] Error handler called', {
+        hasResponse: !!error.response,
+        hasRequest: !!error.request,
+        message: error.message,
+        url: error.config?.url,
       });
     }
 
@@ -176,23 +148,14 @@ apiClient.interceptors.response.use(
       const requestStartTime = (error.config as any)?.__requestStartTime;
       const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
       
+      // Log network errors concisely
       debugLog.error('[apiClient] Network Error:', {
-        requestId,
         message: error.message,
-        code: error.code,
         url: error.config?.url,
-        fullURL: error.config ? `${error.config.baseURL}${error.config.url}` : undefined,
-        method: error.config?.method,
-        timeout: error.config?.timeout,
         isTimeout,
-        elapsed: elapsed ? `${elapsed}ms` : undefined,
-        timestamp: new Date().toISOString(),
-        ...(isTimeout && {
-          timeoutDetails: {
-            configuredTimeout: error.config?.timeout,
-            actualElapsed: elapsed,
-            timeoutExceeded: elapsed && error.config?.timeout ? elapsed > error.config.timeout : undefined,
-          },
+        ...(isTimeout && elapsed && {
+          elapsed: `${elapsed}ms`,
+          timeout: error.config?.timeout,
         }),
       });
     } else {

@@ -200,13 +200,13 @@ export default function EditPostModal({
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
-        <div className="relative bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900">{t('editTitle')}</h2>
+          <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('editTitle')}</h2>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -223,14 +223,14 @@ export default function EditPostModal({
           <form onSubmit={handleSubmit} className="p-6">
             {/* Error message */}
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm">
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm">
                 {error}
               </div>
             )}
 
             {/* Content textarea */}
             <div className="mb-4">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('contentLabel')}
               </label>
               <textarea
@@ -238,11 +238,11 @@ export default function EditPostModal({
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 rows={6}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('contentPlaceholder')}
                 disabled={isSubmitting}
               />
-              <div className="mt-1 text-sm text-gray-500">
+              <div className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 {content.length}/5000 {t('characters')}
               </div>
             </div>
@@ -250,14 +250,14 @@ export default function EditPostModal({
             {/* Detected hashtags */}
             {detectedHashtags.length > 0 && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('detectedHashtags')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {detectedHashtags.map((hashtag, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-sm font-medium"
+                      className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
                     >
                       #{hashtag}
                     </span>
@@ -269,14 +269,14 @@ export default function EditPostModal({
             {/* Detected mentions */}
             {detectedMentions.length > 0 && (
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('detectedMentions')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {detectedMentions.map((mention, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 text-purple-700 text-sm font-medium"
+                      className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
                     >
                       @{mention}
                     </span>
@@ -287,7 +287,7 @@ export default function EditPostModal({
 
             {/* Images */}
             <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('imagesLabel')} ({imageUrls.length}/5)
               </label>
               
@@ -304,7 +304,7 @@ export default function EditPostModal({
                         alt={`Image ${index + 1}`}
                         width={80}
                         height={80}
-                        className="w-20 h-20 object-cover rounded-lg border border-gray-300"
+                        className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
                       />
                       {uploadingImages && preview.file && (
                         <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
@@ -340,15 +340,15 @@ export default function EditPostModal({
                   />
                   <label
                     htmlFor="image-upload-edit"
-                    className={`inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                    className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
                       isSubmitting || uploadingImages || imageUrls.length >= 5
-                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
+                        ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                        : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                     }`}
                   >
                     {uploadingImages ? (
                       <>
-                        <div className="w-4 h-4 border-4 border-gray-600 border-t-transparent rounded-full animate-spin mr-2"></div>
+                        <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
                         {t('uploading')}
                       </>
                     ) : (
@@ -366,13 +366,13 @@ export default function EditPostModal({
 
             {/* Visibility */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('visibilityLabel')}
               </label>
               <select
                 value={visibility}
                 onChange={(e) => setVisibility(e.target.value as 'public' | 'followers_only' | 'private')}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-gray-100"
                 disabled={isSubmitting}
               >
                 <option value="public">{t('visibility.public')}</option>
@@ -387,7 +387,7 @@ export default function EditPostModal({
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {t('cancel')}
               </button>
