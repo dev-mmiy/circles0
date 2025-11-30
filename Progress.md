@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-27（Progress.md整理完了）
+## 最終更新日: 2025-11-27（Cloud Runコスト最適化完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装完了、本番環境稼働中
 
@@ -1727,6 +1727,40 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/lib/hooks/useDataLoader.ts](frontend/lib/hooks/useDataLoader.ts) - データローダーフックのコメント追加
 
 ### 2025-11-27
+- **CI/CDパイプラインの整理と最適化** ✅ 完了
+  - **マイグレーションエラーの修正**:
+    - `add_course_column_to_user_diseases.py`の冪等性を修正
+    - カラムが既に存在する場合のチェックを追加（`IF NOT EXISTS`パターン）
+    - GitHub Actionsでの重複カラムエラーを解消
+  - **CI/CDパイプラインの整理**:
+    - `ci.yml`から`pull_request`トリガーを削除（実際には使われていなかった）
+    - `ci-light.yml`から`pull_request`トリガーを削除（`pr-check.yml`と重複していた）
+    - 各ワークフローの役割を明確化
+      - `ci.yml`: デプロイ用（main/developブランチのみ）
+      - `pr-check.yml`: PRチェック専用
+      - `ci-light.yml`: featureブランチ用の軽量チェック
+    - `.github/workflows/README.md`を更新して役割を明確化
+  - **Cloud Runコスト最適化** ✅ 完了
+    - **バックエンド設定の最適化**:
+      - メモリ: 2Gi → 1Gi（50%削減）
+      - CPU: 2 → 1（50%削減）
+      - 最大インスタンス数: 10 → 5（50%削減）
+      - タイムアウト: 600秒 → 300秒（5分）
+      - 最小インスタンス数: 0（コールドスタート有効化）
+    - **フロントエンド設定の最適化**:
+      - メモリ: 2Gi → 512Mi（75%削減）
+      - CPU: 2 → 1（50%削減）
+      - 最大インスタンス数: 10 → 3（70%削減）
+      - タイムアウト: 600秒 → 60秒（1分）
+      - 最小インスタンス数: 0（コールドスタート有効化）
+    - **期待される効果**:
+      - 月額コスト削減: 約¥1,000-1,300（30-35%削減）
+      - 現在: 約¥3,560/月 → 最適化後: 約¥2,300-2,600/月
+    - **コスト最適化ドキュメント作成**:
+      - `docs/COST_OPTIMIZATION.md`を作成
+      - 現在のコスト状況、最適化内容、モニタリング方法を記載
+    - **動作確認**: 最適化後の設定で正常に動作することを確認
+
 - **本番環境GCS設定の修正** ✅ 完了
   - **問題**: iPhoneから本番環境にアクセスして画像をアップロードしようとすると、「画像アップロードサービスが設定されていません」というエラーが発生
   - **原因**: `GOOGLE_APPLICATION_CREDENTIALS`がSecret Managerから参照されていたが、ファイルが存在しない
@@ -1909,6 +1943,8 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+[最新] - perf: Optimize Cloud Run resource configuration for cost reduction (2025-11-27)
+[最新] - fix: Fix migration duplicate column error and optimize CI/CD pipelines (2025-11-27)
 [最新] - refactor: Unify loading spinner icons across all components (2025-11-27)
 [最新] - fix: Resolve TypeScript and ESLint errors in CI build (2025-11-27)
 [最新] - docs: Update commit history in Progress.md (2025-11-27)
@@ -1949,7 +1985,7 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-27（Progress.md整理完了）
+**最終更新日**: 2025-11-27（Cloud Runコスト最適化完了）
 **最終更新者**: Claude Code
 **ステータス**: ✅ 基本機能実装完了、本番環境稼働中
 - ✅ コア機能: 認証、ユーザー管理、投稿・フィード、コメント・リアクション、フォロー・フォロワー、通知、メッセージング、グループチャット
@@ -1957,3 +1993,4 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 - ✅ パフォーマンス最適化: N+1クエリ修正、画像最適化、コードスプリッティング
 - ✅ テスト: ユニットテスト、統合テスト導入完了
 - ✅ 本番環境: GCS設定修正、データベースタイムアウト問題修正完了
+- ✅ コスト最適化: Cloud Runリソース設定最適化完了（30-35%削減見込み）
