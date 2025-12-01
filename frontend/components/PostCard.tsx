@@ -9,6 +9,9 @@ import dynamic from 'next/dynamic';
 import { likePost, unlikePost, deletePost, type Post } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
+import toast from 'react-hot-toast';
+import { debugLog } from '@/lib/utils/debug';
+import ShareButton from './ShareButton';
 
 // Dynamically import EditPostModal to reduce initial bundle size
 const EditPostModal = dynamic(() => import('./EditPostModal'), {
@@ -144,15 +147,18 @@ export default function PostCard({
       const accessToken = await getAccessTokenSilently();
       await deletePost(post.id, accessToken);
       
+      // Show success toast
+      toast.success(t('deleteSuccess'));
+      
       // Notify parent
       if (onPostDeleted) {
         onPostDeleted();
       }
       
       setIsDeleteConfirmOpen(false);
-    } catch (error) {
-      console.error('Failed to delete post:', error);
-      alert(t('errors.deleteFailed'));
+    } catch (error: any) {
+      debugLog.error('Failed to delete post:', error);
+      toast.error(error?.message || t('errors.deleteFailed'));
     } finally {
       setIsDeleting(false);
     }
@@ -223,13 +229,14 @@ export default function PostCard({
           </div>
         </div>
 
-        {/* Edit/Delete buttons (only for author) */}
-        {isAuthor && isAuthenticated && (
+        {/* Edit/Delete buttons (only for author, and only if post is active) */}
+        {isAuthor && isAuthenticated && post.is_active && (
           <div className="flex items-center space-x-2">
             <button
               onClick={() => setIsEditModalOpen(true)}
               className="p-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-colors"
               title={t('edit')}
+              aria-label={t('edit')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -244,6 +251,7 @@ export default function PostCard({
               onClick={() => setIsDeleteConfirmOpen(true)}
               className="p-2 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
               title={t('delete')}
+              aria-label={t('delete')}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -258,23 +266,34 @@ export default function PostCard({
         )}
       </div>
 
-      {/* Post content */}
-      <div className="mb-4">
-        <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-          {displayContent}
-        </p>
-        {!showFullContent && post.content.length > 300 && (
-          <Link
-            href={`/posts/${post.id}`}
-            className="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 inline-block"
-          >
-            {t('readMore')}
-          </Link>
-        )}
-      </div>
+      {/* Post content or deleted message */}
+      {!post.is_active ? (
+        <div className="mb-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-600">
+          <p className="text-gray-500 dark:text-gray-400 font-medium">
+            {t('deleted')}
+          </p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+            {t('deletedByAuthor')}
+          </p>
+        </div>
+      ) : (
+        <div className="mb-4">
+          <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
+            {displayContent}
+          </p>
+          {!showFullContent && post.content.length > 300 && (
+            <Link
+              href={`/posts/${post.id}`}
+              className="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 inline-block"
+            >
+              {t('readMore')}
+            </Link>
+          )}
+        </div>
+      )}
 
-      {/* Hashtags */}
-      {post.hashtags && post.hashtags.length > 0 && (
+      {/* Hashtags (only show if post is active) */}
+      {post.is_active && post.hashtags && post.hashtags.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {post.hashtags.map((hashtag) => (
             <Link
@@ -288,8 +307,8 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Mentions */}
-      {post.mentions && post.mentions.length > 0 && (
+      {/* Mentions (only show if post is active) */}
+      {post.is_active && post.mentions && post.mentions.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-1">
             {t('mentions')}:
@@ -306,8 +325,8 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Images */}
-      {post.images && post.images.length > 0 && (
+      {/* Images (only show if post is active) */}
+      {post.is_active && post.images && post.images.length > 0 && (
         <div className="mb-4">
           <div className={`grid gap-2 ${
             post.images.length === 1
@@ -372,8 +391,9 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Actions: Like and Comment */}
-      <div className="flex items-center space-x-6 pt-3 border-t border-gray-200 dark:border-gray-700">
+      {/* Actions: Like and Comment (only show if post is active) */}
+      {post.is_active && (
+        <div className="flex items-center space-x-6 pt-3 border-t border-gray-200 dark:border-gray-700">
         {/* Like button */}
         <button
           onClick={handleLikeToggle}
@@ -420,7 +440,15 @@ export default function PostCard({
           </svg>
           <span className="font-medium">{post.comment_count}</span>
         </Link>
-      </div>
+
+        {/* Share button */}
+        <ShareButton
+          postId={post.id}
+          postContent={post.content}
+          authorName={post.author?.nickname}
+        />
+        </div>
+      )}
 
       {/* Edit Modal */}
       {isEditModalOpen && (
@@ -437,17 +465,53 @@ export default function PostCard({
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div
             className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-            onClick={() => setIsDeleteConfirmOpen(false)}
+            onClick={() => !isDeleting && setIsDeleteConfirmOpen(false)}
           />
           <div className="flex min-h-full items-center justify-center p-4">
             <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full">
               <div className="p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                  {t('deleteConfirm')}
-                </h3>
+                {/* Warning Icon and Title */}
+                <div className="flex items-start mb-4">
+                  <div className="w-12 h-12 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                    <svg
+                      className="w-6 h-6 text-red-600 dark:text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                      {t('deleteConfirm')}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {t('deleteConfirmMessage')}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Post Preview */}
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
+                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 break-words">
+                    {post.content.length > 150
+                      ? post.content.slice(0, 150) + '...'
+                      : post.content}
+                  </p>
+                </div>
+
+                {/* Impact Message */}
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  {t('deleteConfirmMessage')}
+                  {t('deleteImpact')}
                 </p>
+
+                {/* Buttons */}
                 <div className="flex justify-end gap-3">
                   <button
                     onClick={() => setIsDeleteConfirmOpen(false)}
@@ -459,8 +523,11 @@ export default function PostCard({
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
+                    {isDeleting && (
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    )}
                     {isDeleting ? t('deleting') : t('delete')}
                   </button>
                 </div>

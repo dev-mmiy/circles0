@@ -10,6 +10,7 @@ import { DiseaseProvider } from '@/contexts/DiseaseContext';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ScrollHandler from '@/components/ScrollHandler';
+import ToasterProvider from '@/components/ToasterProvider';
 
 export const metadata: Metadata = {
   title: 'Disease Community Platform',
@@ -47,7 +48,10 @@ export default async function LocaleLayout({
               <UserProvider>
                 <DiseaseProvider>
                   <NotificationProvider>
-                    <ApiProvider>{children}</ApiProvider>
+                    <ApiProvider>
+                      {children}
+                      <ToasterProvider />
+                    </ApiProvider>
                   </NotificationProvider>
                 </DiseaseProvider>
               </UserProvider>
