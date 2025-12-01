@@ -16,47 +16,60 @@ export default function Home() {
   const [postsError, setPostsError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
 
-  // Load recent posts
+  // Load recent posts function
+  const loadRecentPosts = async () => {
+    setIsLoadingPosts(true);
+    setPostsError(null);
+
+    try {
+      let accessToken: string | undefined = undefined;
+      if (isAuthenticated) {
+        try {
+          // Add timeout for token retrieval (5 seconds)
+          const tokenPromise = getAccessTokenSilently();
+          const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('Token retrieval timeout')), 5000)
+          );
+          accessToken = await Promise.race([tokenPromise, timeoutPromise]);
+        } catch (tokenError) {
+          console.warn('Failed to get access token:', tokenError);
+          // Continue without token - API will return public posts
+        }
+      }
+
+      const recentPosts = await getFeed(0, 5, accessToken, 'all');
+      setPosts(recentPosts);
+    } catch (err) {
+      console.error('Failed to load recent posts:', err);
+      setPostsError(err instanceof Error ? err.message : 'Failed to load posts');
+      // Reset hasLoadedRef on error so user can retry
+      hasLoadedRef.current = false;
+    } finally {
+      setIsLoadingPosts(false);
+    }
+  };
+
+  // Load recent posts on mount
   useEffect(() => {
     // Prevent multiple calls on re-renders
     if (hasLoadedRef.current || authLoading) return;
 
-    const loadRecentPosts = async () => {
-      hasLoadedRef.current = true;
-      setIsLoadingPosts(true);
-      setPostsError(null);
-
-      try {
-        let accessToken: string | undefined = undefined;
-        if (isAuthenticated) {
-          try {
-            // Add timeout for token retrieval (5 seconds)
-            const tokenPromise = getAccessTokenSilently();
-            const timeoutPromise = new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Token retrieval timeout')), 5000)
-            );
-            accessToken = await Promise.race([tokenPromise, timeoutPromise]);
-          } catch (tokenError) {
-            console.warn('Failed to get access token:', tokenError);
-            // Continue without token - API will return public posts
-          }
-        }
-
-        const recentPosts = await getFeed(0, 5, accessToken, 'all');
-        setPosts(recentPosts);
-      } catch (err) {
-        console.error('Failed to load recent posts:', err);
-        setPostsError(err instanceof Error ? err.message : 'Failed to load posts');
-        // Reset hasLoadedRef on error so user can retry
-        hasLoadedRef.current = false;
-      } finally {
-        setIsLoadingPosts(false);
-      }
-    };
-
+    hasLoadedRef.current = true;
     loadRecentPosts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated]);
+
+  // Handle post deletion - refresh feed
+  const handlePostDeleted = async () => {
+    // Reset hasLoadedRef to allow reload
+    hasLoadedRef.current = false;
+    await loadRecentPosts();
+  };
+
+  // Handle post update - refresh feed
+  const handlePostUpdated = async () => {
+    await loadRecentPosts();
+  };
 
   return (
     <>
@@ -103,6 +116,8 @@ export default function Home() {
                     <PostCard
                       post={post}
                       showFullContent={false}
+                      onPostDeleted={handlePostDeleted}
+                      onPostUpdated={handlePostUpdated}
                     />
                   </div>
                 ))}

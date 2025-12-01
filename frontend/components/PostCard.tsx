@@ -150,12 +150,16 @@ export default function PostCard({
       // Show success toast
       toast.success(t('deleteSuccess'));
       
-      // Notify parent
-      if (onPostDeleted) {
-        onPostDeleted();
-      }
-      
+      // Close modal first
       setIsDeleteConfirmOpen(false);
+      
+      // Wait a bit for modal to close, then refresh feed
+      setTimeout(() => {
+        // Notify parent to refresh feed
+        if (onPostDeleted) {
+          onPostDeleted();
+        }
+      }, 300); // Small delay to allow modal close animation
     } catch (error: any) {
       debugLog.error('Failed to delete post:', error);
       toast.error(error?.message || t('errors.deleteFailed'));
