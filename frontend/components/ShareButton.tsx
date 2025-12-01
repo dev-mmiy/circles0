@@ -131,7 +131,7 @@ export default function ShareButton({
       debugLog.error('Failed to copy URL:', error);
       // Still navigate even if copy fails
       router.push('/messages');
-      toast.info(t('share.redirectedToMessages'));
+      toast(t('share.redirectedToMessages'));
     }
     setIsShareMenuOpen(false);
   };
