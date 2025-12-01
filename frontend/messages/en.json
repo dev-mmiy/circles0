@@ -316,8 +316,12 @@
     "cancel": "Cancel",
     "deleteConfirm": "Delete this post?",
     "deleteConfirmMessage": "This action cannot be undone.",
+    "deleteWarning": "Warning",
+    "deleteImpact": "Deleting this post will also delete all comments.",
     "deleteSuccess": "Post deleted successfully",
     "deleteFailed": "Failed to delete post",
+    "deleted": "This post has been deleted",
+    "deletedByAuthor": "Deleted by the author",
     "editSuccess": "Post updated successfully",
     "time": {
       "justNow": "Just now",
@@ -332,6 +336,21 @@
       "private": "Private"
     },
     "mentions": "Mentions",
+    "share": {
+      "share": "Share",
+      "copyUrl": "Copy URL",
+      "shareToTwitter": "Share on Twitter/X",
+      "shareToFacebook": "Share on Facebook",
+      "shareToLINE": "Share on LINE",
+      "shareToKakaoTalk": "Share on KakaoTalk",
+      "shareToWeChat": "Share on WeChat",
+      "shareToWeibo": "Share on Weibo",
+      "shareToMessage": "Share via Message",
+      "urlCopied": "URL copied to clipboard",
+      "copyFailed": "Failed to copy URL",
+      "urlCopiedAndRedirected": "URL copied. Redirecting to messages page.",
+      "redirectedToMessages": "Redirecting to messages page."
+    },
     "errors": {
       "loginRequired": "Please log in to like this post",
       "likeFailed": "Failed to like the post",

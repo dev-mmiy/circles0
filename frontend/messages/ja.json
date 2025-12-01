@@ -354,8 +354,12 @@
     "cancel": "キャンセル",
     "deleteConfirm": "この投稿を削除しますか？",
     "deleteConfirmMessage": "この操作は取り消せません。",
+    "deleteWarning": "警告",
+    "deleteImpact": "この投稿を削除すると、コメントも一緒に削除されます。",
     "deleteSuccess": "投稿を削除しました",
     "deleteFailed": "投稿の削除に失敗しました",
+    "deleted": "この投稿は削除されました",
+    "deletedByAuthor": "投稿者によって削除されました",
     "editSuccess": "投稿を更新しました",
     "time": {
       "justNow": "たった今",
@@ -370,6 +374,21 @@
       "private": "非公開"
     },
     "mentions": "メンション",
+    "share": {
+      "share": "シェア",
+      "copyUrl": "URLをコピー",
+      "shareToTwitter": "Twitter/Xでシェア",
+      "shareToFacebook": "Facebookでシェア",
+      "shareToLINE": "LINEでシェア",
+      "shareToKakaoTalk": "KakaoTalkでシェア",
+      "shareToWeChat": "WeChatでシェア",
+      "shareToWeibo": "Weiboでシェア",
+      "shareToMessage": "メッセージでシェア",
+      "urlCopied": "URLをコピーしました",
+      "copyFailed": "URLのコピーに失敗しました",
+      "urlCopiedAndRedirected": "URLをコピーしました。メッセージページに移動します。",
+      "redirectedToMessages": "メッセージページに移動します。"
+    },
     "errors": {
       "loginRequired": "いいねするにはログインが必要です",
       "likeFailed": "いいねの処理に失敗しました",
