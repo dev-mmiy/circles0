@@ -29,6 +29,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isMarkingAllRead, setIsMarkingAllRead] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Contextから未読数とリアルタイム通知を取得
@@ -72,6 +73,20 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
       fetchNotifications();
     }
   }, [lastNotification, isOpen, fetchNotifications]);
+
+  // 画面サイズを検出
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkMobile);
+    };
+  }, []);
 
   // 外部クリックでドロップダウンを閉じる
   useEffect(() => {
@@ -120,7 +135,21 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   return (
     <div
       ref={dropdownRef}
-      className="absolute right-0 mt-2 w-96 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
+      className={`${isMobile ? 'fixed' : 'absolute'} mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 sm:w-96`}
+      style={isMobile ? {
+        left: '50%',
+        right: 'auto',
+        top: '4rem',
+        transform: 'translateX(-50%)',
+        width: 'calc(100vw - 2rem)',
+        maxWidth: '384px'
+      } : {
+        right: '1rem',
+        left: 'auto',
+        transform: 'none',
+        width: 'min(calc(100vw - 2rem), 384px)',
+        maxWidth: '384px'
+      }}
     >
       {/* ヘッダー */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
