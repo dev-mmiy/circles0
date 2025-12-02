@@ -380,7 +380,7 @@
     "detectedHashtags": "Detected hashtags",
     "detectedMentions": "Mentions",
     "imagesLabel": "Images",
-    "imageUrlPlaceholder": "Enter image URL (max 5 images)",
+    "imageUrlPlaceholder": "Enter image URL (max 10 images)",
     "addImage": "Add",
     "uploadImage": "Upload Image",
     "uploading": "Uploading...",
@@ -395,7 +395,7 @@
     "errors": {
       "contentRequired": "Please enter post content",
       "contentTooLong": "Post content must be 5000 characters or less",
-      "tooManyImages": "Maximum 5 images allowed",
+      "tooManyImages": "Maximum 10 images allowed",
       "createFailed": "Failed to create post",
       "updateFailed": "Failed to update post",
       "uploadServiceNotConfigured": "Image upload service is not configured. Please use image URL input instead, or configure GCS settings.",
@@ -688,7 +688,9 @@
       "loadRepliesFailed": "Failed to load replies",
       "replyFailed": "Failed to post reply"
     },
-    "loginPrompt": "Please <login>log in</login> to comment"
+    "loginPrompt": "Please <login>log in</login> to comment",
+    "addImage": "Add Image",
+    "uploadingImages": "Uploading..."
   },
   "followersList": {
     "loading": "Loading...",

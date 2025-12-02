@@ -112,7 +112,7 @@ async def upload_multiple_images(
 
     Returns a list of public URLs of the uploaded images.
 
-    Maximum 5 images per request.
+    Maximum 10 images per request.
 
     Requires authentication.
     """
@@ -124,10 +124,10 @@ async def upload_multiple_images(
         )
 
     # Validate number of files
-    if len(files) > 5:
+    if len(files) > 10:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum 5 images allowed per request",
+            detail="Maximum 10 images allowed per request",
         )
 
     uploaded_urls = []

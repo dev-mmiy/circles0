@@ -418,7 +418,7 @@
     "detectedHashtags": "検出されたハッシュタグ",
     "detectedMentions": "メンション",
     "imagesLabel": "画像",
-    "imageUrlPlaceholder": "画像URLを入力（最大5枚）",
+    "imageUrlPlaceholder": "画像URLを入力（最大10枚）",
     "addImage": "追加",
     "uploadImage": "画像をアップロード",
     "uploading": "アップロード中...",
@@ -433,7 +433,7 @@
     "errors": {
       "contentRequired": "投稿内容を入力してください",
       "contentTooLong": "投稿内容は5000文字以内にしてください",
-      "tooManyImages": "画像は最大5枚までです",
+      "tooManyImages": "画像は最大10枚までです",
       "createFailed": "投稿の作成に失敗しました",
       "updateFailed": "投稿の更新に失敗しました",
       "uploadServiceNotConfigured": "画像アップロードサービスが設定されていません。画像URL入力を使用するか、GCS設定を確認してください。",
@@ -725,7 +725,9 @@
       "loadRepliesFailed": "返信の読み込みに失敗しました",
       "replyFailed": "返信の投稿に失敗しました"
     },
-    "loginPrompt": "コメントするには<login>ログイン</login>してください"
+    "loginPrompt": "コメントするには<login>ログイン</login>してください",
+    "addImage": "画像を追加",
+    "uploadingImages": "アップロード中..."
   },
   "followersList": {
     "loading": "読み込み中...",

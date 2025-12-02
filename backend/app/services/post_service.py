@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session, joinedload
 from app.models.disease import UserDisease
 from app.models.hashtag import Hashtag, PostHashtag
 from app.models.mention import PostMention
-from app.models.post import Post, PostComment, PostCommentLike, PostImage, PostLike
+from app.models.post import Post, PostComment, PostCommentImage, PostCommentLike, PostImage, PostLike
 from app.models.user import User
 from app.schemas.post import (
     PostCommentCreate,
@@ -44,7 +44,7 @@ class PostService:
 
         # Create post images if provided
         if post_data.image_urls:
-            for index, image_url in enumerate(post_data.image_urls[:5]):  # Max 5 images
+            for index, image_url in enumerate(post_data.image_urls[:10]):  # Max 10 images
                 post_image = PostImage(
                     post_id=post.id,
                     image_url=image_url,
@@ -521,7 +521,7 @@ class PostService:
             db.query(PostImage).filter(PostImage.post_id == post_id).delete()
 
             # Create new images
-            for index, image_url in enumerate(post_data.image_urls[:5]):  # Max 5 images
+            for index, image_url in enumerate(post_data.image_urls[:10]):  # Max 10 images
                 post_image = PostImage(
                     post_id=post.id,
                     image_url=image_url,
@@ -680,6 +680,18 @@ class PostService:
         db.commit()
         db.refresh(comment)
 
+        # Create comment images if provided
+        if comment_data.image_urls:
+            for index, image_url in enumerate(comment_data.image_urls[:5]):  # Max 5 images
+                comment_image = PostCommentImage(
+                    comment_id=comment.id,
+                    image_url=image_url,
+                    display_order=index,
+                    created_at=datetime.utcnow(),
+                )
+                db.add(comment_image)
+            db.commit()
+
         # Create notification
         if comment_data.parent_comment_id:
             # This is a reply to a comment - notify the parent comment author
@@ -710,7 +722,11 @@ class PostService:
         """
         return (
             db.query(PostComment)
-            .options(joinedload(PostComment.user), joinedload(PostComment.replies))
+            .options(
+                joinedload(PostComment.user),
+                joinedload(PostComment.replies),
+                joinedload(PostComment.images),
+            )
             .filter(
                 PostComment.post_id == post_id,
                 PostComment.parent_comment_id.is_(None),
@@ -729,7 +745,10 @@ class PostService:
         """Get replies to a specific comment."""
         return (
             db.query(PostComment)
-            .options(joinedload(PostComment.user))
+            .options(
+                joinedload(PostComment.user),
+                joinedload(PostComment.images),
+            )
             .filter(
                 PostComment.parent_comment_id == comment_id,
                 PostComment.is_active == True,

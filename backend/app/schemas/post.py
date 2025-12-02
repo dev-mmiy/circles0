@@ -38,6 +38,26 @@ class PostImageResponse(BaseModel):
             return utc_value.replace(tzinfo=None).isoformat() + "Z"
 
 
+class PostCommentImageResponse(BaseModel):
+    """Schema for comment image responses."""
+
+    id: UUID
+    image_url: str
+    display_order: int
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
+
 class PostCreate(PostBase):
     """Schema for creating a new post."""
 
@@ -57,8 +77,8 @@ class PostUpdate(BaseModel):
     is_active: Optional[bool] = None
     image_urls: Optional[List[str]] = Field(
         default=None,
-        max_length=5,
-        description="List of image URLs (max 5 images)",
+        max_length=10,
+        description="List of image URLs (max 10 images)",
         min_length=0,
     )
 
@@ -112,6 +132,11 @@ class PostCommentCreate(PostCommentBase):
     """Schema for creating a comment."""
 
     parent_comment_id: Optional[UUID] = None
+    image_urls: Optional[List[str]] = Field(
+        None,
+        max_length=10,
+        description="List of image URLs (max 10 images)",
+    )
 
 
 class PostCommentUpdate(BaseModel):
@@ -133,6 +158,7 @@ class PostCommentResponse(PostCommentBase):
     updated_at: datetime
     author: Optional[PostAuthor] = None
     reply_count: int = 0
+    images: Optional[List[PostCommentImageResponse]] = None
 
     model_config = {"from_attributes": True}
 

@@ -43,14 +43,14 @@ export async function uploadImage(
 }
 
 /**
- * Upload multiple image files (max 5)
+ * Upload multiple image files (max 10)
  */
 export async function uploadMultipleImages(
   files: File[],
   authToken: string
 ): Promise<UploadMultipleImagesResponse> {
-  if (files.length > 5) {
-    throw new Error('Maximum 5 images allowed per request');
+  if (files.length > 10) {
+    throw new Error('Maximum 10 images allowed per request');
   }
 
   const formData = new FormData();

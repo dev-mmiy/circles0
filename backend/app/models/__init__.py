@@ -21,7 +21,7 @@ from .hashtag import Hashtag, PostHashtag
 from .mention import CommentMention, PostMention
 from .message import Conversation, Message, MessageRead, MessageReaction
 from .notification import Notification, NotificationType
-from .post import Post, PostComment, PostCommentLike, PostImage, PostLike
+from .post import Post, PostComment, PostCommentImage, PostCommentLike, PostImage, PostLike
 from .push_subscription import PushSubscription
 from .user import User
 from .user_field_visibility import UserFieldVisibility
@@ -40,6 +40,7 @@ __all__ = [
     "Post",
     "PostLike",
     "PostComment",
+    "PostCommentImage",
     "PostCommentLike",
     "PostImage",
     "Hashtag",

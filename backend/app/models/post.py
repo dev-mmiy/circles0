@@ -162,6 +162,12 @@ class PostComment(Base):
     likes = relationship(
         "PostCommentLike", back_populates="comment", cascade="all, delete-orphan"
     )
+    images = relationship(
+        "PostCommentImage",
+        back_populates="comment",
+        cascade="all, delete-orphan",
+        order_by="PostCommentImage.display_order",
+    )
 
 
 class PostCommentLike(Base):
@@ -227,3 +233,29 @@ class PostImage(Base):
 
     # Relationships
     post = relationship("Post", back_populates="images")
+
+
+class PostCommentImage(Base):
+    """
+    Post comment image model.
+
+    Stores image URLs for comments. Supports multiple images per comment.
+    """
+
+    __tablename__ = "post_comment_images"
+
+    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    comment_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("post_comments.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    image_url = Column(String(500), nullable=False, comment="URL to the image file")
+    display_order = Column(
+        Integer, nullable=False, default=0, comment="Order for displaying images"
+    )
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    # Relationships
+    comment = relationship("PostComment", back_populates="images")

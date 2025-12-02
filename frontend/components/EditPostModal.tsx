@@ -65,7 +65,7 @@ export default function EditPostModal({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newFiles = Array.from(files).slice(0, 5 - imageUrls.length);
+    const newFiles = Array.from(files).slice(0, 10 - imageUrls.length);
     const validFiles: File[] = [];
     const previews: { url: string; file: File }[] = [];
 
@@ -288,7 +288,7 @@ export default function EditPostModal({
             {/* Images */}
             <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {t('imagesLabel')} ({imageUrls.length}/5)
+                {t('imagesLabel')} ({imageUrls.length}/10)
               </label>
               
               {/* Image previews */}
@@ -326,7 +326,7 @@ export default function EditPostModal({
               )}
 
               {/* Upload options */}
-              {imageUrls.length < 5 && (
+              {imageUrls.length < 10 && (
                 <div>
                   <input
                     ref={fileInputRef}
@@ -335,13 +335,13 @@ export default function EditPostModal({
                     multiple
                     onChange={handleFileSelect}
                     className="hidden"
-                    disabled={isSubmitting || uploadingImages || imageUrls.length >= 5}
+                    disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
                     id="image-upload-edit"
                   />
                   <label
                     htmlFor="image-upload-edit"
                     className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                      isSubmitting || uploadingImages || imageUrls.length >= 5
+                      isSubmitting || uploadingImages || imageUrls.length >= 10
                         ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                         : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                     }`}

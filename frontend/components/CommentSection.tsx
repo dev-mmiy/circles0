@@ -3,7 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link as I18nLink } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
@@ -14,6 +14,7 @@ import {
   type Comment,
   type CreateCommentData,
 } from '@/lib/api/posts';
+import { uploadMultipleImages, validateImageFile, createImagePreview } from '@/lib/api/images';
 
 interface CommentSectionProps {
   postId: string;
@@ -30,8 +31,78 @@ export default function CommentSection({
   const t = useTranslations('commentSection');
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newCommentContent, setNewCommentContent] = useState('');
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<{ url: string; file?: File }[]>([]);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle file selection
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const newFiles = Array.from(files).slice(0, 5 - imageUrls.length);
+    const validFiles: File[] = [];
+    const previews: { url: string; file: File }[] = [];
+
+    // Validate and create previews
+    for (const file of newFiles) {
+      const validation = validateImageFile(file);
+      if (!validation.valid) {
+        setError(validation.error || 'Invalid file');
+        continue;
+      }
+
+      try {
+        const previewUrl = await createImagePreview(file);
+        validFiles.push(file);
+        previews.push({ url: previewUrl, file });
+      } catch (err) {
+        console.error('Failed to create preview:', err);
+        setError('Failed to create preview for one or more images');
+      }
+    }
+
+    if (validFiles.length === 0) return;
+
+    // Update previews
+    setImagePreviews([...imagePreviews, ...previews]);
+
+    // Upload images
+    setUploadingImages(true);
+    setError(null);
+
+    try {
+      const accessToken = await getAccessTokenSilently();
+      const uploadResponse = await uploadMultipleImages(validFiles, accessToken);
+
+      if (uploadResponse.urls && uploadResponse.urls.length > 0) {
+        setImageUrls([...imageUrls, ...uploadResponse.urls]);
+      }
+
+      if (uploadResponse.errors && uploadResponse.errors.length > 0) {
+        setError(uploadResponse.errors.join(', '));
+      }
+    } catch (err: any) {
+      console.error('Failed to upload images:', err);
+      setError(err.response?.data?.detail || err.message || 'Failed to upload images');
+      // Remove failed previews
+      setImagePreviews(imagePreviews.slice(0, imagePreviews.length - validFiles.length));
+    } finally {
+      setUploadingImages(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Remove image
+  const handleRemoveImage = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
+  };
 
   const handleSubmitComment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +112,7 @@ export default function CommentSection({
       return;
     }
 
-    if (!newCommentContent.trim()) {
+    if (!newCommentContent.trim() && imageUrls.length === 0) {
       setError(t('errors.contentRequired'));
       return;
     }
@@ -59,6 +130,7 @@ export default function CommentSection({
 
       const commentData: CreateCommentData = {
         content: newCommentContent.trim(),
+        image_urls: imageUrls.length > 0 ? imageUrls : undefined,
       };
 
       const newComment = await createComment(postId, commentData, accessToken);
@@ -66,6 +138,8 @@ export default function CommentSection({
       // Add new comment to the list
       setComments([newComment, ...comments]);
       setNewCommentContent('');
+      setImageUrls([]);
+      setImagePreviews([]);
 
       // Notify parent
       if (onCommentAdded) {
@@ -94,8 +168,59 @@ export default function CommentSection({
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
           maxLength={2000}
-          disabled={isSubmitting || !isAuthenticated}
+          disabled={isSubmitting || uploadingImages || !isAuthenticated}
         />
+
+        {/* Image previews */}
+        {imagePreviews.length > 0 && (
+          <div className="mt-2 flex flex-wrap gap-2">
+            {imagePreviews.map((preview, index) => (
+              <div key={index} className="relative">
+                <Image
+                  src={preview.url}
+                  alt={`Preview ${index + 1}`}
+                  width={100}
+                  height={100}
+                  className="w-24 h-24 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center text-xs hover:bg-red-600"
+                  disabled={isSubmitting || uploadingImages}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Image upload button */}
+        <div className="mt-2 flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={isSubmitting || uploadingImages || !isAuthenticated || imageUrls.length >= 5}
+            multiple
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isSubmitting || uploadingImages || !isAuthenticated || imageUrls.length >= 5}
+            className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {uploadingImages ? t('uploadingImages') || 'アップロード中...' : t('addImage') || '画像を追加'}
+          </button>
+          {imageUrls.length > 0 && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              ({imageUrls.length}/5)
+            </span>
+          )}
+        </div>
 
         <div className="flex items-center justify-between mt-2">
           <span
@@ -108,9 +233,9 @@ export default function CommentSection({
 
           <button
             type="submit"
-            disabled={isSubmitting || !newCommentContent.trim() || !isAuthenticated}
+            disabled={isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              isSubmitting || !newCommentContent.trim() || !isAuthenticated
+              isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated
                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
@@ -316,6 +441,24 @@ function CommentItem({
             <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
               {comment.content}
             </p>
+            
+            {/* Comment images */}
+            {comment.images && comment.images.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {comment.images.map((img, index) => (
+                  <div key={img.id} className="relative">
+                    <Image
+                      src={img.image_url}
+                      alt={`Comment image ${index + 1}`}
+                      width={200}
+                      height={200}
+                      className="max-w-xs max-h-48 object-contain rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-90"
+                      onClick={() => window.open(img.image_url, '_blank')}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Actions */}

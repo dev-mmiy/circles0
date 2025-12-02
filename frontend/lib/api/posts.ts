@@ -65,6 +65,13 @@ export interface PostLike {
   user?: PostAuthor;
 }
 
+export interface CommentImage {
+  id: string;
+  image_url: string;
+  display_order: number;
+  created_at: string;
+}
+
 export interface Comment {
   id: string;
   post_id: string;
@@ -76,6 +83,7 @@ export interface Comment {
   updated_at: string;
   author?: PostAuthor;
   reply_count: number;
+  images?: CommentImage[];
 }
 
 export interface CreatePostData {
@@ -94,6 +102,7 @@ export interface UpdatePostData {
 export interface CreateCommentData {
   content: string;
   parent_comment_id?: string;
+  image_urls?: string[];
 }
 
 export interface UpdateCommentData {

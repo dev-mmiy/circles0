@@ -1571,10 +1571,23 @@ def _build_comment_response(
     db: Session, comment, current_user_id: Optional[UUID] = None, viewer_disease_ids: Optional[List[int]] = None
 ) -> PostCommentResponse:
     """Build PostCommentResponse with calculated fields."""
-    from app.schemas.post import PostAuthor
+    from app.schemas.post import PostAuthor, PostCommentImageResponse
     from app.services.user_field_visibility_service import UserFieldVisibilityService
 
     reply_count = PostService.get_reply_count(db, comment.id)
+
+    # Build images
+    comment_images = []
+    if hasattr(comment, 'images') and comment.images:
+        comment_images = [
+            PostCommentImageResponse(
+                id=img.id,
+                image_url=img.image_url,
+                display_order=img.display_order,
+                created_at=img.created_at,
+            )
+            for img in sorted(comment.images, key=lambda x: x.display_order)
+        ]
 
     return PostCommentResponse(
         id=comment.id,
@@ -1585,6 +1598,7 @@ def _build_comment_response(
         is_active=comment.is_active,
         created_at=comment.created_at,
         updated_at=comment.updated_at,
+        images=comment_images if comment_images else None,
         author=(
             PostAuthor(
                 id=comment.user.id,

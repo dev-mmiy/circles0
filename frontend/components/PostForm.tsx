@@ -47,7 +47,7 @@ export default function PostForm({
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    const newFiles = Array.from(files).slice(0, 5 - imageUrls.length);
+    const newFiles = Array.from(files).slice(0, 10 - imageUrls.length);
     const validFiles: File[] = [];
     const previews: { url: string; file: File }[] = [];
 
@@ -143,7 +143,7 @@ export default function PostForm({
       return;
     }
 
-    if (imageUrls.length > 5) {
+    if (imageUrls.length > 10) {
       setError(t('errors.tooManyImages'));
       return;
     }
@@ -235,7 +235,7 @@ export default function PostForm({
         {/* Images */}
         <div className="mt-4">
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('imagesLabel')} ({imageUrls.length}/5)
+            {t('imagesLabel')} ({imageUrls.length}/10)
           </label>
           
           {/* Image previews */}
@@ -273,7 +273,7 @@ export default function PostForm({
           )}
 
           {/* Upload options */}
-          {imageUrls.length < 5 && (
+          {imageUrls.length < 10 && (
             <div>
               <input
                 ref={fileInputRef}
@@ -281,14 +281,14 @@ export default function PostForm({
                 accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
                 multiple
                 onChange={handleFileSelect}
-                disabled={isSubmitting || uploadingImages || imageUrls.length >= 5}
+                disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
                 className="hidden"
                 id="image-upload"
               />
               <label
                 htmlFor="image-upload"
                 className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                  isSubmitting || uploadingImages || imageUrls.length >= 5
+                  isSubmitting || uploadingImages || imageUrls.length >= 10
                     ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                     : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                 }`}
