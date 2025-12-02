@@ -185,7 +185,7 @@ export default function PostForm({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
       <form onSubmit={handleSubmit}>
         {/* Textarea for post content */}
         <textarea
