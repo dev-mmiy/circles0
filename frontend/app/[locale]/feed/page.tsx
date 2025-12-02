@@ -12,28 +12,17 @@ import { useDisease } from '@/contexts/DiseaseContext';
 import { useLocale } from 'next-intl';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { useAuth0 } from '@auth0/auth0-react';
-
-// Dynamically import PostForm to reduce initial bundle size
-const PostForm = dynamic(() => import('@/components/PostForm'), {
-  loading: () => (
-    <div className="mb-6 bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-      <div className="animate-pulse">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-2"></div>
-        <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
-        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
-      </div>
-    </div>
-  ),
-  ssr: false,
-});
+import PostFormModal from '@/components/PostFormModal';
 
 export default function FeedPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
   const t = useTranslations('feed');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  const [filterType, setFilterType] = useState<'all' | 'following' | 'disease' | 'my_posts'>('all');
+  const [activeTab, setActiveTab] = useState<'default' | 'detailed'>('default');
+  const [filterType, setFilterType] = useState<'following_and_my_posts' | 'all' | 'following' | 'disease' | 'my_posts' | 'not_following'>('following_and_my_posts');
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
+  const [isPostFormModalOpen, setIsPostFormModalOpen] = useState(false);
 
   // Unified data loader for posts
   const {
@@ -102,8 +91,17 @@ export default function FeedPage() {
     await refresh();
   };
 
+  // Handle tab change
+  const handleTabChange = (tab: 'default' | 'detailed') => {
+    setActiveTab(tab);
+    if (tab === 'default') {
+      setFilterType('following_and_my_posts');
+      setSelectedDiseaseId(null);
+    }
+  };
+
   // Handle filter type change
-  const handleFilterChange = (newFilterType: 'all' | 'following' | 'disease' | 'my_posts') => {
+  const handleFilterChange = (newFilterType: 'all' | 'following' | 'disease' | 'my_posts' | 'not_following') => {
     setFilterType(newFilterType);
     if (newFilterType !== 'disease') {
       setSelectedDiseaseId(null);
@@ -145,116 +143,157 @@ export default function FeedPage() {
       <Header />
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
-          <p className="text-gray-600 dark:text-gray-400 mt-2">
-            {t('subtitle')}
-          </p>
-        </div>
-
-        {/* Post creation form - only shown when authenticated */}
-        {isAuthenticated && (
-          <div className="mb-6">
-            <PostForm onPostCreated={handlePostCreated} />
+          {/* Page Header */}
+          <div className="mb-6 flex items-center justify-between">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
+            {isAuthenticated && (
+              <button
+                onClick={() => setIsPostFormModalOpen(true)}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                aria-label="Create Post"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                <span>{t('createPost') || '投稿'}</span>
+              </button>
+            )}
           </div>
-        )}
 
         {/* Filter Tabs */}
         {isAuthenticated && (
           <div className="mb-6">
+            {/* Main Tabs: Default and Detailed */}
             <div className="border-b border-gray-200 dark:border-gray-700">
-              <nav className="flex space-x-8" aria-label="Feed filter">
+              <nav className="flex space-x-8" aria-label="Feed tabs">
                 <button
-                  onClick={() => handleFilterChange('all')}
+                  onClick={() => handleTabChange('default')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    filterType === 'all'
+                    activeTab === 'default'
                       ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
-                  {t('filterAll')}
+                  {t('tabDefault') || 'フィード'}
                 </button>
                 <button
-                  onClick={() => handleFilterChange('my_posts')}
+                  onClick={() => handleTabChange('detailed')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    filterType === 'my_posts'
+                    activeTab === 'detailed'
                       ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
                       : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
                   }`}
                 >
-                  {t('filterMyPosts')}
+                  {t('tabDetailed') || '詳細'}
                 </button>
-                <button
-                  onClick={() => handleFilterChange('following')}
-                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                    filterType === 'following'
-                      ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                  }`}
-                >
-                  {t('filterFollowing')}
-                </button>
-                {userDiseases.length > 0 && (
-                  <button
-                    onClick={() => handleFilterChange('disease')}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      filterType === 'disease'
-                        ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
-                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
-                    }`}
-                  >
-                    {t('filterDisease')}
-                  </button>
-                )}
               </nav>
             </div>
-            
-            {/* Disease selector for disease filter */}
-            {filterType === 'disease' && userDiseases.length > 0 && (
+
+            {/* Detailed Filter Options */}
+            {activeTab === 'detailed' && (
               <div className="mt-4">
-                <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('selectDisease')}
-                </label>
-                <select
-                  id="disease-select"
-                  value={selectedDiseaseId || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value === '') {
-                      setSelectedDiseaseId(null);
-                    } else {
-                      const diseaseId = parseInt(value, 10);
-                      if (!isNaN(diseaseId)) {
-                        setSelectedDiseaseId(diseaseId);
-                      }
-                    }
-                  }}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                >
-                  <option value="">{t('selectDiseasePlaceholder')}</option>
-                  {userDiseases
-                    .filter(userDisease => userDisease.disease)
-                    .map((userDisease) => {
-                      const disease = userDisease.disease!;
-                      const translation = disease.translations?.find(
-                        t => t.language_code === locale
-                      );
-                      const diseaseName = translation?.translated_name || disease.name;
-                      return (
-                        <option key={disease.id} value={disease.id}>
-                          {diseaseName}
-                        </option>
-                      );
-                    })}
-                </select>
-              </div>
-            )}
-            
-            {/* Message when disease filter is selected but no disease chosen */}
-            {filterType === 'disease' && !selectedDiseaseId && (
-              <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                <p className="text-sm text-yellow-800 dark:text-yellow-200">{t('selectDiseasePrompt')}</p>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  <button
+                    onClick={() => handleFilterChange('all')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'all'
+                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {t('filterAll')}
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('following')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'following'
+                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {t('filterFollowing')}
+                  </button>
+                  <button
+                    onClick={() => handleFilterChange('my_posts')}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      filterType === 'my_posts'
+                        ? 'bg-blue-600 text-white dark:bg-blue-500'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                    }`}
+                  >
+                    {t('filterMyPosts')}
+                  </button>
+                  {userDiseases.length > 0 && (
+                    <button
+                      onClick={() => handleFilterChange('disease')}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                        filterType === 'disease'
+                          ? 'bg-blue-600 text-white dark:bg-blue-500'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      {t('filterDisease')}
+                    </button>
+                  )}
+                </div>
+                
+                {/* Disease selector for disease filter */}
+                {filterType === 'disease' && userDiseases.length > 0 && (
+                  <div className="mt-4">
+                    <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('selectDisease')}
+                    </label>
+                    <select
+                      id="disease-select"
+                      value={selectedDiseaseId || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === '') {
+                          setSelectedDiseaseId(null);
+                        } else {
+                          const diseaseId = parseInt(value, 10);
+                          if (!isNaN(diseaseId)) {
+                            setSelectedDiseaseId(diseaseId);
+                          }
+                        }
+                      }}
+                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    >
+                      <option value="">{t('selectDiseasePlaceholder')}</option>
+                      {userDiseases
+                        .filter(userDisease => userDisease.disease)
+                        .map((userDisease) => {
+                          const disease = userDisease.disease!;
+                          const translation = disease.translations?.find(
+                            t => t.language_code === locale
+                          );
+                          const diseaseName = translation?.translated_name || disease.name;
+                          return (
+                            <option key={disease.id} value={disease.id}>
+                              {diseaseName}
+                            </option>
+                          );
+                        })}
+                    </select>
+                  </div>
+                )}
+                
+                {/* Message when disease filter is selected but no disease chosen */}
+                {filterType === 'disease' && !selectedDiseaseId && (
+                  <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">{t('selectDiseasePrompt')}</p>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -318,6 +357,8 @@ export default function FeedPage() {
               <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                 {filterType === 'following' 
                   ? t('noFollowingPosts') 
+                  : filterType === 'following_and_my_posts'
+                  ? t('noFollowingAndMyPosts') || '投稿がありません'
                   : filterType === 'disease'
                   ? t('noDiseasePosts')
                   : filterType === 'my_posts'
@@ -327,6 +368,8 @@ export default function FeedPage() {
               <p className="mt-2 text-gray-500 dark:text-gray-400">
                 {filterType === 'following' 
                   ? t('noFollowingPostsMessage') 
+                  : filterType === 'following_and_my_posts'
+                  ? t('noFollowingAndMyPostsMessage') || 'フォローしているユーザーや自分の投稿がまだありません'
                   : filterType === 'disease'
                   ? t('noDiseasePostsMessage', { diseaseName: selectedDiseaseId ? getDiseaseName(selectedDiseaseId) : '' })
                   : filterType === 'my_posts'
@@ -399,8 +442,17 @@ export default function FeedPage() {
             </>
           )}
         </div>
+        </div>
       </div>
-    </div>
+
+      {/* Post Form Modal */}
+      {isAuthenticated && (
+        <PostFormModal
+          isOpen={isPostFormModalOpen}
+          onClose={() => setIsPostFormModalOpen(false)}
+          onPostCreated={handlePostCreated}
+        />
+      )}
     </>
   );
 }

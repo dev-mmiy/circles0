@@ -192,12 +192,14 @@ class PostService:
         Get feed of posts for the current user.
 
         Args:
-            filter_type: "all" for all posts, "following" for posts from followed users only, "disease" for posts from users with specific disease, "my_posts" for current user's posts only
+            filter_type: "all" for all posts, "following" for posts from followed users only, "following_and_my_posts" for posts from followed users and current user, "not_following" for posts from users not being followed, "disease" for posts from users with specific disease, "my_posts" for current user's posts only
             disease_id: Disease ID to filter by (required when filter_type="disease")
 
         If authenticated:
             - filter_type="all": public posts + followers_only posts from followed users
             - filter_type="following": posts from followed users only (public + followers_only)
+            - filter_type="following_and_my_posts": posts from followed users and current user (public + followers_only)
+            - filter_type="not_following": posts from users not being followed (excludes followed users and current user)
             - filter_type="disease": posts from users who have the specified disease (public + followers_only from followed users)
             - filter_type="my_posts": posts from current user only (all visibility levels)
         If not authenticated: only public posts
@@ -261,7 +263,7 @@ class PostService:
         # This list is used to determine which users' followers_only posts should be shown
         following_user_ids = []
         if current_user_id:
-            if filter_type in ("following", "all", "disease"):
+            if filter_type in ("following", "all", "disease", "following_and_my_posts", "not_following"):
                 # Get list of user IDs that current user is following (executed once)
                 # This avoids querying the follow relationship multiple times
                 following_ids = (
@@ -293,6 +295,31 @@ class PostService:
                 else:
                     # User is not following anyone, return empty result early
                     return []
+            elif filter_type == "following_and_my_posts":
+                # Show posts from followed users and current user (public + followers_only)
+                user_ids_to_show = following_user_ids.copy()
+                user_ids_to_show.append(current_user_id)
+                if user_ids_to_show:
+                    query = query.filter(
+                        Post.user_id.in_(user_ids_to_show),
+                        or_(
+                            Post.visibility == "public",
+                            Post.visibility == "followers_only",
+                            Post.user_id == current_user_id,  # Show all visibility levels for own posts
+                        ),
+                    )
+                else:
+                    # User is not following anyone and has no posts, return empty result early
+                    return []
+            elif filter_type == "not_following":
+                # Show posts from users not being followed (excludes followed users and current user)
+                # Visibility logic: public posts only (since we don't follow these users)
+                excluded_user_ids = list(following_user_ids)
+                excluded_user_ids.append(current_user_id)
+                query = query.filter(
+                    ~Post.user_id.in_(excluded_user_ids),
+                    Post.visibility == "public",
+                )
             else:
                 # filter_type="all" or "disease": show public posts + followers_only posts from followed users
                 # Visibility logic:

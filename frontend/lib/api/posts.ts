@@ -138,7 +138,7 @@ export async function getFeed(
   skip: number = 0,
   limit: number = 20,
   accessToken?: string, // Kept for backward compatibility, but not used (apiClient handles auth)
-  filterType: 'all' | 'following' | 'disease' | 'my_posts' = 'all',
+  filterType: 'all' | 'following' | 'disease' | 'my_posts' | 'following_and_my_posts' | 'not_following' = 'all',
   diseaseId?: number
 ): Promise<Post[]> {
   const queryParams = new URLSearchParams();

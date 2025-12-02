@@ -37,7 +37,10 @@ export default function Home() {
         }
       }
 
-      const recentPosts = await getFeed(0, 5, accessToken, 'all');
+      // Use 'following_and_my_posts' filter for authenticated users (same as Feed page default)
+      // For unauthenticated users, use 'all' filter
+      const filterType = isAuthenticated ? 'following_and_my_posts' : 'all';
+      const recentPosts = await getFeed(0, 5, accessToken, filterType);
       setPosts(recentPosts);
     } catch (err) {
       console.error('Failed to load recent posts:', err);

@@ -323,6 +323,7 @@
   "feed": {
     "title": "タイムライン",
     "subtitle": "みんなの経験や気持ちをシェアしましょう",
+    "createPost": "投稿",
     "loginPrompt": "投稿を作成するにはログインしてください",
     "errorLoadingPosts": "投稿の読み込みに失敗しました",
     "retry": "再試行",
@@ -343,7 +344,14 @@
     "noMyPosts": "自分の投稿がまだありません",
     "noMyPostsMessage": "最初の投稿を作成してみましょう！",
     "noDiseasePosts": "この疾患の投稿がまだありません",
-    "noDiseasePostsMessage": "{diseaseName}を持つユーザーの投稿がまだありません"
+    "noDiseasePostsMessage": "{diseaseName}を持つユーザーの投稿がまだありません",
+    "tabDefault": "フィード",
+    "tabDetailed": "詳細",
+    "filterNotFollowing": "フォロー以外",
+    "noFollowingAndMyPosts": "投稿がまだありません",
+    "noFollowingAndMyPostsMessage": "フォローしているユーザーや自分の投稿がまだありません",
+    "noNotFollowingPosts": "フォロー以外の投稿がまだありません",
+    "noNotFollowingPostsMessage": "フォローしていないユーザーの投稿がまだありません"
   },
   "post": {
     "unknownUser": "不明なユーザー",
@@ -397,6 +405,7 @@
     }
   },
   "postForm": {
+    "title": "投稿を作成",
     "placeholder": "今の気持ちや経験をシェアしましょう...",
     "contentLabel": "投稿内容",
     "contentPlaceholder": "今の気持ちや経験をシェアしましょう...",

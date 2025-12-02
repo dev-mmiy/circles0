@@ -285,6 +285,7 @@
   "feed": {
     "title": "Community Feed",
     "subtitle": "Share your experiences and feelings with everyone",
+    "createPost": "Post",
     "loginPrompt": "Please log in to create a post",
     "errorLoadingPosts": "Failed to load posts",
     "retry": "Retry",
@@ -305,7 +306,14 @@
     "noMyPosts": "You haven't posted anything yet",
     "noMyPostsMessage": "Create your first post to get started!",
     "noDiseasePosts": "No posts for this disease yet",
-    "noDiseasePostsMessage": "No posts from users with {diseaseName} yet"
+    "noDiseasePostsMessage": "No posts from users with {diseaseName} yet",
+    "tabDefault": "Feed",
+    "tabDetailed": "Detailed",
+    "filterNotFollowing": "Not Following",
+    "noFollowingAndMyPosts": "No posts yet",
+    "noFollowingAndMyPostsMessage": "No posts from users you follow or your own posts yet",
+    "noNotFollowingPosts": "No posts from users you don't follow yet",
+    "noNotFollowingPostsMessage": "No posts from users you don't follow yet"
   },
   "post": {
     "unknownUser": "Unknown User",
@@ -359,6 +367,7 @@
     }
   },
   "postForm": {
+    "title": "Create Post",
     "placeholder": "Share your feelings and experiences...",
     "contentLabel": "Post Content",
     "contentPlaceholder": "Share your feelings and experiences...",

@@ -111,8 +111,8 @@ async def get_feed(
     ),
     filter_type: str = Query(
         "all",
-        regex="^(all|following|disease|my_posts)$",
-        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease, 'my_posts' for current user's posts only",
+        regex="^(all|following|disease|my_posts|following_and_my_posts|not_following)$",
+        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease, 'my_posts' for current user's posts only, 'following_and_my_posts' for posts from followed users and current user, 'not_following' for posts from users not being followed",
     ),
     disease_id: Optional[int] = Query(
         None,
@@ -131,6 +131,8 @@ async def get_feed(
     Filter types:
     - "all": Show all public posts + followers_only posts from followed users
     - "following": Show only posts from users you follow (public + followers_only)
+    - "following_and_my_posts": Show posts from users you follow and your own posts
+    - "not_following": Show posts from users you don't follow (excludes followed users)
     - "disease": Show posts from users who have the specified disease (requires disease_id parameter)
     - "my_posts": Show only posts from the current user (requires authentication)
     """
@@ -141,12 +143,8 @@ async def get_feed(
     user_id = get_user_id_from_token(db, current_user)
     logger.debug(f"[get_feed] User ID: {user_id}")
 
-    # If filter_type is "following" but user is not authenticated, return empty
-    if filter_type == "following" and not user_id:
-        return []
-
-    # If filter_type is "my_posts" but user is not authenticated, return empty
-    if filter_type == "my_posts" and not user_id:
+    # If filter_type requires authentication but user is not authenticated, return empty
+    if filter_type in ("following", "my_posts", "following_and_my_posts", "not_following") and not user_id:
         return []
 
     # If filter_type is "disease" but disease_id is not provided, return empty
