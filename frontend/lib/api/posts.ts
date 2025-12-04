@@ -46,6 +46,7 @@ export interface Post {
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
+  is_saved_by_current_user?: boolean;  // Whether the post is saved by current user
   hashtags?: Hashtag[];
   mentions?: Mention[];
   images?: PostImage[];
@@ -518,4 +519,83 @@ export async function deleteComment(
     const error = await response.json();
     throw new Error(error.detail || 'Failed to delete comment');
   }
+}
+
+// ========== Saved Posts API ==========
+
+/**
+ * Save a post
+ */
+export async function savePost(
+  postId: string,
+  token: string
+): Promise<void> {
+  await apiClient.post(
+    `/api/v1/posts/${postId}/save`,
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+}
+
+/**
+ * Unsave a post
+ */
+export async function unsavePost(
+  postId: string,
+  token: string
+): Promise<void> {
+  await apiClient.delete(`/api/v1/posts/${postId}/save`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+}
+
+/**
+ * Get saved posts
+ */
+export async function getSavedPosts(
+  skip: number = 0,
+  limit: number = 20,
+  sortBy: 'created_at' | 'post_created_at' = 'created_at',
+  sortOrder: 'asc' | 'desc' = 'desc',
+  token: string
+): Promise<Post[]> {
+  const response = await apiClient.get<Post[]>(`/api/v1/posts/saved`, {
+    params: {
+      skip,
+      limit,
+      sort_by: sortBy,
+      sort_order: sortOrder,
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+}
+
+/**
+ * Check if posts are saved
+ */
+export async function checkSavedPosts(
+  postIds: string[],
+  token: string
+): Promise<string[]> {
+  const response = await apiClient.get<{ saved_post_ids: string[] }>(
+    `/api/v1/posts/saved/check`,
+    {
+      params: {
+        post_ids: postIds.join(','),
+      },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data.saved_post_ids;
 }

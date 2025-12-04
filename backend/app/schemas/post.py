@@ -242,6 +242,7 @@ class PostResponse(PostBase):
     like_count: int = 0
     comment_count: int = 0
     is_liked_by_current_user: bool = False
+    is_saved_by_current_user: bool = False
     hashtags: List[HashtagResponse] = []
     mentions: List[MentionResponse] = []
     images: List[PostImageResponse] = []
@@ -265,3 +266,39 @@ class PostDetailResponse(PostResponse):
     likes: List[PostLikeResponse] = []
 
     model_config = {"from_attributes": True}
+
+
+class SavedPostCreate(BaseModel):
+    """Schema for creating a saved post."""
+    
+    post_id: UUID
+
+
+class SavedPostResponse(BaseModel):
+    """Schema for saved post response."""
+    
+    id: UUID
+    user_id: UUID
+    post_id: UUID
+    created_at: datetime
+    post: Optional[PostResponse] = None  # Include post details if needed
+    
+    model_config = {"from_attributes": True}
+    
+    @field_serializer("created_at", when_used="json")
+    def serialize_datetime(self, value: datetime, _info) -> str:
+        """Serialize datetime to ISO format with 'Z' suffix."""
+        if value.tzinfo is None:
+            return value.isoformat() + "Z"
+        else:
+            utc_value = value.astimezone(timezone.utc)
+            return utc_value.replace(tzinfo=None).isoformat() + "Z"
+
+
+class SavedPostListResponse(BaseModel):
+    """Schema for saved posts list response."""
+    
+    items: List[PostResponse]  # Use PostResponse to include full post details
+    total: int
+    skip: int
+    limit: int

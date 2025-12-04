@@ -125,8 +125,9 @@ export default function FeedPage() {
     return translation?.translated_name || userDisease.disease.name;
   };
 
-  // Full page loading only for initial auth or redirect
-  if (authLoading && !isAuthenticated) {
+  // Full page loading only for initial auth check (wait for Auth0 to restore session from localStorage)
+  // Don't show loading if we're already authenticated or if auth check is complete
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -212,17 +213,17 @@ export default function FeedPage() {
                     }`}
                   >
                     {t('filterAll')}
-                  </button>
-                  <button
-                    onClick={() => handleFilterChange('following')}
+                </button>
+                <button
+                  onClick={() => handleFilterChange('following')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      filterType === 'following'
+                    filterType === 'following'
                         ? 'bg-blue-600 text-white dark:bg-blue-500'
                         : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {t('filterFollowing')}
-                  </button>
+                  }`}
+                >
+                  {t('filterFollowing')}
+                </button>
                   <button
                     onClick={() => handleFilterChange('my_posts')}
                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -240,58 +241,58 @@ export default function FeedPage() {
                         filterType === 'disease'
                           ? 'bg-blue-600 text-white dark:bg-blue-500'
                           : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      {t('filterDisease')}
-                    </button>
-                  )}
-                </div>
-                
-                {/* Disease selector for disease filter */}
-                {filterType === 'disease' && userDiseases.length > 0 && (
-                  <div className="mt-4">
-                    <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      {t('selectDisease')}
-                    </label>
-                    <select
-                      id="disease-select"
-                      value={selectedDiseaseId || ''}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        if (value === '') {
-                          setSelectedDiseaseId(null);
-                        } else {
-                          const diseaseId = parseInt(value, 10);
-                          if (!isNaN(diseaseId)) {
-                            setSelectedDiseaseId(diseaseId);
-                          }
-                        }
-                      }}
-                      className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    >
-                      <option value="">{t('selectDiseasePlaceholder')}</option>
-                      {userDiseases
-                        .filter(userDisease => userDisease.disease)
-                        .map((userDisease) => {
-                          const disease = userDisease.disease!;
-                          const translation = disease.translations?.find(
-                            t => t.language_code === locale
-                          );
-                          const diseaseName = translation?.translated_name || disease.name;
-                          return (
-                            <option key={disease.id} value={disease.id}>
-                              {diseaseName}
-                            </option>
-                          );
-                        })}
-                    </select>
-                  </div>
+                    }`}
+                  >
+                    {t('filterDisease')}
+                  </button>
                 )}
-                
-                {/* Message when disease filter is selected but no disease chosen */}
-                {filterType === 'disease' && !selectedDiseaseId && (
-                  <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                    <p className="text-sm text-yellow-800 dark:text-yellow-200">{t('selectDiseasePrompt')}</p>
+            </div>
+            
+            {/* Disease selector for disease filter */}
+            {filterType === 'disease' && userDiseases.length > 0 && (
+              <div className="mt-4">
+                <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('selectDisease')}
+                </label>
+                <select
+                  id="disease-select"
+                  value={selectedDiseaseId || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value === '') {
+                      setSelectedDiseaseId(null);
+                    } else {
+                      const diseaseId = parseInt(value, 10);
+                      if (!isNaN(diseaseId)) {
+                        setSelectedDiseaseId(diseaseId);
+                      }
+                    }
+                  }}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full max-w-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                >
+                  <option value="">{t('selectDiseasePlaceholder')}</option>
+                  {userDiseases
+                    .filter(userDisease => userDisease.disease)
+                    .map((userDisease) => {
+                      const disease = userDisease.disease!;
+                      const translation = disease.translations?.find(
+                        t => t.language_code === locale
+                      );
+                      const diseaseName = translation?.translated_name || disease.name;
+                      return (
+                        <option key={disease.id} value={disease.id}>
+                          {diseaseName}
+                        </option>
+                      );
+                    })}
+                </select>
+              </div>
+            )}
+            
+            {/* Message when disease filter is selected but no disease chosen */}
+            {filterType === 'disease' && !selectedDiseaseId && (
+              <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">{t('selectDiseasePrompt')}</p>
                   </div>
                 )}
               </div>

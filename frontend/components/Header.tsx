@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { Link, usePathname } from '@/i18n/routing';
-import { Menu, X, Newspaper, Search, MessageCircle } from 'lucide-react';
+import { Menu, X, Newspaper, Search, MessageCircle, Bookmark } from 'lucide-react';
 import AuthButton from './AuthButton';
 import NotificationBell from './notifications/NotificationBell';
 import NotificationDropdown from './notifications/NotificationDropdown';
@@ -192,6 +192,19 @@ export default function Header() {
                   <span className="absolute top-0 right-0 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
                 )}
               </Link>
+              <Link
+                href="/posts/saved"
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                  pathname.startsWith('/posts/saved')
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-label={t('savedPosts')}
+                title={t('savedPosts')}
+              >
+                <Bookmark className="w-5 h-5" />
+                <span className="text-xs font-medium">{t('savedPosts')}</span>
+              </Link>
             </nav>
           )}
 
@@ -259,6 +272,14 @@ export default function Header() {
                 {unreadMessageCount > 0 && (
                   <span className="absolute top-2 right-4 h-2 w-2 bg-red-600 rounded-full border-2 border-white dark:border-gray-800"></span>
                 )}
+              </Link>
+              <Link
+                href="/posts/saved"
+                onClick={handleMobileMenuClose}
+                className="px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
+              >
+                <Bookmark className="w-5 h-5" />
+                {t('savedPosts')}
               </Link>
             </nav>
           </div>

@@ -115,6 +115,9 @@ class User(Base):
     post_comment_likes = relationship(
         "PostCommentLike", back_populates="user", cascade="all, delete-orphan"
     )
+    saved_posts = relationship(
+        "SavedPost", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Follow relationships
     # Users that this user is following

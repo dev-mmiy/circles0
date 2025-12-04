@@ -71,6 +71,9 @@ class Post(Base):
         cascade="all, delete-orphan",
         order_by="PostImage.display_order",
     )
+    saved_by_users = relationship(
+        "SavedPost", back_populates="post", cascade="all, delete-orphan"
+    )
 
 
 class PostLike(Base):
@@ -259,3 +262,36 @@ class PostCommentImage(Base):
 
     # Relationships
     comment = relationship("PostComment", back_populates="images")
+
+
+class SavedPost(Base):
+    """
+    Saved post model.
+    
+    Tracks which posts users have saved for later reading.
+    """
+    
+    __tablename__ = "saved_posts"
+    
+    id = Column(PostgreSQLUUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    post_id = Column(
+        PostgreSQLUUID(as_uuid=True),
+        ForeignKey("posts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    created_at = Column(DateTime(timezone=True), nullable=False, default=datetime.utcnow)
+    
+    # Relationships
+    user = relationship("User", back_populates="saved_posts")
+    post = relationship("Post", back_populates="saved_by_users")
+    
+    __table_args__ = (
+        UniqueConstraint('user_id', 'post_id', name='uq_saved_posts_user_post'),
+    )
