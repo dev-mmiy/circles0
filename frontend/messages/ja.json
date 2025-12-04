@@ -14,6 +14,7 @@
     "myPage": "プロファイル",
     "messages": "メッセージ",
     "groups": "グループ",
+    "savedPosts": "保存した投稿",
     "settings": "設定",
     "logout": "ログアウト",
     "openMenu": "メニューを開く",
@@ -1106,6 +1107,33 @@
     "errors": {
       "loadFailed": "ブロック済みユーザーの取得に失敗しました",
       "unblockFailed": "ブロック解除に失敗しました"
+    }
+  },
+  "savedPosts": {
+    "pageTitle": "保存した投稿",
+    "pageSubtitle": "後で読むために保存した投稿を管理します",
+    "save": "保存",
+    "unsave": "保存解除",
+    "saved": "投稿を保存しました",
+    "unsaved": "保存を解除しました",
+    "saveFailed": "保存に失敗しました",
+    "loading": "読み込み中...",
+    "loadingMore": "読み込み中...",
+    "loadMore": "もっと見る",
+    "noSavedPosts": "保存した投稿がありません",
+    "noSavedPostsMessage": "気になる投稿を見つけたら、保存アイコンをクリックして保存できます。",
+    "sortBy": {
+      "saveDate": "保存日時",
+      "postDate": "投稿日時"
+    },
+    "sortOrder": {
+      "newest": "新しい順",
+      "oldest": "古い順"
+    },
+    "authenticationRequired": "ログインが必要です",
+    "pleaseLogin": "保存した投稿を表示するには、ログインしてください。",
+    "errors": {
+      "loadFailed": "投稿の読み込みに失敗しました"
     }
   }
 }

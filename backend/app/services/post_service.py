@@ -3,16 +3,20 @@ Post service for business logic related to posts, likes, and comments.
 """
 
 from datetime import datetime
-from typing import List, Optional
+import logging
+from typing import List, Optional, Tuple
 from uuid import UUID
 
 from sqlalchemy import and_, desc, func, or_
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session, joinedload
 
 from app.models.disease import UserDisease
+
+logger = logging.getLogger(__name__)
 from app.models.hashtag import Hashtag, PostHashtag
 from app.models.mention import PostMention
-from app.models.post import Post, PostComment, PostCommentImage, PostCommentLike, PostImage, PostLike
+from app.models.post import Post, PostComment, PostCommentImage, PostCommentLike, PostImage, PostLike, SavedPost
 from app.models.user import User
 from app.schemas.post import (
     PostCommentCreate,
@@ -953,3 +957,255 @@ class PostService:
             .first()
             is not None
         )
+
+
+class SavedPostService:
+    """Service for saved post operations."""
+    
+    @staticmethod
+    def save_post(db: Session, user_id: UUID, post_id: UUID) -> SavedPost:
+        """
+        Save a post for a user.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            post_id: Post ID to save
+            
+        Returns:
+            SavedPost instance
+            
+        Raises:
+            ValueError: If post doesn't exist or is already saved
+            ProgrammingError: If saved_posts table doesn't exist (migration not run)
+        """
+        # Check if post exists and is active
+        post = db.query(Post).filter(
+            Post.id == post_id,
+            Post.is_active == True
+        ).first()
+        
+        if not post:
+            raise ValueError("Post not found or inactive")
+        
+        try:
+            # Check if already saved
+            existing = db.query(SavedPost).filter(
+                SavedPost.user_id == user_id,
+                SavedPost.post_id == post_id
+            ).first()
+            
+            if existing:
+                raise ValueError("Post already saved")
+            
+            # Create saved post
+            saved_post = SavedPost(
+                user_id=user_id,
+                post_id=post_id
+            )
+            db.add(saved_post)
+            db.commit()
+            db.refresh(saved_post)
+            
+            return saved_post
+        except ProgrammingError as e:
+            # Handle case where saved_posts table doesn't exist (migration not run)
+            db.rollback()
+            if "does not exist" in str(e) or "relation" in str(e).lower():
+                logger.error(
+                    "saved_posts table does not exist. "
+                    "Please run database migrations to enable this feature."
+                )
+                raise ValueError(
+                    "Saved posts feature is not available. "
+                    "Database migrations need to be run."
+                )
+            raise
+    
+    @staticmethod
+    def unsave_post(db: Session, user_id: UUID, post_id: UUID) -> bool:
+        """
+        Unsave a post for a user.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            post_id: Post ID to unsave
+            
+        Returns:
+            True if unsaved, False if not found
+            
+        Raises:
+            ValueError: If saved_posts table doesn't exist (migration not run)
+        """
+        try:
+            saved_post = db.query(SavedPost).filter(
+                SavedPost.user_id == user_id,
+                SavedPost.post_id == post_id
+            ).first()
+            
+            if not saved_post:
+                return False
+            
+            db.delete(saved_post)
+            db.commit()
+            return True
+        except ProgrammingError as e:
+            # Handle case where saved_posts table doesn't exist (migration not run)
+            db.rollback()
+            if "does not exist" in str(e) or "relation" in str(e).lower():
+                logger.error(
+                    "saved_posts table does not exist. "
+                    "Please run database migrations to enable this feature."
+                )
+                raise ValueError(
+                    "Saved posts feature is not available. "
+                    "Database migrations need to be run."
+                )
+            raise
+    
+    @staticmethod
+    def get_saved_posts(
+        db: Session,
+        user_id: UUID,
+        current_user_id: Optional[UUID] = None,
+        skip: int = 0,
+        limit: int = 20,
+        sort_by: str = "created_at",  # "created_at" or "post_created_at"
+        sort_order: str = "desc"  # "asc" or "desc"
+    ) -> Tuple[List[Post], int]:
+        """
+        Get saved posts for a user.
+        
+        Args:
+            db: Database session
+            user_id: User ID to get saved posts for
+            current_user_id: Current user ID (for visibility checks)
+            skip: Number of posts to skip
+            limit: Maximum number of posts to return
+            sort_by: Sort by "created_at" (save date) or "post_created_at" (post date)
+            sort_order: Sort order "asc" or "desc"
+            
+        Returns:
+            Tuple of (list of posts, total count)
+        """
+        # Base query
+        query = (
+            db.query(SavedPost)
+            .filter(SavedPost.user_id == user_id)
+            .join(Post, SavedPost.post_id == Post.id)
+            .filter(Post.is_active == True)
+        )
+        
+        # Get total count
+        total = query.count()
+        
+        # Apply sorting
+        if sort_by == "created_at":
+            order_column = SavedPost.created_at
+        else:  # sort_by == "post_created_at"
+            order_column = Post.created_at
+        
+        if sort_order == "desc":
+            query = query.order_by(order_column.desc())
+        else:
+            query = query.order_by(order_column.asc())
+        
+        # Apply pagination
+        saved_posts = query.offset(skip).limit(limit).all()
+        
+        # Get post IDs
+        post_ids = [sp.post_id for sp in saved_posts]
+        
+        # Fetch posts with relationships
+        posts = (
+            db.query(Post)
+            .options(
+                joinedload(Post.user),
+                joinedload(Post.likes).joinedload(PostLike.user),
+                joinedload(Post.comments).joinedload(PostComment.user),
+                joinedload(Post.images),
+            )
+            .filter(Post.id.in_(post_ids))
+            .all()
+        )
+        
+        # Sort posts to match saved_posts order
+        post_dict = {post.id: post for post in posts}
+        ordered_posts = [post_dict[post_id] for post_id in post_ids if post_id in post_dict]
+        
+        # Filter by visibility (same logic as get_feed)
+        visible_posts = []
+        for post in ordered_posts:
+            if post.visibility == "private" and post.user_id != current_user_id:
+                continue
+            if post.visibility == "followers_only":
+                if current_user_id is None:
+                    continue
+                if post.user_id != current_user_id:
+                    from app.services.follow_service import FollowService
+                    if not FollowService.is_following(db, current_user_id, post.user_id):
+                        continue
+            visible_posts.append(post)
+        
+        return visible_posts, total
+    
+    @staticmethod
+    def is_post_saved(db: Session, user_id: UUID, post_id: UUID) -> bool:
+        """
+        Check if a post is saved by a user.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            post_id: Post ID
+            
+        Returns:
+            True if saved, False otherwise
+        """
+        try:
+            saved_post = db.query(SavedPost).filter(
+                SavedPost.user_id == user_id,
+                SavedPost.post_id == post_id
+            ).first()
+            
+            return saved_post is not None
+        except ProgrammingError as e:
+            # Handle case where saved_posts table doesn't exist (migration not run)
+            # IMPORTANT: Rollback the transaction to avoid InFailedSqlTransaction errors
+            db.rollback()
+            if "does not exist" in str(e) or "relation" in str(e).lower():
+                logger.debug(
+                    "saved_posts table does not exist, returning False. "
+                    "This is expected if migrations have not been run yet."
+                )
+                return False
+            raise
+    
+    @staticmethod
+    def get_saved_post_ids(
+        db: Session,
+        user_id: UUID,
+        post_ids: List[UUID]
+    ) -> List[UUID]:
+        """
+        Get list of post IDs that are saved by the user.
+        
+        Args:
+            db: Database session
+            user_id: User ID
+            post_ids: List of post IDs to check
+            
+        Returns:
+            List of post IDs that are saved
+        """
+        saved_posts = (
+            db.query(SavedPost.post_id)
+            .filter(
+                SavedPost.user_id == user_id,
+                SavedPost.post_id.in_(post_ids)
+            )
+            .all()
+        )
+        
+        return [sp.post_id for sp in saved_posts]

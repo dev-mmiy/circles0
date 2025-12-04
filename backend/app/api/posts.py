@@ -7,6 +7,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func
+from sqlalchemy.exc import ProgrammingError
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user, get_current_user_optional
@@ -25,7 +26,7 @@ from app.schemas.post import (
     PostUpdate,
 )
 from app.services.hashtag_service import HashtagService
-from app.services.post_service import PostService
+from app.services.post_service import PostService, SavedPostService
 from app.services.user_service import UserService
 from app.utils.auth_utils import extract_auth0_id
 
@@ -46,16 +47,28 @@ def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optiona
     if not current_user:
         return None
 
-    auth0_id = extract_auth0_id(current_user)
-    user = UserService.get_user_by_auth0_id(db, auth0_id)
+    try:
+        auth0_id = extract_auth0_id(current_user)
+        user = UserService.get_user_by_auth0_id(db, auth0_id)
 
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User profile not found. Please complete registration first.",
-        )
+        if not user:
+            # Log warning but return None instead of raising exception
+            # This allows endpoints to work gracefully when user is not found
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"[get_user_id_from_token] User not found for auth0_id: {auth0_id}")
+            return None
 
-    return user.id
+        return user.id
+    except HTTPException:
+        # Re-raise HTTPException (e.g., invalid token format)
+        raise
+    except Exception as e:
+        # Log unexpected errors but return None to avoid breaking the endpoint
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"[get_user_id_from_token] Unexpected error: {str(e)}", exc_info=True)
+        return None
 
 
 # ========== Post Endpoints ==========
@@ -170,6 +183,11 @@ async def get_feed(
     # - We execute only 6 queries total (likes, comments, liked status, hashtags, mentions, images)
     # - This reduces database load and improves response time significantly
     post_ids = [post.id for post in posts]
+    
+    # If no posts, return empty list early
+    if not post_ids:
+        return []
+    
     bulk_fetch_start_time = time.time()
     
     # Step 1: Get like counts for all posts in a single query using GROUP BY
@@ -212,6 +230,34 @@ async def get_feed(
             .all()
         )
         liked_post_ids = {row[0] for row in liked_posts}
+    
+    # Step 3.5: Get saved posts for current user in a single query
+    # This determines which posts the current user has saved (for UI state)
+    saved_post_ids = set()
+    if user_id and post_ids:
+        try:
+            from app.models.post import SavedPost
+            saved_posts = (
+                db.query(SavedPost.post_id)
+                .filter(
+                    SavedPost.post_id.in_(post_ids),
+                    SavedPost.user_id == user_id
+                )
+                .all()
+            )
+            saved_post_ids = {row[0] for row in saved_posts}
+        except ProgrammingError as e:
+            # Handle case where saved_posts table doesn't exist (migration not run)
+            # IMPORTANT: Rollback the transaction to avoid InFailedSqlTransaction errors
+            db.rollback()
+            if "does not exist" in str(e) or "relation" in str(e).lower():
+                logger.debug(
+                    "[get_feed] saved_posts table does not exist, skipping saved posts check. "
+                    "This is expected if migrations have not been run yet."
+                )
+                saved_post_ids = set()
+            else:
+                raise
     
     # Step 4: Get hashtags for all posts in a single query
     # JOIN PostHashtag with Hashtag to get full hashtag objects
@@ -274,7 +320,8 @@ async def get_feed(
             post.id in liked_post_ids,
             hashtags_by_post.get(post.id, []),
             mentions_by_post.get(post.id, []),
-            viewer_disease_ids
+            viewer_disease_ids,
+            post.id in saved_post_ids
         )
         for post in posts
     ]
@@ -355,6 +402,27 @@ async def get_posts_by_hashtag(
             )
             liked_post_ids = {row[0] for row in liked_posts}
         
+        # Get saved posts for current user in a single query
+        saved_post_ids = set()
+        if user_id:
+            try:
+                from app.models.post import SavedPost
+                saved_posts = (
+                    db.query(SavedPost.post_id)
+                    .filter(
+                        SavedPost.post_id.in_(post_ids),
+                        SavedPost.user_id == user_id
+                    )
+                    .all()
+                )
+                saved_post_ids = {row[0] for row in saved_posts}
+            except ProgrammingError as e:
+                # Handle case where saved_posts table doesn't exist (migration not run)
+                if "does not exist" in str(e) or "relation" in str(e).lower():
+                    saved_post_ids = set()
+                else:
+                    raise
+        
         # Get hashtags for all posts in a single query
         from app.models.hashtag import PostHashtag
         from app.models.hashtag import Hashtag
@@ -393,12 +461,91 @@ async def get_posts_by_hashtag(
                 comment_counts.get(post.id, 0),
                 post.id in liked_post_ids,
                 hashtags_by_post.get(post.id, []),
-                mentions_by_post.get(post.id, [])
+                mentions_by_post.get(post.id, []),
+                None,
+                post.id in saved_post_ids
             )
             for post in posts
         ]
     else:
         return []
+
+
+# IMPORTANT: /saved and /saved/check must be defined BEFORE /{post_id}
+# Otherwise FastAPI will try to match /saved as /{post_id} with post_id="saved"
+@router.get(
+    "/saved",
+    response_model=List[PostResponse],
+    summary="Get saved posts",
+)
+async def get_saved_posts(
+    skip: int = Query(0, ge=0, description="Number of posts to skip"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
+    sort_by: str = Query(
+        "created_at",
+        regex="^(created_at|post_created_at)$",
+        description="Sort by save date or post date"
+    ),
+    sort_order: str = Query(
+        "desc",
+        regex="^(asc|desc)$",
+        description="Sort order"
+    ),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Get saved posts for the current user.
+    
+    Requires authentication.
+    Posts are filtered by visibility settings.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    posts, total = SavedPostService.get_saved_posts(
+        db,
+        user_id,
+        current_user_id=user_id,
+        skip=skip,
+        limit=limit,
+        sort_by=sort_by,
+        sort_order=sort_order
+    )
+    
+    # Build response
+    responses = []
+    for post in posts:
+        responses.append(_build_post_response(db, post, user_id))
+    
+    return responses
+
+
+@router.get(
+    "/saved/check",
+    summary="Check if posts are saved",
+)
+async def check_saved_posts(
+    post_ids: List[UUID] = Query(..., description="List of post IDs to check"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Check if posts are saved by the current user.
+    
+    Requires authentication.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    try:
+        saved_post_ids = SavedPostService.get_saved_post_ids(db, user_id, post_ids)
+        return {"saved_post_ids": [str(pid) for pid in saved_post_ids]}
+    except ProgrammingError as e:
+        # Handle case where saved_posts table doesn't exist
+        db.rollback()
+        if "does not exist" in str(e) or "relation" in str(e).lower():
+            # Return empty list if table doesn't exist
+            return {"saved_post_ids": []}
+        raise
 
 
 @router.get(
@@ -498,6 +645,27 @@ async def get_user_posts(
             )
             liked_post_ids = {row[0] for row in liked_posts}
         
+        # Get saved posts for current user in a single query
+        saved_post_ids = set()
+        if current_user_id:
+            try:
+                from app.models.post import SavedPost
+                saved_posts = (
+                    db.query(SavedPost.post_id)
+                    .filter(
+                        SavedPost.post_id.in_(post_ids),
+                        SavedPost.user_id == current_user_id
+                    )
+                    .all()
+                )
+                saved_post_ids = {row[0] for row in saved_posts}
+            except ProgrammingError as e:
+                # Handle case where saved_posts table doesn't exist (migration not run)
+                if "does not exist" in str(e) or "relation" in str(e).lower():
+                    saved_post_ids = set()
+                else:
+                    raise
+        
         # Get hashtags for all posts in a single query
         from app.models.hashtag import PostHashtag
         from app.models.hashtag import Hashtag
@@ -536,7 +704,9 @@ async def get_user_posts(
                 comment_counts.get(post.id, 0),
                 post.id in liked_post_ids,
                 hashtags_by_post.get(post.id, []),
-                mentions_by_post.get(post.id, [])
+                mentions_by_post.get(post.id, []),
+                None,
+                post.id in saved_post_ids
             )
             for post in posts
         ]
@@ -1192,6 +1362,16 @@ def _build_post_response(
         if current_user_id
         else False
     )
+    is_saved = False
+    if current_user_id:
+        try:
+            is_saved = SavedPostService.is_post_saved(db, current_user_id, post.id)
+        except ProgrammingError as e:
+            # Handle case where saved_posts table doesn't exist (migration not run)
+            if "does not exist" in str(e) or "relation" in str(e).lower():
+                is_saved = False
+            else:
+                raise
 
     # Get viewer's disease IDs for field visibility checks
     viewer_disease_ids = None
@@ -1286,6 +1466,7 @@ def _build_post_response(
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
+        is_saved_by_current_user=is_saved,
         hashtags=hashtag_responses,
         mentions=mention_responses,
         images=image_responses,
@@ -1302,6 +1483,7 @@ def _build_post_response_optimized(
     hashtags: list,
     mentioned_users: list,
     viewer_disease_ids: Optional[List[int]] = None,
+    is_saved: bool = False,
 ) -> PostResponse:
     """
     Build PostResponse with pre-fetched data (optimized version for bulk operations).
@@ -1415,6 +1597,7 @@ def _build_post_response_optimized(
         like_count=like_count,
         comment_count=comment_count,
         is_liked_by_current_user=is_liked,
+        is_saved_by_current_user=is_saved,
         hashtags=hashtag_responses,
         mentions=mention_responses,
         images=image_responses,
@@ -1623,3 +1806,122 @@ def _build_comment_response(
         ),
         reply_count=reply_count,
     )
+
+
+# ========== Saved Posts Endpoints ==========
+
+@router.post(
+    "/{post_id}/save",
+    status_code=status.HTTP_201_CREATED,
+    summary="Save a post",
+)
+async def save_post(
+    post_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Save a post for later reading.
+    
+    Requires authentication.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    try:
+        saved_post = SavedPostService.save_post(db, user_id, post_id)
+        return {"message": "Post saved successfully", "id": str(saved_post.id)}
+    except ValueError as e:
+        # Check if error is about missing table (migration not run)
+        error_message = str(e)
+        if "migrations" in error_message.lower() or "not available" in error_message.lower():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=error_message
+            )
+        # Otherwise, it's a business logic error (post not found, already saved, etc.)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_message
+        )
+    except ProgrammingError as e:
+        # Handle case where saved_posts table doesn't exist
+        db.rollback()
+        if "does not exist" in str(e) or "relation" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Saved posts feature is not available. Database migrations need to be run."
+            )
+        raise
+
+
+@router.delete(
+    "/{post_id}/save",
+    status_code=status.HTTP_200_OK,
+    summary="Unsave a post",
+)
+async def unsave_post(
+    post_id: UUID,
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Unsave a post.
+    
+    Requires authentication.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    try:
+        success = SavedPostService.unsave_post(db, user_id, post_id)
+        
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Saved post not found"
+            )
+        
+        return {"message": "Post unsaved successfully"}
+    except ValueError as e:
+        # Check if error is about missing table (migration not run)
+        error_message = str(e)
+        if "migrations" in error_message.lower() or "not available" in error_message.lower():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=error_message
+            )
+        # Otherwise, re-raise as it shouldn't happen for unsave
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_message
+        )
+    except ProgrammingError as e:
+        # Handle case where saved_posts table doesn't exist
+        db.rollback()
+        if "does not exist" in str(e) or "relation" in str(e).lower():
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Saved posts feature is not available. Database migrations need to be run."
+            )
+        raise
+
+
+@router.get(
+    "/saved/check",
+    summary="Check if posts are saved",
+)
+async def check_saved_posts(
+    post_ids: List[UUID] = Query(..., description="List of post IDs to check"),
+    db: Session = Depends(get_db),
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Check which posts are saved by the current user.
+    
+    Requires authentication.
+    Returns a list of post IDs that are saved.
+    """
+    user_id = get_user_id_from_token(db, current_user)
+    
+    saved_post_ids = SavedPostService.get_saved_post_ids(db, user_id, post_ids)
+    
+    return {"saved_post_ids": saved_post_ids}

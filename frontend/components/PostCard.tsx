@@ -6,7 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link } from '@/i18n/routing';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { likePost, unlikePost, deletePost, type Post } from '@/lib/api/posts';
+import { likePost, unlikePost, deletePost, savePost, unsavePost, type Post } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import toast from 'react-hot-toast';
@@ -38,9 +38,12 @@ export default function PostCard({
   const { user } = useUser();
   const locale = useLocale();
   const t = useTranslations('post');
+  const tSaved = useTranslations('savedPosts');
   const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
   const [likeCount, setLikeCount] = useState(post.like_count);
   const [isLiking, setIsLiking] = useState(false);
+  const [isSaved, setIsSaved] = useState(post.is_saved_by_current_user ?? false);
+  const [isSaving, setIsSaving] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -135,6 +138,57 @@ export default function PostCard({
       alert(t('errors.likeFailed'));
     } finally {
       setIsLiking(false);
+    }
+  };
+
+  // Handle save toggle
+  const handleSaveToggle = async () => {
+    if (!isAuthenticated || !user) {
+      toast.error(tSaved('authenticationRequired'));
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      const token = await getAccessTokenSilently();
+      
+      if (isSaved) {
+        await unsavePost(post.id, token);
+        setIsSaved(false);
+        toast.success(tSaved('unsaved'));
+      } else {
+        await savePost(post.id, token);
+        setIsSaved(true);
+        toast.success(tSaved('saved'));
+      }
+    } catch (error: any) {
+      // Extract error message from response
+      let errorMessage = tSaved('saveFailed');
+      if (error?.response?.data?.detail) {
+        // Use backend error message if available
+        errorMessage = error.response.data.detail;
+      } else if (error?.message) {
+        // Fallback to error message
+        errorMessage = error.message;
+      }
+      
+      // Log error (503 Service Unavailable is expected when feature is not available)
+      const isServiceUnavailable = error?.response?.status === 503;
+      const isFeatureNotAvailable = isServiceUnavailable && 
+        (errorMessage?.includes('not available') || 
+         errorMessage?.includes('migrations'));
+      
+      if (isFeatureNotAvailable) {
+        // Log as warning for expected service unavailable errors
+        debugLog.warn('Save feature not available:', errorMessage);
+      } else {
+        // Log other errors normally
+        debugLog.error('Failed to toggle save:', error);
+      }
+      
+      toast.error(errorMessage);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -444,6 +498,35 @@ export default function PostCard({
           </svg>
           <span className="font-medium">{post.comment_count}</span>
         </Link>
+
+        {/* Save button (between comment and share) */}
+        {isAuthenticated && (
+          <button
+            onClick={handleSaveToggle}
+            disabled={isSaving}
+            className={`transition-colors ${
+              isSaved
+                ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300'
+                : 'text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400'
+            } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+            title={isSaved ? tSaved('unsave') : tSaved('save')}
+            aria-label={isSaved ? tSaved('unsave') : tSaved('save')}
+          >
+            <svg
+              className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`}
+              fill={isSaved ? 'currentColor' : 'none'}
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+              />
+            </svg>
+          </button>
+        )}
 
         {/* Share button */}
         <ShareButton

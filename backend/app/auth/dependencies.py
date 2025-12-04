@@ -133,14 +133,25 @@ def get_current_user_optional(
 
     Returns:
         dict or None: User information if authenticated, None otherwise
+
+    Note:
+        Only catches HTTPException (authentication/authorization errors).
+        Other exceptions (system errors, etc.) are re-raised as they indicate
+        serious problems that should not be silently ignored.
     """
     if not credentials:
         return None
 
     try:
         return get_current_user(credentials)
-    except HTTPException:
+    except HTTPException as e:
+        # HTTPException indicates authentication/authorization failure
+        # This is expected for optional authentication, so return None
+        logger.debug(f"[get_current_user_optional] Authentication failed (optional): {e.detail}")
         return None
+    # Note: get_current_user converts all other exceptions to HTTPException,
+    # so we should only catch HTTPException here. If other exceptions occur,
+    # they indicate serious system errors and should be propagated.
 
 
 def require_permission(permission: str):

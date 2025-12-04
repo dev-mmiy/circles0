@@ -14,6 +14,7 @@
     "myPage": "Profile",
     "messages": "Messages",
     "groups": "Groups",
+    "savedPosts": "Saved Posts",
     "settings": "Settings",
     "logout": "Logout",
     "openMenu": "Open menu",
@@ -1069,6 +1070,33 @@
     "errors": {
       "loadFailed": "Failed to load blocked users",
       "unblockFailed": "Failed to unblock user"
+    }
+  },
+  "savedPosts": {
+    "pageTitle": "Saved Posts",
+    "pageSubtitle": "Manage posts you've saved for later reading",
+    "save": "Save",
+    "unsave": "Unsave",
+    "saved": "Post saved",
+    "unsaved": "Post unsaved",
+    "saveFailed": "Failed to save post",
+    "loading": "Loading...",
+    "loadingMore": "Loading...",
+    "loadMore": "Load More",
+    "noSavedPosts": "No saved posts",
+    "noSavedPostsMessage": "When you find interesting posts, click the save icon to save them.",
+    "sortBy": {
+      "saveDate": "Save Date",
+      "postDate": "Post Date"
+    },
+    "sortOrder": {
+      "newest": "Newest First",
+      "oldest": "Oldest First"
+    },
+    "authenticationRequired": "Authentication Required",
+    "pleaseLogin": "Please log in to view your saved posts.",
+    "errors": {
+      "loadFailed": "Failed to load posts"
     }
   }
 }

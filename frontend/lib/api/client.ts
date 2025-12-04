@@ -133,12 +133,31 @@ apiClient.interceptors.response.use(
         }
       }
       
-      debugLog.error('[apiClient] API Error:', {
-        status: error.response.status,
-        statusText: error.response.statusText,
-        data: error.response.data,
-        url: error.config?.url,
-      });
+      // For 503 Service Unavailable (feature not available), log as warning instead of error
+      // This is expected when features require database migrations
+      const status = error.response.status;
+      const errorData = error.response.data as any;
+      const isServiceUnavailable = status === 503;
+      const isFeatureNotAvailable = isServiceUnavailable && 
+        (errorData?.detail?.includes('not available') || 
+         errorData?.detail?.includes('migrations'));
+      
+      if (isFeatureNotAvailable) {
+        // Log as warning for expected service unavailable errors
+        debugLog.warn('[apiClient] Feature Not Available:', {
+          status,
+          message: errorData?.detail || error.response.statusText,
+          url: error.config?.url,
+        });
+      } else {
+        // Log other errors normally
+        debugLog.error('[apiClient] API Error:', {
+          status,
+          statusText: error.response.statusText,
+          data: error.response.data,
+          url: error.config?.url,
+        });
+      }
     } else if (error.request) {
       // Request made but no response received (network error, timeout, etc.)
       const isTimeout = error.code === 'ECONNABORTED' || 
