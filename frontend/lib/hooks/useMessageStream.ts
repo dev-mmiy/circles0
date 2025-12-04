@@ -185,20 +185,28 @@ export function useMessageStream(
       eventSource.addEventListener('error', (errorEvent) => {
         const eventSource = errorEvent.target as EventSource;
         const readyState = eventSource.readyState;
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
         
         // EventSource readyState:
-        // 0 = CONNECTING
-        // 1 = OPEN
-        // 2 = CLOSED
+        // 0 = CONNECTING (connection not yet established or lost)
+        // 1 = OPEN (connection is open and data can be received)
+        // 2 = CLOSED (connection is closed)
         
-        // Connection closed - check if it was a normal disconnect or an error
+        // Only log actual errors, not connection attempts
         if (readyState === EventSource.CLOSED) {
-          // Only log unexpected disconnects or in verbose mode
+          // Connection was closed - this is normal if it was previously connected
           if (wasConnectedRef.current && isVerbose) {
             debugLog.log('[Message SSE] Connection closed, will reconnect');
           }
+        } else if (readyState === EventSource.CONNECTING) {
+          // Connection attempt failed - this is normal during initial connection or reconnection
+          // Don't log as error - this is expected behavior during connection attempts
+          // Only log in verbose mode to avoid noise
+          if (isVerbose) {
+            debugLog.log('[Message SSE] Connection attempt failed, will retry');
+          }
         } else {
-          // Unexpected state - always log errors
+          // Unexpected state (should not happen, but handle gracefully)
           debugLog.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
         }
         

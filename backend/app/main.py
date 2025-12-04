@@ -265,11 +265,25 @@ async def http_exception_handler(request: Request, exc: StarletteHTTPException):
 @app.exception_handler(Exception)
 async def general_exception_handler(request: Request, exc: Exception):
     """Handle general exceptions and ensure CORS headers are present."""
+    from sqlalchemy.exc import ProgrammingError
+    
     logger.error(f"Unhandled Exception: {str(exc)}", exc_info=True)
     cors_origin = get_cors_origin(request)
+    
+    # Provide more user-friendly error messages for common database errors
+    error_detail = str(exc)
+    if isinstance(exc, ProgrammingError):
+        if "does not exist" in error_detail or "relation" in error_detail.lower():
+            error_detail = (
+                "Database table not found. This usually means database migrations need to be run. "
+                "Please contact the administrator."
+            )
+        else:
+            error_detail = f"Database error: {error_detail}"
+    
     return JSONResponse(
         status_code=500,
-        content={"detail": f"Internal server error: {str(exc)}"},
+        content={"detail": error_detail},
         headers={
             "Access-Control-Allow-Origin": cors_origin,
             "Access-Control-Allow-Credentials": "true",

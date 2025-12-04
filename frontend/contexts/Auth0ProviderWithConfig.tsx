@@ -37,8 +37,8 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
           audience: audience,
           scope: 'openid profile email',
         }}
-        useRefreshTokens={false}
-        cacheLocation="memory"
+        useRefreshTokens={true}
+        cacheLocation="localstorage"
         skipRedirectCallback={false}
         onRedirectCallback={appState => {
           // Only log in verbose mode
