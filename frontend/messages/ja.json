@@ -251,6 +251,7 @@
     "general": "エラーが発生しました。",
     "statusCode": "ステータスコード",
     "retry": "再試行",
+    "dismiss": "閉じる",
     "backToHome": "ホームに戻る",
     "authenticationRequired": "この操作を実行するにはログインが必要です。",
     "createDiseaseFailed": "疾患の作成に失敗しました。"

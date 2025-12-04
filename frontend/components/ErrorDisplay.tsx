@@ -14,6 +14,7 @@ interface ErrorDisplayProps {
   className?: string;
   showDetails?: boolean;
   onRetry?: () => void;
+  onDismiss?: () => void;
 }
 
 export function ErrorDisplay({
@@ -21,6 +22,7 @@ export function ErrorDisplay({
   className = '',
   showDetails = false,
   onRetry,
+  onDismiss,
 }: ErrorDisplayProps) {
   const t = useTranslations('errors');
   
@@ -95,7 +97,18 @@ export function ErrorDisplay({
   };
   
   return (
-    <div className={`rounded-lg border p-4 ${getErrorColor()} ${className}`}>
+    <div className={`rounded-lg border p-4 ${getErrorColor()} ${className} relative`}>
+      {onDismiss && (
+        <button
+          onClick={onDismiss}
+          className="absolute top-2 right-2 text-current opacity-60 hover:opacity-100 transition-opacity"
+          aria-label={t('dismiss') || 'Dismiss'}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
       <div className="flex items-start">
         <div className="flex-shrink-0 mt-0.5">
           {getErrorIcon()}

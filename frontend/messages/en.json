@@ -213,6 +213,7 @@
     "general": "An error occurred.",
     "statusCode": "Status Code",
     "retry": "Retry",
+    "dismiss": "Dismiss",
     "backToHome": "Back to Home",
     "authenticationRequired": "Authentication is required to perform this action.",
     "createDiseaseFailed": "Failed to create disease."
