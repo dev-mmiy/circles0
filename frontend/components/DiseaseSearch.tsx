@@ -308,20 +308,21 @@ export function DiseaseSearch({
               </div>
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
                 {searchHistory.map((item) => (
-                  <button
+                  <div
                     key={`${item.query}-${item.timestamp}`}
                     onClick={() => handleHistoryClick(item)}
-                    className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group cursor-pointer"
                   >
                     <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
                     <button
+                      type="button"
                       onClick={(e) => handleRemoveHistoryItem(e, item.query)}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
                       aria-label="Remove"
                     >
                       <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
                     </button>
-                  </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -352,7 +353,7 @@ export function DiseaseSearch({
 
       {/* Advanced Search Options */}
       {showAdvanced && (
-        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
+        <div className="px-1 py-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
           {/* Clear Filters Button */}
           <div className="flex justify-end">
             <button
@@ -601,7 +602,14 @@ export function DiseaseSearch({
                     )}
                   </div>
                   {onSelect && (
-                    <button className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelect(disease);
+                      }}
+                      className="ml-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                    >
                       {t('select')}
                     </button>
                   )}

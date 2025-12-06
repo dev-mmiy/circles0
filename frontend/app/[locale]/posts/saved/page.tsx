@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { useAuth0 } from '@auth0/auth0-react';
 import PostCard from '@/components/PostCard';
@@ -22,6 +22,7 @@ export default function SavedPostsPage() {
     isLoadingMore,
     error,
     hasMore,
+    load,
     loadMore,
     retry,
     clearError,
@@ -57,6 +58,13 @@ export default function SavedPostsPage() {
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
   };
+
+  // Reload data when sortBy or sortOrder changes
+  useEffect(() => {
+    if (isAuthenticated) {
+      load(true);
+    }
+  }, [sortBy, sortOrder, isAuthenticated, load]);
 
   // 認証チェック
   if (!isAuthenticated) {
