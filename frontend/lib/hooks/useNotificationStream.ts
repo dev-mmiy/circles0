@@ -54,7 +54,10 @@ export function useNotificationStream(
 
   const closeConnection = useCallback(() => {
     if (eventSourceRef.current) {
-      console.log('[SSE] Closing connection');
+      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      if (isVerbose) {
+        console.log('[SSE] Closing connection');
+      }
       eventSourceRef.current.close();
       eventSourceRef.current = null;
       setIsConnected(false);
@@ -67,13 +70,19 @@ export function useNotificationStream(
   }, []);
 
   const connect = useCallback(async () => {
+    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+
     if (!isAuthenticated) {
-      console.log('[SSE] Not authenticated, skipping connection');
+      if (isVerbose) {
+        console.log('[SSE] Not authenticated, skipping connection');
+      }
       return;
     }
 
     if (eventSourceRef.current) {
-      console.log('[SSE] Connection already exists');
+      if (isVerbose) {
+        console.log('[SSE] Connection already exists');
+      }
       return;
     }
 
@@ -85,13 +94,17 @@ export function useNotificationStream(
       // We'll append the token as a query parameter
       const urlWithAuth = `${SSE_ENDPOINT}?token=${encodeURIComponent(token)}`;
 
-      console.log('[SSE] Connecting to notification stream...');
+      if (isVerbose) {
+        console.log('[SSE] Connecting to notification stream...');
+      }
       const eventSource = new EventSource(urlWithAuth);
       eventSourceRef.current = eventSource;
 
       // Connection established
       eventSource.addEventListener('connected', (event) => {
-        console.log('[SSE] Connected:', event.data);
+        if (isVerbose) {
+          console.log('[SSE] Connected:', event.data);
+        }
         setIsConnected(true);
         setError(null);
         // Reset retry delay on successful connection
@@ -102,43 +115,89 @@ export function useNotificationStream(
       eventSource.addEventListener('notification', (event) => {
         try {
           const notification: NotificationEvent = JSON.parse(event.data);
-          console.log('[SSE] New notification:', notification);
+          if (isVerbose) {
+            console.log('[SSE] New notification:', notification);
+          }
           setLastNotification(notification);
 
           if (onNotification) {
             onNotification(notification);
           }
         } catch (error) {
-          console.error('[SSE] Failed to parse notification:', error);
+          // Only log parsing errors in verbose mode
+          if (isVerbose) {
+            console.error('[SSE] Failed to parse notification:', error);
+          }
         }
       });
 
       // Heartbeat (keep-alive ping)
       eventSource.addEventListener('ping', (event) => {
-        console.log('[SSE] Heartbeat received');
+        // Silently handle ping events (no logging needed)
       });
 
       // Server requests reconnection (before timeout)
       eventSource.addEventListener('reconnect', (event) => {
-        console.log('[SSE] Server requested reconnection:', event.data);
+        if (isVerbose) {
+          console.log('[SSE] Server requested reconnection:', event.data);
+        }
         closeConnection();
         scheduleReconnectRef.current?.();
       });
 
-      // Error event
+      // Error event (custom event listener)
       eventSource.addEventListener('error', (event) => {
-        console.log('[SSE] Error event:', event);
+        // This is a custom error event from the server, not the standard EventSource error
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        if (isVerbose) {
+          console.log('[SSE] Server error event:', event);
+        }
       });
 
       // Standard open event
       eventSource.onopen = () => {
-        console.log('[SSE] EventSource opened');
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        if (isVerbose) {
+          console.log('[SSE] EventSource opened');
+        }
+        setIsConnected(true);
+        setError(null);
+        // Reset retry delay on successful connection
+        retryDelayRef.current = INITIAL_RETRY_DELAY;
       };
 
       // Standard error handler
       eventSource.onerror = (event) => {
-        console.error('[SSE] EventSource error:', event);
-        setIsConnected(false);
+        const eventSource = event.target as EventSource;
+        const readyState = eventSource.readyState;
+
+        // EventSource readyState:
+        // 0 = CONNECTING
+        // 1 = OPEN
+        // 2 = CLOSED
+
+        // Only log errors in verbose mode to reduce console noise
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+
+        if (readyState === EventSource.CLOSED) {
+          // Connection closed - will reconnect automatically
+          if (isVerbose) {
+            console.log('[SSE] Connection closed, will reconnect');
+          }
+          setIsConnected(false);
+        } else if (readyState === EventSource.CONNECTING) {
+          // Connection attempt failed - this is normal during reconnection
+          if (isVerbose) {
+            console.log('[SSE] Connection attempt failed, will retry');
+          }
+          setIsConnected(false);
+        } else {
+          // Unexpected error state - only log in verbose mode
+          if (isVerbose) {
+            console.error('[SSE] Unexpected error state:', readyState, event);
+          }
+          setIsConnected(false);
+        }
 
         // Connection lost, schedule reconnection
         if (shouldReconnectRef.current) {
@@ -148,9 +207,18 @@ export function useNotificationStream(
       };
 
     } catch (error) {
-      console.error('[SSE] Failed to connect:', error);
+      // Only log errors in verbose mode (SSE is non-critical, errors are expected)
+      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      if (isVerbose) {
+        const errorMessage = error instanceof Error ? error.message : 'Connection failed';
+        console.error('[SSE] Failed to connect:', errorMessage);
+      }
+      
+      // Set error state but don't block the app
       setError(error instanceof Error ? error : new Error('Connection failed'));
+      setIsConnected(false);
 
+      // Schedule reconnection
       if (shouldReconnectRef.current) {
         scheduleReconnectRef.current?.();
       }
@@ -168,10 +236,15 @@ export function useNotificationStream(
     }
 
     const delay = retryDelayRef.current;
-    console.log(`[SSE] Scheduling reconnection in ${delay}ms`);
+    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+    if (isVerbose) {
+      console.log(`[SSE] Scheduling reconnection in ${delay}ms`);
+    }
 
     retryTimeoutRef.current = setTimeout(() => {
-      console.log('[SSE] Attempting to reconnect...');
+      if (isVerbose) {
+        console.log('[SSE] Attempting to reconnect...');
+      }
       connect();
 
       // Increase retry delay with backoff (up to max)
@@ -194,7 +267,10 @@ export function useNotificationStream(
 
     // Cleanup on unmount
     return () => {
-      console.log('[SSE] Component unmounting, cleaning up');
+      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      if (isVerbose) {
+        console.log('[SSE] Component unmounting, cleaning up');
+      }
       shouldReconnectRef.current = false;
       closeConnection();
     };

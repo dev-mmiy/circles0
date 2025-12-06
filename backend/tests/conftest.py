@@ -23,13 +23,25 @@ from app.models import (  # noqa: F401
     PostLike,
     User,
 )
+from app.models.post import SavedPost  # noqa: F401
 
 # Get test database URL from environment variable or use default
 # Default to test database on PostgreSQL (works both locally and in Docker)
 # In Docker: use 'postgres' as hostname, locally: use 'localhost'
+# Auto-detect: if running locally (not in Docker), use 'localhost'
+# Check if we're in Docker by checking if 'postgres' hostname resolves
+import socket
+try:
+    socket.gethostbyname('postgres')
+    # If we can resolve 'postgres', we're likely in Docker
+    DEFAULT_HOST = 'postgres'
+except socket.gaierror:
+    # If we can't resolve 'postgres', we're likely running locally
+    DEFAULT_HOST = 'localhost'
+
 TEST_DATABASE_URL = os.getenv(
     "TEST_DATABASE_URL",
-    "postgresql://postgres:postgres@postgres:5432/disease_community_test",
+    f"postgresql://postgres:postgres@{DEFAULT_HOST}:5432/disease_community_test",
 )
 
 # Create PostgreSQL engine for testing
@@ -91,9 +103,13 @@ def reset_db():
     pass
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_notification_broadcast():
-    """Mock notification broadcasting to avoid async issues in tests."""
+    """Mock notification broadcasting to avoid async issues in tests.
+    
+    Note: This fixture is NOT autouse because it breaks async tests using httpx.AsyncClient.
+    Use this fixture explicitly in tests that need it (e.g., TestClient-based tests).
+    """
     # Mock asyncio.create_task to prevent async issues in tests
     with patch(
         "app.services.notification_service.asyncio.create_task"

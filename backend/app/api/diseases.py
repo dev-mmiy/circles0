@@ -93,11 +93,11 @@ async def search_diseases(
     language: str = Query("en", description="Preferred language for search"),
     sort_by: str = Query(
         "name",
-        regex="^(name|disease_code|created_at)$",
+        pattern="^(name|disease_code|created_at)$",
         description="Sort field: name, disease_code, or created_at",
     ),
     sort_order: str = Query(
-        "asc", regex="^(asc|desc)$", description="Sort order: asc or desc"
+        "asc", pattern="^(asc|desc)$", description="Sort order: asc or desc"
     ),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     db: Session = Depends(get_db),

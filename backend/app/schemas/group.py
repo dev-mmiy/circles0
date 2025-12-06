@@ -222,7 +222,7 @@ class AddMemberRequest(BaseModel):
     """Schema for adding members to a group."""
 
     user_ids: List[UUID] = Field(
-        ..., min_items=1, description="User IDs to add to the group"
+        ..., min_length=1, description="User IDs to add to the group"
     )
 
 

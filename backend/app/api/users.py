@@ -186,11 +186,11 @@ async def search_users(
     language: Optional[str] = Query(None, description="Language code"),
     sort_by: str = Query(
         "created_at",
-        regex="^(created_at|last_login_at|nickname|post_count)$",
+        pattern="^(created_at|last_login_at|nickname|post_count)$",
         description="Sort field: created_at, last_login_at, nickname, or post_count",
     ),
     sort_order: str = Query(
-        "desc", regex="^(asc|desc)$", description="Sort order: asc or desc"
+        "desc", pattern="^(asc|desc)$", description="Sort order: asc or desc"
     ),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of results"),
     db: Session = Depends(get_db),

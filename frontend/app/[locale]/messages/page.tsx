@@ -576,26 +576,26 @@ export default function MessagesPage() {
                                   {item.other_user ? (
                                     <div className="flex-shrink-0 relative w-12 h-12 hover:opacity-80 transition-opacity cursor-pointer">
                                       {item.other_user.avatar_url ? (
-                                        <Image
-                                          src={item.other_user.avatar_url}
-                                          alt={item.other_user.nickname}
-                                          width={48}
-                                          height={48}
+                                      <Image
+                                        src={item.other_user.avatar_url}
+                                        alt={item.other_user.nickname}
+                                        width={48}
+                                        height={48}
                                           className="rounded-full object-cover cursor-pointer"
-                                        />
-                                      ) : (
+                                      />
+                                    ) : (
                                         <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center cursor-pointer">
-                                          <span className="text-gray-600 dark:text-gray-300 font-medium">
+                                        <span className="text-gray-600 dark:text-gray-300 font-medium">
                                             {item.other_user.nickname?.[0]?.toUpperCase() || '?'}
-                                          </span>
-                                        </div>
-                                      )}
+                                        </span>
+                                      </div>
+                                    )}
                                     </div>
                                   ) : (
                                     <div className="flex-shrink-0 relative w-12 h-12">
                                       <div className="w-12 h-12 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">
                                         <span className="text-gray-600 dark:text-gray-300 font-medium">?</span>
-                                      </div>
+                                  </div>
                                     </div>
                                   )}
 
@@ -605,12 +605,12 @@ export default function MessagesPage() {
                                       {/* Nickname - Clickable to conversation */}
                                       {item.other_user ? (
                                         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                          {item.other_user.nickname || 'Unknown User'}
-                                        </h3>
+                                            {item.other_user.nickname || 'Unknown User'}
+                                          </h3>
                                       ) : (
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
+                                      <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 truncate">
                                           Unknown User
-                                        </h3>
+                                      </h3>
                                       )}
                                       {item.last_message_at && (
                                         <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">

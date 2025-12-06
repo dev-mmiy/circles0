@@ -6,7 +6,7 @@ import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
 from app.auth.dependencies import get_current_user
@@ -32,13 +32,12 @@ class PushSubscriptionRequest(BaseModel):
 class PushSubscriptionResponse(BaseModel):
     """Response model for push subscription."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: str
     user_id: str
     endpoint: str
     created_at: str
-
-    class Config:
-        from_attributes = True
 
 
 @router.post(

@@ -36,6 +36,8 @@ import ChatMessage from '@/components/ChatMessage';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { addMessageReaction, removeMessageReaction } from '@/lib/api/messages';
 import ImageViewer, { type ImageViewerImage } from '@/components/ImageViewer';
+import { useImageViewer } from '@/hooks/useImageViewer';
+import { convertMessageImagesToViewerImages } from '@/lib/utils/imageViewerUtils';
 
 export default function ConversationPage() {
   // Disable Next.js automatic scroll restoration for this page
@@ -107,32 +109,15 @@ export default function ConversationPage() {
   const [isSearching, setIsSearching] = useState(false);
   
   // Image viewer state
-  const [imageViewerImages, setImageViewerImages] = useState<ImageViewerImage[]>([]);
-  const [imageViewerIndex, setImageViewerIndex] = useState(0);
-  const [showImageViewer, setShowImageViewer] = useState(false);
+  const imageViewer = useImageViewer();
   
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Handle image click - open image viewer
   const handleImageClick = useCallback((imageUrl: string) => {
-    // Collect all images from messages
-    const allImages: ImageViewerImage[] = messages
-      .filter(msg => msg.image_url)
-      .map((msg, idx) => ({
-        id: msg.id,
-        image_url: msg.image_url!,
-        alt: `Message image ${idx + 1}`,
-      }));
-
-    // Find the index of the clicked image
-    const clickedIndex = allImages.findIndex(img => img.image_url === imageUrl);
-    
-    if (clickedIndex >= 0) {
-      setImageViewerImages(allImages);
-      setImageViewerIndex(clickedIndex);
-      setShowImageViewer(true);
-    }
-  }, [messages]);
+    const allImages = convertMessageImagesToViewerImages(messages);
+    imageViewer.openViewer(allImages, imageUrl);
+  }, [messages, imageViewer]);
 
   const MESSAGES_PER_PAGE = 50;
 
@@ -1101,11 +1086,11 @@ export default function ConversationPage() {
       </div>
 
       {/* Image Viewer */}
-      {showImageViewer && imageViewerImages.length > 0 && (
+      {imageViewer.isOpen && imageViewer.images.length > 0 && (
         <ImageViewer
-          images={imageViewerImages}
-          initialIndex={imageViewerIndex}
-          onClose={() => setShowImageViewer(false)}
+          images={imageViewer.images}
+          initialIndex={imageViewer.currentIndex}
+          onClose={imageViewer.closeViewer}
         />
       )}
     </>

@@ -1148,6 +1148,10 @@ class SavedPostService:
                         continue
             visible_posts.append(post)
         
+        # Note: 'total' represents the total number of saved posts (before visibility filtering)
+        # The actual number of visible posts may be less than 'total' due to visibility restrictions.
+        # This is by design - 'total' helps with pagination of saved posts, while visibility
+        # filtering ensures users only see posts they have permission to view.
         return visible_posts, total
     
     @staticmethod

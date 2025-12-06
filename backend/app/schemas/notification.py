@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, field_serializer
+from pydantic import BaseModel, ConfigDict, field_serializer
 
 from app.models.notification import NotificationType
 
@@ -30,35 +30,32 @@ class NotificationCreate(NotificationBase):
 class UserSummary(BaseModel):
     """Summary of user information for notifications."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     member_id: str
     nickname: str
     username: Optional[str] = None
     avatar_url: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 
 class PostSummary(BaseModel):
     """Summary of post information for notifications."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     content: str  # Truncated content for preview
-
-    class Config:
-        from_attributes = True
 
 
 class CommentSummary(BaseModel):
     """Summary of comment information for notifications."""
 
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     content: str  # Truncated content for preview
     post_id: UUID
-
-    class Config:
-        from_attributes = True
 
 
 class NotificationResponse(NotificationBase):
@@ -78,8 +75,7 @@ class NotificationResponse(NotificationBase):
     post: Optional[PostSummary] = None
     comment: Optional[CommentSummary] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
     @field_serializer("created_at", when_used="json")
     def serialize_datetime(self, value: datetime, _info) -> str:

@@ -124,7 +124,7 @@ async def get_feed(
     ),
     filter_type: str = Query(
         "all",
-        regex="^(all|following|disease|my_posts|following_and_my_posts|not_following)$",
+        pattern="^(all|following|disease|my_posts|following_and_my_posts|not_following)$",
         description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease, 'my_posts' for current user's posts only, 'following_and_my_posts' for posts from followed users and current user, 'not_following' for posts from users not being followed",
     ),
     disease_id: Optional[int] = Query(
@@ -483,12 +483,12 @@ async def get_saved_posts(
     limit: int = Query(20, ge=1, le=100, description="Maximum number of posts to return"),
     sort_by: str = Query(
         "created_at",
-        regex="^(created_at|post_created_at)$",
+        pattern="^(created_at|post_created_at)$",
         description="Sort by save date or post date"
     ),
     sort_order: str = Query(
         "desc",
-        regex="^(asc|desc)$",
+        pattern="^(asc|desc)$",
         description="Sort order"
     ),
     db: Session = Depends(get_db),
