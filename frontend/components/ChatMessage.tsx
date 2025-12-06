@@ -47,6 +47,8 @@ interface ChatMessageProps {
   reactions?: (MessageReaction | GroupMessageReaction)[];
   currentUserId?: string;
   onReactionClick?: (reactionType: string) => void;
+  // Image click handler
+  onImageClick?: (imageUrl: string) => void;
 }
 
 export default function ChatMessage({
@@ -74,6 +76,7 @@ export default function ChatMessage({
   reactions,
   currentUserId,
   onReactionClick,
+  onImageClick,
 }: ChatMessageProps) {
   const t = useTranslations('messages.reactions');
   const [showReactionButton, setShowReactionButton] = useState(false);
@@ -182,6 +185,7 @@ export default function ChatMessage({
                   messageId={id}
                   alt="Message attachment"
                   priority={priority}
+                  onClick={onImageClick ? () => onImageClick(imageUrl) : undefined}
                 />
               )}
             </>

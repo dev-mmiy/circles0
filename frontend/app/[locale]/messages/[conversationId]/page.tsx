@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams as useNextParams } from 'next/navigation';
 import { useRouter } from '@/i18n/routing';
@@ -35,6 +35,7 @@ import Avatar from '@/components/Avatar';
 import ChatMessage from '@/components/ChatMessage';
 import { useImageUpload } from '@/hooks/useImageUpload';
 import { addMessageReaction, removeMessageReaction } from '@/lib/api/messages';
+import ImageViewer, { type ImageViewerImage } from '@/components/ImageViewer';
 
 export default function ConversationPage() {
   // Disable Next.js automatic scroll restoration for this page
@@ -105,7 +106,33 @@ export default function ConversationPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   
+  // Image viewer state
+  const [imageViewerImages, setImageViewerImages] = useState<ImageViewerImage[]>([]);
+  const [imageViewerIndex, setImageViewerIndex] = useState(0);
+  const [showImageViewer, setShowImageViewer] = useState(false);
+  
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle image click - open image viewer
+  const handleImageClick = useCallback((imageUrl: string) => {
+    // Collect all images from messages
+    const allImages: ImageViewerImage[] = messages
+      .filter(msg => msg.image_url)
+      .map((msg, idx) => ({
+        id: msg.id,
+        image_url: msg.image_url!,
+        alt: `Message image ${idx + 1}`,
+      }));
+
+    // Find the index of the clicked image
+    const clickedIndex = allImages.findIndex(img => img.image_url === imageUrl);
+    
+    if (clickedIndex >= 0) {
+      setImageViewerImages(allImages);
+      setImageViewerIndex(clickedIndex);
+      setShowImageViewer(true);
+    }
+  }, [messages]);
 
   const MESSAGES_PER_PAGE = 50;
 
@@ -977,6 +1004,7 @@ export default function ConversationPage() {
                         reactions={message.reactions || []}
                         currentUserId={currentUser?.id}
                         onReactionClick={(reactionType) => handleReactionClick(message.id, reactionType)}
+                        onImageClick={handleImageClick}
                       />
                     </div>
                   );
@@ -1071,6 +1099,15 @@ export default function ConversationPage() {
           </div>
         </div>
       </div>
+
+      {/* Image Viewer */}
+      {showImageViewer && imageViewerImages.length > 0 && (
+        <ImageViewer
+          images={imageViewerImages}
+          initialIndex={imageViewerIndex}
+          onClose={() => setShowImageViewer(false)}
+        />
+      )}
     </>
   );
 }

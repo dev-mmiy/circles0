@@ -13,6 +13,7 @@ interface MessageImageProps {
   alt?: string;
   className?: string;
   priority?: boolean;
+  onClick?: () => void;
 }
 
 export default function MessageImage({
@@ -21,6 +22,7 @@ export default function MessageImage({
   alt = 'Message attachment',
   className = 'max-w-full rounded-lg object-contain',
   priority = false,
+  onClick,
 }: MessageImageProps) {
   return (
     <div className="mt-2 relative w-full">
@@ -30,10 +32,11 @@ export default function MessageImage({
         width={400}
         height={400}
         sizes="(max-width: 768px) 100vw, 400px"
-        className={className}
+        className={`${className} ${onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
         style={{ width: 'auto', height: 'auto' }}
         priority={priority}
         loading={priority ? undefined : 'lazy'}
+        onClick={onClick}
         onError={(e) => {
           debugLog.error('[MessageImage] Image load error:', {
             messageId,
