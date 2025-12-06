@@ -151,7 +151,7 @@ async def get_feed(
     """
     import logging
     logger = logging.getLogger(__name__)
-    
+
     logger.info(f"[get_feed] Request received: skip={skip}, limit={limit}, filter_type={filter_type}, disease_id={disease_id}")
     user_id = get_user_id_from_token(db, current_user)
     logger.debug(f"[get_feed] User ID: {user_id}")
@@ -174,7 +174,7 @@ async def get_feed(
     # Performance Optimization: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     # This avoids N+1 query problems by fetching all related data in a few queries
     # instead of querying for each post individually.
-    # 
+    #
     # Without this optimization:
     # - For 20 posts, we would execute 20+ queries (one per post for likes, comments, etc.)
     # - This results in 100+ database queries for a single feed request
@@ -183,13 +183,13 @@ async def get_feed(
     # - We execute only 6 queries total (likes, comments, liked status, hashtags, mentions, images)
     # - This reduces database load and improves response time significantly
     post_ids = [post.id for post in posts]
-    
+
     # If no posts, return empty list early
     if not post_ids:
         return []
-    
+
     bulk_fetch_start_time = time.time()
-    
+
     # Step 1: Get like counts for all posts in a single query using GROUP BY
     # This replaces N queries (one per post) with a single aggregated query.
     # Example: Instead of 20 queries like "SELECT COUNT(*) FROM post_likes WHERE post_id = ?",
@@ -202,21 +202,21 @@ async def get_feed(
         .all()
     )
     like_counts = {post_id: count for post_id, count in like_counts_query}
-    
+
     # Step 2: Get comment counts for all posts in a single query using GROUP BY
-    # Only count active comments (is_active == True)
+    # Only count active comments (is_active is True)
     from app.models.post import PostComment
     comment_counts_query = (
         db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
         .filter(
             PostComment.post_id.in_(post_ids),
-            PostComment.is_active == True
+            PostComment.is_active.is_(True)
         )
         .group_by(PostComment.post_id)
         .all()
     )
     comment_counts = {post_id: count for post_id, count in comment_counts_query}
-    
+
     # Step 3: Get liked posts for current user in a single query
     # This determines which posts the current user has liked (for UI state)
     liked_post_ids = set()
@@ -230,7 +230,7 @@ async def get_feed(
             .all()
         )
         liked_post_ids = {row[0] for row in liked_posts}
-    
+
     # Step 3.5: Get saved posts for current user in a single query
     # This determines which posts the current user has saved (for UI state)
     saved_post_ids = set()
@@ -258,7 +258,7 @@ async def get_feed(
                 saved_post_ids = set()
             else:
                 raise
-    
+
     # Step 4: Get hashtags for all posts in a single query
     # JOIN PostHashtag with Hashtag to get full hashtag objects
     from app.models.hashtag import PostHashtag
@@ -275,7 +275,7 @@ async def get_feed(
         if post_id not in hashtags_by_post:
             hashtags_by_post[post_id] = []
         hashtags_by_post[post_id].append(hashtag)
-    
+
     # Step 5: Get mentions for all posts in a single query
     # JOIN PostMention with User to get full user objects for mentioned users
     from app.models.mention import PostMention
@@ -292,10 +292,10 @@ async def get_feed(
         if post_id not in mentions_by_post:
             mentions_by_post[post_id] = []
         mentions_by_post[post_id].append(user)
-    
+
     bulk_fetch_elapsed = time.time() - bulk_fetch_start_time
     logger.debug(f"[get_feed] Pre-fetched data: like_counts={len(like_counts)}, comment_counts={len(comment_counts)}, liked_posts={len(liked_post_ids)}, hashtags={len(hashtags_by_post)}, mentions={len(mentions_by_post)} (took {bulk_fetch_elapsed:.3f}s)")
-    
+
     # Get viewer's disease IDs for field visibility checks
     from app.models.disease import UserDisease
     viewer_disease_ids = None
@@ -305,11 +305,11 @@ async def get_feed(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
-    
+
     # Build responses with pre-fetched data
     response_build_start_time = time.time()
     response = [
@@ -332,7 +332,7 @@ async def get_feed(
         f"(feed: {feed_elapsed:.3f}s, bulk_fetch: {bulk_fetch_elapsed:.3f}s, "
         f"response_build: {response_build_elapsed:.3f}s, total: {total_elapsed:.3f}s)"
     )
-    
+
     return response
 
 
@@ -364,7 +364,7 @@ async def get_posts_by_hashtag(
 
     # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     post_ids = [post.id for post in posts]
-    
+
     if post_ids:
         # Get like counts for all posts in a single query
         from app.models.post import PostLike
@@ -375,20 +375,20 @@ async def get_posts_by_hashtag(
             .all()
         )
         like_counts = {post_id: count for post_id, count in like_counts_query}
-        
+
         # Get comment counts for all posts in a single query
         from app.models.post import PostComment
         comment_counts_query = (
             db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
             .filter(
                 PostComment.post_id.in_(post_ids),
-                PostComment.is_active == True
+                PostComment.is_active.is_(True)
             )
             .group_by(PostComment.post_id)
             .all()
         )
         comment_counts = {post_id: count for post_id, count in comment_counts_query}
-        
+
         # Get liked posts for current user in a single query
         liked_post_ids = set()
         if user_id:
@@ -401,7 +401,7 @@ async def get_posts_by_hashtag(
                 .all()
             )
             liked_post_ids = {row[0] for row in liked_posts}
-        
+
         # Get saved posts for current user in a single query
         saved_post_ids = set()
         if user_id:
@@ -422,7 +422,7 @@ async def get_posts_by_hashtag(
                     saved_post_ids = set()
                 else:
                     raise
-        
+
         # Get hashtags for all posts in a single query
         from app.models.hashtag import PostHashtag
         from app.models.hashtag import Hashtag
@@ -437,7 +437,7 @@ async def get_posts_by_hashtag(
             if post_id not in hashtags_by_post:
                 hashtags_by_post[post_id] = []
             hashtags_by_post[post_id].append(hashtag)
-        
+
         # Get mentions for all posts in a single query
         from app.models.mention import PostMention
         from app.models.user import User
@@ -452,7 +452,7 @@ async def get_posts_by_hashtag(
             if post_id not in mentions_by_post:
                 mentions_by_post[post_id] = []
             mentions_by_post[post_id].append(user)
-        
+
         # Build responses with pre-fetched data
         return [
             _build_post_response_optimized(
@@ -496,12 +496,12 @@ async def get_saved_posts(
 ):
     """
     Get saved posts for the current user.
-    
+
     Requires authentication.
     Posts are filtered by visibility settings.
     """
     user_id = get_user_id_from_token(db, current_user)
-    
+
     posts, total = SavedPostService.get_saved_posts(
         db,
         user_id,
@@ -511,12 +511,12 @@ async def get_saved_posts(
         sort_by=sort_by,
         sort_order=sort_order
     )
-    
+
     # Build response
     responses = []
     for post in posts:
         responses.append(_build_post_response(db, post, user_id))
-    
+
     return responses
 
 
@@ -531,11 +531,11 @@ async def check_saved_posts(
 ):
     """
     Check if posts are saved by the current user.
-    
+
     Requires authentication.
     """
     user_id = get_user_id_from_token(db, current_user)
-    
+
     try:
         saved_post_ids = SavedPostService.get_saved_post_ids(db, user_id, post_ids)
         return {"saved_post_ids": [str(pid) for pid in saved_post_ids]}
@@ -607,7 +607,7 @@ async def get_user_posts(
 
     # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     post_ids = [post.id for post in posts]
-    
+
     if post_ids:
         # Get like counts for all posts in a single query
         from app.models.post import PostLike
@@ -618,20 +618,20 @@ async def get_user_posts(
             .all()
         )
         like_counts = {post_id: count for post_id, count in like_counts_query}
-        
+
         # Get comment counts for all posts in a single query
         from app.models.post import PostComment
         comment_counts_query = (
             db.query(PostComment.post_id, func.count(PostComment.id).label('count'))
             .filter(
                 PostComment.post_id.in_(post_ids),
-                PostComment.is_active == True
+                PostComment.is_active.is_(True)
             )
             .group_by(PostComment.post_id)
             .all()
         )
         comment_counts = {post_id: count for post_id, count in comment_counts_query}
-        
+
         # Get liked posts for current user in a single query
         liked_post_ids = set()
         if current_user_id:
@@ -644,7 +644,7 @@ async def get_user_posts(
                 .all()
             )
             liked_post_ids = {row[0] for row in liked_posts}
-        
+
         # Get saved posts for current user in a single query
         saved_post_ids = set()
         if current_user_id:
@@ -665,7 +665,7 @@ async def get_user_posts(
                     saved_post_ids = set()
                 else:
                     raise
-        
+
         # Get hashtags for all posts in a single query
         from app.models.hashtag import PostHashtag
         from app.models.hashtag import Hashtag
@@ -680,7 +680,7 @@ async def get_user_posts(
             if post_id not in hashtags_by_post:
                 hashtags_by_post[post_id] = []
             hashtags_by_post[post_id].append(hashtag)
-        
+
         # Get mentions for all posts in a single query
         from app.models.mention import PostMention
         from app.models.user import User
@@ -695,7 +695,7 @@ async def get_user_posts(
             if post_id not in mentions_by_post:
                 mentions_by_post[post_id] = []
             mentions_by_post[post_id].append(user)
-        
+
         # Build responses with pre-fetched data
         return [
             _build_post_response_optimized(
@@ -835,7 +835,7 @@ async def like_post(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -929,7 +929,7 @@ async def get_post_likes(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1007,7 +1007,7 @@ async def create_comment(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1046,7 +1046,7 @@ async def get_post_comments(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1083,7 +1083,7 @@ async def get_comment_replies(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1126,7 +1126,7 @@ async def update_comment(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1205,7 +1205,7 @@ async def like_comment(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1299,7 +1299,7 @@ async def get_comment_likes(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1381,7 +1381,7 @@ def _build_post_response(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1487,12 +1487,12 @@ def _build_post_response_optimized(
 ) -> PostResponse:
     """
     Build PostResponse with pre-fetched data (optimized version for bulk operations).
-    
+
     This function is optimized for building multiple post responses efficiently by:
     1. Accepting pre-fetched data (like_count, comment_count, hashtags, mentions) to avoid N+1 queries
     2. Using field visibility service to conditionally include username and avatar_url based on privacy settings
     3. Building response objects without additional database queries
-    
+
     Args:
         db: Database session (used for field visibility checks)
         post: Post model instance
@@ -1503,7 +1503,7 @@ def _build_post_response_optimized(
         hashtags: Pre-fetched list of hashtag objects for this post
         mentioned_users: Pre-fetched list of mentioned user objects
         viewer_disease_ids: List of disease IDs the viewer has (for same_disease_only visibility checks)
-    
+
     Returns:
         PostResponse object with all related data included
     """
@@ -1568,7 +1568,7 @@ def _build_post_response_optimized(
         can_view_avatar = UserFieldVisibilityService.can_view_field(
             db, post.user.id, "avatar_url", current_user_id, viewer_disease_ids
         )
-        
+
         import logging
         logger = logging.getLogger(__name__)
         logger.debug(
@@ -1577,7 +1577,7 @@ def _build_post_response_optimized(
             f"can_view_username={can_view_username}, can_view_avatar={can_view_avatar}, "
             f"post.user.username={post.user.username}"
         )
-        
+
         author = PostAuthor(
             id=post.user.id,
             nickname=post.user.nickname,
@@ -1608,7 +1608,12 @@ def _build_post_detail_response(
     db: Session, post, current_user_id: Optional[UUID]
 ) -> PostDetailResponse:
     """Build PostDetailResponse with comments and likes."""
-    from app.schemas.post import HashtagResponse, PostAuthor, PostImageResponse
+    from app.schemas.post import (
+        HashtagResponse,
+        MentionResponse,
+        PostAuthor,
+        PostImageResponse,
+    )
     from app.services.mention_service import MentionService
     from app.services.user_field_visibility_service import UserFieldVisibilityService
     from app.models.disease import UserDisease
@@ -1629,7 +1634,7 @@ def _build_post_detail_response(
             for ud in db.query(UserDisease)
             .filter(
                 UserDisease.user_id == current_user_id,
-                UserDisease.is_active == True,
+                UserDisease.is_active.is_(True),
             )
             .all()
         ]
@@ -1822,11 +1827,11 @@ async def save_post(
 ):
     """
     Save a post for later reading.
-    
+
     Requires authentication.
     """
     user_id = get_user_id_from_token(db, current_user)
-    
+
     try:
         saved_post = SavedPostService.save_post(db, user_id, post_id)
         return {"message": "Post saved successfully", "id": str(saved_post.id)}
@@ -1866,20 +1871,20 @@ async def unsave_post(
 ):
     """
     Unsave a post.
-    
+
     Requires authentication.
     """
     user_id = get_user_id_from_token(db, current_user)
-    
+
     try:
         success = SavedPostService.unsave_post(db, user_id, post_id)
-        
+
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Saved post not found"
             )
-        
+
         return {"message": "Post unsaved successfully"}
     except ValueError as e:
         # Check if error is about missing table (migration not run)
@@ -1903,25 +1908,3 @@ async def unsave_post(
                 detail="Saved posts feature is not available. Database migrations need to be run."
             )
         raise
-
-
-@router.get(
-    "/saved/check",
-    summary="Check if posts are saved",
-)
-async def check_saved_posts(
-    post_ids: List[UUID] = Query(..., description="List of post IDs to check"),
-    db: Session = Depends(get_db),
-    current_user: dict = Depends(get_current_user),
-):
-    """
-    Check which posts are saved by the current user.
-    
-    Requires authentication.
-    Returns a list of post IDs that are saved.
-    """
-    user_id = get_user_id_from_token(db, current_user)
-    
-    saved_post_ids = SavedPostService.get_saved_post_ids(db, user_id, post_ids)
-    
-    return {"saved_post_ids": saved_post_ids}
