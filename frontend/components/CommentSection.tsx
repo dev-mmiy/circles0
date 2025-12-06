@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link as I18nLink } from '@/i18n/routing';
+import { Link as I18nLink, useRouter } from '@/i18n/routing';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import {
@@ -28,6 +28,8 @@ export default function CommentSection({
   onCommentAdded,
 }: CommentSectionProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const router = useRouter();
+  const locale = useLocale();
   const t = useTranslations('commentSection');
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [newCommentContent, setNewCommentContent] = useState('');
@@ -37,6 +39,12 @@ export default function CommentSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle comment image click - navigate to image viewer
+  // Note: next-intl's useRouter automatically adds locale prefix
+  const handleCommentImageClick = (commentId: string, imageId: string) => {
+    router.push(`/posts/${postId}/comments/${commentId}/images/${imageId}`);
+  };
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -304,6 +312,7 @@ function CommentItem({
 }: CommentItemProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user } = useUser();
+  const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('commentSection');
   const [showReplyForm, setShowReplyForm] = useState(false);
@@ -312,6 +321,12 @@ function CommentItem({
   const [replies, setReplies] = useState<Comment[]>([]);
   const [showReplies, setShowReplies] = useState(false);
   const [loadingReplies, setLoadingReplies] = useState(false);
+
+  // Handle comment image click - navigate to image viewer
+  // Note: next-intl's useRouter automatically adds locale prefix
+  const handleCommentImageClick = (commentId: string, imageId: string) => {
+    router.push(`/posts/${postId}/comments/${commentId}/images/${imageId}`);
+  };
 
   // Format date using user's timezone
   const formatDate = (dateString: string) => {
@@ -453,7 +468,7 @@ function CommentItem({
                       width={200}
                       height={200}
                       className="max-w-xs max-h-48 object-contain rounded-lg border border-gray-300 dark:border-gray-600 cursor-pointer hover:opacity-90"
-                      onClick={() => window.open(img.image_url, '_blank')}
+                      onClick={() => handleCommentImageClick(comment.id, img.id)}
                     />
                   </div>
                 ))}

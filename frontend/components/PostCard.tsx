@@ -3,7 +3,7 @@
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
-import { Link } from '@/i18n/routing';
+import { Link, useRouter } from '@/i18n/routing';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { likePost, unlikePost, deletePost, savePost, unsavePost, type Post } from '@/lib/api/posts';
@@ -37,6 +37,7 @@ export default function PostCard({
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user } = useUser();
   const locale = useLocale();
+  const router = useRouter();
   const t = useTranslations('post');
   const tSaved = useTranslations('savedPosts');
   const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
@@ -50,6 +51,12 @@ export default function PostCard({
 
   // Check if current user is the author
   const isAuthor = user && user.id === post.user_id;
+
+  // Handle image click - navigate to image viewer
+  // Note: next-intl's useRouter automatically adds locale prefix
+  const handleImageClick = (imageId: string) => {
+    router.push(`/posts/${post.id}/images/${imageId}`);
+  };
 
   // Format date using user's timezone
   const formatDate = (dateString: string) => {
@@ -410,9 +417,7 @@ export default function PostCard({
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                     className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
                     loading="lazy"
-                    onClick={() => {
-                      window.open(image.image_url, '_blank');
-                    }}
+                    onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback
@@ -430,9 +435,7 @@ export default function PostCard({
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 40vw, 600px"
                     className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     loading="lazy"
-                    onClick={() => {
-                      window.open(image.image_url, '_blank');
-                    }}
+                    onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback

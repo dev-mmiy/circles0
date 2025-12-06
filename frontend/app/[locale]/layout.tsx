@@ -39,26 +39,24 @@ export default async function LocaleLayout({
   }
 
   return (
-    <html lang={locale} suppressHydrationWarning>
-      <body className="font-sans">
-        <ScrollHandler />
-        <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            <Auth0ProviderWithConfig>
-              <UserProvider>
-                <DiseaseProvider>
-                  <NotificationProvider>
-                    <ApiProvider>
-                      {children}
-                      <ToasterProvider />
-                    </ApiProvider>
-                  </NotificationProvider>
-                </DiseaseProvider>
-              </UserProvider>
-            </Auth0ProviderWithConfig>
-          </NextIntlClientProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+    <>
+      <ScrollHandler />
+      <ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <Auth0ProviderWithConfig>
+            <UserProvider>
+              <DiseaseProvider>
+                <NotificationProvider>
+                  <ApiProvider>
+                    {children}
+                    <ToasterProvider />
+                  </ApiProvider>
+                </NotificationProvider>
+              </DiseaseProvider>
+            </UserProvider>
+          </Auth0ProviderWithConfig>
+        </NextIntlClientProvider>
+      </ThemeProvider>
+    </>
   );
 }
