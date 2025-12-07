@@ -34,7 +34,7 @@ export class ApiConfigService {
     const isDev = hostname.includes('dev') || hostname.includes('staging');
 
     // Production URLs
-    const productionApiUrl = 'https://disease-community-api-508246122017.asia-northeast1.run.app';
+    const productionApiUrl = 'https://api.lifry.com';
     const devApiUrl = 'https://disease-community-api-dev-508246122017.asia-northeast1.run.app';
     const localApiUrl = 'http://localhost:8000';
 

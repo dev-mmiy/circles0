@@ -64,7 +64,7 @@ deploy_frontend() {
     
     # Set API URL based on environment
     if [ "$ENVIRONMENT" = "prod" ]; then
-        API_URL="https://disease-community-api-asia-northeast1-$PROJECT_ID.a.run.app"
+        API_URL="https://api.lifry.com"
     else
         API_URL="https://disease-community-api-dev-asia-northeast1-$PROJECT_ID.a.run.app"
     fi
@@ -85,8 +85,8 @@ health_check() {
     echo "🏥 Running health checks..."
     
     if [ "$ENVIRONMENT" = "prod" ]; then
-        API_URL="https://disease-community-api-asia-northeast1-$PROJECT_ID.a.run.app"
-        FRONTEND_URL="https://disease-community-frontend-asia-northeast1-$PROJECT_ID.a.run.app"
+        API_URL="https://api.lifry.com"
+        FRONTEND_URL="https://lifry.com"
     else
         API_URL="https://disease-community-api-dev-asia-northeast1-$PROJECT_ID.a.run.app"
         FRONTEND_URL="https://disease-community-frontend-dev-asia-northeast1-$PROJECT_ID.a.run.app"
@@ -143,8 +143,8 @@ echo "Region: $REGION"
 
 if [ "$ENVIRONMENT" = "prod" ]; then
     echo "🌐 Production URLs:"
-    echo "API: https://disease-community-api-asia-northeast1-$PROJECT_ID.a.run.app"
-    echo "Frontend: https://disease-community-frontend-asia-northeast1-$PROJECT_ID.a.run.app"
+    echo "API: https://api.lifry.com"
+    echo "Frontend: https://lifry.com"
 else
     echo "🌐 Development URLs:"
     echo "API: https://disease-community-api-dev-asia-northeast1-$PROJECT_ID.a.run.app"

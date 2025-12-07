@@ -30,7 +30,7 @@ echo "🎨 Frontend (disease-community-frontend) の環境変数を設定中..."
 gcloud run services update disease-community-frontend \
   --region="${REGION}" \
   --project="${PROJECT_ID}" \
-  --update-env-vars="NEXT_PUBLIC_AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com,NEXT_PUBLIC_AUTH0_CLIENT_ID=YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD,NEXT_PUBLIC_AUTH0_AUDIENCE=https://api.disease-community.com,NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback,NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
+  --update-env-vars="NEXT_PUBLIC_AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com,NEXT_PUBLIC_AUTH0_CLIENT_ID=YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD,NEXT_PUBLIC_AUTH0_AUDIENCE=https://api.disease-community.com,NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://lifry.com/callback,NEXT_PUBLIC_API_URL=https://api.lifry.com"
 
 echo "✅ Frontend 環境変数設定完了"
 echo ""
@@ -41,7 +41,7 @@ echo "=========================================="
 echo ""
 echo "次のステップ:"
 echo "1. デプロイが完了するまで 2-3 分待つ"
-echo "2. Backend ヘルスチェック: https://disease-community-api-508246122017.asia-northeast1.run.app/health"
-echo "3. Frontend: https://disease-community-frontend-508246122017.asia-northeast1.run.app/"
+echo "2. Backend ヘルスチェック: https://api.lifry.com/health"
+echo "3. Frontend: https://lifry.com/"
 echo ""
 

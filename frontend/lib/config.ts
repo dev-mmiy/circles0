@@ -34,9 +34,7 @@ export function getApiBaseUrl(): string {
     }
     
     // For other hostnames, use production API
-    return `https://${
-      'disease-community-api-508246122017.asia-northeast1.run.app'
-    }`;
+    return 'https://api.lifry.com';
   }
 
   // In server-side rendering, use environment variable or default

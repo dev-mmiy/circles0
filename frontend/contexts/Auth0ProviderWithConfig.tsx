@@ -14,7 +14,7 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
   const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || 'YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD';
   const redirectUri =
     process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI ||
-    'https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback';
+    'https://lifry.com/callback';
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com';
 
   // 設定値が不足している場合はAuth0を無効化

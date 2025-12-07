@@ -135,6 +135,8 @@ if ENVIRONMENT in ["development", "test"]:
 else:
     # Production: Only allow specific frontend URLs
     allowed_origins = [
+        "https://lifry.com",
+        "http://lifry.com",
         "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
         "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
     ]
