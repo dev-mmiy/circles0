@@ -103,7 +103,7 @@ class PostLike(Base):
         String(20),
         nullable=False,
         default="like",
-        comment="like, support, empathy",
+        comment="36 reaction types: like, love, haha, wow, sad, angry, thumbs_up, thumbs_down, clap, fire, party, pray, heart_eyes, kiss, thinking, cool, ok_hand, victory, muscle, point_up, point_down, wave, handshake, fist_bump, rocket, star, trophy, medal, crown, gem, balloon, cake, gift, confetti, sparkles, rainbow",
     )
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
@@ -200,7 +200,7 @@ class PostCommentLike(Base):
         String(20),
         nullable=False,
         default="like",
-        comment="like, support, empathy",
+        comment="36 reaction types: like, love, haha, wow, sad, angry, thumbs_up, thumbs_down, clap, fire, party, pray, heart_eyes, kiss, thinking, cool, ok_hand, victory, muscle, point_up, point_down, wave, handshake, fist_bump, rocket, star, trophy, medal, crown, gem, balloon, cake, gift, confetti, sparkles, rainbow",
     )
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 

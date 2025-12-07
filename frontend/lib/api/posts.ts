@@ -50,6 +50,7 @@ export interface Post {
   hashtags?: Hashtag[];
   mentions?: Mention[];
   images?: PostImage[];
+  likes?: PostLike[];  // Reactions to the post
 }
 
 export interface PostDetail extends Post {
@@ -57,11 +58,19 @@ export interface PostDetail extends Post {
   likes: PostLike[];
 }
 
+export type ReactionType = 
+  | 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry'
+  | 'thumbs_up' | 'thumbs_down' | 'clap' | 'fire' | 'party' | 'pray'
+  | 'heart_eyes' | 'kiss' | 'thinking' | 'cool' | 'ok_hand' | 'victory'
+  | 'muscle' | 'point_up' | 'point_down' | 'wave' | 'handshake' | 'fist_bump'
+  | 'rocket' | 'star' | 'trophy' | 'medal' | 'crown' | 'gem'
+  | 'balloon' | 'cake' | 'gift' | 'confetti' | 'sparkles' | 'rainbow';
+
 export interface PostLike {
   id: number;
   post_id: string;
   user_id: string;
-  reaction_type: 'like' | 'support' | 'empathy';
+  reaction_type: ReactionType;
   created_at: string;
   user?: PostAuthor;
 }
@@ -112,7 +121,7 @@ export interface UpdateCommentData {
 }
 
 export interface CreateLikeData {
-  reaction_type?: 'like' | 'support' | 'empathy';
+  reaction_type?: ReactionType;
 }
 
 // ========== Post API Functions ==========
@@ -318,7 +327,7 @@ export async function likePost(
   postId: string,
   data: CreateLikeData = { reaction_type: 'like' },
   accessToken: string
-): Promise<PostLike> {
+): Promise<PostLike | null> {
   const response = await fetch(
     `${getApiBaseUrl()}/api/v1/posts/${postId}/like`,
     {
@@ -330,6 +339,11 @@ export async function likePost(
       body: JSON.stringify(data),
     }
   );
+
+  if (response.status === 204) {
+    // Reaction was toggled off (same reaction type sent)
+    return null;
+  }
 
   if (!response.ok) {
     const error = await response.json();

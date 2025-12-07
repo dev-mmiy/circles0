@@ -97,7 +97,11 @@ class PostAuthor(BaseModel):
 class PostLikeCreate(BaseModel):
     """Schema for creating a post like."""
 
-    reaction_type: str = Field(default="like", pattern="^(like|support|empathy)$")
+    reaction_type: str = Field(
+        default="like",
+        pattern="^(like|love|haha|wow|sad|angry|thumbs_up|thumbs_down|clap|fire|party|pray|heart_eyes|kiss|thinking|cool|ok_hand|victory|muscle|point_up|point_down|wave|handshake|fist_bump|rocket|star|trophy|medal|crown|gem|balloon|cake|gift|confetti|sparkles|rainbow)$",
+        description="Type of reaction (36 types available)"
+    )
 
 
 class PostLikeResponse(BaseModel):
@@ -175,7 +179,11 @@ class PostCommentResponse(PostCommentBase):
 class PostCommentLikeCreate(BaseModel):
     """Schema for creating a comment like."""
 
-    reaction_type: str = Field(default="like", pattern="^(like|support|empathy)$")
+    reaction_type: str = Field(
+        default="like",
+        pattern="^(like|love|haha|wow|sad|angry|thumbs_up|thumbs_down|clap|fire|party|pray|heart_eyes|kiss|thinking|cool|ok_hand|victory|muscle|point_up|point_down|wave|handshake|fist_bump|rocket|star|trophy|medal|crown|gem|balloon|cake|gift|confetti|sparkles|rainbow)$",
+        description="Type of reaction (36 types available)"
+    )
 
 
 class PostCommentLikeResponse(BaseModel):

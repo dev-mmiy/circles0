@@ -825,19 +825,26 @@ async def like_post(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Like a post or update existing reaction type.
-
-    If the user has already liked the post, the reaction type will be updated.
+    Add or update a reaction to a post.
+    
+    If the user has already reacted to the post, the reaction type will be updated.
+    If the same reaction type is sent, the reaction will be removed (toggle off).
     """
     user_id = get_user_id_from_token(db, current_user)
 
     like = PostService.like_post(db, post_id, user_id, like_data)
 
-    if not like:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Post not found or not accessible",
-        )
+    if like is None:
+        # Check if post exists to determine if it was a toggle off or not found
+        post = PostService.get_post_by_id(db, post_id, user_id)
+        if not post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Post not found or not accessible",
+            )
+        # Reaction was toggled off (same reaction type sent)
+        from fastapi import Response
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     # Build response with user info
     from app.schemas.post import PostAuthor
@@ -1197,19 +1204,30 @@ async def like_comment(
     current_user: dict = Depends(get_current_user),
 ):
     """
-    Like a comment or update existing reaction type.
-
-    If the user has already liked the comment, the reaction type will be updated.
+    Add or update a reaction to a comment.
+    
+    If the user has already reacted to the comment, the reaction type will be updated.
+    If the same reaction type is sent, the reaction will be removed (toggle off).
     """
     user_id = get_user_id_from_token(db, current_user)
 
     like = PostService.like_comment(db, comment_id, user_id, like_data)
 
-    if not like:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Comment not found or not accessible",
+    if like is None:
+        # Check if comment exists to determine if it was a toggle off or not found
+        comment = (
+            db.query(PostComment)
+            .filter(PostComment.id == comment_id, PostComment.is_active == True)
+            .first()
         )
+        if not comment:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Comment not found or not accessible",
+            )
+        # Reaction was toggled off (same reaction type sent)
+        from fastapi import Response
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     # Build response with user info
     from app.schemas.post import PostAuthor

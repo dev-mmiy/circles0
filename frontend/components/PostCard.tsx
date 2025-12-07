@@ -1,17 +1,18 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { likePost, unlikePost, deletePost, savePost, unsavePost, type Post } from '@/lib/api/posts';
+import { likePost, unlikePost, deletePost, savePost, unsavePost, type Post, type PostLike, type ReactionType } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import toast from 'react-hot-toast';
 import { debugLog } from '@/lib/utils/debug';
 import ShareButton from './ShareButton';
+import MessageReactions, { type ReactionType as MessageReactionType } from './MessageReactions';
 
 // Dynamically import EditPostModal to reduce initial bundle size
 const EditPostModal = dynamic(() => import('./EditPostModal'), {
@@ -42,8 +43,14 @@ export default function PostCard({
   const router = useRouter();
   const t = useTranslations('post');
   const tSaved = useTranslations('savedPosts');
-  const [isLiked, setIsLiked] = useState(post.is_liked_by_current_user);
-  const [likeCount, setLikeCount] = useState(post.like_count);
+  const [reactions, setReactions] = useState<PostLike[]>(post.likes || []);
+  
+  // Update reactions when post.likes changes (e.g., when post is refreshed)
+  useEffect(() => {
+    if (post.likes) {
+      setReactions(post.likes);
+    }
+  }, [post.likes]);
   const [isLiking, setIsLiking] = useState(false);
   const [isSaved, setIsSaved] = useState(post.is_saved_by_current_user ?? false);
   const [isSaving, setIsSaving] = useState(false);
@@ -116,8 +123,8 @@ export default function PostCard({
     }
   };
 
-  // Handle like toggle
-  const handleLikeToggle = async () => {
+  // Handle reaction click
+  const handleReactionClick = async (reactionType: MessageReactionType) => {
     if (!isAuthenticated) {
       alert(t('errors.loginRequired'));
       return;
@@ -127,15 +134,29 @@ export default function PostCard({
 
     try {
       const accessToken = await getAccessTokenSilently();
+      const currentUserReaction = reactions.find(r => r.user_id === user?.id);
+      const isSameReactionType = currentUserReaction?.reaction_type === reactionType;
 
-      if (isLiked) {
-        await unlikePost(post.id, accessToken);
-        setIsLiked(false);
-        setLikeCount((prev) => prev - 1);
+      const updatedReaction = await likePost(post.id, { reaction_type: reactionType as ReactionType }, accessToken);
+
+      // Update reactions state
+      if (updatedReaction === null) {
+        // Reaction was toggled off (same reaction type sent)
+        setReactions(prev => prev.filter(r => r.user_id !== user?.id));
       } else {
-        await likePost(post.id, { reaction_type: 'like' }, accessToken);
-        setIsLiked(true);
-        setLikeCount((prev) => prev + 1);
+        // Add or update reaction
+        const existingIndex = reactions.findIndex(r => r.user_id === user?.id);
+        if (existingIndex >= 0) {
+          // Update existing reaction
+          setReactions(prev => {
+            const updated = [...prev];
+            updated[existingIndex] = updatedReaction;
+            return updated;
+          });
+        } else {
+          // Add new reaction
+          setReactions(prev => [...prev, updatedReaction]);
+        }
       }
 
       // Notify parent component
@@ -143,7 +164,7 @@ export default function PostCard({
         onLikeToggle();
       }
     } catch (error) {
-      console.error('Failed to toggle like:', error);
+      console.error('Failed to toggle reaction:', error);
       alert(t('errors.likeFailed'));
     } finally {
       setIsLiking(false);
@@ -456,34 +477,32 @@ export default function PostCard({
         </div>
       )}
 
-      {/* Actions: Like and Comment (only show if post is active) */}
+      {/* Actions: Reaction, Comment, Save, Share (only show if post is active) */}
       {post.is_active && (
-        <div className="flex items-center space-x-6 pt-3 border-t border-gray-200 dark:border-gray-700">
-        {/* Like button */}
-        <button
-          onClick={handleLikeToggle}
-          disabled={isLiking}
-          className={`flex items-center space-x-2 transition-colors ${
-            isLiked
-              ? 'text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300'
-              : 'text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400'
-          } ${isLiking ? 'opacity-50 cursor-not-allowed' : ''}`}
-        >
-          <svg
-            className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`}
-            fill={isLiked ? 'currentColor' : 'none'}
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-            />
-          </svg>
-          <span className="font-medium">{likeCount}</span>
-        </button>
+        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+          <div className="flex items-center space-x-6">
+            {/* Reaction button */}
+            <div className="relative">
+              <MessageReactions
+                reactions={reactions.map(r => ({
+                  id: r.id.toString(),
+                  message_id: r.post_id,
+                  user_id: r.user_id,
+                  reaction_type: r.reaction_type as MessageReactionType,
+                  created_at: r.created_at,
+                  user: r.user ? {
+                    id: r.user.id,
+                    nickname: r.user.nickname,
+                    username: r.user.username || null,
+                    avatar_url: r.user.avatar_url || null,
+                  } : null,
+                }))}
+                currentUserId={user?.id}
+                onReactionClick={handleReactionClick}
+                messagePosition="left"
+                showAddButton={true}
+              />
+            </div>
 
         {/* Comment button/link */}
         <Link
@@ -535,12 +554,13 @@ export default function PostCard({
           </button>
         )}
 
-        {/* Share button */}
-        <ShareButton
-          postId={post.id}
-          postContent={post.content}
-          authorName={post.author?.nickname}
-        />
+            {/* Share button */}
+            <ShareButton
+              postId={post.id}
+              postContent={post.content}
+              authorName={post.author?.nickname}
+            />
+          </div>
         </div>
       )}
 

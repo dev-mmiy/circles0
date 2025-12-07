@@ -583,7 +583,12 @@ class PostService:
         )
 
         if existing_like:
-            # Update reaction type
+            # If same reaction type, remove it (toggle off)
+            if existing_like.reaction_type == like_data.reaction_type:
+                db.delete(existing_like)
+                db.commit()
+                return None
+            # Otherwise, update reaction type
             existing_like.reaction_type = like_data.reaction_type
             db.commit()
             db.refresh(existing_like)
@@ -879,7 +884,12 @@ class PostService:
         )
 
         if existing_like:
-            # Update reaction type
+            # If same reaction type, remove it (toggle off)
+            if existing_like.reaction_type == like_data.reaction_type:
+                db.delete(existing_like)
+                db.commit()
+                return None
+            # Otherwise, update reaction type
             existing_like.reaction_type = like_data.reaction_type
             db.commit()
             db.refresh(existing_like)
