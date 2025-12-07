@@ -108,7 +108,7 @@ export default function Home() {
               </div>
             ) : (
               <div className="space-y-4">
-                {posts.map((post) => (
+                {posts.map((post, index) => (
                   <div
                     key={post.id}
                     className="block cursor-pointer hover:opacity-90 transition-opacity"
@@ -118,6 +118,7 @@ export default function Home() {
                       showFullContent={false}
                       onPostDeleted={handlePostDeleted}
                       onPostUpdated={handlePostUpdated}
+                      priority={index === 0}
                     />
                   </div>
                 ))}

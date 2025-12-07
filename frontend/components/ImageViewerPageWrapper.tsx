@@ -78,7 +78,7 @@ export default function ImageViewerPageWrapper({
           <div className="mt-6">
             <button
               onClick={() => router.push('/feed')}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="inline-flex items-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               Back to Feed
             </button>
@@ -98,7 +98,7 @@ export default function ImageViewerPageWrapper({
           <div className="mt-6">
             <button
               onClick={handleBack}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              className="inline-flex items-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
             >
               {backButtonText}
             </button>

@@ -38,7 +38,7 @@ export default function PublicProfilePage() {
   };
   const params = useParams();
   const userId = params.id as string;
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();
   const [isCreatingConversation, setIsCreatingConversation] = useState(false);
@@ -67,6 +67,11 @@ export default function PublicProfilePage() {
   const isOwnProfile = currentUser?.id === profile?.id;
 
   useEffect(() => {
+    // Wait for auth state to be determined
+    if (authLoading) {
+      return;
+    }
+
     const fetchProfile = async () => {
       try {
         let token: string | undefined;
@@ -77,6 +82,8 @@ export default function PublicProfilePage() {
             token = await getAccessTokenSilently();
           } catch (err) {
             console.log('Failed to get access token, continuing without auth');
+            // If token retrieval fails, we'll try without auth
+            // The API will return 403 if auth is required
           }
         }
 
@@ -112,7 +119,21 @@ export default function PublicProfilePage() {
         }
       } catch (err) {
         console.error('Failed to fetch profile:', err);
-        setError(err instanceof Error ? err.message : t('error'));
+        const errorMessage = err instanceof Error ? err.message : t('error');
+        
+        // Check if it's a 403 error (authentication required)
+        if (errorMessage.includes('only visible to authenticated users') || 
+            errorMessage.includes('403') ||
+            errorMessage.includes('Forbidden')) {
+          // If user is authenticated but got 403, it might be a token issue
+          if (isAuthenticated) {
+            setError(t('profileRequiresAuth') || 'This profile requires authentication. Please try refreshing the page.');
+          } else {
+            setError(t('profileRequiresAuth') || 'This profile is only visible to authenticated users. Please log in to view this profile.');
+          }
+        } else {
+          setError(errorMessage);
+        }
       } finally {
         setLoading(false);
       }
@@ -121,7 +142,7 @@ export default function PublicProfilePage() {
     if (userId) {
       fetchProfile();
     }
-  }, [userId, isAuthenticated, getAccessTokenSilently, t]);
+  }, [userId, isAuthenticated, authLoading, getAccessTokenSilently, t]);
 
   const handleFollowChange = async (newIsFollowing: boolean) => {
     // Update follower count optimistically
@@ -380,7 +401,7 @@ export default function PublicProfilePage() {
                     <button
                       onClick={handleSendMessage}
                       disabled={isCreatingConversation}
-                    className="flex flex-row items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="flex flex-row items-center justify-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     title={tMessages('sendMessage')}
                     >
                       {isCreatingConversation ? (
@@ -602,7 +623,7 @@ export default function PublicProfilePage() {
             </nav>
           </div>
 
-          <div className="p-6">
+          <div className="px-2 py-6">
             {activeTab === 'posts' && (
               <div>
                 {/* Posts */}
@@ -617,7 +638,7 @@ export default function PublicProfilePage() {
                       <p className="text-red-600 dark:text-red-400 mb-4">{t('errorLoadingPosts')}</p>
                       <button
                         onClick={() => loadPosts(true)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         {t('retry')}
                       </button>

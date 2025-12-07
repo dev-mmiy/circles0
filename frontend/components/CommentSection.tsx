@@ -242,7 +242,7 @@ export default function CommentSection({
           <button
             type="submit"
             disabled={isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-2 py-2 rounded-lg font-medium transition-colors ${
               isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated
                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'

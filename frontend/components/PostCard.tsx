@@ -25,6 +25,7 @@ interface PostCardProps {
   onPostUpdated?: () => void;
   onPostDeleted?: () => void;
   showFullContent?: boolean;
+  priority?: boolean;
 }
 
 export default function PostCard({
@@ -33,6 +34,7 @@ export default function PostCard({
   onPostUpdated,
   onPostDeleted,
   showFullContent = false,
+  priority = false,
 }: PostCardProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user } = useUser();
@@ -416,7 +418,8 @@ export default function PostCard({
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                     className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                    loading="lazy"
+                    priority={priority && index === 0}
+                    loading={priority && index === 0 ? undefined : "lazy"}
                     onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
@@ -434,7 +437,8 @@ export default function PostCard({
                     fill
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 40vw, 600px"
                     className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                    loading="lazy"
+                    priority={priority && index === 0}
+                    loading={priority && index === 0 ? undefined : "lazy"}
                     onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
@@ -613,7 +617,7 @@ export default function PostCard({
                   <button
                     onClick={handleDelete}
                     disabled={isDeleting}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    className="px-2 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-0.5"
                   >
                     {isDeleting && (
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />

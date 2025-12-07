@@ -2,12 +2,10 @@
 
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
 import PostCard from '@/components/PostCard';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { extractErrorInfo } from '@/lib/utils/errorHandler';
-import { getFeed, type Post } from '@/lib/api/posts';
+import { getFeed, getSavedPosts, type Post } from '@/lib/api/posts';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useLocale } from 'next-intl';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
@@ -15,14 +13,18 @@ import { useAuth0 } from '@auth0/auth0-react';
 import PostFormModal from '@/components/PostFormModal';
 
 export default function FeedPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth0();
+  const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const t = useTranslations('feed');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  const [activeTab, setActiveTab] = useState<'default' | 'detailed'>('default');
+  const [activeTab, setActiveTab] = useState<'default' | 'saved' | 'detailed'>('default');
   const [filterType, setFilterType] = useState<'following_and_my_posts' | 'all' | 'following' | 'disease' | 'my_posts' | 'not_following'>('following_and_my_posts');
   const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
   const [isPostFormModalOpen, setIsPostFormModalOpen] = useState(false);
+  
+  // Saved posts sort options
+  const [savedSortBy, setSavedSortBy] = useState<'created_at' | 'post_created_at'>('created_at');
+  const [savedSortOrder, setSavedSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Unified data loader for posts
   const {
@@ -39,6 +41,25 @@ export default function FeedPage() {
     clearError,
   } = useDataLoader<Post>({
     loadFn: useCallback(async (skip, limit) => {
+      // If saved tab is active, load saved posts
+      if (activeTab === 'saved') {
+        if (!isAuthenticated) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const fetchedPosts = await getSavedPosts(
+          skip,
+          limit,
+          savedSortBy,
+          savedSortOrder,
+          token
+        );
+        return {
+          items: fetchedPosts,
+        };
+      }
+      
+      // Otherwise, load feed posts
       const fetchedPosts = await getFeed(
         skip,
         limit,
@@ -49,17 +70,17 @@ export default function FeedPage() {
       return {
         items: fetchedPosts,
       };
-    }, [filterType, selectedDiseaseId]),
+    }, [activeTab, filterType, selectedDiseaseId, savedSortBy, savedSortOrder, isAuthenticated, getAccessTokenSilently]),
     pageSize: 20,
     autoLoad: true,
-    requireAuth: false,
+    requireAuth: activeTab === 'saved',
     retryConfig: {
       maxRetries: 3,
       retryDelay: 1000,
       autoRetry: true,
     },
     cacheConfig: {
-      enabled: true,
+      enabled: activeTab !== 'saved', // Don't cache saved posts
       ttl: 5 * 60 * 1000, // 5 minutes
     },
   });
@@ -84,7 +105,7 @@ export default function FeedPage() {
         clearTimeout(filterChangeTimeoutRef.current);
       }
     };
-  }, [filterType, selectedDiseaseId, authLoading, load]);
+  }, [filterType, selectedDiseaseId, activeTab, savedSortBy, savedSortOrder, authLoading, load]);
 
   // Refresh feed after creating a post
   const handlePostCreated = async () => {
@@ -92,7 +113,7 @@ export default function FeedPage() {
   };
 
   // Handle tab change
-  const handleTabChange = (tab: 'default' | 'detailed') => {
+  const handleTabChange = (tab: 'default' | 'saved' | 'detailed') => {
     setActiveTab(tab);
     if (tab === 'default') {
       setFilterType('following_and_my_posts');
@@ -150,7 +171,7 @@ export default function FeedPage() {
             {isAuthenticated && (
               <button
                 onClick={() => setIsPostFormModalOpen(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium"
+                className="flex items-center space-x-0.5 px-2 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 font-medium"
                 aria-label="Create Post"
               >
                 <svg
@@ -174,7 +195,7 @@ export default function FeedPage() {
         {/* Filter Tabs */}
         {isAuthenticated && (
           <div className="mb-6">
-            {/* Main Tabs: Default and Detailed */}
+            {/* Main Tabs: Default, Saved, and Detailed */}
             <div className="border-b border-gray-200 dark:border-gray-700">
               <nav className="flex space-x-8" aria-label="Feed tabs">
                 <button
@@ -188,6 +209,16 @@ export default function FeedPage() {
                   {t('tabDefault') || 'フィード'}
                 </button>
                 <button
+                  onClick={() => handleTabChange('saved')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                    activeTab === 'saved'
+                      ? 'border-blue-500 dark:border-blue-400 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+                  }`}
+                >
+                  {t('tabSaved') || '保存済み'}
+                </button>
+                <button
                   onClick={() => handleTabChange('detailed')}
                   className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
                     activeTab === 'detailed'
@@ -199,6 +230,34 @@ export default function FeedPage() {
                 </button>
               </nav>
             </div>
+
+            {/* Saved Posts Sort Options */}
+            {activeTab === 'saved' && (
+              <div className="mt-4">
+                <div className="flex items-center space-x-4">
+                  <select
+                    value={savedSortBy}
+                    onChange={(e) => {
+                      setSavedSortBy(e.target.value as 'created_at' | 'post_created_at');
+                    }}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    <option value="created_at">{t('savedSortBy.saveDate') || '保存日'}</option>
+                    <option value="post_created_at">{t('savedSortBy.postDate') || '投稿日'}</option>
+                  </select>
+                  <select
+                    value={savedSortOrder}
+                    onChange={(e) => {
+                      setSavedSortOrder(e.target.value as 'asc' | 'desc');
+                    }}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-sm"
+                  >
+                    <option value="desc">{t('savedSortOrder.newest') || '新しい順'}</option>
+                    <option value="asc">{t('savedSortOrder.oldest') || '古い順'}</option>
+                  </select>
+                </div>
+              </div>
+            )}
 
             {/* Detailed Filter Options */}
             {activeTab === 'detailed' && (
@@ -356,7 +415,9 @@ export default function FeedPage() {
                 />
               </svg>
               <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
-                {filterType === 'following' 
+                {activeTab === 'saved'
+                  ? t('noSavedPosts') || '保存した投稿がありません'
+                  : filterType === 'following' 
                   ? t('noFollowingPosts') 
                   : filterType === 'following_and_my_posts'
                   ? t('noFollowingAndMyPosts') || '投稿がありません'
@@ -367,7 +428,9 @@ export default function FeedPage() {
                   : t('noPosts')}
               </h3>
               <p className="mt-2 text-gray-500 dark:text-gray-400">
-                {filterType === 'following' 
+                {activeTab === 'saved'
+                  ? t('noSavedPostsMessage') || 'まだ保存した投稿がありません'
+                  : filterType === 'following' 
                   ? t('noFollowingPostsMessage') 
                   : filterType === 'following_and_my_posts'
                   ? t('noFollowingAndMyPostsMessage') || 'フォローしているユーザーや自分の投稿がまだありません'

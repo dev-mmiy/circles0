@@ -68,7 +68,7 @@ export default function UserListItem({
       className={`flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-lg shadow hover:shadow-md transition-shadow ${className}`}
     >
       <Link
-        href={isCurrentUser ? '/profile/me' : `/profile/${user.member_id || user.id}`}
+        href={isCurrentUser ? '/profile/me' : `/profile/${user.id}`}
         className="flex items-center space-x-4 flex-1 min-w-0"
       >
         {/* Avatar */}

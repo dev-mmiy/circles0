@@ -329,12 +329,21 @@ export default function MessageReactions({
             
             {/* Reaction picker */}
             {showPicker && (
-              <div 
-                className={`absolute bottom-full mb-2 ${
-                  messagePosition === 'right' ? 'right-0' : 'left-0'
-                } bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3 z-30`}
-                style={{ minWidth: '280px' }}
-              >
+              <>
+                {/* Mobile overlay */}
+                <div 
+                  className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowPicker(false);
+                  }}
+                />
+                {/* Reaction picker */}
+                <div 
+                  className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:bottom-full md:mb-2 md:top-auto md:left-auto md:right-auto md:translate-x-0 md:translate-y-0 ${
+                    messagePosition === 'right' ? 'md:right-0' : 'md:left-0'
+                  } bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3 z-50 md:z-30 w-[90vw] max-w-[320px]`}
+                >
                 {/* Quick reactions row */}
                 <div className="flex gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
                   {QUICK_REACTIONS.map((type) => {
@@ -388,6 +397,7 @@ export default function MessageReactions({
                   })}
                 </div>
               </div>
+              </>
             )}
           </div>
         )}

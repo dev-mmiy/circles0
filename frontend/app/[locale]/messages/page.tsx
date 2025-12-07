@@ -369,19 +369,19 @@ export default function MessagesPage() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
               <p className="text-gray-600 dark:text-gray-400 mt-2">{t('conversations')}</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={() => router.push('/groups/new')}
-                className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="inline-flex items-center px-2 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-5 h-5 mr-0.5" />
                 {t('createGroup')}
               </button>
               <button
                 onClick={() => setShowNewMessageModal(true)}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                className="inline-flex items-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-5 h-5 mr-0.5" />
                 {t('newMessage')}
               </button>
             </div>
@@ -896,7 +896,7 @@ export default function MessagesPage() {
                       }
                     }}
                     disabled={isSearching || !searchQuery.trim()}
-                    className="mt-2 w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="mt-2 w-full px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {isSearching ? (
                       <div className="flex items-center justify-center">
@@ -933,7 +933,7 @@ export default function MessagesPage() {
                         setShowNewMessageModal(false);
                         router.push('/groups/new');
                       }}
-                      className="mt-2 w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="mt-2 w-full px-2 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       {t('createGroup')}
                     </button>

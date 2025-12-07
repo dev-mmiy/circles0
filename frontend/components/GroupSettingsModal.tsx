@@ -318,7 +318,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                     <button
                                         onClick={handleUpdateGroup}
                                         disabled={isSaving || !name.trim()}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                                        className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
                                     >
                                         {isSaving ? t('saving') : t('saveChanges')}
                                     </button>
@@ -459,7 +459,7 @@ export default function GroupSettingsModal({ group, isOpen, onClose, onUpdate }:
                                     <p className="text-sm text-red-600 mb-4">{t('deleteGroupDescription')}</p>
                                     <button
                                         onClick={handleDeleteGroup}
-                                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                                        className="flex items-center gap-0.5 px-2 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
                                     >
                                         <Trash2 className="w-4 h-4" />
                                         {t('deleteGroup')}

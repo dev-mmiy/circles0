@@ -636,7 +636,7 @@ export default function GroupChatPage() {
                 />
                 <label
                   htmlFor="group-image-upload"
-                  className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center"
+                  className="px-2 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 cursor-pointer transition-colors flex items-center"
                   title={tChat('attachImage') || 'Attach image'}
                 >
                   <ImageIcon className="w-5 h-5" />
@@ -644,7 +644,7 @@ export default function GroupChatPage() {
                 <button
                   type="submit"
                   disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSending ? (
                     <div className="w-5 h-5 border-4 border-white border-t-transparent rounded-full animate-spin"></div>

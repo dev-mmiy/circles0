@@ -328,7 +328,7 @@ async def search_users(
                 for ud in db.query(UserDisease)
                 .filter(
                     UserDisease.user_id == viewer_id,
-                    UserDisease.is_active == True,
+                    UserDisease.is_active.is_(True),
                 )
                 .all()
             ]
@@ -427,23 +427,41 @@ async def get_user_public_profile(
     # Get current viewer's ID and disease IDs
     viewer_id = None
     viewer_disease_ids = None
+    is_own_profile = False
     if current_user:
         auth0_id = extract_auth0_id(current_user)
         viewer = UserService.get_user_by_auth0_id(db, auth0_id)
         if viewer:
             viewer_id = viewer.id
+            is_own_profile = viewer_id == user.id
             viewer_disease_ids = [
                 ud.disease_id
                 for ud in db.query(UserDisease)
                 .filter(
                     UserDisease.user_id == viewer_id,
-                    UserDisease.is_active == True,
+                    UserDisease.is_active.is_(True),
                 )
                 .all()
             ]
 
-    # Get user's diseases (only public ones)
-    user_diseases = UserService.get_user_diseases(db, user.id)
+    # Get user's diseases
+    # If viewing own profile, show all diseases
+    # Otherwise, show only public diseases
+    if is_own_profile:
+        user_diseases = UserService.get_user_diseases(db, user.id)
+    else:
+        # Filter to only public diseases for other users
+        from sqlalchemy.orm import joinedload
+        user_diseases = (
+            db.query(Disease)
+            .options(joinedload(Disease.translations))
+            .join(UserDisease, UserDisease.disease_id == Disease.id)
+            .filter(UserDisease.user_id == user.id)
+            .filter(UserDisease.is_active.is_(True))
+            .filter(UserDisease.is_public.is_(True))
+            .filter(Disease.is_active.is_(True))
+            .all()
+        )
 
     # Convert Disease objects to UserDiseaseResponse format with translations
     diseases_list = [

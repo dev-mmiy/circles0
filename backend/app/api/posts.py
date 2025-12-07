@@ -56,7 +56,9 @@ def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optiona
             # This allows endpoints to work gracefully when user is not found
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(f"[get_user_id_from_token] User not found for auth0_id: {auth0_id}")
+            logger.warning(
+                f"[get_user_id_from_token] User not found for auth0_id: {auth0_id}"
+            )
             return None
 
         return user.id
@@ -67,7 +69,9 @@ def get_user_id_from_token(db: Session, current_user: Optional[dict]) -> Optiona
         # Log unexpected errors but return None to avoid breaking the endpoint
         import logging
         logger = logging.getLogger(__name__)
-        logger.error(f"[get_user_id_from_token] Unexpected error: {str(e)}", exc_info=True)
+        logger.error(
+            f"[get_user_id_from_token] Unexpected error: {str(e)}", exc_info=True
+        )
         return None
 
 
@@ -125,7 +129,13 @@ async def get_feed(
     filter_type: str = Query(
         "all",
         pattern="^(all|following|disease|my_posts|following_and_my_posts|not_following)$",
-        description="Filter type: 'all' for all posts, 'following' for posts from followed users only, 'disease' for posts from users with specific disease, 'my_posts' for current user's posts only, 'following_and_my_posts' for posts from followed users and current user, 'not_following' for posts from users not being followed",
+        description=(
+            "Filter type: 'all' for all posts, 'following' for posts from "
+            "followed users only, 'disease' for posts from users with specific "
+            "disease, 'my_posts' for current user's posts only, "
+            "'following_and_my_posts' for posts from followed users and current "
+            "user, 'not_following' for posts from users not being followed"
+        ),
     ),
     disease_id: Optional[int] = Query(
         None,
@@ -152,12 +162,19 @@ async def get_feed(
     import logging
     logger = logging.getLogger(__name__)
 
-    logger.info(f"[get_feed] Request received: skip={skip}, limit={limit}, filter_type={filter_type}, disease_id={disease_id}")
+    logger.info(
+        f"[get_feed] Request received: skip={skip}, limit={limit}, "
+        f"filter_type={filter_type}, disease_id={disease_id}"
+    )
     user_id = get_user_id_from_token(db, current_user)
     logger.debug(f"[get_feed] User ID: {user_id}")
 
-    # If filter_type requires authentication but user is not authenticated, return empty
-    if filter_type in ("following", "my_posts", "following_and_my_posts", "not_following") and not user_id:
+    # If filter_type requires authentication but user is not authenticated,
+    # return empty
+    auth_required_filters = (
+        "following", "my_posts", "following_and_my_posts", "not_following"
+    )
+    if filter_type in auth_required_filters and not user_id:
         return []
 
     # If filter_type is "disease" but disease_id is not provided, return empty
@@ -1034,7 +1051,9 @@ async def get_post_comments(
 
     Use the `/comments/{comment_id}/replies` endpoint to get replies to a specific comment.
     """
-    comments = PostService.get_post_comments(db, post_id, skip, limit)
+    comments = PostService.get_post_comments(
+        db, post_id, skip, limit
+    )
     current_user_id = get_user_id_from_token(db, current_user)
 
     # Get viewer's disease IDs for field visibility checks
@@ -1429,7 +1448,9 @@ def _build_post_response(
             display_order=image.display_order,
             created_at=image.created_at,
         )
-        for image in (post.images if hasattr(post, "images") and post.images else [])
+        for image in (
+            post.images if hasattr(post, "images") and post.images else []
+        )
     ]
 
     # Build author with field visibility checks
@@ -1554,7 +1575,9 @@ def _build_post_response_optimized(
             display_order=image.display_order,
             created_at=image.created_at,
         )
-        for image in (post.images if hasattr(post, "images") and post.images else [])
+        for image in (
+            post.images if hasattr(post, "images") and post.images else []
+        )
     ]
 
     # Build author with field visibility checks
@@ -1682,7 +1705,9 @@ def _build_post_detail_response(
             display_order=image.display_order,
             created_at=image.created_at,
         )
-        for image in (post.images if hasattr(post, "images") and post.images else [])
+        for image in (
+            post.images if hasattr(post, "images") and post.images else []
+        )
     ]
 
     # Build comments
@@ -1736,7 +1761,11 @@ def _build_post_detail_response(
                 avatar_url=(
                     post.user.avatar_url
                     if UserFieldVisibilityService.can_view_field(
-                        db, post.user.id, "avatar_url", current_user_id, viewer_disease_ids
+                        db,
+                        post.user.id,
+                        "avatar_url",
+                        current_user_id,
+                        viewer_disease_ids,
                     )
                     else None
                 ),
@@ -1774,7 +1803,9 @@ def _build_comment_response(
                 display_order=img.display_order,
                 created_at=img.created_at,
             )
-            for img in sorted(comment.images, key=lambda x: x.display_order)
+            for img in sorted(
+                comment.images, key=lambda x: x.display_order
+            )
         ]
 
     return PostCommentResponse(
@@ -1834,7 +1865,10 @@ async def save_post(
 
     try:
         saved_post = SavedPostService.save_post(db, user_id, post_id)
-        return {"message": "Post saved successfully", "id": str(saved_post.id)}
+        return {
+            "message": "Post saved successfully",
+            "id": str(saved_post.id),
+        }
     except ValueError as e:
         # Check if error is about missing table (migration not run)
         error_message = str(e)

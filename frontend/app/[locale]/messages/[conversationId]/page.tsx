@@ -1039,7 +1039,7 @@ export default function ConversationPage() {
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isSending || uploadingImage}
-                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex-shrink-0"
+                  className="px-2 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-0.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex-shrink-0"
                   title={tConv('attachImage')}
                 >
                   <ImageIcon className="w-4 h-4" />
@@ -1047,7 +1047,7 @@ export default function ConversationPage() {
                 <button
                   type="submit"
                   disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2 flex-shrink-0"
+                  className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-0.5 flex-shrink-0"
                 >
                   {isSending ? (
                     <>

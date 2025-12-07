@@ -124,7 +124,7 @@ export default function PostDetailPage() {
             <div className="mt-6">
               <Link
                 href="/feed"
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="inline-flex items-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 {t('backToFeed')}
               </Link>

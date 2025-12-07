@@ -36,7 +36,7 @@ async def get_diseases(skip: int = 0, limit: int = 100, db: Session = Depends(ge
     diseases = (
         db.query(Disease)
         .options(joinedload(Disease.category_mappings))
-        .filter(Disease.is_active == True)
+        .filter(Disease.is_active.is_(True))
         .offset(skip)
         .limit(limit)
         .all()
@@ -121,7 +121,7 @@ async def search_diseases(
         .options(
             joinedload(Disease.translations), joinedload(Disease.category_mappings)
         )
-        .filter(Disease.is_active == True)
+        .filter(Disease.is_active.is_(True))
     )
 
     # Search by query string (name, code, or translation)
@@ -263,7 +263,7 @@ async def autocomplete_icd_codes(
     codes = (
         db.query(distinct(Disease.disease_code))
         .filter(
-            Disease.is_active == True,
+            Disease.is_active.is_(True),
             Disease.disease_code.isnot(None),
             func.upper(Disease.disease_code).like(f"{q.upper()}%"),
         )
