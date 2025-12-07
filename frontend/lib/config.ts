@@ -37,6 +37,18 @@ export function getApiBaseUrl(): string {
     return 'https://api.lifry.com';
   }
 
-  // In server-side rendering, use environment variable or default
+  // In server-side rendering, check environment variable first
+  // If NEXT_PUBLIC_API_URL is set, use it (for production builds)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // For SSR, try to determine production URL based on NODE_ENV
+  // In production, default to api.lifry.com
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://api.lifry.com';
+  }
+  
+  // Default to localhost for development SSR
   return 'http://localhost:8000';
 }

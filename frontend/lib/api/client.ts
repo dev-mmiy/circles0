@@ -8,19 +8,70 @@ import { addLocalePrefix } from '../utils/locale';
 import { getApiBaseUrl } from '../config';
 import { debugLog } from '../utils/debug';
 
-// API base URL - use getApiBaseUrl() for consistency with other API clients
-// Note: This does NOT include /api/v1 - each endpoint should include it in the path
-const API_BASE_URL = getApiBaseUrl();
+/**
+ * Get API base URL dynamically at runtime
+ * This ensures the correct URL is used in both SSR and client-side rendering
+ */
+function getApiBaseUrlDynamic(): string {
+  return getApiBaseUrl();
+}
+
+/**
+ * Retry configuration for timeout errors
+ */
+const RETRY_CONFIG = {
+  maxRetries: 2, // Maximum number of retries for timeout errors
+  retryDelay: 1000, // Initial delay in milliseconds (exponential backoff)
+  retryableStatusCodes: [408, 429, 500, 502, 503, 504], // HTTP status codes to retry
+};
+
+/**
+ * Check if an error should be retried
+ */
+function shouldRetry(error: AxiosError, retryCount: number): boolean {
+  if (retryCount >= RETRY_CONFIG.maxRetries) {
+    return false;
+  }
+
+  // Retry on timeout errors
+  const isTimeout = error.code === 'ECONNABORTED' || 
+                   error.message?.includes('timeout') ||
+                   error.message?.includes('exceeded');
+  
+  if (isTimeout) {
+    return true;
+  }
+
+  // Retry on specific HTTP status codes
+  if (error.response && RETRY_CONFIG.retryableStatusCodes.includes(error.response.status)) {
+    return true;
+  }
+
+  // Retry on network errors (no response)
+  if (error.request && !error.response) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Calculate retry delay with exponential backoff
+ */
+function getRetryDelay(retryCount: number): number {
+  return RETRY_CONFIG.retryDelay * Math.pow(2, retryCount);
+}
 
 /**
  * Axios instance for API calls
+ * baseURL is set dynamically in request interceptor to ensure correct URL at runtime
  */
 export const apiClient = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: '', // Will be set dynamically in request interceptor
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 20000, // 20秒のタイムアウト (increased for initial load stability)
+  timeout: 30000, // 30秒のタイムアウト (increased for Cloud Run cold starts and network latency)
   // Add adapter to handle requests in WSL2 environment
   adapter: typeof window !== 'undefined' ? undefined : undefined, // Use default adapter
   // Ensure requests are not blocked
@@ -39,10 +90,20 @@ export function setAuthToken(token: string | null) {
 }
 
 /**
- * Request interceptor to add auth token
+ * Request interceptor to add auth token and set baseURL dynamically
  */
 apiClient.interceptors.request.use(
   (config) => {
+    // Set baseURL dynamically at request time to ensure correct URL
+    if (!config.baseURL || config.baseURL === '') {
+      config.baseURL = getApiBaseUrlDynamic();
+    }
+    
+    // Initialize retry count if not set
+    if (!(config as any).__retryCount) {
+      (config as any).__retryCount = 0;
+    }
+    
     // Token will be set via setAuthToken function
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const requestStartTime = Date.now();
@@ -54,6 +115,8 @@ apiClient.interceptors.request.use(
       debugLog.log('[apiClient] Request:', {
         method: config.method,
         url: config.url,
+        baseURL: config.baseURL,
+        retryCount: (config as any).__retryCount,
       });
     }
     
@@ -107,6 +170,29 @@ apiClient.interceptors.response.use(
     if (error.response) {
       // Server responded with error status
       const errorInfo = extractErrorInfo(error);
+      const status = error.response.status;
+      const retryCount = (error.config as any)?.__retryCount || 0;
+      
+      // Check if we should retry this error
+      if (shouldRetry(error, retryCount)) {
+        const delay = getRetryDelay(retryCount);
+        (error.config as any).__retryCount = retryCount + 1;
+        
+        debugLog.warn('[apiClient] API Error - Will retry:', {
+          status,
+          statusText: error.response.statusText,
+          url: error.config?.url,
+          retryCount: retryCount + 1,
+          maxRetries: RETRY_CONFIG.maxRetries,
+          retryDelay: delay,
+        });
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Retry the request
+        return apiClient.request(error.config!);
+      }
       
       // Handle 401/403 errors - redirect to login
       if (requiresAuthRedirect(errorInfo)) {
@@ -135,7 +221,6 @@ apiClient.interceptors.response.use(
       
       // For 503 Service Unavailable (feature not available), log as warning instead of error
       // This is expected when features require database migrations
-      const status = error.response.status;
       const errorData = error.response.data as any;
       const isServiceUnavailable = status === 503;
       const isFeatureNotAvailable = isServiceUnavailable && 
@@ -166,12 +251,47 @@ apiClient.interceptors.response.use(
       
       const requestStartTime = (error.config as any)?.__requestStartTime;
       const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
+      const retryCount = (error.config as any)?.__retryCount || 0;
       
       // Log network errors concisely
+      const fullUrl = error.config?.baseURL && error.config?.url
+        ? `${error.config.baseURL}${error.config.url}`
+        : error.config?.url || 'unknown';
+      
+      // Check if we should retry this request
+      if (shouldRetry(error, retryCount)) {
+        const delay = getRetryDelay(retryCount);
+        (error.config as any).__retryCount = retryCount + 1;
+        
+        debugLog.warn('[apiClient] Network Error - Will retry:', {
+          message: error.message,
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          fullURL: fullUrl,
+          isTimeout,
+          retryCount: retryCount + 1,
+          maxRetries: RETRY_CONFIG.maxRetries,
+          retryDelay: delay,
+          ...(isTimeout && elapsed && {
+            elapsed: `${elapsed}ms`,
+            timeout: error.config?.timeout,
+          }),
+        });
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, delay));
+        
+        // Retry the request
+        return apiClient.request(error.config!);
+      }
+      
       debugLog.error('[apiClient] Network Error:', {
         message: error.message,
         url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        fullURL: fullUrl,
         isTimeout,
+        retryCount,
         ...(isTimeout && elapsed && {
           elapsed: `${elapsed}ms`,
           timeout: error.config?.timeout,
