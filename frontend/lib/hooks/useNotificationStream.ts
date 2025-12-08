@@ -176,15 +176,24 @@ export function useNotificationStream(
         // 1 = OPEN
         // 2 = CLOSED
 
+        // Check if page is visible (not in background)
+        const isPageVisible = typeof document !== 'undefined' && !document.hidden;
+
         // Only log errors in verbose mode to reduce console noise
         const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
 
         if (readyState === EventSource.CLOSED) {
-          // Connection closed - will reconnect automatically
+          // Connection closed - ERR_NETWORK_IO_SUSPENDED is normal when page goes to background
           if (isVerbose) {
-            console.log('[SSE] Connection closed, will reconnect');
+            console.log('[SSE] Connection closed, will reconnect when page is visible');
           }
           setIsConnected(false);
+          
+          // Only reconnect if page is visible
+          if (!isPageVisible) {
+            // Page is in background, don't reconnect yet
+            return;
+          }
         } else if (readyState === EventSource.CONNECTING) {
           // Connection attempt failed - this is normal during reconnection
           if (isVerbose) {
@@ -199,8 +208,8 @@ export function useNotificationStream(
           setIsConnected(false);
         }
 
-        // Connection lost, schedule reconnection
-        if (shouldReconnectRef.current) {
+        // Connection lost, schedule reconnection only if page is visible
+        if (shouldReconnectRef.current && isPageVisible) {
           closeConnection();
           scheduleReconnectRef.current?.();
         }
@@ -258,9 +267,52 @@ export function useNotificationStream(
   // Store scheduleReconnect in ref to avoid circular dependency
   scheduleReconnectRef.current = scheduleReconnect;
 
+  // Handle page visibility changes (pause/resume SSE when page goes to background/foreground)
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      
+      if (isVisible) {
+        // Page became visible, reconnect if authenticated
+        if (isAuthenticated && !eventSourceRef.current) {
+          const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+          if (isVerbose) {
+            console.log('[SSE] Page became visible, reconnecting...');
+          }
+          shouldReconnectRef.current = true;
+          connect();
+        }
+      } else {
+        // Page went to background, connection will be suspended by browser
+        // ERR_NETWORK_IO_SUSPENDED will occur, which is normal
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        if (isVerbose && isConnected) {
+          console.log('[SSE] Page went to background, connection will be suspended');
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isAuthenticated, isConnected, connect]);
+
   // Initial connection on mount
   useEffect(() => {
     if (isAuthenticated) {
+      // Only connect if page is visible
+      const isPageVisible = typeof document !== 'undefined' && !document.hidden;
+      if (!isPageVisible) {
+        // Page is in background, don't connect yet
+        return;
+      }
+      
       shouldReconnectRef.current = true;
       connect();
     }

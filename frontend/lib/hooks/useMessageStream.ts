@@ -192,11 +192,24 @@ export function useMessageStream(
         // 1 = OPEN (connection is open and data can be received)
         // 2 = CLOSED (connection is closed)
         
+        // Check if page is visible (not in background)
+        const isPageVisible = typeof document !== 'undefined' && !document.hidden;
+        
         // Only log actual errors, not connection attempts
         if (readyState === EventSource.CLOSED) {
           // Connection was closed - this is normal if it was previously connected
+          // ERR_NETWORK_IO_SUSPENDED is normal when page goes to background
           if (wasConnectedRef.current && isVerbose) {
-            debugLog.log('[Message SSE] Connection closed, will reconnect');
+            debugLog.log('[Message SSE] Connection closed, will reconnect when page is visible');
+          }
+          
+          // Only reconnect if page is visible
+          if (!isPageVisible) {
+            // Page is in background, don't reconnect yet
+            // Will reconnect when page becomes visible again
+            setIsConnected(false);
+            wasConnectedRef.current = false;
+            return;
           }
         } else if (readyState === EventSource.CONNECTING) {
           // Connection attempt failed - this is normal during initial connection or reconnection
@@ -207,11 +220,21 @@ export function useMessageStream(
           }
         } else {
           // Unexpected state (should not happen, but handle gracefully)
-          debugLog.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
+          // Only log in verbose mode to reduce console noise
+          if (isVerbose) {
+            debugLog.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
+          }
         }
         
         setIsConnected(false);
         wasConnectedRef.current = false;
+        
+        // Only reconnect if page is visible
+        if (!isPageVisible) {
+          // Page is in background, don't reconnect yet
+          return;
+        }
+        
         closeConnection();
 
         // Schedule reconnection with exponential backoff
@@ -223,7 +246,7 @@ export function useMessageStream(
 
         // Silent reconnection, no log needed
         setTimeout(() => {
-          if (!eventSourceRef.current && isAuthenticated) {
+          if (!eventSourceRef.current && isAuthenticated && isPageVisible) {
             connect();
           }
         }, delay);
@@ -251,10 +274,54 @@ export function useMessageStream(
     };
   }, [connect, isAuthenticated, enabled]);
 
+  // Handle page visibility changes (pause/resume SSE when page goes to background/foreground)
+  useEffect(() => {
+    if (typeof document === 'undefined') {
+      return;
+    }
+
+    const handleVisibilityChange = () => {
+      const isVisible = !document.hidden;
+      
+      if (isVisible) {
+        // Page became visible, reconnect if authenticated and enabled
+        if (enabled && isAuthenticated && !eventSourceRef.current) {
+          const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+          if (isVerbose) {
+            debugLog.log('[Message SSE] Page became visible, reconnecting...');
+          }
+          connect();
+        }
+      } else {
+        // Page went to background, close connection to save resources
+        // ERR_NETWORK_IO_SUSPENDED will occur, which is normal
+        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        if (isVerbose && wasConnectedRef.current) {
+          debugLog.log('[Message SSE] Page went to background, connection will be suspended');
+        }
+        // Don't close connection immediately - let browser handle it naturally
+        // Connection will be automatically suspended by browser
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [enabled, isAuthenticated, connect]);
+
   // Connect on mount and when authentication changes
   // Add a delay to avoid conflicts with other initial API calls (UserProvider, etc.)
   useEffect(() => {
     if (enabled && isAuthenticated) {
+      // Only connect if page is visible
+      const isPageVisible = typeof document !== 'undefined' && !document.hidden;
+      if (!isPageVisible) {
+        // Page is in background, don't connect yet
+        return;
+      }
+      
       // Delay SSE connection to let other critical API calls complete first
       const timeoutId = setTimeout(() => {
         connect();

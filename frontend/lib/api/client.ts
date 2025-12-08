@@ -49,6 +49,19 @@ function shouldRetry(error: AxiosError, retryCount: number): boolean {
 
   // Retry on network errors (no response)
   if (error.request && !error.response) {
+    // Check for DNS resolution errors
+    const isDnsError = error.code === 'ENOTFOUND' || 
+                       error.code === 'EAI_AGAIN' ||
+                       error.message?.includes('ERR_NAME_NOT_RESOLVED') ||
+                       error.message?.includes('getaddrinfo') ||
+                       error.message?.includes('ENOTFOUND');
+    
+    // Retry DNS errors (temporary DNS issues)
+    if (isDnsError) {
+      return true;
+    }
+    
+    // Retry other network errors
     return true;
   }
 
