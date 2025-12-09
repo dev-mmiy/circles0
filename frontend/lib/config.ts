@@ -3,6 +3,17 @@
  */
 
 /**
+ * Post display configuration
+ */
+export const POST_CONFIG = {
+  /**
+   * Maximum number of lines to show before truncating with "Read more" button
+   * This can be easily changed here for future adjustments
+   */
+  MAX_LINES_TO_SHOW: 10,
+} as const;
+
+/**
  * Get the API base URL based on the environment
  */
 export function getApiBaseUrl(): string {
