@@ -9,9 +9,9 @@ from uuid import UUID
 
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.exc import ProgrammingError
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy.orm import Session, joinedload, selectinload
 
-from app.models.disease import UserDisease
+from app.models.disease import UserDisease, Disease, DiseaseTranslation
 
 logger = logging.getLogger(__name__)
 from app.models.hashtag import Hashtag, PostHashtag
@@ -39,6 +39,7 @@ class PostService:
             user_id=user_id,
             content=post_data.content,
             visibility=post_data.visibility,
+            user_disease_id=post_data.user_disease_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -80,6 +81,7 @@ class PostService:
                 joinedload(Post.comments).joinedload(PostComment.user),
                 joinedload(Post.mentions).joinedload(PostMention.mentioned_user),
                 joinedload(Post.images),
+                joinedload(Post.user_disease).joinedload(UserDisease.disease),
             )
             .filter(Post.id == post_id, Post.is_active == True)
         )
@@ -211,11 +213,13 @@ class PostService:
         from app.models.follow import Follow
 
         # Optimize: Only load user and images (likes/comments counts are fetched separately)
+        # Also load user_disease for disease information
         query = (
             db.query(Post)
             .options(
                 joinedload(Post.user),
                 joinedload(Post.images),
+                joinedload(Post.user_disease).joinedload(UserDisease.disease),
             )
             .filter(Post.is_active == True)
         )
@@ -518,6 +522,30 @@ class PostService:
             post.visibility = post_data.visibility
         if post_data.is_active is not None:
             post.is_active = post_data.is_active
+        # Handle user_disease_id update
+        # Check if the field was explicitly provided in the request
+        # Use model_dump(exclude_unset=True) to check if field was set
+        update_dict = post_data.model_dump(exclude_unset=True)
+        if 'user_disease_id' in update_dict:
+            user_disease_id_value = update_dict['user_disease_id']
+            if user_disease_id_value is None:
+                # Explicitly set to None to clear the association
+                post.user_disease_id = None
+            elif user_disease_id_value > 0:
+                # Validate that the user_disease_id belongs to the user
+                from app.models.disease import UserDisease
+                user_disease = (
+                    db.query(UserDisease)
+                    .filter(
+                        UserDisease.id == user_disease_id_value,
+                        UserDisease.user_id == user_id,
+                        UserDisease.is_active == True,
+                    )
+                    .first()
+                )
+                if user_disease:
+                    post.user_disease_id = user_disease_id_value
+                # If invalid, ignore it (don't update)
 
         # Update images if provided
         if post_data.image_urls is not None:

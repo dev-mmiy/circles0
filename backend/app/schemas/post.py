@@ -67,6 +67,10 @@ class PostCreate(PostBase):
         description="List of image URLs (max 5 images)",
         min_length=0,
     )
+    user_disease_id: Optional[int] = Field(
+        default=None,
+        description="Optional: Link post to a specific user disease",
+    )
 
 
 class PostUpdate(BaseModel):
@@ -80,6 +84,10 @@ class PostUpdate(BaseModel):
         max_length=10,
         description="List of image URLs (max 10 images)",
         min_length=0,
+    )
+    user_disease_id: Optional[int] = Field(
+        default=None,
+        description="Optional: Link post to a specific user disease",
     )
 
 
@@ -238,6 +246,17 @@ class MentionResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class PostDiseaseInfo(BaseModel):
+    """Schema for disease information in post response."""
+
+    id: int
+    disease_id: int
+    disease_name: str
+    disease_translations: Optional[List[dict]] = None
+
+    model_config = {"from_attributes": True}
+
+
 class PostResponse(PostBase):
     """Schema for post responses."""
 
@@ -254,6 +273,7 @@ class PostResponse(PostBase):
     hashtags: List[HashtagResponse] = []
     mentions: List[MentionResponse] = []
     images: List[PostImageResponse] = []
+    user_disease: Optional[PostDiseaseInfo] = None
 
     model_config = {"from_attributes": True}
 

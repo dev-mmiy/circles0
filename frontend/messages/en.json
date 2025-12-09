@@ -368,6 +368,7 @@
   "post": {
     "unknownUser": "Unknown User",
     "readMore": "Read more",
+    "showLess": "Show less",
     "edit": "Edit",
     "delete": "Delete",
     "deleting": "Deleting...",
@@ -421,6 +422,9 @@
     "placeholder": "Share your feelings and experiences...",
     "contentLabel": "Post Content",
     "contentPlaceholder": "Share your feelings and experiences...",
+    "diseaseLabel": "Related Disease (Optional)",
+    "diseaseNone": "None",
+    "diseaseId": "Disease ID",
     "visibilityLabel": "Visibility:",
     "visibility": {
       "public": "Public",

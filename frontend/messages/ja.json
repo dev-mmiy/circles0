@@ -367,7 +367,8 @@
   },
   "post": {
     "unknownUser": "不明なユーザー",
-    "readMore": "続きを読む",
+    "readMore": "もっと読む",
+    "showLess": "表示を隠す",
     "edit": "編集",
     "delete": "削除",
     "deleting": "削除中...",
@@ -421,6 +422,9 @@
     "placeholder": "今の気持ちや経験をシェアしましょう...",
     "contentLabel": "投稿内容",
     "contentPlaceholder": "今の気持ちや経験をシェアしましょう...",
+    "diseaseLabel": "関連する疾患（任意）",
+    "diseaseNone": "指定しない",
+    "diseaseId": "疾患ID",
     "visibilityLabel": "公開範囲:",
     "visibility": {
       "public": "全体公開",

@@ -445,23 +445,10 @@ async def get_user_public_profile(
             ]
 
     # Get user's diseases
-    # If viewing own profile, show all diseases
-    # Otherwise, show only public diseases
-    if is_own_profile:
-        user_diseases = UserService.get_user_diseases(db, user.id)
-    else:
-        # Filter to only public diseases for other users
-        from sqlalchemy.orm import joinedload
-        user_diseases = (
-            db.query(Disease)
-            .options(joinedload(Disease.translations))
-            .join(UserDisease, UserDisease.disease_id == Disease.id)
-            .filter(UserDisease.user_id == user.id)
-            .filter(UserDisease.is_active.is_(True))
-            .filter(UserDisease.is_public.is_(True))
-            .filter(Disease.is_active.is_(True))
-            .all()
-        )
+    # Always show only public diseases for public profile endpoint
+    # This ensures that /profile/{user_id} shows the same information as others see
+    # Uses get_user_public_diseases_for_profile to respect is_public setting
+    user_diseases = UserService.get_user_public_diseases_for_profile(db, user.id)
 
     # Convert Disease objects to UserDiseaseResponse format with translations
     diseases_list = [

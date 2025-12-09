@@ -1493,6 +1493,36 @@ def _build_post_response(
             ),
         )
 
+    # Get disease information if post is linked to a user disease
+    user_disease_info = None
+    if post.user_disease_id:
+        from app.models.disease import UserDisease, Disease
+        from sqlalchemy.orm import joinedload
+        user_disease = (
+            db.query(UserDisease)
+            .options(joinedload(UserDisease.disease).joinedload(Disease.translations))
+            .filter(UserDisease.id == post.user_disease_id)
+            .first()
+        )
+        if user_disease and user_disease.disease:
+            disease_translations = []
+            if user_disease.disease.translations:
+                for trans in user_disease.disease.translations:
+                    disease_translations.append({
+                        "id": trans.id,
+                        "disease_id": trans.disease_id,
+                        "language_code": trans.language_code,
+                        "translated_name": trans.translated_name,
+                        "details": trans.details,
+                    })
+            from app.schemas.post import PostDiseaseInfo
+            user_disease_info = PostDiseaseInfo(
+                id=user_disease.id,
+                disease_id=user_disease.disease_id,
+                disease_name=user_disease.disease.name,
+                disease_translations=disease_translations if disease_translations else None,
+            )
+
     return PostResponse(
         id=post.id,
         user_id=post.user_id,
@@ -1509,6 +1539,7 @@ def _build_post_response(
         hashtags=hashtag_responses,
         mentions=mention_responses,
         images=image_responses,
+        user_disease=user_disease_info,
     )
 
 
@@ -1626,6 +1657,36 @@ def _build_post_response_optimized(
             avatar_url=post.user.avatar_url if can_view_avatar else None,
         )
 
+    # Get disease information if post is linked to a user disease
+    user_disease_info = None
+    if post.user_disease_id:
+        from app.models.disease import UserDisease, Disease
+        from sqlalchemy.orm import joinedload
+        user_disease = (
+            db.query(UserDisease)
+            .options(joinedload(UserDisease.disease).joinedload(Disease.translations))
+            .filter(UserDisease.id == post.user_disease_id)
+            .first()
+        )
+        if user_disease and user_disease.disease:
+            disease_translations = []
+            if user_disease.disease.translations:
+                for trans in user_disease.disease.translations:
+                    disease_translations.append({
+                        "id": trans.id,
+                        "disease_id": trans.disease_id,
+                        "language_code": trans.language_code,
+                        "translated_name": trans.translated_name,
+                        "details": trans.details,
+                    })
+            from app.schemas.post import PostDiseaseInfo
+            user_disease_info = PostDiseaseInfo(
+                id=user_disease.id,
+                disease_id=user_disease.disease_id,
+                disease_name=user_disease.disease.name,
+                disease_translations=disease_translations if disease_translations else None,
+            )
+
     return PostResponse(
         id=post.id,
         user_id=post.user_id,
@@ -1642,6 +1703,7 @@ def _build_post_response_optimized(
         hashtags=hashtag_responses,
         mentions=mention_responses,
         images=image_responses,
+        user_disease=user_disease_info,
     )
 
 
@@ -1757,6 +1819,36 @@ def _build_post_detail_response(
         for like in post.likes
     ]
 
+    # Get disease information if post is linked to a user disease
+    user_disease_info = None
+    if post.user_disease_id:
+        from app.models.disease import UserDisease, Disease
+        from sqlalchemy.orm import joinedload
+        user_disease = (
+            db.query(UserDisease)
+            .options(joinedload(UserDisease.disease).joinedload(Disease.translations))
+            .filter(UserDisease.id == post.user_disease_id)
+            .first()
+        )
+        if user_disease and user_disease.disease:
+            disease_translations = []
+            if user_disease.disease.translations:
+                for trans in user_disease.disease.translations:
+                    disease_translations.append({
+                        "id": trans.id,
+                        "disease_id": trans.disease_id,
+                        "language_code": trans.language_code,
+                        "translated_name": trans.translated_name,
+                        "details": trans.details,
+                    })
+            from app.schemas.post import PostDiseaseInfo
+            user_disease_info = PostDiseaseInfo(
+                id=user_disease.id,
+                disease_id=user_disease.disease_id,
+                disease_name=user_disease.disease.name,
+                disease_translations=disease_translations if disease_translations else None,
+            )
+
     return PostDetailResponse(
         id=post.id,
         user_id=post.user_id,
@@ -1799,6 +1891,7 @@ def _build_post_detail_response(
         images=image_responses,
         comments=comments,
         likes=likes,
+        user_disease=user_disease_info,
     )
 
 

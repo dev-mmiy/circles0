@@ -45,6 +45,13 @@ class Post(Base):
         default="public",
         comment="public, followers_only, private",
     )
+    user_disease_id = Column(
+        Integer,
+        ForeignKey("user_diseases.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+        comment="Optional: Link post to a specific user disease",
+    )
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(
@@ -53,6 +60,7 @@ class Post(Base):
 
     # Relationships
     user = relationship("User", back_populates="posts")
+    user_disease = relationship("UserDisease", foreign_keys=[user_disease_id])
     likes = relationship(
         "PostLike", back_populates="post", cascade="all, delete-orphan"
     )

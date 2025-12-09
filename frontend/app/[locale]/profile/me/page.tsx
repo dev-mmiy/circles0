@@ -80,12 +80,15 @@ export default function MyProfilePage() {
   };
 
   const handleEditDisease = (disease: UserDiseaseDetailed) => {
+    // Find the disease from the full list (including private ones) to ensure we have all data
+    const fullDisease = userDiseases?.find(d => d.id === disease.id) || disease;
+    
     // Toggle: if already editing this disease, close it; otherwise, open it
-    if (editingDisease?.id === disease.id) {
+    if (editingDisease?.id === fullDisease.id) {
       setEditingDisease(null);
       setIsEditModalOpen(false);
     } else {
-      setEditingDisease(disease);
+      setEditingDisease(fullDisease);
       setIsEditModalOpen(true);
     }
   };

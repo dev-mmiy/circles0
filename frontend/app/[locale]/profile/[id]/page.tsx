@@ -654,6 +654,7 @@ export default function PublicProfilePage() {
                         <PostCard
                           key={post.id}
                           post={post}
+                          showFullContent={false}
                           onPostUpdated={handlePostUpdated}
                           onPostDeleted={handlePostDeleted}
                         />

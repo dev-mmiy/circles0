@@ -447,6 +447,7 @@ export default function FeedPage() {
                 <PostCard
                   key={post.id}
                   post={post}
+                  showFullContent={false}
                   onLikeToggle={() => {
                     // PostCard handles like state internally, optionally refresh
                   }}

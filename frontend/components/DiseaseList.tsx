@@ -113,15 +113,15 @@ export function DiseaseList({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {diseases.map(disease => (
         <div
           key={disease.id}
           className="bg-white dark:bg-gray-800 shadow rounded-lg hover:shadow-md transition-shadow"
         >
-          <div className="p-6">
+          <div className="p-4">
             {/* Header: Disease name and status */}
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                   {getDiseaseName(disease)}
@@ -144,7 +144,7 @@ export function DiseaseList({
 
             {/* Diagnosis Information */}
             {(disease.diagnosis_date || disease.diagnosis_doctor || disease.diagnosis_hospital) && (
-              <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
+              <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('diagnosisInfo')}</h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {disease.diagnosis_date && (
@@ -171,7 +171,7 @@ export function DiseaseList({
 
             {/* Symptoms */}
             {disease.symptoms && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('symptoms')}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.symptoms}</p>
               </div>
@@ -179,7 +179,7 @@ export function DiseaseList({
 
             {/* Limitations */}
             {disease.limitations && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('limitations')}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.limitations}</p>
               </div>
@@ -187,7 +187,7 @@ export function DiseaseList({
 
             {/* Medications */}
             {disease.medications && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('medications')}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.medications}</p>
               </div>
@@ -195,7 +195,7 @@ export function DiseaseList({
 
             {/* Course */}
             {disease.course && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('course')}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.course}</p>
               </div>
@@ -203,14 +203,14 @@ export function DiseaseList({
 
             {/* Notes */}
             {disease.notes && (
-              <div className="mb-3">
+              <div className="mb-2">
                 <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('notes')}</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.notes}</p>
               </div>
             )}
 
             {/* Privacy Badges */}
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-3">
               {disease.is_public ? (
                 <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
                   {t('public')}
@@ -237,7 +237,7 @@ export function DiseaseList({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-end gap-2 pt-4 border-t dark:border-gray-700">
+            <div className="flex justify-end gap-2 pt-3 border-t dark:border-gray-700">
               {onViewDetail && (
                 <button
                   onClick={() => onViewDetail(disease)}

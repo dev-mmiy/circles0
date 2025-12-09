@@ -74,7 +74,7 @@ export default function AddDiseasePage() {
         )}
 
         {/* Form */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4">
           <DiseaseForm
             mode="add"
             diseases={diseases}
