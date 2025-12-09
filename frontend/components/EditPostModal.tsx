@@ -2,12 +2,13 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { updatePost, type Post, type UpdatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
 import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
+import { useDisease } from '@/contexts/DiseaseContext';
 
 interface EditPostModalProps {
   post: Post;
@@ -24,9 +25,14 @@ export default function EditPostModal({
 }: EditPostModalProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
+  const locale = useLocale();
+  const { userDiseases } = useDisease();
   const [content, setContent] = useState(post.content);
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     post.visibility as 'public' | 'followers_only' | 'private'
+  );
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(
+    post.user_disease?.id || null
   );
   const [imageUrls, setImageUrls] = useState<string[]>(
     post.images?.map(img => img.image_url) || []
@@ -44,11 +50,32 @@ export default function EditPostModal({
     if (isOpen) {
       setContent(post.content);
       setVisibility(post.visibility as 'public' | 'followers_only' | 'private');
+      setSelectedDiseaseId(post.user_disease?.id || null);
       setImageUrls(post.images?.map(img => img.image_url) || []);
       setImagePreviews(post.images?.map(img => ({ url: img.image_url })) || []);
       setError(null);
     }
   }, [isOpen, post]);
+
+  // Get localized disease name
+  const getDiseaseName = (disease: typeof userDiseases[0]): string => {
+    if (!disease.disease) {
+      return `${t('diseaseId')}: ${disease.disease_id}`;
+    }
+    if (disease.disease.translations && disease.disease.translations.length > 0) {
+      const translation = disease.disease.translations.find(
+        (t) => t.language_code === locale
+      );
+      if (translation) {
+        return translation.translated_name;
+      }
+      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      if (jaTranslation) {
+        return jaTranslation.translated_name;
+      }
+    }
+    return disease.disease.name;
+  };
 
   // Extract hashtags from content
   const detectedHashtags = useMemo(() => {
@@ -169,6 +196,9 @@ export default function EditPostModal({
         content: content.trim(),
         visibility,
         image_urls: imageUrls, // Always send image_urls array (empty array to delete all images)
+        // Explicitly send null if no disease is selected to clear the association
+        // Send the ID if a disease is selected, or null to remove the association
+        user_disease_id: selectedDiseaseId !== null ? selectedDiseaseId : null,
       };
 
       await updatePost(post.id, updateData, accessToken);
@@ -249,15 +279,15 @@ export default function EditPostModal({
 
             {/* Detected hashtags */}
             {detectedHashtags.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('detectedHashtags')}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {detectedHashtags.map((hashtag, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
+                      className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
                     >
                       #{hashtag}
                     </span>
@@ -268,15 +298,15 @@ export default function EditPostModal({
 
             {/* Detected mentions */}
             {detectedMentions.length > 0 && (
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">
                   {t('detectedMentions')}
                 </label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {detectedMentions.map((mention, index) => (
                     <span
                       key={index}
-                      className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
+                      className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
                     >
                       @{mention}
                     </span>
@@ -362,6 +392,27 @@ export default function EditPostModal({
                   </label>
                 </div>
               )}
+            </div>
+
+            {/* Disease selector */}
+            <div className="mb-4">
+              <label htmlFor="disease-select-edit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('diseaseLabel')}
+              </label>
+              <select
+                id="disease-select-edit"
+                value={selectedDiseaseId || ''}
+                onChange={(e) => setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                disabled={isSubmitting}
+              >
+                <option value="">{t('diseaseNone')}</option>
+                {userDiseases?.filter(d => d.is_active).map((disease) => (
+                  <option key={disease.id} value={disease.id}>
+                    {getDiseaseName(disease)}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Visibility */}

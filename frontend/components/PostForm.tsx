@@ -2,13 +2,14 @@
 
 import { useAuth0 } from '@auth0/auth0-react';
 import { useMemo, useState, useRef } from 'react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { createPost, type CreatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
 import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
 import { debugLog } from '@/lib/utils/debug';
+import { useDisease } from '@/contexts/DiseaseContext';
 
 interface PostFormProps {
   onPostCreated?: () => void | Promise<void>;
@@ -21,10 +22,13 @@ export default function PostForm({
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
+  const locale = useLocale();
+  const { userDiseases } = useDisease();
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     'public'
   );
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [imagePreviews, setImagePreviews] = useState<{ url: string; file?: File }[]>([]);
   const [uploadingImages, setUploadingImages] = useState(false);
@@ -158,6 +162,7 @@ export default function PostForm({
         content: content.trim(),
         visibility,
         image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+        user_disease_id: selectedDiseaseId || undefined,
       };
 
       await createPost(postData, accessToken);
@@ -165,6 +170,7 @@ export default function PostForm({
       // Reset form
       setContent('');
       setVisibility('public');
+      setSelectedDiseaseId(null);
       setImageUrls([]);
       setImagePreviews([]);
 
@@ -184,30 +190,62 @@ export default function PostForm({
     }
   };
 
+  // Get localized disease name
+  const getDiseaseName = (disease: typeof userDiseases[0]): string => {
+    if (!disease.disease) {
+      return `${t('diseaseId')}: ${disease.disease_id}`;
+    }
+    if (disease.disease.translations && disease.disease.translations.length > 0) {
+      const translation = disease.disease.translations.find(
+        (t) => t.language_code === locale
+      );
+      if (translation) {
+        return translation.translated_name;
+      }
+      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      if (jaTranslation) {
+        return jaTranslation.translated_name;
+      }
+    }
+    return disease.disease.name;
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
       <form onSubmit={handleSubmit}>
         {/* Textarea for post content */}
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder={placeholder || t('placeholder')}
-          className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-          rows={4}
-          maxLength={5000}
-          disabled={isSubmitting}
-        />
+        <div className="relative">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={placeholder || t('placeholder')}
+            className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            rows={4}
+            maxLength={5000}
+            disabled={isSubmitting}
+          />
+          {/* Character count in bottom right */}
+          <div className="absolute bottom-2 right-2">
+            <span
+              className={`text-xs ${
+                content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {content.length} / 5000
+            </span>
+          </div>
+        </div>
 
         {/* Detected hashtags */}
         {detectedHashtags.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {t('detectedHashtags')}:
             </span>
             {detectedHashtags.map((tag, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
+                className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium"
               >
                 #{tag}
               </span>
@@ -217,14 +255,14 @@ export default function PostForm({
 
         {/* Detected mentions */}
         {detectedMentions.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-2">
+          <div className="mt-1.5 flex flex-wrap gap-1.5">
             <span className="text-sm text-gray-600 dark:text-gray-400 font-medium">
               {t('detectedMentions')}:
             </span>
             {detectedMentions.map((mention, index) => (
               <span
                 key={index}
-                className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
+                className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium"
               >
                 @{mention}
               </span>
@@ -311,15 +349,25 @@ export default function PostForm({
           )}
         </div>
 
-        {/* Character count */}
-        <div className="flex justify-end mt-1">
-          <span
-            className={`text-sm ${
-              content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
-            }`}
+        {/* Disease selector */}
+        <div className="mt-4">
+          <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            {t('diseaseLabel')}
+          </label>
+          <select
+            id="disease-select"
+            value={selectedDiseaseId || ''}
+            onChange={(e) => setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)}
+            className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+            disabled={isSubmitting}
           >
-            {content.length} / 5000
-          </span>
+            <option value="">{t('diseaseNone')}</option>
+            {userDiseases?.filter(d => d.is_active).map((disease) => (
+              <option key={disease.id} value={disease.id}>
+                {getDiseaseName(disease)}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* Visibility selector and submit button */}

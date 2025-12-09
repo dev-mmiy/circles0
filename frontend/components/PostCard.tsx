@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import Image from 'next/image';
@@ -13,6 +13,7 @@ import toast from 'react-hot-toast';
 import { debugLog } from '@/lib/utils/debug';
 import ShareButton from './ShareButton';
 import MessageReactions, { type ReactionType as MessageReactionType } from './MessageReactions';
+import { POST_CONFIG } from '@/lib/config';
 
 // Dynamically import EditPostModal to reduce initial bundle size
 const EditPostModal = dynamic(() => import('./EditPostModal'), {
@@ -57,6 +58,10 @@ export default function PostCard({
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  // Initialize expanded state based on showFullContent prop
+  const [isExpanded, setIsExpanded] = useState(showFullContent);
+  const [shouldShowExpandButton, setShouldShowExpandButton] = useState(false);
+  const contentRef = useRef<HTMLParagraphElement>(null);
 
   // Check if current user is the author
   const isAuthor = user && user.id === post.user_id;
@@ -265,17 +270,67 @@ export default function PostCard({
     setIsEditModalOpen(false);
   };
 
-  // Truncate content if needed
-  const displayContent = showFullContent
-    ? post.content
-    : post.content.length > 300
-    ? post.content.slice(0, 300) + '...'
-    : post.content;
+  // Check if content exceeds configured max lines
+  // Skip this check if showFullContent is true (always show full content)
+  useEffect(() => {
+    // If showFullContent is true, don't show expand button
+    if (showFullContent) {
+      setShouldShowExpandButton(false);
+      setIsExpanded(true);
+      return;
+    }
+
+    if (contentRef.current && post.is_active) {
+      // Create a temporary element to measure content height without affecting layout
+      const tempElement = document.createElement('div');
+      tempElement.style.position = 'absolute';
+      tempElement.style.visibility = 'hidden';
+      tempElement.style.width = contentRef.current.offsetWidth + 'px';
+      tempElement.style.fontSize = getComputedStyle(contentRef.current).fontSize;
+      tempElement.style.fontFamily = getComputedStyle(contentRef.current).fontFamily;
+      tempElement.style.lineHeight = getComputedStyle(contentRef.current).lineHeight;
+      tempElement.style.whiteSpace = 'pre-wrap';
+      tempElement.style.wordBreak = 'break-word';
+      tempElement.style.padding = getComputedStyle(contentRef.current).padding;
+      tempElement.textContent = post.content;
+      document.body.appendChild(tempElement);
+      
+      const lineHeight = parseFloat(getComputedStyle(tempElement).lineHeight) || 24;
+      const maxHeight = lineHeight * POST_CONFIG.MAX_LINES_TO_SHOW;
+      const actualHeight = tempElement.scrollHeight;
+      
+      setShouldShowExpandButton(actualHeight > maxHeight);
+      
+      document.body.removeChild(tempElement);
+    } else {
+      setShouldShowExpandButton(false);
+    }
+  }, [post.content, post.is_active, showFullContent]);
+
+  // Get localized disease name
+  const getDiseaseName = (): string | null => {
+    if (!post.user_disease) return null;
+    if (post.user_disease.disease_translations && post.user_disease.disease_translations.length > 0) {
+      const translation = post.user_disease.disease_translations.find(
+        (t) => t.language_code === locale
+      );
+      if (translation) {
+        return translation.translated_name;
+      }
+      const jaTranslation = post.user_disease.disease_translations.find((t) => t.language_code === 'ja');
+      if (jaTranslation) {
+        return jaTranslation.translated_name;
+      }
+    }
+    return post.user_disease.disease_name;
+  };
+
+  const diseaseName = getDiseaseName();
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 hover:shadow-md transition-shadow">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 hover:shadow-md transition-shadow">
       {/* Header: Author info and timestamp */}
-      <div className="flex items-start justify-between mb-4">
+      <div className="flex items-start justify-between mb-2">
         <div className="flex items-center space-x-3">
           {/* Avatar */}
           <Link href={`/profile/${post.user_id}`}>
@@ -356,7 +411,7 @@ export default function PostCard({
 
       {/* Post content or deleted message */}
       {!post.is_active ? (
-        <div className="mb-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 text-center border border-gray-200 dark:border-gray-600">
+        <div className="mb-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
           <p className="text-gray-500 dark:text-gray-400 font-medium">
             {t('deleted')}
           </p>
@@ -365,29 +420,58 @@ export default function PostCard({
           </p>
         </div>
       ) : (
-        <div className="mb-4">
-          <p className="text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
-            {displayContent}
+        <div className="mb-2">
+          <p
+            ref={contentRef}
+            className={`text-gray-800 dark:text-gray-200 break-words ${
+              !isExpanded && shouldShowExpandButton
+                ? ''
+                : 'whitespace-pre-wrap'
+            }`}
+            style={
+              !isExpanded && shouldShowExpandButton
+                ? {
+                    display: '-webkit-box',
+                    WebkitBoxOrient: 'vertical',
+                    WebkitLineClamp: POST_CONFIG.MAX_LINES_TO_SHOW,
+                    overflow: 'hidden',
+                    whiteSpace: 'pre-line',
+                  }
+                : undefined
+            }
+          >
+            {post.content}
           </p>
-          {!showFullContent && post.content.length > 300 && (
-            <Link
-              href={`/posts/${post.id}`}
-              className="text-blue-600 dark:text-blue-400 hover:underline text-sm mt-2 inline-block"
-            >
-              {t('readMore')}
-            </Link>
+          {shouldShowExpandButton && (
+            <div className="mt-1.5">
+              {!isExpanded ? (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                >
+                  {t('readMore')}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setIsExpanded(false)}
+                  className="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium"
+                >
+                  {t('showLess')}
+                </button>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {/* Hashtags (only show if post is active) */}
       {post.is_active && post.hashtags && post.hashtags.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-1.5">
           {post.hashtags.map((hashtag) => (
             <Link
               key={hashtag.id}
               href={`/search?q=${encodeURIComponent(hashtag.name)}&type=hashtags`}
-              className="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-colors"
             >
               #{hashtag.name}
             </Link>
@@ -397,7 +481,7 @@ export default function PostCard({
 
       {/* Mentions (only show if post is active) */}
       {post.is_active && post.mentions && post.mentions.length > 0 && (
-        <div className="mb-4 flex flex-wrap gap-2">
+        <div className="mb-2 flex flex-wrap gap-1.5">
           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-1">
             {t('mentions')}:
           </span>
@@ -405,7 +489,7 @@ export default function PostCard({
             <Link
               key={mention.id}
               href={`/profile/${mention.id}`}
-              className="inline-flex items-center px-2 py-1 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
+              className="inline-flex items-center px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-medium hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-colors"
             >
               @{mention.nickname}
             </Link>
@@ -415,7 +499,7 @@ export default function PostCard({
 
       {/* Images (only show if post is active) */}
       {post.is_active && post.images && post.images.length > 0 && (
-        <div className="mb-4">
+        <div className="mb-2">
           <div className={`grid gap-2 ${
             post.images.length === 1
               ? 'grid-cols-1'
@@ -477,9 +561,21 @@ export default function PostCard({
         </div>
       )}
 
+      {/* Disease information - shown after images */}
+      {post.is_active && diseaseName && (
+        <div className="mb-2">
+          <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium">
+            <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {diseaseName}
+          </span>
+        </div>
+      )}
+
       {/* Actions: Reaction, Comment, Save, Share (only show if post is active) */}
       {post.is_active && (
-        <div className="pt-3 border-t border-gray-200 dark:border-gray-700">
+        <div className="pt-2 border-t border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-6">
             {/* Reaction button */}
             <div className="relative">
