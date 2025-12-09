@@ -34,6 +34,19 @@ export interface PostImage {
   created_at: string;
 }
 
+export interface PostDisease {
+  id: number;
+  disease_id: number;
+  disease_name: string;
+  disease_translations?: Array<{
+    id: number;
+    disease_id: number;
+    language_code: string;
+    translated_name: string;
+    details?: string;
+  }>;
+}
+
 export interface Post {
   id: string;
   user_id: string;
@@ -51,6 +64,7 @@ export interface Post {
   mentions?: Mention[];
   images?: PostImage[];
   likes?: PostLike[];  // Reactions to the post
+  user_disease?: PostDisease;  // Disease information if post is linked to a disease
 }
 
 export interface PostDetail extends Post {
@@ -100,6 +114,7 @@ export interface CreatePostData {
   content: string;
   visibility?: 'public' | 'followers_only' | 'private';
   image_urls?: string[];
+  user_disease_id?: number;
 }
 
 export interface UpdatePostData {
@@ -107,6 +122,7 @@ export interface UpdatePostData {
   visibility?: 'public' | 'followers_only' | 'private';
   is_active?: boolean;
   image_urls?: string[];
+  user_disease_id?: number | null; // null to explicitly clear the association
 }
 
 export interface CreateCommentData {
