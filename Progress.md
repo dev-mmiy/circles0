@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-27（Cloud Runコスト最適化完了）
+## 最終更新日: 2025-11-27（投稿カードレイアウトのコンパクト化完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装完了、本番環境稼働中
 
@@ -1830,6 +1830,35 @@ Auth0を使用したOAuth2.0認証システム。
     - [frontend/components/DiseaseForm.tsx](frontend/components/DiseaseForm.tsx) - TypeScript型エラー修正
     - [frontend/lib/utils/filterSettings.ts](frontend/lib/utils/filterSettings.ts) - 型定義修正
 
+- **投稿カードレイアウトのコンパクト化** ✅ 完了
+  - **実装内容**:
+    - 投稿カードの縦方向の余白を削減してよりコンパクトなレイアウトに改善
+    - **PostCardコンポーネント**:
+      - ヘッダー: `mb-4` → `mb-2` (16px → 8px)
+      - 投稿内容: `mb-4` → `mb-2`
+      - ハッシュタグ: `mb-4` → `mb-2`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+      - メンション: `mb-4` → `mb-2`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+      - 画像: `mb-4` → `mb-2`
+      - 疾患タグ（画像の後）: `mb-4` → `mb-2`、`py-1` → `py-0.5`
+      - アクション部分: `pt-3` → `pt-2`
+      - 展開ボタン: `mt-2` → `mt-1.5`
+      - メインコンテナ: `p-6` → `p-4` (24px → 16px)
+      - 削除された投稿メッセージ: `p-6` → `p-4`
+    - **PostFormコンポーネント**:
+      - ハッシュタグ: `mt-2` → `mt-1.5`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+      - メンション: `mt-2` → `mt-1.5`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+    - **EditPostModalコンポーネント**:
+      - ハッシュタグ: `mb-4` → `mb-2`、ラベルの`mb-2` → `mb-1.5`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+      - メンション: `mb-4` → `mb-2`、ラベルの`mb-2` → `mb-1.5`、`gap-2` → `gap-1.5`、`py-1` → `py-0.5`
+  - **効果**:
+    - 投稿カード全体がよりコンパクトになり、視覚的な密度が向上
+    - 疾患タグ、ハッシュタグ、メンションなどの縦方向の余白が適切に削減
+    - ユーザーが一度に多くの情報を確認しやすくなった
+  - **実装ファイル**:
+    - [frontend/components/PostCard.tsx](frontend/components/PostCard.tsx) - 余白調整
+    - [frontend/components/PostForm.tsx](frontend/components/PostForm.tsx) - 余白調整
+    - [frontend/components/EditPostModal.tsx](frontend/components/EditPostModal.tsx) - 余白調整
+
 ### 2025-11-25
 - **グループアバター機能の実装** ✅ 完了
   - **グループ設定でのアバター画像設定機能**:
@@ -1943,11 +1972,11 @@ Auth0を使用したOAuth2.0認証システム。
 
 ### コミット履歴（最近10件）
 ```
+[最新] - refactor: Make post card layout more compact by reducing spacing (2025-11-27)
 [最新] - perf: Optimize Cloud Run resource configuration for cost reduction (2025-11-27)
 [最新] - fix: Fix migration duplicate column error and optimize CI/CD pipelines (2025-11-27)
 [最新] - refactor: Unify loading spinner icons across all components (2025-11-27)
 [最新] - fix: Resolve TypeScript and ESLint errors in CI build (2025-11-27)
-[最新] - docs: Update commit history in Progress.md (2025-11-27)
 [最新] - docs: Update Progress.md header and commit history (2025-11-25)
 [最新] - feat: Add group avatar functionality and improve UI (2025-11-25)
 [最新] - docs: Update Progress.md with group avatar and comment like features (2025-11-25)
@@ -1985,7 +2014,7 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-27（Cloud Runコスト最適化完了）
+**最終更新日**: 2025-11-27（投稿カードレイアウトのコンパクト化完了）
 **最終更新者**: Claude Code
 **ステータス**: ✅ 基本機能実装完了、本番環境稼働中
 - ✅ コア機能: 認証、ユーザー管理、投稿・フィード、コメント・リアクション、フォロー・フォロワー、通知、メッセージング、グループチャット
