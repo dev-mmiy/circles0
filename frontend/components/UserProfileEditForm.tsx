@@ -80,7 +80,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6">
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{t('title')}</h2>
 
       {error && (
