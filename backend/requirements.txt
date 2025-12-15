@@ -45,7 +45,7 @@ fastapi-users[sqlalchemy]==14.0.1
 python-multipart==0.0.20
 
 # Web Push API
-pywebpush==1.14.0
+pywebpush==2.1.2
 py-vapid==1.9.0
 
 # Google Cloud Storage
