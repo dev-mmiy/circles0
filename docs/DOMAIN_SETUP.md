@@ -154,3 +154,6 @@ gcloud run services update disease-community-api \
 - Cloud Runは自動的にHTTPS証明書を提供します
 - HTTPからHTTPSへのリダイレクトを設定することを推奨します
 
+
+
+

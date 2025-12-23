@@ -142,3 +142,6 @@ echo "   - 詳細は docs/PRODUCTION_GCS_SETUP.md を参照してください"
 echo ""
 
 
+
+
+

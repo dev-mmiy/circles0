@@ -90,3 +90,6 @@ frontend/app/[locale]/posts/[id]/comments/[commentId]/images/[imageId]/page.tsx
 - `next-intl`の`useRouter`は自動的にロケールプレフィックスを追加するため、手動で追加すると二重になる
 - `next/navigation`の`useRouter`を使用する場合は、明示的にロケールを追加する必要がある
 
+
+
+
