@@ -1,0 +1,447 @@
+/**
+ * User Search Component
+ * Search for users by various criteria
+ */
+
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from '@/i18n/routing';
+import Image from 'next/image';
+import { useTranslations } from 'next-intl';
+import { UserSearchParams } from '@/lib/api/search';
+import { UserPublicProfile, getLocalizedDiseaseName } from '@/lib/api/users';
+import {
+  getSearchHistory,
+  addToSearchHistory,
+  clearSearchHistory,
+  removeFromSearchHistory,
+  type SearchHistoryItem,
+} from '@/lib/utils/searchHistory';
+import {
+  getUserSearchFilterSettings,
+  saveUserSearchFilterSettings,
+  clearUserSearchFilterSettings,
+  type UserSearchFilterSettings,
+} from '@/lib/utils/filterSettings';
+import { X, Clock } from 'lucide-react';
+import { extractErrorInfo } from '@/lib/utils/errorHandler';
+
+interface UserSearchProps {
+  onSearch: (params: UserSearchParams) => Promise<UserPublicProfile[]>;
+  diseases?: Array<{ id: number; name: string; translations?: any[] }>;
+  preferredLanguage?: string;
+  initialDiseaseId?: number;
+  initialSortBy?: 'created_at' | 'last_login_at' | 'nickname' | 'post_count';
+}
+
+export function UserSearch({
+  onSearch,
+  diseases = [],
+  preferredLanguage = 'ja',
+  initialDiseaseId,
+  initialSortBy = 'post_count',
+}: UserSearchProps) {
+  const t = useTranslations('userSearch');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedDiseases, setSelectedDiseases] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState<'created_at' | 'last_login_at' | 'nickname' | 'post_count'>(
+    initialSortBy || 'post_count'
+  );
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [results, setResults] = useState<UserPublicProfile[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
+
+  const handleSearch = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const params: UserSearchParams = {
+        limit: 20,
+        sort_by: sortBy,
+        sort_order: sortOrder,
+      };
+
+      if (searchQuery) params.q = searchQuery;
+      if (selectedDiseases.length > 0) {
+        params.disease_ids = selectedDiseases.join(',');
+      }
+
+      const searchResults = await onSearch(params);
+      setResults(searchResults);
+      
+      // Save to search history if query exists
+      if (searchQuery.trim()) {
+        addToSearchHistory('user', searchQuery, {
+          disease_ids: selectedDiseases.length > 0 ? selectedDiseases.join(',') : undefined,
+          sort_by: sortBy,
+          sort_order: sortOrder,
+        });
+        setSearchHistory(getSearchHistory('user'));
+      }
+      
+      setShowHistory(false);
+    } catch (err) {
+      console.error('Search error:', err);
+      // Extract error information using error handler utility
+      const errorInfo = extractErrorInfo(err);
+      setError(errorInfo.message || t('errors.searchFailed'));
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, selectedDiseases, sortBy, sortOrder, onSearch, t]);
+
+  // Initialize with initialDiseaseId if provided
+  useEffect(() => {
+    if (!hasInitialized) {
+      setSearchHistory(getSearchHistory('user'));
+      
+      if (initialDiseaseId) {
+        // Set initial disease ID and trigger search
+        setSelectedDiseases([initialDiseaseId]);
+        setHasInitialized(true);
+      } else {
+        // Restore saved filter settings
+        const savedSettings = getUserSearchFilterSettings();
+        if (savedSettings) {
+          if (savedSettings.diseaseIds && savedSettings.diseaseIds.length > 0) {
+            setSelectedDiseases(savedSettings.diseaseIds);
+          }
+          if (savedSettings.sortBy) setSortBy(savedSettings.sortBy);
+          if (savedSettings.sortOrder) setSortOrder(savedSettings.sortOrder);
+        }
+        setHasInitialized(true);
+      }
+    } else if (initialDiseaseId && !selectedDiseases.includes(initialDiseaseId)) {
+      // Update selectedDiseases when initialDiseaseId changes after initialization
+      setSelectedDiseases([initialDiseaseId]);
+    }
+  }, [initialDiseaseId, hasInitialized, selectedDiseases]);
+
+  // Auto-search when initialDiseaseId is set and selected
+  useEffect(() => {
+    if (hasInitialized && initialDiseaseId && selectedDiseases.includes(initialDiseaseId) && selectedDiseases.length === 1) {
+      // Trigger search after state is set
+      setTimeout(() => {
+        handleSearch();
+      }, 100);
+    }
+  }, [hasInitialized, initialDiseaseId, selectedDiseases, handleSearch]);
+
+  // Save filter settings when they change
+  useEffect(() => {
+    const settings: UserSearchFilterSettings = {
+      diseaseIds: selectedDiseases.length > 0 ? selectedDiseases : undefined,
+      sortBy,
+      sortOrder,
+    };
+    saveUserSearchFilterSettings(settings);
+  }, [selectedDiseases, sortBy, sortOrder]);
+
+  const toggleDisease = (diseaseId: number) => {
+    setSelectedDiseases((prev) =>
+      prev.includes(diseaseId)
+        ? prev.filter((id) => id !== diseaseId)
+        : [...prev, diseaseId]
+    );
+  };
+
+  // Handle search from history
+  const handleHistoryClick = (historyItem: SearchHistoryItem) => {
+    setSearchQuery(historyItem.query);
+    setShowHistory(false);
+    // Optionally restore params if stored
+    if (historyItem.params) {
+      if (historyItem.params.disease_ids) {
+        setSelectedDiseases(historyItem.params.disease_ids.split(',').map(Number));
+      }
+      if (historyItem.params.sort_by) setSortBy(historyItem.params.sort_by);
+      if (historyItem.params.sort_order) setSortOrder(historyItem.params.sort_order);
+    }
+    // Trigger search
+    setTimeout(() => {
+      handleSearch();
+    }, 100);
+  };
+
+  // Clear search history
+  const handleClearHistory = () => {
+    clearSearchHistory('user');
+    setSearchHistory([]);
+  };
+
+  // Remove single history item
+  const handleRemoveHistoryItem = (e: React.MouseEvent, query: string) => {
+    e.stopPropagation();
+    removeFromSearchHistory('user', query);
+    setSearchHistory(getSearchHistory('user'));
+  };
+
+  return (
+    <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="flex gap-2 relative">
+        <div className="flex-1 relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowHistory(e.target.value === '' && searchHistory.length > 0);
+            }}
+            onFocus={() => {
+              if (searchHistory.length > 0 && !searchQuery) {
+                setShowHistory(true);
+              }
+            }}
+            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder={t('placeholder')}
+            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+          />
+          
+          {/* Search History Dropdown */}
+          {showHistory && searchHistory.length > 0 && (
+            <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div className="p-2 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-1">
+                  <Clock className="w-4 h-4" />
+                  {t('searchHistory')}
+                </span>
+                <button
+                  onClick={handleClearHistory}
+                  className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                >
+                  {t('clearHistory')}
+                </button>
+              </div>
+              <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                {searchHistory.map((item) => (
+                  <button
+                    key={`${item.query}-${item.timestamp}`}
+                    onClick={() => handleHistoryClick(item)}
+                    className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
+                  >
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
+                    <button
+                      onClick={(e) => handleRemoveHistoryItem(e, item.query)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
+                      aria-label="Remove"
+                    >
+                      <X className="w-3 h-3 text-gray-500 dark:text-gray-400" />
+                    </button>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+        <button
+          onClick={handleSearch}
+          disabled={loading}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {loading ? t('searching') : t('search')}
+        </button>
+        <button
+          onClick={() => setShowAdvanced(!showAdvanced)}
+          className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+        >
+          {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
+        </button>
+      </div>
+      
+      {/* Click outside to close history */}
+      {showHistory && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => setShowHistory(false)}
+        />
+      )}
+
+      {/* Advanced Search Options */}
+      {showAdvanced && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
+          {/* Clear Filters Button */}
+          <div className="flex justify-end">
+            <button
+              onClick={() => {
+                setSelectedDiseases([]);
+                setSortBy('created_at');
+                setSortOrder('desc');
+                clearUserSearchFilterSettings();
+              }}
+              className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
+            >
+              {t('clearFilters')}
+            </button>
+          </div>
+
+          {/* Disease Filter */}
+          {diseases.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('diseaseFilterLabel')}
+              </label>
+              <div className="max-h-60 overflow-y-auto space-y-1">
+                {diseases.map((disease) => (
+                  <label
+                    key={disease.id}
+                    className="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedDiseases.includes(disease.id)}
+                      onChange={() => toggleDisease(disease.id)}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-900 dark:text-gray-100">
+                      {disease.translations && disease.translations.length > 0
+                        ? disease.translations.find((t) => t.language_code === preferredLanguage)
+                            ?.translated_name ||
+                          disease.translations.find((t) => t.language_code === 'ja')
+                            ?.translated_name ||
+                          disease.name
+                        : disease.name}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Sort Options */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('sortByLabel')}
+              </label>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname' | 'post_count')}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="created_at">{t('sortByDate')}</option>
+                <option value="last_login_at">{t('sortByLogin')}</option>
+                <option value="nickname">{t('sortByName')}</option>
+                <option value="post_count">{t('sortByPostCount')}</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                {t('sortOrderAsc')} / {t('sortOrderDesc')}
+              </label>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+              >
+                <option value="asc">{t('sortOrderAsc')}</option>
+                <option value="desc">{t('sortOrderDesc')}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-4 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-red-800 dark:text-red-200">{error}</p>
+        </div>
+      )}
+
+      {/* Search Results */}
+      {results.length > 0 && (
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+            {t('resultsTitle', { count: results.length })}
+          </h3>
+          <div className="space-y-4">
+            {results.map((user) => (
+              <Link
+                key={user.id}
+                href={`/profile/${user.id}`}
+                className="block p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-all bg-white dark:bg-gray-800"
+              >
+                <div className="flex items-start gap-4">
+                  {/* Avatar */}
+                  {user.avatar_url ? (
+                    <Image
+                      src={user.avatar_url}
+                      alt={user.nickname || 'User'}
+                      width={64}
+                      height={64}
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-gray-200 dark:bg-gray-600 flex items-center justify-center">
+                      <span className="text-2xl text-gray-600 dark:text-gray-300 font-bold">
+                        {user.nickname?.charAt(0).toUpperCase() || '?'}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* User Info */}
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{user.nickname}</h4>
+                        {user.username && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">@{user.username}</p>
+                        )}
+                      </div>
+                      {user.post_count !== undefined && (
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {t('postCount', { count: user.post_count })}
+                        </div>
+                      )}
+                    </div>
+
+                    {user.bio && <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">{user.bio}</p>}
+
+                    {/* Diseases */}
+                    {user.diseases && user.diseases.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {user.diseases.map((disease) => {
+                          const diseaseName =
+                            disease.translations && disease.translations.length > 0
+                              ? disease.translations.find(
+                                  (t) => t.language_code === preferredLanguage
+                                )?.translated_name ||
+                                disease.translations.find((t) => t.language_code === 'ja')
+                                  ?.translated_name ||
+                                disease.name
+                              : disease.name;
+
+                          return (
+                            <span
+                              key={disease.id}
+                              className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+                            >
+                              {diseaseName}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* No Results */}
+      {!loading && results.length === 0 && (searchQuery || selectedDiseases.length > 0) && (
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('noResults')}</div>
+      )}
+    </div>
+  );
+}

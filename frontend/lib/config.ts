@@ -1,0 +1,65 @@
+/**
+ * Configuration utilities for the frontend
+ */
+
+/**
+ * Post display configuration
+ */
+export const POST_CONFIG = {
+  /**
+   * Maximum number of lines to show before truncating with "Read more" button
+   * This can be easily changed here for future adjustments
+   */
+  MAX_LINES_TO_SHOW: 10,
+} as const;
+
+/**
+ * Get the API base URL based on the environment
+ */
+export function getApiBaseUrl(): string {
+  // Check for environment variable first (highest priority)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // In browser environment, use the runtime API URL from ApiContext
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    
+    // For localhost, try to use WSL2 IP if available, otherwise use localhost
+    if (hostname === 'localhost' || hostname === '127.0.0.1') {
+      // Try to detect if we're in WSL2 environment and use WSL2 IP
+      // This can be set via environment variable: NEXT_PUBLIC_WSL2_IP
+      // For WSL2, you can get the IP with: ip addr show eth0 | grep "inet " | awk '{print $2}' | cut -d/ -f1
+      const wsl2Ip = process.env.NEXT_PUBLIC_WSL2_IP;
+      if (wsl2Ip) {
+        console.log(`[getApiBaseUrl] Using WSL2 IP: ${wsl2Ip}`);
+        return `http://${wsl2Ip}:8000`;
+      }
+      // Try to use the WSL2 host IP (Windows can access WSL2 via this)
+      // WSL2 host IP is typically the first IP in the WSL2 network range
+      // For now, default to localhost (should work with WSL2 port forwarding)
+      // If this doesn't work, set NEXT_PUBLIC_WSL2_IP environment variable
+      console.log('[getApiBaseUrl] Using localhost:8000 (if this fails, set NEXT_PUBLIC_WSL2_IP)');
+      return 'http://localhost:8000';
+    }
+    
+    // For other hostnames, use production API
+    return 'https://api.lifry.com';
+  }
+
+  // In server-side rendering, check environment variable first
+  // If NEXT_PUBLIC_API_URL is set, use it (for production builds)
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+  
+  // For SSR, try to determine production URL based on NODE_ENV
+  // In production, default to api.lifry.com
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://api.lifry.com';
+  }
+  
+  // Default to localhost for development SSR
+  return 'http://localhost:8000';
+}

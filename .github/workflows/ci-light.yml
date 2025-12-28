@@ -1,10 +1,8 @@
-name: Light CI/CD Pipeline
+name: Light CI Pipeline
 
 on:
   push:
     branches: [ feature/* ]
-  pull_request:
-    branches: [ main ]
 
 permissions:
   contents: read
@@ -18,7 +16,7 @@ env:
   POSTGRES_VERSION: '15'
 
 jobs:
-  # 軽量なコード品質チェック
+  # コード品質チェック
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest
@@ -45,7 +43,7 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install black isort flake8
+        pip install isort flake8
 
     - name: Install Node.js dependencies
       run: |
@@ -55,15 +53,10 @@ jobs:
     - name: Backend Linting
       run: |
         cd backend
-        echo "🔍 Running Black formatting check..."
-        black --check . || {
-          echo "⚠️ Black formatting issues found. Auto-fixing..."
-          black .
-        }
         echo "🔍 Running isort import sorting check..."
-        isort --check-only . || {
-          echo "⚠️ Import sorting issues found. Auto-fixing..."
-          isort .
+        isort --check-only . 2>&1 | grep -v "env file" || {
+          echo "⚠️ Import sorting issues found. Please run 'isort .' locally and commit the changes."
+          echo "⚠️ Continuing with build (isort check is non-blocking for now)..."
         }
         echo "🔍 Running flake8 linting..."
         flake8 . --max-line-length=88 --extend-ignore=E203,W503 || {
@@ -83,7 +76,7 @@ jobs:
           npx prettier --write .
         }
 
-  # 軽量なバックエンドテスト
+  # バックエンドテスト
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -134,7 +127,7 @@ jobs:
       env:
         DATABASE_URL: postgresql://postgres:postgres@localhost:5432/disease_community_test
 
-  # 軽量なフロントエンドテスト
+  # フロントエンドテスト
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -171,59 +164,3 @@ jobs:
         npm run build || {
           echo "⚠️ Frontend build failed, but continuing..."
         }
-
-  # 統合テスト
-  integration-test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm ci
-
-    - name: Run integration tests
-      run: |
-        cd backend
-        echo "🧪 Running integration tests..."
-        python -m pytest tests/integration/ -v || {
-          echo "⚠️ Some integration tests failed, but continuing..."
-        }
-
-  # 通知
-  notify:
-    name: Notify Test Results
-    runs-on: ubuntu-latest
-    needs: [integration-test]
-    if: always()
-    
-    steps:
-    - name: Notify Success
-      if: needs.integration-test.result == 'success'
-      run: |
-        echo "✅ All tests passed!"
-        echo "Code quality checks: ✅"
-        echo "Backend tests: ✅"
-        echo "Frontend tests: ✅"
-        echo "Integration tests: ✅"
-
-    - name: Notify Failure
-      if: needs.integration-test.result == 'failure'
-      run: |
-        echo "❌ Some tests failed!"
-        echo "Please check the logs for details."

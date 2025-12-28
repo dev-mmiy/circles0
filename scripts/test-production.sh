@@ -25,8 +25,8 @@ log_warn() {
 }
 
 # 本番環境のURL
-BACKEND_URL="https://disease-community-api-508246122017.asia-northeast1.run.app"
-FRONTEND_URL="https://disease-community-frontend-508246122017.asia-northeast1.run.app"
+BACKEND_URL="https://api.lifry.com"
+FRONTEND_URL="https://lifry.com"
 
 # 1. バックエンドヘルスチェック
 log_info "Testing backend health..."

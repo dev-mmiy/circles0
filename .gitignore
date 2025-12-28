@@ -83,6 +83,10 @@ jspm_packages/
 # Next.js build output
 .next
 
+# TypeScript build info
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
 # Nuxt.js build / generate output
 .nuxt
 dist
@@ -115,3 +119,8 @@ temp/
 
 # GCP
 .gcloudignore
+
+# Service account keys (GCS, etc.)
+*service-account*.json
+secrets/
+*.key.json

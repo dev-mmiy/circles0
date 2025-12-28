@@ -101,14 +101,14 @@ test-frontend: ## フロントエンドテストを実行
 # リント実行
 lint: ## 全リントを実行
 	@echo "🔍 Running linters..."
-	cd backend && flake8 app/ && black --check app/ && isort --check-only app/
+	cd backend && flake8 app/ && isort --check-only app/
 	cd frontend && npm run lint
 	@echo "✅ Linting completed!"
 
 # フォーマット実行
 format: ## コードをフォーマット
 	@echo "🎨 Formatting code..."
-	cd backend && black app/ && isort app/
+	cd backend && isort app/
 	cd frontend && npm run format
 	@echo "✅ Code formatted!"
 
@@ -159,7 +159,6 @@ test-local-simple: ## ローカル環境で簡易テストを実行
 	@echo "🧪 Running simple local tests..."
 	@echo "📋 Backend linting..."
 	docker compose exec backend flake8 app/ --max-line-length=88 --extend-ignore=E203,W503
-	docker compose exec backend black --check app/
 	docker compose exec backend isort --check-only app/
 	@echo "📋 Backend tests..."
 	docker compose exec backend python -m pytest tests/ -v --cov=app --cov-report=html

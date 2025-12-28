@@ -40,7 +40,7 @@ steps:
       - '--region=asia-northeast1'
       - '--platform=managed'
       - '--allow-unauthenticated'
-      - '--set-env-vars=NEXT_PUBLIC_API_URL=https://disease-community-api-asia-northeast1-$PROJECT_ID.a.run.app'
+      - '--set-env-vars=NEXT_PUBLIC_API_URL=https://api.lifry.com'
 
 substitutions:
   _DATABASE_URL: 'postgresql://user:password@host:5432/database'

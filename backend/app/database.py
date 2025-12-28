@@ -20,8 +20,29 @@ DATABASE_URL = (
     or "postgresql://postgres:postgres@postgres:5432/disease_community"
 )
 
-# Create engine
-engine = create_engine(DATABASE_URL)
+# Convert asyncpg URL to psycopg2 URL (for synchronous operations)
+# Cloud Run may provide postgresql+asyncpg:// but we need postgresql://
+if "+asyncpg" in DATABASE_URL:
+    DATABASE_URL = DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
+
+# Create engine with connection pool settings
+# These settings help prevent connection timeouts in Cloud Run environment
+# Optimized for production: increased pool size and added TCP keepalive
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=10,  # Number of connections to maintain in the pool (increased from 5)
+    max_overflow=20,  # Maximum number of connections to allow beyond pool_size (increased from 10)
+    pool_timeout=30,  # Seconds to wait before giving up on getting a connection from the pool
+    pool_recycle=1800,  # Recycle connections after 30 minutes (reduced from 1 hour to prevent stale connections)
+    pool_pre_ping=True,  # Verify connections before using them (detect stale connections)
+    connect_args={
+        "connect_timeout": 10,  # PostgreSQL connection timeout in seconds
+        "keepalives": 1,  # Enable TCP keepalive
+        "keepalives_idle": 30,  # Start keepalive after 30 seconds of inactivity
+        "keepalives_interval": 10,  # Send keepalive every 10 seconds
+        "keepalives_count": 5,  # Number of keepalive packets before considering connection dead
+    },
+)
 
 # Create async engine for fastapi-users (temporarily disabled)
 # async_database_url = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://")

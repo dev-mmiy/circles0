@@ -29,7 +29,8 @@ COPY . .
 # Copy market configuration
 COPY config/markets.json /app/config/markets.json
 EXPOSE 8000
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Run migrations and seed master data before starting the development server
+CMD ["sh", "-c", "echo 'Running database migrations...' && alembic upgrade head && echo 'Seeding master data...' && python scripts/seed_final_master_data.py && echo 'Starting development server on port 8000' && uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload"]
 
 # Production stage
 FROM base AS production
@@ -43,5 +44,6 @@ EXPOSE 8080
 
 # Run the application (Cloud Run compatible)
 # Cloud Run sets PORT=8080, ensure we use it
-# Skip migrations for now and start server directly
-CMD ["sh", "-c", "echo 'Starting server on port ${PORT:-8080}' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
+# Migrations and seed data will run in background via FastAPI startup event
+# This allows the app to start quickly and handle requests while migrations run
+CMD ["sh", "-c", "echo 'Starting server on port ${PORT:-8080}...' && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]

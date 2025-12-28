@@ -29,11 +29,11 @@ gcloud run services add-iam-policy-binding disease-community-frontend \
 echo "✅ IAM policies updated successfully!"
 echo ""
 echo "Testing backend..."
-curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/health
+curl -f https://api.lifry.com/health
 
 echo ""
 echo "Testing frontend..."
-curl -f https://disease-community-frontend-508246122017.asia-northeast1.run.app
+curl -f https://lifry.com
 
 echo ""
 echo "🎉 All services are accessible!"

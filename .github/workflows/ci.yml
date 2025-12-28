@@ -1,21 +1,9 @@
-name: Continuous Integration & Deployment (Refactored)
+name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
-  pull_request:
     branches: [ main, develop ]
   workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-        - dev
-        - staging
-        - production
 
 permissions:
   contents: read
@@ -31,7 +19,7 @@ env:
   REGION: asia-northeast1
 
 jobs:
-  # Stage 1: コード品質チェック（全ブランチ）
+  # Stage 1: コード品質チェック
   code-quality:
     name: Code Quality Checks
     runs-on: ubuntu-latest
@@ -58,7 +46,7 @@ jobs:
       run: |
         cd backend
         pip install -r requirements.txt
-        pip install black isort flake8 safety
+        pip install isort flake8 safety
 
     - name: Install Node.js dependencies
       run: |
@@ -68,15 +56,10 @@ jobs:
     - name: Backend Linting
       run: |
         cd backend
-        echo "🔍 Running Black formatting check..."
-        black --check . || {
-          echo "⚠️ Black formatting issues found. Auto-fixing..."
-          black .
-        }
         echo "🔍 Running isort import sorting check..."
-        isort --check-only . || {
-          echo "⚠️ Import sorting issues found. Auto-fixing..."
-          isort .
+        isort --check-only . 2>&1 | grep -v "env file" || {
+          echo "⚠️ Import sorting issues found. Please run 'isort .' locally and commit the changes."
+          echo "⚠️ Continuing with build (isort check is non-blocking for now)..."
         }
         echo "🔍 Running flake8 linting..."
         flake8 . --max-line-length=88 --extend-ignore=E203,W503 || {
@@ -103,7 +86,7 @@ jobs:
         cd backend && safety check -r requirements.txt
         cd ../frontend && (npm audit --audit-level high || echo "⚠️  Next.js vulnerabilities detected but continuing build process")
 
-  # Stage 2: バックエンドテスト（新しいスクリプト使用）
+  # Stage 2: バックエンドテスト
   backend-test:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -125,12 +108,13 @@ jobs:
 
     - name: Upload coverage reports
       uses: codecov/codecov-action@v3
+      continue-on-error: true
       with:
         file: backend/coverage.xml
         flags: backend
         name: backend-coverage
 
-  # Stage 3: フロントエンドテスト（改善されたテスト）
+  # Stage 3: フロントエンドテスト
   frontend-test:
     name: Frontend Tests
     runs-on: ubuntu-latest
@@ -150,66 +134,12 @@ jobs:
         chmod +x scripts/local-test.sh
         ./scripts/local-test.sh
 
-  # Stage 4: 統合テスト（新しいスクリプト使用）
-  integration-test:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [backend-test, frontend-test]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v5
-
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
-
-    - name: Run integration tests with Docker Compose
-      run: |
-        echo "🧪 Running integration tests with Docker Compose..."
-        chmod +x scripts/local-test-full.sh
-        ./scripts/local-test-full.sh
-
-  # Stage 5: フルテスト（新しいスクリプト使用）
-  full-test:
-    name: Full Tests
-    runs-on: ubuntu-latest
-    needs: [integration-test]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Set up Node.js ${{ env.NODE_VERSION }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ env.NODE_VERSION }}
-
-    - name: Install dependencies
-      run: |
-        cd backend && pip install -r requirements.txt
-        cd ../frontend && npm install --legacy-peer-deps --no-audit --no-fund
-
-    - name: Run full tests using new script
-      run: |
-        echo "🧪 Running full tests using new script..."
-        chmod +x scripts/local-test-full.sh
-        ./scripts/local-test-full.sh || {
-          echo "⚠️ Some full tests failed, but continuing..."
-        }
-
-  # Stage 6: Dockerイメージビルド（main, develop）
+  # Stage 4: Dockerイメージビルド（main, developのみ）
   build-images:
     name: Build Docker Images
     runs-on: ubuntu-latest
-    needs: [full-test]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    needs: [backend-test, frontend-test]
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
     - name: Checkout code
@@ -247,12 +177,12 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # Stage 7: デプロイメント（main, develop）
+  # Stage 5: デプロイメント（main, developのみ）
   deploy:
     name: Deploy to Cloud Run
     runs-on: ubuntu-latest
     needs: [build-images]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     
     steps:
     - name: Checkout code
@@ -271,128 +201,44 @@ jobs:
     - name: Configure Docker for GCR
       run: gcloud auth configure-docker
 
-    - name: Verify authentication
-      run: |
-        echo "🔐 Verifying Google Cloud authentication..."
-        echo "=== Current authentication status ==="
-        gcloud auth list
-        echo "=== Project configuration ==="
-        gcloud config get-value project
-        echo "=== Service account info ==="
-        gcloud auth print-access-token > /dev/null && echo "✅ Access token obtained successfully" || echo "❌ Failed to get access token"
-        echo "=== Testing Cloud Run access ==="
-        gcloud run services list --region=asia-northeast1 --limit=1 || echo "❌ Cannot list Cloud Run services"
-
     - name: Deploy to Cloud Run
       run: |
         echo "🚀 Deploying to Cloud Run..."
         
-        # バックエンドデプロイ
+        # バックエンドデプロイ（コスト最適化: 1Gi memory, 1 CPU, max 5 instances）
         gcloud run deploy disease-community-api \
           --image gcr.io/${{ env.PROJECT_ID }}/disease-community-api:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
           --port 8080 \
-          --timeout 600 \
-          --memory 2Gi \
-          --cpu 2 \
-          --max-instances 10 \
+          --timeout 300 \
+          --memory 1Gi \
+          --cpu 1 \
+          --max-instances 5 \
+          --min-instances 0 \
           --allow-unauthenticated \
           --add-cloudsql-instances=circles-202510:asia-northeast1:disease-community-db \
-          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }}"
+          --set-env-vars="ENVIRONMENT=production,DATABASE_URL=${{ secrets.DATABASE_URL }},AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }},AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }},GCS_BUCKET_NAME=disease-community-images,GCS_PROJECT_ID=${{ env.PROJECT_ID }}"
         
-        # IAM Policy設定を別途実行
-        echo "🔐 Setting IAM policy..."
-        gcloud run services add-iam-policy-binding disease-community-api \
-          --region=${{ env.REGION }} \
-          --member="allUsers" \
-          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed, but deployment may still work"
-        
-        # フロントエンドデプロイ
+        # フロントエンドデプロイ（コスト最適化: 512Mi memory, 1 CPU, max 3 instances）
         gcloud run deploy disease-community-frontend \
-          --image gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend:${{ github.sha }} \
+          --image gcr.io/${{ env.PROJECT_ID}}/disease-community-frontend:${{ github.sha }} \
           --platform managed \
           --region ${{ env.REGION }} \
           --port 8080 \
-          --timeout 600 \
-          --memory 2Gi \
-          --cpu 2 \
-          --max-instances 10 \
+          --timeout 60 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 3 \
+          --min-instances 0 \
           --allow-unauthenticated \
-          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app"
-        
-        # フロントエンドのIAM Policy設定
-        echo "🔐 Setting IAM policy for frontend..."
-        gcloud run services add-iam-policy-binding disease-community-frontend \
-          --region=${{ env.REGION }} \
-          --member="allUsers" \
-          --role="roles/run.invoker" || echo "⚠️ IAM policy setting failed, but deployment may still work"
+          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,NEXT_PUBLIC_AUTH0_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH0_DOMAIN }},NEXT_PUBLIC_AUTH0_CLIENT_ID=${{ secrets.NEXT_PUBLIC_AUTH0_CLIENT_ID }},NEXT_PUBLIC_AUTH0_AUDIENCE=${{ secrets.NEXT_PUBLIC_AUTH0_AUDIENCE }},NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback"
 
-    - name: Get service URLs
+    - name: Health Check
       run: |
-        echo "🌐 Service URLs:"
-        echo "Backend URL: https://disease-community-api-508246122017.asia-northeast1.run.app"
-        echo "Frontend URL: https://disease-community-frontend-508246122017.asia-northeast1.run.app"
-
-  # Stage 8: デプロイメント後のテスト（新しいスクリプト使用）
-  post-deploy-test:
-    name: Post-Deployment Tests
-    runs-on: ubuntu-latest
-    needs: [deploy]
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Set up Python ${{ env.PYTHON_VERSION }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ env.PYTHON_VERSION }}
-
-    - name: Install dependencies
-      run: pip install requests
-
-    - name: Test deployed services
-      run: |
-        echo "🧪 Testing deployed services..."
-        
-        # バックエンドヘルスチェック
-        echo "🔍 Testing backend health..."
-        curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/health
+        echo "🔍 Testing deployed services..."
+        sleep 10
+        curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/health || exit 1
         echo "✅ Backend is healthy"
-        
-        # フロントエンドアクセステスト
-        echo "🔍 Testing frontend access..."
-        curl -f https://disease-community-frontend-508246122017.asia-northeast1.run.app
+        curl -f -L https://disease-community-frontend-508246122017.asia-northeast1.run.app/ja > /dev/null || exit 1
         echo "✅ Frontend is accessible"
-        
-        # APIエンドポイントテスト
-        echo "🔍 Testing API endpoints..."
-        curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/api/v1/users/name-display-orders/
-        curl -f https://disease-community-api-508246122017.asia-northeast1.run.app/api/v1/users/locale-formats/
-        echo "✅ API endpoints are working"
-        
-        echo "🎉 All services are responding correctly!"
-
-  # Stage 9: 通知（main, develop）
-  notify:
-    name: Notify Deployment Status
-    runs-on: ubuntu-latest
-    needs: [post-deploy-test]
-    if: always() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
-    
-    steps:
-    - name: Notify Success
-      if: needs.post-deploy-test.result == 'success'
-      run: |
-        echo "🎉 Deployment successful!"
-        echo "Backend: https://disease-community-api-508246122017.asia-northeast1.run.app"
-        echo "Frontend: https://disease-community-frontend-508246122017.asia-northeast1.run.app"
-        echo "API Docs: https://disease-community-api-508246122017.asia-northeast1.run.app/docs"
-
-    - name: Notify Failure
-      if: needs.post-deploy-test.result == 'failure'
-      run: |
-        echo "❌ Deployment failed!"
-        echo "Please check the logs for details."

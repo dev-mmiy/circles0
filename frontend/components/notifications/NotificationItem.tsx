@@ -1,0 +1,131 @@
+'use client';
+
+import { useRouter } from '@/i18n/routing';
+import { useLocale, useTranslations } from 'next-intl';
+import { formatDistanceToNow } from 'date-fns';
+import { ja, enUS } from 'date-fns/locale';
+import { X } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { getUserTimezone } from '@/lib/utils/timezone';
+import {
+  Notification,
+  getNotificationText,
+  getNotificationIcon,
+  getNotificationLink,
+  markNotificationAsRead,
+  deleteNotification,
+} from '@/lib/api/notifications';
+import { useState } from 'react';
+
+interface NotificationItemProps {
+  notification: Notification;
+  onRead?: () => void;
+  onDelete?: () => void;
+}
+
+/**
+ * 個別の通知アイテムコンポーネント
+ */
+export default function NotificationItem({
+  notification,
+  onRead,
+  onDelete,
+}: NotificationItemProps) {
+  const router = useRouter();
+  const locale = useLocale();
+  const { user } = useUser();
+  const t = useTranslations('notificationItem');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // 通知クリック時の処理
+  const handleClick = async () => {
+    try {
+      // 未読の場合は既読にする
+      if (!notification.is_read) {
+        await markNotificationAsRead(notification.id);
+        onRead?.();
+      }
+
+      // 遷移先URLへ移動（next-intlのrouterは自動的にロケールプレフィックスを追加するが、念のため明示的に追加）
+      const link = getNotificationLink(notification);
+      // next-intlのrouter.pushは自動的にロケールプレフィックスを追加するので、そのまま使用
+      router.push(link);
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
+
+  // 削除ボタンクリック時の処理
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation(); // 親要素のクリックイベントを阻止
+
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await deleteNotification(notification.id);
+      onDelete?.();
+    } catch (error) {
+      console.error('Failed to delete notification:', error);
+      setIsDeleting(false);
+    }
+  };
+
+  // 相対時間を取得
+  const dateFnsLocale = locale === 'ja' ? ja : enUS;
+  const timeAgo = formatDistanceToNow(new Date(notification.created_at), {
+    addSuffix: true,
+    locale: dateFnsLocale,
+  });
+
+  return (
+    <div
+      onClick={handleClick}
+      className={`relative flex items-start gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors ${
+        !notification.is_read ? 'bg-blue-50 dark:bg-blue-900/30' : ''
+      }`}
+    >
+      {/* アイコン */}
+      <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-white dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700 text-xl">
+        {getNotificationIcon(notification.type)}
+      </div>
+
+      {/* 通知内容 */}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm text-gray-900 dark:text-gray-100">{getNotificationText(notification)}</p>
+
+        {/* 投稿内容のプレビュー（あれば） */}
+        {notification.post && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+            「{notification.post.content}」
+          </p>
+        )}
+
+        {/* コメント内容のプレビュー（あれば） */}
+        {notification.comment && !notification.post && (
+          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 line-clamp-2">
+            「{notification.comment.content}」
+          </p>
+        )}
+
+        {/* 時間 */}
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">{timeAgo}</p>
+      </div>
+
+      {/* 未読インジケーター */}
+      {!notification.is_read && (
+        <div className="flex-shrink-0 w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full" />
+      )}
+
+      {/* 削除ボタン */}
+      <button
+        onClick={handleDelete}
+        disabled={isDeleting}
+        className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
+        aria-label={t('delete')}
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
