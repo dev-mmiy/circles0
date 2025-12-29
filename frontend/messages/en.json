@@ -452,6 +452,7 @@
         "notes": "Notes"
       },
       "vitalForm": {
+        "defaultContent": "Vital Record",
         "recordedAt": "Recorded At",
         "bloodPressure": "Blood Pressure",
         "temperature": "Temperature",

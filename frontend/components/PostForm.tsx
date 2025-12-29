@@ -216,11 +216,43 @@ export default function PostForm({
         };
       }
 
+      // Validate vital record measurements
+      if (postType === 'health_record' && healthRecordType === 'vital') {
+        const measurements = processedHealthRecordData.measurements || {};
+        
+        // Check if at least one measurement is provided
+        const hasBloodPressure = measurements.blood_pressure?.systolic || measurements.blood_pressure?.diastolic;
+        const hasHeartRate = measurements.heart_rate?.value;
+        const hasTemperature = measurements.temperature?.value;
+        const hasWeight = measurements.weight?.value;
+        const hasBodyFat = measurements.body_fat_percentage?.value;
+        const hasBloodGlucose = measurements.blood_glucose?.value;
+        const hasSpO2 = measurements.spo2?.value;
+        
+        const hasAnyMeasurement = hasBloodPressure || hasHeartRate || hasTemperature || hasWeight || hasBodyFat || hasBloodGlucose || hasSpO2;
+        
+        if (!hasAnyMeasurement) {
+          setError(t('errors.vitalMeasurementRequired') || 'At least one measurement is required');
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // For blood_pressure_heart_rate group, check if at least one is provided
+        if (visibleMeasurements?.includes('blood_pressure_heart_rate')) {
+          if (!hasBloodPressure && !hasHeartRate) {
+            setError(t('errors.bloodPressureOrHeartRateRequired') || 'Blood pressure or heart rate is required');
+            setIsSubmitting(false);
+            return;
+          }
+        }
+      }
+
       const postData: CreatePostData = {
         // For health records, use notes from healthRecordData if content is empty
         // Otherwise use content (for regular posts or health records with content)
+        // If both are empty, use a default message
         content: postType === 'health_record' && !content.trim() 
-          ? (healthRecordData.notes || '') 
+          ? (healthRecordData.notes || t('healthRecord.defaultContent') || 'Health record')
           : content.trim(),
         visibility,
         // Don't include images for vital records

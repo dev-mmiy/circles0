@@ -249,7 +249,9 @@
     "dismiss": "閉じる",
     "backToHome": "ホームに戻る",
     "authenticationRequired": "この操作を実行するにはログインが必要です。",
-    "createDiseaseFailed": "疾患の作成に失敗しました。"
+    "createDiseaseFailed": "疾患の作成に失敗しました。",
+    "vitalMeasurementRequired": "少なくとも1つの測定値を入力してください。",
+    "bloodPressureOrHeartRateRequired": "血圧または心拍数のいずれかを入力してください。"
   },
   "auth": {
     "login": "ログイン",
