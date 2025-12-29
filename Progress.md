@@ -1,6 +1,6 @@
 # Disease Community Platform - 開発進捗
 
-## 最終更新日: 2025-11-27（投稿カードレイアウトのコンパクト化完了）
+## 最終更新日: 2025-12-29（新規会員登録フロー実装、翻訳ファイルリファクタリング完了）
 
 **現在のステータス**: Phase 2 コミュニティ機能実装完了、本番環境稼働中
 
@@ -258,6 +258,92 @@ Auth0を使用したOAuth2.0認証システム。
 - [backend/run_migrations.sh](backend/run_migrations.sh) - マイグレーション実行スクリプト
 - [backend/seed_master_data.py](backend/seed_master_data.py) - マスターデータ投入 (冪等性対応)
 - Docker Compose起動時に自動実行
+
+---
+
+### 6. 新規会員登録フロー実装 - ✅ 完了
+**実装日: 2025-12-29**
+
+#### 概要
+Auth0認証の前にユーザー情報（メールアドレス、ニックネーム、ユーザーネーム）を入力する新規登録フローを実装しました。
+
+#### 実装内容
+
+**フロントエンド実装:**
+
+1. **新規登録ページ (`/signup`)**
+   - [frontend/app/[locale]/signup/page.tsx](frontend/app/[locale]/signup/page.tsx) - 新規登録フォーム
+   - メールアドレス、ニックネーム、ユーザーネームの入力（すべて必須）
+   - バリデーション機能（メール形式、文字数制限）
+   - ダークモード対応
+   - フォーム送信後、セッションストレージに情報を保存してAuth0サインアップにリダイレクト
+
+2. **登録完了ページ (`/register/complete`)**
+   - [frontend/app/[locale]/register/complete/page.tsx](frontend/app/[locale]/register/complete/page.tsx) - Auth0認証完了後の処理
+   - セッションストレージから登録情報を取得
+   - Auth0のユーザー情報と統合してバックエンドに送信
+   - 成功時にプロフィールページにリダイレクト
+
+3. **ヘッダーにSign Upリンク追加**
+   - [frontend/components/Header.tsx](frontend/components/Header.tsx) - ログインしていない時のみ表示
+   - 多言語対応（日本語: "会員登録", 英語: "Sign Up"）
+
+**バックエンド実装:**
+
+1. **UserCreateスキーマの拡張**
+   - [backend/app/schemas/user.py](backend/app/schemas/user.py) - `username`フィールドを追加（オプショナル、既存ユーザーとの互換性のため）
+
+2. **usernameのユニーク制約削除**
+   - [backend/app/models/user.py](backend/app/models/user.py) - `username`から`unique=True`を削除
+   - [backend/app/services/user_service.py](backend/app/services/user_service.py) - usernameのユニークチェックを削除
+   - [backend/alembic/versions/456511e8b410_remove_username_unique_constraint.py](backend/alembic/versions/456511e8b410_remove_username_unique_constraint.py) - マイグレーション作成
+
+**プロフィール編集の改善:**
+
+1. **エラーメッセージの多言語対応**
+   - [backend/app/services/user_service.py](backend/app/services/user_service.py) - nickname重複時のエラーメッセージを構造化（日英対応）
+   - [frontend/components/UserProfileEditForm.tsx](frontend/components/UserProfileEditForm.tsx) - エラーメッセージの多言語表示対応
+
+2. **変更検知ロジックの改善**
+   - [frontend/components/UserProfileEditForm.tsx](frontend/components/UserProfileEditForm.tsx) - 変更されたフィールドのみを送信するように改善
+   - null/undefined/空文字の正規化処理を追加
+
+**コードのリファクタリング:**
+
+1. **デバッグログの整理**
+   - `console.error`を`debugLog.error`に置換（新規追加ファイル）
+   - バックエンドの不要なデバッグログを削除
+
+2. **翻訳ファイルのリファクタリング**
+   - [frontend/messages/ja.json](frontend/messages/ja.json) - 重複キーと未使用キーを削除（30行削除）
+   - [frontend/messages/en.json](frontend/messages/en.json) - 重複キーと未使用キーを削除（27行削除）
+   - 削除したキー:
+     - `navigation.myPage`（`navigation.profile`に統一）
+     - `register`セクションの未使用キー（`basic_info`, `name_info`, `additional_info`, `preferences`, `email_placeholder`, `first_name`, `first_name_placeholder`, `middle_name`, `middle_name_placeholder`, `last_name`, `last_name_placeholder`）
+     - `messages.error`セクション（グローバル`errors`セクションを使用）
+     - `validation`セクションの重複キー（`email_required`, `email_invalid`, `nickname_required`, `nickname_too_short`, `first_name_required`, `last_name_required`）
+     - `errors`セクションの重複キー（`registration_failed`, `network_error`）
+     - `myProfile.deleteSuccess`（未使用）
+
+**実装ファイル:**
+- [frontend/app/[locale]/signup/page.tsx](frontend/app/[locale]/signup/page.tsx) - 新規登録ページ
+- [frontend/app/[locale]/register/complete/page.tsx](frontend/app/[locale]/register/complete/page.tsx) - 登録完了ページ
+- [frontend/components/Header.tsx](frontend/components/Header.tsx) - Sign Upリンク追加
+- [frontend/components/UserProfileEditForm.tsx](frontend/components/UserProfileEditForm.tsx) - プロフィール編集改善
+- [frontend/lib/api/users.ts](frontend/lib/api/users.ts) - APIクライアント更新
+- [backend/app/schemas/user.py](backend/app/schemas/user.py) - UserCreateスキーマ拡張
+- [backend/app/models/user.py](backend/app/models/user.py) - usernameのユニーク制約削除
+- [backend/app/services/user_service.py](backend/app/services/user_service.py) - ユニークチェック削除、エラーメッセージ改善
+- [backend/alembic/versions/456511e8b410_remove_username_unique_constraint.py](backend/alembic/versions/456511e8b410_remove_username_unique_constraint.py) - マイグレーション
+- [frontend/messages/ja.json](frontend/messages/ja.json) - 翻訳ファイル整理
+- [frontend/messages/en.json](frontend/messages/en.json) - 翻訳ファイル整理
+
+**効果:**
+- 新規ユーザーがスムーズに登録できるフローを実装
+- usernameの重複を許可することで、より柔軟なユーザー管理が可能に
+- エラーメッセージがわかりやすく、多言語対応
+- コードベースが整理され、保守性が向上
+- 翻訳ファイルが整理され、管理が容易に
 
 ---
 
@@ -2014,11 +2100,12 @@ cfd185c - Add error handling for dotenv import and filter .env errors from isort
 
 ---
 
-**最終更新日**: 2025-11-27（投稿カードレイアウトのコンパクト化完了）
+**最終更新日**: 2025-12-29（新規会員登録フロー実装、翻訳ファイルリファクタリング完了）
 **最終更新者**: Claude Code
 **ステータス**: ✅ 基本機能実装完了、本番環境稼働中
 - ✅ コア機能: 認証、ユーザー管理、投稿・フィード、コメント・リアクション、フォロー・フォロワー、通知、メッセージング、グループチャット
-- ✅ 多言語対応: 日本語・英語（381キー、26名前空間）
+- ✅ 新規会員登録: Auth0認証前の登録フロー実装完了
+- ✅ 多言語対応: 日本語・英語（整理後、重複キー削除）
 - ✅ パフォーマンス最適化: N+1クエリ修正、画像最適化、コードスプリッティング
 - ✅ テスト: ユニットテスト、統合テスト導入完了
 - ✅ 本番環境: GCS設定修正、データベースタイムアウト問題修正完了
