@@ -177,14 +177,18 @@ export default function PostForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!content.trim()) {
-      setError(t('errors.contentRequired'));
-      return;
-    }
+    // For health records, content is optional (stored in healthRecordData.notes instead)
+    // For regular posts, content is required
+    if (postType !== 'health_record') {
+      if (!content.trim()) {
+        setError(t('errors.contentRequired'));
+        return;
+      }
 
-    if (content.length > 5000) {
-      setError(t('errors.contentTooLong'));
-      return;
+      if (content.length > 5000) {
+        setError(t('errors.contentTooLong'));
+        return;
+      }
     }
 
     if (imageUrls.length > 10) {
