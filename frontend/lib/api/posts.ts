@@ -158,6 +158,14 @@ export async function createPost(
   data: CreatePostData,
   accessToken: string
 ): Promise<Post> {
+  console.log('[createPost] Sending request:', {
+    post_type: data.post_type,
+    health_record_type: data.health_record_type,
+    has_health_record_data: !!data.health_record_data,
+    content_length: data.content?.length || 0,
+    timestamp: new Date().toISOString(),
+  });
+
   const response = await fetch(`${getApiBaseUrl()}/api/v1/posts`, {
     method: 'POST',
     headers: {
@@ -168,11 +176,23 @@ export async function createPost(
   });
 
   if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || 'Failed to create post');
+    const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
+    console.error('[createPost] API error:', {
+      status: response.status,
+      statusText: response.statusText,
+      error,
+      timestamp: new Date().toISOString(),
+    });
+    throw new Error(error.detail || error.message || `Failed to create post: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const result = await response.json();
+  console.log('[createPost] Success:', {
+    post_id: result.id,
+    post_type: result.post_type,
+    timestamp: new Date().toISOString(),
+  });
+  return result;
 }
 
 /**

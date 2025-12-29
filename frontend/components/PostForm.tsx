@@ -252,7 +252,7 @@ export default function PostForm({
         // Otherwise use content (for regular posts or health records with content)
         // If both are empty, use a default message
         content: postType === 'health_record' && !content.trim() 
-          ? (healthRecordData.notes || t('healthRecord.defaultContent') || 'Health record')
+          ? (processedHealthRecordData.notes || t('healthRecord.vitalForm.defaultContent') || 'Health record')
           : content.trim(),
         visibility,
         // Don't include images for vital records
@@ -264,6 +264,15 @@ export default function PostForm({
         health_record_type: postType === 'health_record' ? healthRecordType || undefined : undefined,
         health_record_data: postType === 'health_record' && Object.keys(processedHealthRecordData).length > 0 ? processedHealthRecordData : undefined,
       };
+
+      // Debug log for vital records
+      if (postType === 'health_record' && healthRecordType === 'vital') {
+        debugLog.log('[PostForm] Creating vital record:', {
+          postData,
+          processedHealthRecordData,
+          measurements: processedHealthRecordData.measurements,
+        });
+      }
 
       await createPost(postData, accessToken);
 
@@ -287,7 +296,20 @@ export default function PostForm({
       }
     } catch (err: any) {
       debugLog.error('Failed to create post:', err);
-      setError(err.message || t('errors.createFailed'));
+      
+      // Extract more detailed error message
+      let errorMessage = t('errors.createFailed');
+      if (err.message) {
+        errorMessage = err.message;
+      } else if (err.response?.data?.detail) {
+        errorMessage = typeof err.response.data.detail === 'string' 
+          ? err.response.data.detail 
+          : JSON.stringify(err.response.data.detail);
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
