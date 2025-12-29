@@ -579,7 +579,14 @@ export default function PostCard({
                   {post.health_record_data.measurements?.blood_glucose && (
                     <div className="text-sm">
                       <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {tHealthRecord('vitalForm.bloodGlucose')}:
+                        {tHealthRecord('vitalForm.bloodGlucose')}
+                        {post.health_record_data.measurements.blood_glucose.timing && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
+                            ({post.health_record_data.measurements.blood_glucose.timing === 'fasting' 
+                              ? tHealthRecord('vitalForm.bloodGlucoseFasting')
+                              : tHealthRecord('vitalForm.bloodGlucosePostprandial')})
+                          </span>
+                        )}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
                         {post.health_record_data.measurements.blood_glucose.value} {post.health_record_data.measurements.blood_glucose.unit || 'mg/dL'}

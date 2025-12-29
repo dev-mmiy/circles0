@@ -457,6 +457,8 @@
         "heartRate": "心拍数",
         "bodyFatPercentage": "体脂肪率",
         "bloodGlucose": "血糖値",
+        "bloodGlucoseFasting": "空腹時",
+        "bloodGlucosePostprandial": "食後",
         "spo2": "血中酸素濃度（SpO2）",
         "notes": "メモ"
       },

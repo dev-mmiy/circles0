@@ -639,6 +639,30 @@ export default function PostForm({
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.bloodGlucose')}
                 </label>
+                <div className="mb-2">
+                  <select
+                    value={healthRecordData.measurements?.blood_glucose?.timing || 'fasting'}
+                    onChange={(e) => {
+                      const measurements = healthRecordData.measurements || {};
+                      setHealthRecordData({
+                        ...healthRecordData,
+                        measurements: {
+                          ...measurements,
+                          blood_glucose: {
+                            ...measurements.blood_glucose,
+                            timing: e.target.value,
+                            unit: 'mg/dL'
+                          }
+                        }
+                      });
+                    }}
+                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                    disabled={isSubmitting}
+                  >
+                    <option value="fasting">{t('healthRecord.vitalForm.bloodGlucoseFasting')}</option>
+                    <option value="postprandial">{t('healthRecord.vitalForm.bloodGlucosePostprandial')}</option>
+                  </select>
+                </div>
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
@@ -650,13 +674,14 @@ export default function PostForm({
                         measurements: {
                           ...measurements,
                           blood_glucose: {
+                            ...measurements.blood_glucose,
                             value: e.target.value ? parseInt(e.target.value) : undefined,
                             unit: 'mg/dL'
                           }
                         }
                       });
                     }}
-                    placeholder="100"
+                    placeholder={healthRecordData.measurements?.blood_glucose?.timing === 'postprandial' ? '140' : '100'}
                     className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                     disabled={isSubmitting}
                   />

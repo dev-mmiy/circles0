@@ -457,6 +457,8 @@
         "heartRate": "Heart Rate",
         "bodyFatPercentage": "Body Fat Percentage",
         "bloodGlucose": "Blood Glucose",
+        "bloodGlucoseFasting": "Fasting",
+        "bloodGlucosePostprandial": "Postprandial",
         "spo2": "Blood Oxygen Saturation (SpO2)",
         "notes": "Notes"
       },
