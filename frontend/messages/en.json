@@ -11,7 +11,6 @@
     "diseases": "Diseases",
     "posts": "Posts",
     "profile": "Profile",
-    "myPage": "Profile",
     "messages": "Messages",
     "groups": "Groups",
     "settings": "Settings",
@@ -41,14 +40,6 @@
       "updated": "Successfully updated",
       "deleted": "Successfully deleted",
       "created": "Successfully created"
-    },
-    "error": {
-      "general": "An error occurred",
-      "network": "Network error",
-      "validation": "Validation error",
-      "notFound": "Not found",
-      "unauthorized": "Unauthorized",
-      "forbidden": "Forbidden"
     },
     "loading": "Loading...",
     "noData": "No data available",
@@ -168,12 +159,6 @@
     "maxLength": "Maximum length is {max} characters",
     "password": "Password must be at least 8 characters long",
     "confirmPassword": "Passwords do not match",
-    "email_required": "Email address is required",
-    "email_invalid": "Please enter a valid email address",
-    "nickname_required": "Nickname is required",
-    "nickname_too_short": "Nickname must be at least 3 characters",
-    "first_name_required": "First name is required",
-    "last_name_required": "Last name is required",
     "phone_invalid": "Please enter a valid phone number"
   },
   "dateTime": {
@@ -207,14 +192,7 @@
     "termsNote": "By registering, you agree to the Terms of Service and Privacy Policy.",
     "errors": {
       "registrationFailed": "Registration failed"
-    },
-    "basic_info": "Basic Information",
-    "name_info": "Name Information",
-    "additional_info": "Additional Information",
-    "preferences": "Preferences",
-    "email_placeholder": "Enter your email address",
-    "first_name": "First Name",
-    "first_name_placeholder": "Enter your first name"
+    }
   },
   "signup": {
     "title": "Sign Up",
@@ -255,8 +233,6 @@
     }
   },
   "errors": {
-    "registration_failed": "Registration failed. Please try again.",
-    "network_error": "Network error. Please check your connection.",
     "network": "A network error occurred. Please check your internet connection.",
     "timeout": "Request timeout: The server is taking too long to respond. Please try again later.",
     "unauthorized": "Authentication required. Please log in.",
@@ -503,7 +479,6 @@
     "addDiseaseButton": "+ Add Disease",
     "backToHome": "← Back to Home",
     "deleteConfirm": "Are you sure you want to delete \"{diseaseName}\"?",
-    "deleteSuccess": "Disease deleted successfully",
     "deleteFailed": "Failed to delete disease",
     "privacySettings": "Privacy Settings",
     "viewBlockedUsers": "View Blocked Users",

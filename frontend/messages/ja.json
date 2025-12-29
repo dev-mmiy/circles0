@@ -11,7 +11,6 @@
     "diseases": "疾患",
     "posts": "投稿",
     "profile": "プロフィール",
-    "myPage": "プロファイル",
     "messages": "メッセージ",
     "groups": "グループ",
     "settings": "設定",
@@ -41,14 +40,6 @@
       "updated": "正常に更新されました",
       "deleted": "正常に削除されました",
       "created": "正常に作成されました"
-    },
-    "error": {
-      "general": "エラーが発生しました",
-      "network": "ネットワークエラー",
-      "validation": "バリデーションエラー",
-      "notFound": "見つかりません",
-      "unauthorized": "認証が必要です",
-      "forbidden": "アクセスが拒否されました"
     },
     "loading": "読み込み中...",
     "noData": "データがありません",
@@ -168,12 +159,6 @@
     "maxLength": "最大文字数は{max}文字です",
     "password": "パスワードは8文字以上である必要があります",
     "confirmPassword": "パスワードが一致しません",
-    "email_required": "メールアドレスは必須です",
-    "email_invalid": "有効なメールアドレスを入力してください",
-    "nickname_required": "ニックネームは必須です",
-    "nickname_too_short": "ニックネームは3文字以上である必要があります",
-    "first_name_required": "名は必須です",
-    "last_name_required": "姓は必須です",
     "phone_invalid": "有効な電話番号を入力してください"
   },
   "dateTime": {
@@ -207,18 +192,7 @@
     "termsNote": "登録することで、利用規約とプライバシーポリシーに同意したものとみなされます。",
     "errors": {
       "registrationFailed": "会員登録に失敗しました"
-    },
-    "basic_info": "基本情報",
-    "name_info": "名前情報",
-    "additional_info": "追加情報",
-    "preferences": "設定",
-    "email_placeholder": "メールアドレスを入力してください",
-    "first_name": "名",
-    "first_name_placeholder": "名を入力してください",
-    "middle_name": "ミドルネーム",
-    "middle_name_placeholder": "ミドルネームを入力してください（任意）",
-    "last_name": "姓",
-    "last_name_placeholder": "姓を入力してください"
+    }
   },
   "signup": {
     "title": "新規会員登録",
@@ -259,8 +233,6 @@
     }
   },
   "errors": {
-    "registration_failed": "登録に失敗しました。もう一度お試しください。",
-    "network_error": "ネットワークエラーです。接続を確認してください。",
     "network": "ネットワークエラーが発生しました。インターネット接続を確認してください。",
     "timeout": "サーバーからの応答がタイムアウトしました。しばらく待ってから再試行してください。",
     "unauthorized": "認証が必要です。ログインしてください。",
