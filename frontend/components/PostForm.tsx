@@ -1433,9 +1433,15 @@ export default function PostForm({
 
             <button
               type="submit"
-              disabled={isSubmitting || !content.trim() || (postType === 'health_record' && !healthRecordType)}
+              disabled={
+                isSubmitting || 
+                (postType !== 'health_record' && !content.trim()) || 
+                (postType === 'health_record' && !healthRecordType)
+              }
               className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                isSubmitting || !content.trim() || (postType === 'health_record' && !healthRecordType)
+                isSubmitting || 
+                (postType !== 'health_record' && !content.trim()) || 
+                (postType === 'health_record' && !healthRecordType)
                   ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                   : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
