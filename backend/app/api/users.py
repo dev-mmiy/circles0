@@ -133,17 +133,12 @@ async def update_current_user_profile(
 ):
     """Update current authenticated user's profile."""
     auth0_id = extract_auth0_id(current_user)
-    
-    # Log received update data for debugging
-    logger.info(f"[update_current_user_profile] Received update data: {user_data.model_dump(exclude_unset=True)}")
 
     user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User profile not found"
         )
-    
-    logger.info(f"[update_current_user_profile] Current user username: {user.username}, nickname: {user.nickname}")
 
     # Update user profile
     user = UserService.update_user(db, user, user_data)

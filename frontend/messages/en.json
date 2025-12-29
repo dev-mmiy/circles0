@@ -17,7 +17,8 @@
     "settings": "Settings",
     "logout": "Logout",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "signUp": "Sign Up"
   },
   "buttons": {
     "save": "Save",
@@ -213,29 +214,45 @@
     "preferences": "Preferences",
     "email_placeholder": "Enter your email address",
     "first_name": "First Name",
-    "first_name_placeholder": "Enter your first name",
-    "middle_name": "Middle Name",
-    "middle_name_placeholder": "Enter your middle name (optional)",
-    "last_name": "Last Name",
-    "last_name_placeholder": "Enter your last name",
-    "name_display_order": "Name Display Order",
-    "custom_name_format": "Custom Name Format",
-    "custom_format_help": "Use {first}, {middle}, {last} to format your name",
-    "name_preview": "Name Preview",
-    "name_preview_empty": "Your name will appear here",
-    "phone": "Phone Number",
-    "phone_placeholder": "Enter your phone number",
-    "birth_date": "Birth Date",
-    "country": "Country",
-    "select_country": "Select your country",
-    "timezone": "Timezone",
-    "bio": "Bio",
-    "bio_placeholder": "Tell us about yourself",
-    "preferred_language": "Preferred Language",
-    "preferred_locale": "Preferred Locale",
-    "back_to_home": "Back to Home",
-    "create_account": "Create Account",
-    "creating": "Creating Account..."
+    "first_name_placeholder": "Enter your first name"
+  },
+  "signup": {
+    "title": "Sign Up",
+    "subtitle": "Enter your email, nickname, and username to start registration.",
+    "email": "Email Address",
+    "emailPlaceholder": "example@email.com",
+    "nickname": "Nickname",
+    "nicknamePlaceholder": "Enter a public nickname",
+    "nicknameHelp": "This nickname will be displayed to other users (max 50 characters, required, unique)",
+    "username": "Username",
+    "usernamePlaceholder": "Enter your username",
+    "usernameHelp": "Your username (max 50 characters, required, can be duplicated with other users)",
+    "submitting": "Redirecting to authentication...",
+    "submitButton": "Start Registration",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginLink": "Log in",
+    "errors": {
+      "emailRequired": "Email address is required",
+      "emailInvalid": "Please enter a valid email address",
+      "nicknameRequired": "Nickname is required",
+      "nicknameLength": "Nickname must be between 1 and 50 characters",
+      "usernameRequired": "Username is required",
+      "usernameLength": "Username must be between 1 and 50 characters",
+      "redirectFailed": "Failed to redirect to authentication. Please try again."
+    }
+  },
+  "registerComplete": {
+    "loading": "Completing registration...",
+    "successTitle": "Registration Complete!",
+    "successMessage": "Redirecting to your profile page.",
+    "redirecting": "Redirecting...",
+    "errorTitle": "Failed to Complete Registration",
+    "retryButton": "Try Again",
+    "errors": {
+      "emailMismatch": "Email address does not match. Please try again.",
+      "registrationFailed": "Failed to complete registration",
+      "unknown": "An unknown error occurred"
+    }
   },
   "errors": {
     "registration_failed": "Registration failed. Please try again.",

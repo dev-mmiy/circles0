@@ -17,7 +17,8 @@
     "settings": "設定",
     "logout": "ログアウト",
     "openMenu": "メニューを開く",
-    "closeMenu": "メニューを閉じる"
+    "closeMenu": "メニューを閉じる",
+    "signUp": "会員登録"
   },
   "buttons": {
     "save": "保存",
@@ -217,25 +218,45 @@
     "middle_name": "ミドルネーム",
     "middle_name_placeholder": "ミドルネームを入力してください（任意）",
     "last_name": "姓",
-    "last_name_placeholder": "姓を入力してください",
-    "name_display_order": "名前表示順序",
-    "custom_name_format": "カスタム名前形式",
-    "custom_format_help": "{first}、{middle}、{last}を使用して名前をフォーマットしてください",
-    "name_preview": "名前プレビュー",
-    "name_preview_empty": "ここに名前が表示されます",
-    "phone": "電話番号",
-    "phone_placeholder": "電話番号を入力してください",
-    "birth_date": "生年月日",
-    "country": "国",
-    "select_country": "国を選択してください",
-    "timezone": "タイムゾーン",
-    "bio": "自己紹介",
-    "bio_placeholder": "あなたについて教えてください",
-    "preferred_language": "優先言語",
-    "preferred_locale": "優先ロケール",
-    "back_to_home": "ホームに戻る",
-    "create_account": "アカウント作成",
-    "creating": "アカウント作成中..."
+    "last_name_placeholder": "姓を入力してください"
+  },
+  "signup": {
+    "title": "新規会員登録",
+    "subtitle": "メールアドレス、ニックネーム、ユーザーネームを入力して、会員登録を開始してください。",
+    "email": "メールアドレス",
+    "emailPlaceholder": "example@email.com",
+    "nickname": "ニックネーム",
+    "nicknamePlaceholder": "公開用のニックネームを入力",
+    "nicknameHelp": "他のユーザーに表示されるニックネームです（50文字以内、必須、ユニーク）",
+    "username": "ユーザーネーム",
+    "usernamePlaceholder": "ユーザーネームを入力",
+    "usernameHelp": "あなたのユーザーネームです（50文字以内、必須、他のユーザーと重複可能）",
+    "submitting": "認証画面へ遷移中...",
+    "submitButton": "会員登録を開始",
+    "alreadyHaveAccount": "既にアカウントをお持ちですか？",
+    "loginLink": "ログイン",
+    "errors": {
+      "emailRequired": "メールアドレスは必須です",
+      "emailInvalid": "有効なメールアドレスを入力してください",
+      "nicknameRequired": "ニックネームは必須です",
+      "nicknameLength": "ニックネームは1文字以上50文字以内で入力してください",
+      "usernameRequired": "ユーザーネームは必須です",
+      "usernameLength": "ユーザーネームは1文字以上50文字以内で入力してください",
+      "redirectFailed": "認証画面への遷移に失敗しました。もう一度お試しください。"
+    }
+  },
+  "registerComplete": {
+    "loading": "登録を完了しています...",
+    "successTitle": "登録が完了しました！",
+    "successMessage": "プロフィールページにリダイレクトします。",
+    "redirecting": "リダイレクト中...",
+    "errorTitle": "登録の完了に失敗しました",
+    "retryButton": "もう一度試す",
+    "errors": {
+      "emailMismatch": "メールアドレスが一致しません。もう一度お試しください。",
+      "registrationFailed": "登録の完了に失敗しました",
+      "unknown": "不明なエラーが発生しました"
+    }
   },
   "errors": {
     "registration_failed": "登録に失敗しました。もう一度お試しください。",

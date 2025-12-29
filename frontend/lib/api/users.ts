@@ -3,6 +3,7 @@
  */
 
 import { getApiBaseUrl } from '../config';
+import { debugLog } from '../utils/debug';
 
 /**
  * Get localized disease name based on user's preferred language
@@ -241,7 +242,7 @@ export async function updateCurrentUserProfile(
 
   if (!response.ok) {
     const error = await response.json();
-    console.error('Update profile error response:', error);
+    debugLog.error('Update profile error response:', error);
     
     // Handle structured error responses with code and localized messages
     if (error.detail && typeof error.detail === 'object') {
@@ -270,6 +271,7 @@ export async function createOrGetUser(data: {
   email: string;
   email_verified: boolean;
   nickname: string; // Required: public nickname
+  username?: string; // Optional: username (required for new registrations)
   first_name?: string;
   last_name?: string;
   phone?: string;

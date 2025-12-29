@@ -46,6 +46,9 @@ class UserCreate(BaseModel):
     nickname: str = Field(
         ..., min_length=1, max_length=50, description="Public nickname"
     )
+    username: Optional[str] = Field(
+        None, min_length=1, max_length=50, description="Username (optional, but required for new registrations)"
+    )
     first_name: Optional[str] = Field(
         None, max_length=100, description="First name (private)"
     )
