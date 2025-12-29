@@ -48,6 +48,7 @@ export default function DailyPage() {
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
     limit: 20,
+    autoLoad: false, // Manually control loading after auth check
   });
 
   // Load records when component mounts or filters change
