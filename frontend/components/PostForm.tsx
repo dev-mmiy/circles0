@@ -606,6 +606,91 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('healthRecord.vitalForm.bodyFatPercentage')}
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={healthRecordData.measurements?.body_fat_percentage?.value || ''}
+                    onChange={(e) => {
+                      const measurements = healthRecordData.measurements || {};
+                      setHealthRecordData({
+                        ...healthRecordData,
+                        measurements: {
+                          ...measurements,
+                          body_fat_percentage: {
+                            value: e.target.value ? parseFloat(e.target.value) : undefined,
+                            unit: 'percent'
+                          }
+                        }
+                      });
+                    }}
+                    placeholder="20.0"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('healthRecord.vitalForm.bloodGlucose')}
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={healthRecordData.measurements?.blood_glucose?.value || ''}
+                    onChange={(e) => {
+                      const measurements = healthRecordData.measurements || {};
+                      setHealthRecordData({
+                        ...healthRecordData,
+                        measurements: {
+                          ...measurements,
+                          blood_glucose: {
+                            value: e.target.value ? parseInt(e.target.value) : undefined,
+                            unit: 'mg/dL'
+                          }
+                        }
+                      });
+                    }}
+                    placeholder="100"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">mg/dL</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('healthRecord.vitalForm.spo2')}
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={healthRecordData.measurements?.spo2?.value || ''}
+                    onChange={(e) => {
+                      const measurements = healthRecordData.measurements || {};
+                      setHealthRecordData({
+                        ...healthRecordData,
+                        measurements: {
+                          ...measurements,
+                          spo2: {
+                            value: e.target.value ? parseInt(e.target.value) : undefined,
+                            unit: 'percent'
+                          }
+                        }
+                      });
+                    }}
+                    placeholder="98"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
+                </div>
+              </div>
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.vitalForm.notes')}

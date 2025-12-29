@@ -455,6 +455,9 @@
         "temperature": "体温",
         "weight": "体重",
         "heartRate": "心拍数",
+        "bodyFatPercentage": "体脂肪率",
+        "bloodGlucose": "血糖値",
+        "spo2": "血中酸素濃度（SpO2）",
         "notes": "メモ"
       },
       "mealForm": {

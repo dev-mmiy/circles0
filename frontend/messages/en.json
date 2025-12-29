@@ -455,6 +455,9 @@
         "temperature": "Temperature",
         "weight": "Weight",
         "heartRate": "Heart Rate",
+        "bodyFatPercentage": "Body Fat Percentage",
+        "bloodGlucose": "Blood Glucose",
+        "spo2": "Blood Oxygen Saturation (SpO2)",
         "notes": "Notes"
       },
       "mealForm": {

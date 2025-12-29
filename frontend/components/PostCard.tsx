@@ -566,6 +566,36 @@ export default function PostCard({
                       </span>
                     </div>
                   )}
+                  {post.health_record_data.measurements?.body_fat_percentage && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.bodyFatPercentage')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.body_fat_percentage.value} {post.health_record_data.measurements.body_fat_percentage.unit === 'percent' ? '%' : post.health_record_data.measurements.body_fat_percentage.unit || '%'}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.blood_glucose && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.bloodGlucose')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.blood_glucose.value} {post.health_record_data.measurements.blood_glucose.unit || 'mg/dL'}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.spo2 && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.spo2')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.spo2.value} {post.health_record_data.measurements.spo2.unit === 'percent' ? '%' : post.health_record_data.measurements.spo2.unit || '%'}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
               {post.health_record_type === 'meal' && (
