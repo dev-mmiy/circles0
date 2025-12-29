@@ -1134,28 +1134,30 @@ export default function PostForm({
           </div>
         )}
 
-        {/* Textarea for post content */}
-        <div className="relative">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={placeholder || t('placeholder')}
-            className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            rows={4}
-            maxLength={5000}
-            disabled={isSubmitting}
-          />
-          {/* Character count in bottom right */}
-          <div className="absolute bottom-2 right-2">
-            <span
-              className={`text-xs ${
-                content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              {content.length} / 5000
-            </span>
+        {/* Textarea for post content - Hide for health records (they use notes field instead) */}
+        {!(postType === 'health_record') && (
+          <div className="relative">
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder={placeholder || t('placeholder')}
+              className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              rows={4}
+              maxLength={5000}
+              disabled={isSubmitting}
+            />
+            {/* Character count in bottom right */}
+            <div className="absolute bottom-2 right-2">
+              <span
+                className={`text-xs ${
+                  content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {content.length} / 5000
+              </span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Detected hashtags */}
         {detectedHashtags.length > 0 && (
