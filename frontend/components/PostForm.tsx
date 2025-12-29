@@ -217,7 +217,11 @@ export default function PostForm({
       }
 
       const postData: CreatePostData = {
-        content: content.trim(),
+        // For health records, use notes from healthRecordData if content is empty
+        // Otherwise use content (for regular posts or health records with content)
+        content: postType === 'health_record' && !content.trim() 
+          ? (healthRecordData.notes || '') 
+          : content.trim(),
         visibility,
         // Don't include images for vital records
         image_urls: (postType === 'health_record' && healthRecordType === 'vital') 
