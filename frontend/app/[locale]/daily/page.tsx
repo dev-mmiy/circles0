@@ -26,7 +26,7 @@ export default function DailyPage() {
 
   // Unified data loader for daily records
   const {
-    items: records,
+    items: records = [],
     isLoading,
     isLoadingMore,
     isRefreshing,
@@ -44,6 +44,7 @@ export default function DailyPage() {
       }
       const token = await getAccessTokenSilently();
       
+      let items: Post[];
       if (recordType === 'all') {
         // Load both vital and meal records
         const vitalRecords = await getUserPosts(user.id, skip, Math.ceil(limit / 2), 'vital', token);
@@ -54,11 +55,13 @@ export default function DailyPage() {
           (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         
-        return allRecords.slice(0, limit);
+        items = allRecords.slice(0, limit);
       } else {
         // Load specific type
-        return await getUserPosts(user.id, skip, limit, recordType, token);
+        items = await getUserPosts(user.id, skip, limit, recordType, token);
       }
+      
+      return { items };
     }, [isAuthenticated, user, recordType, getAccessTokenSilently]),
     limit: 20,
   });
