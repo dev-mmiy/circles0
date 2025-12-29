@@ -194,6 +194,20 @@ export default function PostForm({
     try {
       const accessToken = await getAccessTokenSilently();
 
+      // Prepare health_record_data with ISO format for recorded_at
+      let processedHealthRecordData = healthRecordData;
+      if (postType === 'health_record' && healthRecordData.recorded_at) {
+        // Convert datetime-local format (YYYY-MM-DDTHH:mm) to ISO string
+        const recordedAt = healthRecordData.recorded_at;
+        const isoDate = recordedAt.includes('T') && !recordedAt.includes('Z') && !recordedAt.includes('+')
+          ? new Date(recordedAt).toISOString()
+          : recordedAt;
+        processedHealthRecordData = {
+          ...healthRecordData,
+          recorded_at: isoDate,
+        };
+      }
+
       const postData: CreatePostData = {
         content: content.trim(),
         visibility,
@@ -204,7 +218,7 @@ export default function PostForm({
         user_disease_id: selectedDiseaseId || undefined,
         post_type: postType,
         health_record_type: postType === 'health_record' ? healthRecordType || undefined : undefined,
-        health_record_data: postType === 'health_record' && Object.keys(healthRecordData).length > 0 ? healthRecordData : undefined,
+        health_record_data: postType === 'health_record' && Object.keys(processedHealthRecordData).length > 0 ? processedHealthRecordData : undefined,
       };
 
       await createPost(postData, accessToken);
