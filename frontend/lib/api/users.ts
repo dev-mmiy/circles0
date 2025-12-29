@@ -242,6 +242,17 @@ export async function updateCurrentUserProfile(
   if (!response.ok) {
     const error = await response.json();
     console.error('Update profile error response:', error);
+    
+    // Handle structured error responses with code and localized messages
+    if (error.detail && typeof error.detail === 'object') {
+      const detail = error.detail;
+      // Create an error with the code so frontend can handle localization
+      const errorWithCode = new Error(detail.message || 'Failed to update user profile');
+      (errorWithCode as any).code = detail.code;
+      (errorWithCode as any).message_ja = detail.message_ja;
+      throw errorWithCode;
+    }
+    
     const errorMessage = typeof error.detail === 'string'
       ? error.detail
       : JSON.stringify(error.detail || error);

@@ -2,6 +2,7 @@
 User service layer for handling user-related business logic.
 """
 
+import logging
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
@@ -13,6 +14,8 @@ from app.models.disease import Disease, UserDisease
 from app.models.user import User
 from app.schemas.disease import UserDiseaseCreate, UserDiseaseUpdate
 from app.schemas.user import UserCreate, UserUpdate
+
+logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -47,6 +50,11 @@ class UserService:
     def get_user_by_nickname(db: Session, nickname: str) -> Optional[User]:
         """Get user by nickname."""
         return db.query(User).filter(User.nickname == nickname).first()
+
+    @staticmethod
+    def get_user_by_username(db: Session, username: str) -> Optional[User]:
+        """Get user by username."""
+        return db.query(User).filter(User.username == username).first()
 
     @staticmethod
     def get_user_diseases(db: Session, user_id: UUID) -> List[Disease]:
@@ -173,9 +181,33 @@ class UserService:
 
         Returns:
             Updated user instance
+
+        Raises:
+            HTTPException: If username or nickname already exists for another user
         """
+        update_data = user_data.model_dump(exclude_unset=True)
+        
+        # Note: username is NOT unique - multiple users can have the same username
+        # Only nickname needs to be unique
+        
+        # Check for nickname uniqueness if nickname is being updated and changed
+        if "nickname" in update_data:
+            new_nickname = update_data["nickname"]
+            # Only check if nickname is actually being changed
+            if new_nickname != user.nickname:
+                existing_user = UserService.get_user_by_nickname(db, new_nickname)
+                if existing_user and existing_user.id != user.id:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail={
+                            "code": "NICKNAME_ALREADY_EXISTS",
+                            "message": "This nickname is already taken by another user. Please choose a different nickname.",
+                            "message_ja": "このニックネームは既に他のユーザーに使用されています。別のニックネームを選んでください。",
+                        },
+                    )
+        
         # Update user fields
-        for field, value in user_data.model_dump(exclude_unset=True).items():
+        for field, value in update_data.items():
             setattr(user, field, value)
 
         db.commit()

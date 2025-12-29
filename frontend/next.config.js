@@ -6,13 +6,26 @@ const withNextIntl = createNextIntlPlugin();
 const nextConfig = {
   output: 'standalone',
   images: {
-    // Enable image optimization for better performance
-    // unoptimized: true, // Removed to enable Next.js image optimization
+    // Disable image optimization in development to avoid Docker networking issues
+    // In production, this should be enabled for better performance
+    unoptimized: process.env.NODE_ENV === 'development',
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     domains: ['example.com', 'localhost'],
     remotePatterns: [
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8000',
+        pathname: '/uploads/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8000',
+        pathname: '/uploads/**',
+      },
       {
         protocol: 'https',
         hostname: 'example.com',

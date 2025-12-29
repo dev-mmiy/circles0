@@ -14,6 +14,7 @@ except ImportError:
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from fastapi.encoders import jsonable_encoder
 import json
@@ -294,6 +295,17 @@ async def general_exception_handler(request: Request, exc: Exception):
         },
     )
 
+
+# Mount static files for local storage (if enabled)
+from pathlib import Path
+local_upload_dir = os.getenv("LOCAL_UPLOAD_DIR", "./uploads")
+local_upload_path = Path(local_upload_dir).resolve()
+if local_upload_path.exists():
+    try:
+        app.mount("/uploads", StaticFiles(directory=str(local_upload_path)), name="uploads")
+        logger.info(f"Static files mounted at /uploads from {local_upload_path}")
+    except Exception as e:
+        logger.warning(f"Failed to mount static files: {e}")
 
 # Include routers
 app.include_router(auth_router)

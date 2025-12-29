@@ -5,11 +5,14 @@ This module has been refactored to use a service layer for business logic,
 improving maintainability and testability.
 """
 
+import logging
 from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
+
+logger = logging.getLogger(__name__)
 
 from app.auth.dependencies import get_current_user, get_current_user_optional
 from app.database import get_db
@@ -130,12 +133,17 @@ async def update_current_user_profile(
 ):
     """Update current authenticated user's profile."""
     auth0_id = extract_auth0_id(current_user)
+    
+    # Log received update data for debugging
+    logger.info(f"[update_current_user_profile] Received update data: {user_data.model_dump(exclude_unset=True)}")
 
     user = UserService.get_user_by_auth0_id(db, auth0_id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="User profile not found"
         )
+    
+    logger.info(f"[update_current_user_profile] Current user username: {user.username}, nickname: {user.nickname}")
 
     # Update user profile
     user = UserService.update_user(db, user, user_data)

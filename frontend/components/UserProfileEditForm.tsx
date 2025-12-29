@@ -22,16 +22,16 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
   const locale = useLocale();
   const [formData, setFormData] = useState<UserProfileUpdate>({
     nickname: user.nickname,
-    first_name: user.first_name,
-    last_name: user.last_name,
-    phone: user.phone,
-    username: user.username,
-    bio: user.bio,
-    date_of_birth: user.date_of_birth,
+    first_name: user.first_name || undefined,
+    last_name: user.last_name || undefined,
+    phone: user.phone || undefined,
+    username: user.username || undefined, // Normalize None/null to undefined
+    bio: user.bio || undefined,
+    date_of_birth: user.date_of_birth || undefined,
     gender: user.gender,
-    country: user.country,
-    language: user.language,
-    preferred_language: user.preferred_language,
+    country: user.country || undefined,
+    language: user.language || undefined,
+    preferred_language: user.preferred_language || undefined,
     profile_visibility: user.profile_visibility,
     show_email: user.show_email,
     show_online_status: user.show_online_status,
@@ -62,18 +62,73 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
     try {
       // Clean up form data: remove empty strings and convert to undefined
+      // Only include fields that have actually changed
       const cleanedData: UserProfileUpdate = {};
+      
+      // Helper function to normalize values for comparison
+      const normalizeValue = (val: any): any => {
+        if (val === '' || val === null || val === undefined) return null;
+        if (typeof val === 'string') return val.trim() || null;
+        return val;
+      };
+      
       Object.entries(formData).forEach(([key, value]) => {
-        if (value !== '' && value !== null && value !== undefined) {
-          cleanedData[key as keyof UserProfileUpdate] = value as any;
+        const originalValue = user[key as keyof UserProfile];
+        const normalizedValue = normalizeValue(value);
+        const normalizedOriginal = normalizeValue(originalValue);
+        
+        // Special handling for username: skip if unchanged or empty
+        if (key === 'username') {
+          // If both are null/empty/undefined, skip
+          if (normalizedValue === null && normalizedOriginal === null) {
+            return;
+          }
+          // If new value is empty/null but original had a value, allow clearing
+          if (normalizedValue === null && normalizedOriginal !== null) {
+            cleanedData[key as keyof UserProfileUpdate] = undefined as any;
+            return;
+          }
+          // Only include username if it's actually different and not empty
+          if (normalizedValue !== normalizedOriginal && normalizedValue !== null) {
+            cleanedData[key as keyof UserProfileUpdate] = normalizedValue as any;
+          }
+          return; // Skip further processing for username
+        }
+        
+        // Only include if value is different from original
+        if (normalizedValue !== normalizedOriginal) {
+          // If new value is null/empty and original was also null/empty, skip
+          if (normalizedValue === null && normalizedOriginal === null) {
+            return;
+          }
+          
+          // Include the field if it's changed
+          cleanedData[key as keyof UserProfileUpdate] = normalizedValue as any;
         }
       });
 
       debugLog.log('Submitting cleaned profile data:', cleanedData);
+      debugLog.log('Original user data:', { username: user.username, nickname: user.nickname });
+      debugLog.log('Form data:', formData);
+      
+      // Don't send request if nothing changed
+      if (Object.keys(cleanedData).length === 0) {
+        debugLog.log('No changes detected, skipping save');
+        return;
+      }
+      
       await onSave(cleanedData);
-    } catch (err) {
+    } catch (err: any) {
       debugLog.error('Error saving profile:', err);
-      setError(err instanceof Error ? err.message : t('errors.saveFailed'));
+      
+      // Handle localized error messages for nickname uniqueness
+      if (err.code === 'NICKNAME_ALREADY_EXISTS') {
+        setError(locale === 'ja'
+          ? err.message_ja || 'このニックネームは既に他のユーザーに使用されています。別のニックネームを選んでください。'
+          : err.message || 'This nickname is already taken by another user. Please choose a different nickname.');
+      } else {
+        setError(err instanceof Error ? err.message : t('errors.saveFailed'));
+      }
     } finally {
       setSaving(false);
     }

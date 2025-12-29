@@ -124,3 +124,7 @@ temp/
 *service-account*.json
 secrets/
 *.key.json
+
+# Local uploads (development only)
+backend/uploads/
+uploads/

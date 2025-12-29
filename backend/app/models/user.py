@@ -61,8 +61,8 @@ class User(Base):
         String(50), unique=True, nullable=False, index=True
     )  # 公開用ニックネーム（他ユーザーとのやり取りで使用）
     username = Column(
-        String(50), unique=True, nullable=True, index=True
-    )  # システム用ユーザー名（オプション）
+        String(50), nullable=True, index=True
+    )  # ユーザー名（オプション、ユニークではない - 他ユーザーと重複可能）
     bio = Column(Text, nullable=True)
     avatar_url = Column(String(500), nullable=True)
     date_of_birth = Column(Date, nullable=True)
