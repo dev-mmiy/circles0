@@ -522,6 +522,34 @@ export default function PostForm({
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('healthRecord.vitalForm.heartRate')}
+                </label>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="number"
+                    value={healthRecordData.measurements?.heart_rate?.value || ''}
+                    onChange={(e) => {
+                      const measurements = healthRecordData.measurements || {};
+                      setHealthRecordData({
+                        ...healthRecordData,
+                        measurements: {
+                          ...measurements,
+                          heart_rate: {
+                            value: e.target.value ? parseInt(e.target.value) : undefined,
+                            unit: 'bpm'
+                          }
+                        }
+                      });
+                    }}
+                    placeholder="72"
+                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.temperature')}
                 </label>
                 <div className="flex items-center space-x-2">
@@ -576,34 +604,6 @@ export default function PostForm({
                     disabled={isSubmitting}
                   />
                   <span className="text-gray-500 dark:text-gray-400 text-sm">kg</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.heartRate')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.heart_rate?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          heart_rate: {
-                            value: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'bpm'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="72"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
                 </div>
               </div>
               <div>
