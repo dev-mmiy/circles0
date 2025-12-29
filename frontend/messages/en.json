@@ -249,7 +249,9 @@
     "dismiss": "Dismiss",
     "backToHome": "Back to Home",
     "authenticationRequired": "Authentication is required to perform this action.",
-    "createDiseaseFailed": "Failed to create disease."
+    "createDiseaseFailed": "Failed to create disease.",
+    "vitalMeasurementRequired": "Please enter at least one measurement value.",
+    "bloodPressureOrHeartRateRequired": "Please enter either blood pressure or heart rate."
   },
   "auth": {
     "login": "Login",
