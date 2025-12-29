@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth0 } from '@auth0/auth0-react';
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
 import { createPost, type CreatePostData } from '@/lib/api/posts';
@@ -56,6 +56,31 @@ export default function PostForm({
   const detectedMentions = useMemo(() => {
     return extractMentions(content);
   }, [content]);
+
+  // Set default recorded_at when vital or meal type is selected
+  useEffect(() => {
+    if ((healthRecordType === 'vital' || healthRecordType === 'meal')) {
+      setHealthRecordData((prev) => {
+        // Only set default if recorded_at is not already set
+        if (prev.recorded_at) {
+          return prev;
+        }
+        // Set current date/time as default (format: YYYY-MM-DDTHH:mm for datetime-local input)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const defaultDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+        
+        return {
+          ...prev,
+          recorded_at: defaultDateTime,
+        };
+      });
+    }
+  }, [healthRecordType]);
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -424,11 +449,8 @@ export default function PostForm({
             </label>
             <input
               type="datetime-local"
-              value={healthRecordData.recorded_at ? new Date(healthRecordData.recorded_at).toISOString().slice(0, 16) : ''}
-              onChange={(e) => {
-                const date = e.target.value ? new Date(e.target.value).toISOString() : null;
-                setHealthRecordData({ ...healthRecordData, recorded_at: date });
-              }}
+              value={healthRecordData.recorded_at || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             />
@@ -607,11 +629,8 @@ export default function PostForm({
             </label>
             <input
               type="datetime-local"
-              value={healthRecordData.recorded_at ? new Date(healthRecordData.recorded_at).toISOString().slice(0, 16) : ''}
-              onChange={(e) => {
-                const date = e.target.value ? new Date(e.target.value).toISOString() : null;
-                setHealthRecordData({ ...healthRecordData, recorded_at: date });
-              }}
+              value={healthRecordData.recorded_at || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             />
