@@ -172,7 +172,10 @@ export default function PostForm({
       const postData: CreatePostData = {
         content: content.trim(),
         visibility,
-        image_urls: imageUrls.length > 0 ? imageUrls : undefined,
+        // Don't include images for vital records
+        image_urls: (postType === 'health_record' && healthRecordType === 'vital') 
+          ? undefined 
+          : (imageUrls.length > 0 ? imageUrls : undefined),
         user_disease_id: selectedDiseaseId || undefined,
         post_type: postType,
         health_record_type: postType === 'health_record' ? healthRecordType || undefined : undefined,
@@ -1162,11 +1165,12 @@ export default function PostForm({
           </div>
         )}
 
-        {/* Images */}
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('imagesLabel')} ({imageUrls.length}/10)
-          </label>
+        {/* Images - Hide for vital records */}
+        {!(postType === 'health_record' && healthRecordType === 'vital') && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('imagesLabel')} ({imageUrls.length}/10)
+            </label>
           
           {/* Image previews */}
           {imagePreviews.length > 0 && (
@@ -1239,7 +1243,8 @@ export default function PostForm({
               </label>
             </div>
           )}
-        </div>
+          </div>
+        )}
 
         {/* Disease selector */}
         <div className="mt-4">
