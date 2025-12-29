@@ -1233,6 +1233,8 @@
       "meal": "食事"
     },
     "addVital": "バイタルを記録",
+    "editVital": "バイタルを編集",
+    "editMeal": "食事を編集",
     "addBloodPressureHeartRate": "血圧・心拍数",
     "addWeightBodyFat": "体重・体脂肪率",
     "addBloodGlucose": "血糖値",

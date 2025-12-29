@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
+import type { Post } from '@/lib/api/posts';
 
 // Dynamically import PostForm to reduce initial bundle size
 const PostForm = dynamic(() => import('@/components/PostForm'), {
@@ -27,6 +28,7 @@ interface PostFormModalProps {
   initialPostType?: 'regular' | 'health_record';
   initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
   visibleMeasurements?: VisibleMeasurement[];
+  editingPost?: Post; // Post to edit (for edit mode)
 }
 
 export default function PostFormModal({
@@ -36,6 +38,7 @@ export default function PostFormModal({
   initialPostType = 'regular',
   initialHealthRecordType,
   visibleMeasurements,
+  editingPost,
 }: PostFormModalProps) {
   const t = useTranslations('postForm');
   const tDaily = useTranslations('daily');
@@ -49,6 +52,17 @@ export default function PostFormModal({
 
   // Get modal title based on health record type
   const getModalTitle = () => {
+    if (editingPost) {
+      // Edit mode
+      if (editingPost.post_type === 'health_record' && editingPost.health_record_type === 'vital') {
+        return tDaily('editVital') || 'Edit Vital Record';
+      } else if (editingPost.post_type === 'health_record' && editingPost.health_record_type === 'meal') {
+        return tDaily('editMeal') || 'Edit Meal Record';
+      }
+      return t('editTitle') || 'Edit Post';
+    }
+    
+    // Create mode
     if (initialPostType === 'health_record' && initialHealthRecordType) {
       if (initialHealthRecordType === 'vital') {
         // Show specific title based on visible measurements
@@ -131,11 +145,12 @@ export default function PostFormModal({
                     ? tDaily('mealPlaceholder') || t('placeholder')
                     : t('placeholder')
                 }
-                initialPostType={initialPostType}
-                initialHealthRecordType={initialHealthRecordType}
-                hidePostTypeSelector={initialPostType === 'health_record'}
-                hideHealthRecordTypeSelector={initialPostType === 'health_record' && !!initialHealthRecordType}
+                initialPostType={editingPost?.post_type || initialPostType}
+                initialHealthRecordType={editingPost?.health_record_type || initialHealthRecordType}
+                hidePostTypeSelector={initialPostType === 'health_record' || editingPost?.post_type === 'health_record'}
+                hideHealthRecordTypeSelector={(initialPostType === 'health_record' && !!initialHealthRecordType) || editingPost?.post_type === 'health_record'}
                 visibleMeasurements={visibleMeasurements}
+                editingPost={editingPost}
               />
             </div>
           </div>

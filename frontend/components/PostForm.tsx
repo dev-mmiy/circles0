@@ -4,7 +4,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
-import { createPost, type CreatePostData } from '@/lib/api/posts';
+import { createPost, updatePost, type CreatePostData, type UpdatePostData, type Post } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
 import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
@@ -21,6 +21,7 @@ interface PostFormProps {
   hidePostTypeSelector?: boolean;
   hideHealthRecordTypeSelector?: boolean;
   visibleMeasurements?: VisibleMeasurement[]; // 表示する測定項目を指定（未指定の場合は全て表示）
+  editingPost?: Post; // Post to edit (for edit mode)
 }
 
 export default function PostForm({
@@ -31,6 +32,7 @@ export default function PostForm({
   hidePostTypeSelector = false,
   hideHealthRecordTypeSelector = false,
   visibleMeasurements,
+  editingPost,
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
@@ -61,9 +63,9 @@ export default function PostForm({
     return extractMentions(content);
   }, [content]);
 
-  // Set default recorded_at when vital or meal type is selected
+  // Set default recorded_at when vital or meal type is selected (only for new records)
   useEffect(() => {
-    if ((healthRecordType === 'vital' || healthRecordType === 'meal')) {
+    if (!editingPost && (healthRecordType === 'vital' || healthRecordType === 'meal')) {
       setHealthRecordData((prev) => {
         // Only set default if recorded_at is not already set
         if (prev.recorded_at) {
@@ -84,7 +86,7 @@ export default function PostForm({
         };
       });
     }
-  }, [healthRecordType]);
+  }, [healthRecordType, editingPost]);
 
   // Handle file selection
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {

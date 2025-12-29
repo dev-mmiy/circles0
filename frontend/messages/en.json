@@ -1234,6 +1234,8 @@
       "meal": "Meal"
     },
     "addVital": "Record Vital",
+    "editVital": "Edit Vital Record",
+    "editMeal": "Edit Meal Record",
     "addBloodPressureHeartRate": "Blood Pressure & Heart Rate",
     "addWeightBodyFat": "Weight & Body Fat",
     "addBloodGlucose": "Blood Glucose",
