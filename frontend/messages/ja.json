@@ -447,6 +447,33 @@
         "location": "部位",
         "triggers": "きっかけ",
         "notes": "メモ"
+      },
+      "vitalForm": {
+        "recordedAt": "記録日時",
+        "bloodPressure": "血圧",
+        "temperature": "体温",
+        "weight": "体重",
+        "heartRate": "心拍数",
+        "notes": "メモ"
+      },
+      "mealForm": {
+        "mealType": "食事タイプ",
+        "selectMealType": "選択してください",
+        "breakfast": "朝食",
+        "lunch": "昼食",
+        "dinner": "夕食",
+        "snack": "間食",
+        "recordedAt": "記録日時",
+        "foods": "食材",
+        "foodName": "食材名",
+        "amount": "量",
+        "addFood": "食材を追加",
+        "nutrition": "栄養成分",
+        "calories": "カロリー",
+        "protein": "タンパク質",
+        "carbs": "炭水化物",
+        "fat": "脂質",
+        "notes": "メモ"
       }
     },
     "visibilityLabel": "公開設定",

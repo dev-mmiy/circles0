@@ -514,6 +514,119 @@ export default function PostCard({
                   )}
                 </div>
               )}
+              {post.health_record_type === 'vital' && (
+                <div className="space-y-2">
+                  {post.health_record_data.recorded_at && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.recordedAt')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {new Date(post.health_record_data.recorded_at).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.blood_pressure && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.bloodPressure')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.blood_pressure.systolic} / {post.health_record_data.measurements.blood_pressure.diastolic} {post.health_record_data.measurements.blood_pressure.unit || 'mmHg'}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.temperature && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.temperature')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.temperature.value} {post.health_record_data.measurements.temperature.unit === 'celsius' ? '°C' : '°F'}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.weight && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.weight')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.weight.value} {post.health_record_data.measurements.weight.unit || 'kg'}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.measurements?.heart_rate && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('vitalForm.heartRate')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.measurements.heart_rate.value} {post.health_record_data.measurements.heart_rate.unit || 'bpm'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {post.health_record_type === 'meal' && (
+                <div className="space-y-2">
+                  {post.health_record_data.meal_type && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('mealForm.mealType')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {tHealthRecord(`mealForm.${post.health_record_data.meal_type}`)}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.recorded_at && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('mealForm.recordedAt')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {new Date(post.health_record_data.recorded_at).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.foods && Array.isArray(post.health_record_data.foods) && post.health_record_data.foods.length > 0 && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('mealForm.foods')}:
+                      </span>
+                      <div className="mt-1 space-y-1">
+                        {post.health_record_data.foods.map((food: any, index: number) => (
+                          <div key={index} className="text-gray-600 dark:text-gray-400">
+                            • {food.name} {food.amount && `(${food.amount}${food.unit || 'g'})`}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {post.health_record_data.nutrition && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('mealForm.nutrition')}:
+                      </span>
+                      <div className="mt-1 grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.nutrition.calories && (
+                          <div>{tHealthRecord('mealForm.calories')}: {post.health_record_data.nutrition.calories} kcal</div>
+                        )}
+                        {post.health_record_data.nutrition.protein && (
+                          <div>{tHealthRecord('mealForm.protein')}: {post.health_record_data.nutrition.protein} g</div>
+                        )}
+                        {post.health_record_data.nutrition.carbs && (
+                          <div>{tHealthRecord('mealForm.carbs')}: {post.health_record_data.nutrition.carbs} g</div>
+                        )}
+                        {post.health_record_data.nutrition.fat && (
+                          <div>{tHealthRecord('mealForm.fat')}: {post.health_record_data.nutrition.fat} g</div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
           <p

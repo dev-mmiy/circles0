@@ -447,6 +447,33 @@
         "location": "Location",
         "triggers": "Triggers",
         "notes": "Notes"
+      },
+      "vitalForm": {
+        "recordedAt": "Recorded At",
+        "bloodPressure": "Blood Pressure",
+        "temperature": "Temperature",
+        "weight": "Weight",
+        "heartRate": "Heart Rate",
+        "notes": "Notes"
+      },
+      "mealForm": {
+        "mealType": "Meal Type",
+        "selectMealType": "Please select",
+        "breakfast": "Breakfast",
+        "lunch": "Lunch",
+        "dinner": "Dinner",
+        "snack": "Snack",
+        "recordedAt": "Recorded At",
+        "foods": "Foods",
+        "foodName": "Food Name",
+        "amount": "Amount",
+        "addFood": "Add Food",
+        "nutrition": "Nutrition",
+        "calories": "Calories",
+        "protein": "Protein",
+        "carbs": "Carbs",
+        "fat": "Fat",
+        "notes": "Notes"
       }
     },
     "visibilityLabel": "Visibility",
