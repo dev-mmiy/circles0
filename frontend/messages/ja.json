@@ -418,11 +418,48 @@
     "diseaseLabel": "関連する疾患（任意）",
     "diseaseNone": "指定しない",
     "diseaseId": "疾患ID",
-    "visibilityLabel": "公開範囲:",
+    "postType": {
+      "title": "投稿タイプ",
+      "regular": "通常の投稿",
+      "healthRecord": "健康記録"
+    },
+    "healthRecord": {
+      "title": "健康記録の種類",
+      "diary": "日記",
+      "symptom": "症状",
+      "vital": "バイタル",
+      "meal": "食事",
+      "medication": "服薬",
+      "exercise": "運動",
+      "diaryForm": {
+        "mood": "気分",
+        "moodGood": "良い",
+        "moodNeutral": "普通",
+        "moodBad": "悪い",
+        "notes": "メモ",
+        "tags": "タグ"
+      },
+      "symptomForm": {
+        "symptomName": "症状名",
+        "severity": "強度",
+        "severityLabel": "強度: {value} / 10",
+        "duration": "持続時間",
+        "location": "部位",
+        "triggers": "きっかけ",
+        "notes": "メモ"
+      }
+    },
+    "visibilityLabel": "公開設定",
     "visibility": {
       "public": "全体公開",
       "followersOnly": "フォロワーのみ",
       "private": "自分のみ"
+    },
+    "visibilityDescription": {
+      "share": "シェアする（コミュニティに公開）",
+      "shareDescription": "他のユーザーに表示されます",
+      "private": "自分専用（個人記録として保存）",
+      "privateDescription": "他のユーザーには表示されません"
     },
     "detectedHashtags": "検出されたハッシュタグ",
     "detectedMentions": "メンション",

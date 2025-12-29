@@ -33,13 +33,62 @@ class PostService:
     """Service for post-related operations."""
 
     @staticmethod
+    def _validate_health_record(post_data: PostCreate) -> None:
+        """
+        Validate health record data.
+        
+        Raises ValueError if validation fails.
+        """
+        if post_data.post_type != "health_record":
+            return
+        
+        if not post_data.health_record_type:
+            raise ValueError("health_record_type is required when post_type is 'health_record'")
+        
+        valid_types = ["diary", "symptom", "vital", "meal", "medication", "exercise"]
+        if post_data.health_record_type not in valid_types:
+            raise ValueError(
+                f"Invalid health_record_type: {post_data.health_record_type}. "
+                f"Must be one of: {', '.join(valid_types)}"
+            )
+        
+        # Basic validation for health_record_data structure
+        if post_data.health_record_data:
+            if not isinstance(post_data.health_record_data, dict):
+                raise ValueError("health_record_data must be a dictionary/JSON object")
+            
+            # Type-specific validation (basic checks for MVP)
+            record_type = post_data.health_record_type
+            data = post_data.health_record_data
+            
+            if record_type == "diary":
+                # Diary should have optional mood, notes, tags
+                pass  # No strict validation for MVP
+            elif record_type == "symptom":
+                # Symptom should have symptoms array
+                if "symptoms" in data and not isinstance(data.get("symptoms"), list):
+                    raise ValueError("symptoms must be a list")
+            elif record_type == "vital":
+                # Vital should have measurements
+                if "measurements" in data and not isinstance(data.get("measurements"), dict):
+                    raise ValueError("measurements must be a dictionary")
+            # Other types can be validated in Phase 2
+
+    @staticmethod
     def create_post(db: Session, user_id: UUID, post_data: PostCreate) -> Post:
         """Create a new post."""
+        # Validate health record data if post_type is health_record
+        if post_data.post_type == "health_record":
+            PostService._validate_health_record(post_data)
+        
         post = Post(
             user_id=user_id,
             content=post_data.content,
             visibility=post_data.visibility,
             user_disease_id=post_data.user_disease_id,
+            post_type=post_data.post_type or "regular",
+            health_record_type=post_data.health_record_type,
+            health_record_data=post_data.health_record_data,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -546,6 +595,28 @@ class PostService:
                 if user_disease:
                     post.user_disease_id = user_disease_id_value
                 # If invalid, ignore it (don't update)
+
+        # Update health record fields if provided
+        update_dict = post_data.model_dump(exclude_unset=True)
+        if 'post_type' in update_dict:
+            post.post_type = update_dict['post_type']
+        if 'health_record_type' in update_dict:
+            post.health_record_type = update_dict['health_record_type']
+        if 'health_record_data' in update_dict:
+            post.health_record_data = update_dict['health_record_data']
+        
+        # Validate health record data if post_type is health_record
+        if post.post_type == "health_record":
+            from app.schemas.post import PostCreate
+            # Create a temporary PostCreate object for validation
+            temp_post_data = PostCreate(
+                content=post.content,
+                visibility=post.visibility,
+                post_type=post.post_type,
+                health_record_type=post.health_record_type,
+                health_record_data=post.health_record_data,
+            )
+            PostService._validate_health_record(temp_post_data)
 
         # Update images if provided
         if post_data.image_urls is not None:

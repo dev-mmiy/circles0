@@ -3,7 +3,7 @@ Post schemas for API request/response validation.
 """
 
 from datetime import datetime, timezone
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from uuid import UUID
 
 from pydantic import BaseModel, Field, field_serializer
@@ -71,6 +71,20 @@ class PostCreate(PostBase):
         default=None,
         description="Optional: Link post to a specific user disease",
     )
+    post_type: Optional[str] = Field(
+        default="regular",
+        pattern="^(regular|health_record)$",
+        description="Post type: 'regular' for regular posts, 'health_record' for health records",
+    )
+    health_record_type: Optional[str] = Field(
+        default=None,
+        pattern="^(diary|symptom|vital|meal|medication|exercise)$",
+        description="Health record type: 'diary', 'symptom', 'vital', 'meal', 'medication', 'exercise'",
+    )
+    health_record_data: Optional[Dict[str, Any]] = Field(
+        default=None,
+        description="Structured health record data (JSON format)",
+    )
 
 
 class PostUpdate(BaseModel):
@@ -88,6 +102,20 @@ class PostUpdate(BaseModel):
     user_disease_id: Optional[int] = Field(
         default=None,
         description="Optional: Link post to a specific user disease",
+    )
+    post_type: Optional[str] = Field(
+        None,
+        pattern="^(regular|health_record)$",
+        description="Post type: 'regular' for regular posts, 'health_record' for health records",
+    )
+    health_record_type: Optional[str] = Field(
+        None,
+        pattern="^(diary|symptom|vital|meal|medication|exercise)$",
+        description="Health record type: 'diary', 'symptom', 'vital', 'meal', 'medication', 'exercise'",
+    )
+    health_record_data: Optional[Dict[str, Any]] = Field(
+        None,
+        description="Structured health record data (JSON format)",
     )
 
 
@@ -265,6 +293,9 @@ class PostResponse(PostBase):
     is_active: bool
     created_at: datetime
     updated_at: datetime
+    post_type: str = "regular"
+    health_record_type: Optional[str] = None
+    health_record_data: Optional[Dict[str, Any]] = None
     author: Optional[PostAuthor] = None
     like_count: int = 0
     comment_count: int = 0

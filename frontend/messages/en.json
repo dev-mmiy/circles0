@@ -418,11 +418,48 @@
     "diseaseLabel": "Related Disease (Optional)",
     "diseaseNone": "None",
     "diseaseId": "Disease ID",
-    "visibilityLabel": "Visibility:",
+    "postType": {
+      "title": "Post Type",
+      "regular": "Regular Post",
+      "healthRecord": "Health Record"
+    },
+    "healthRecord": {
+      "title": "Health Record Type",
+      "diary": "Diary",
+      "symptom": "Symptom",
+      "vital": "Vital",
+      "meal": "Meal",
+      "medication": "Medication",
+      "exercise": "Exercise",
+      "diaryForm": {
+        "mood": "Mood",
+        "moodGood": "Good",
+        "moodNeutral": "Neutral",
+        "moodBad": "Bad",
+        "notes": "Notes",
+        "tags": "Tags"
+      },
+      "symptomForm": {
+        "symptomName": "Symptom Name",
+        "severity": "Severity",
+        "severityLabel": "Severity: {value} / 10",
+        "duration": "Duration",
+        "location": "Location",
+        "triggers": "Triggers",
+        "notes": "Notes"
+      }
+    },
+    "visibilityLabel": "Visibility",
     "visibility": {
       "public": "Public",
       "followersOnly": "Followers only",
       "private": "Private"
+    },
+    "visibilityDescription": {
+      "share": "Share (Public to Community)",
+      "shareDescription": "Will be visible to other users",
+      "private": "Private (Personal Record)",
+      "privateDescription": "Will not be visible to other users"
     },
     "detectedHashtags": "Detected hashtags",
     "detectedMentions": "Mentions",

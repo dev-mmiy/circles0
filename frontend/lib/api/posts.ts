@@ -55,6 +55,9 @@ export interface Post {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  post_type?: 'regular' | 'health_record';
+  health_record_type?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
+  health_record_data?: Record<string, any>;
   author?: PostAuthor;
   like_count: number;
   comment_count: number;
@@ -115,6 +118,9 @@ export interface CreatePostData {
   visibility?: 'public' | 'followers_only' | 'private';
   image_urls?: string[];
   user_disease_id?: number;
+  post_type?: 'regular' | 'health_record';
+  health_record_type?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
+  health_record_data?: Record<string, any>;
 }
 
 export interface UpdatePostData {
@@ -123,6 +129,9 @@ export interface UpdatePostData {
   is_active?: boolean;
   image_urls?: string[];
   user_disease_id?: number | null; // null to explicitly clear the association
+  post_type?: 'regular' | 'health_record';
+  health_record_type?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
+  health_record_data?: Record<string, any>;
 }
 
 export interface CreateCommentData {

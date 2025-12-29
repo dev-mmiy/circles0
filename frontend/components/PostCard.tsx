@@ -44,6 +44,7 @@ export default function PostCard({
   const router = useRouter();
   const t = useTranslations('post');
   const tSaved = useTranslations('savedPosts');
+  const tHealthRecord = useTranslations('postForm.healthRecord');
   const [reactions, setReactions] = useState<PostLike[]>(post.likes || []);
   
   // Update reactions when post.likes changes (e.g., when post is refreshed)
@@ -368,6 +369,22 @@ export default function PostCard({
             <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
               <span>{formatDate(post.created_at)}</span>
               {getVisibilityBadge(post.visibility)}
+              {post.post_type === 'health_record' && post.health_record_type && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  {t(`healthRecord.${post.health_record_type}`)}
+                </span>
+              )}
+              {post.visibility === 'private' && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
+                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  {t('visibility.private')}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -421,6 +438,84 @@ export default function PostCard({
         </div>
       ) : (
         <div className="mb-2">
+          {/* Health record data display */}
+          {post.post_type === 'health_record' && post.health_record_data && (
+            <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+              {post.health_record_type === 'diary' && (
+                <div className="space-y-2">
+                  {post.health_record_data.mood && (
+                    <div className="flex items-center text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300 mr-2">
+                        {tHealthRecord('diaryForm.mood')}:
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.mood === 'good' && '😊'} 
+                        {post.health_record_data.mood === 'neutral' && '😐'} 
+                        {post.health_record_data.mood === 'bad' && '😢'} 
+                        {tHealthRecord(`diaryForm.mood${post.health_record_data.mood.charAt(0).toUpperCase() + post.health_record_data.mood.slice(1)}`)}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.tags && Array.isArray(post.health_record_data.tags) && post.health_record_data.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {post.health_record_data.tags.map((tag: string, index: number) => (
+                        <span
+                          key={index}
+                          className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+              {post.health_record_type === 'symptom' && (
+                <div className="space-y-2">
+                  {post.health_record_data.symptomName && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('symptomForm.symptomName')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.symptomName}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.severity && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('symptomForm.severity')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {tHealthRecord('symptomForm.severityLabel', { value: post.health_record_data.severity })}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.duration && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('symptomForm.duration')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.duration}
+                      </span>
+                    </div>
+                  )}
+                  {post.health_record_data.location && (
+                    <div className="text-sm">
+                      <span className="font-medium text-gray-700 dark:text-gray-300">
+                        {tHealthRecord('symptomForm.location')}:
+                      </span>
+                      <span className="ml-2 text-gray-600 dark:text-gray-400">
+                        {post.health_record_data.location}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
           <p
             ref={contentRef}
             className={`text-gray-800 dark:text-gray-200 break-words ${

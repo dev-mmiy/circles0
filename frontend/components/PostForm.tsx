@@ -24,6 +24,9 @@ export default function PostForm({
   const t = useTranslations('postForm');
   const locale = useLocale();
   const { userDiseases } = useDisease();
+  const [postType, setPostType] = useState<'regular' | 'health_record'>('regular');
+  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(null);
+  const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>({});
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     'public'
@@ -163,12 +166,18 @@ export default function PostForm({
         visibility,
         image_urls: imageUrls.length > 0 ? imageUrls : undefined,
         user_disease_id: selectedDiseaseId || undefined,
+        post_type: postType,
+        health_record_type: postType === 'health_record' ? healthRecordType || undefined : undefined,
+        health_record_data: postType === 'health_record' && Object.keys(healthRecordData).length > 0 ? healthRecordData : undefined,
       };
 
       await createPost(postData, accessToken);
 
       // Reset form
       setContent('');
+      setPostType('regular');
+      setHealthRecordType(null);
+      setHealthRecordData({});
       setVisibility('public');
       setSelectedDiseaseId(null);
       setImageUrls([]);
@@ -213,6 +222,188 @@ export default function PostForm({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
       <form onSubmit={handleSubmit}>
+        {/* Post type selector */}
+        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('postType.title')}
+          </label>
+          <div className="flex space-x-4">
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="postType"
+                value="regular"
+                checked={postType === 'regular'}
+                onChange={(e) => {
+                  setPostType('regular');
+                  setHealthRecordType(null);
+                  setHealthRecordData({});
+                }}
+                className="mr-2 text-blue-600 focus:ring-blue-500"
+                disabled={isSubmitting}
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.regular')}</span>
+            </label>
+            <label className="flex items-center">
+              <input
+                type="radio"
+                name="postType"
+                value="health_record"
+                checked={postType === 'health_record'}
+                onChange={(e) => setPostType('health_record')}
+                className="mr-2 text-blue-600 focus:ring-blue-500"
+                disabled={isSubmitting}
+              />
+              <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.healthRecord')}</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Health record type selector */}
+        {postType === 'health_record' && (
+          <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.title')}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {(['diary', 'symptom'] as const).map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => {
+                    setHealthRecordType(type);
+                    setHealthRecordData({});
+                  }}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    healthRecordType === type
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                  disabled={isSubmitting}
+                >
+                  {t(`healthRecord.${type}`)}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Health record forms */}
+        {postType === 'health_record' && healthRecordType === 'diary' && (
+          <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.diaryForm.mood')}
+            </label>
+            <div className="flex space-x-4 mb-4">
+              {(['good', 'neutral', 'bad'] as const).map((mood) => (
+                <label key={mood} className="flex items-center">
+                  <input
+                    type="radio"
+                    name="mood"
+                    value={mood}
+                    checked={healthRecordData.mood === mood}
+                    onChange={(e) => setHealthRecordData({ ...healthRecordData, mood: e.target.value })}
+                    className="mr-2 text-blue-600 focus:ring-blue-500"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">
+                    {mood === 'good' && '😊'} {mood === 'neutral' && '😐'} {mood === 'bad' && '😢'} {t(`healthRecord.diaryForm.mood${mood.charAt(0).toUpperCase() + mood.slice(1)}`)}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.diaryForm.notes')}
+            </label>
+            <textarea
+              value={healthRecordData.notes || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              placeholder={t('healthRecord.diaryForm.notes')}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              rows={3}
+              disabled={isSubmitting}
+            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4">
+              {t('healthRecord.diaryForm.tags')}
+            </label>
+            <input
+              type="text"
+              value={healthRecordData.tags ? (Array.isArray(healthRecordData.tags) ? healthRecordData.tags.join(', ') : healthRecordData.tags) : ''}
+              onChange={(e) => {
+                const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+                setHealthRecordData({ ...healthRecordData, tags });
+              }}
+              placeholder="#体調良好 #外出"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              disabled={isSubmitting}
+            />
+          </div>
+        )}
+
+        {postType === 'health_record' && healthRecordType === 'symptom' && (
+          <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.symptomForm.symptomName')}
+            </label>
+            <input
+              type="text"
+              value={healthRecordData.symptomName || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, symptomName: e.target.value })}
+              placeholder={t('healthRecord.symptomForm.symptomName')}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
+              disabled={isSubmitting}
+            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.symptomForm.severity')}
+            </label>
+            <input
+              type="range"
+              min="1"
+              max="10"
+              value={healthRecordData.severity || 5}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, severity: parseInt(e.target.value) })}
+              className="w-full mb-2"
+              disabled={isSubmitting}
+            />
+            <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              {t('healthRecord.symptomForm.severityLabel', { value: healthRecordData.severity || 5 })}
+            </div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.symptomForm.duration')}
+            </label>
+            <input
+              type="text"
+              value={healthRecordData.duration || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, duration: e.target.value })}
+              placeholder="2時間"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
+              disabled={isSubmitting}
+            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.symptomForm.location')}
+            </label>
+            <input
+              type="text"
+              value={healthRecordData.location || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, location: e.target.value })}
+              placeholder="前頭部"
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
+              disabled={isSubmitting}
+            />
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('healthRecord.symptomForm.notes')}
+            </label>
+            <textarea
+              value={healthRecordData.notes || ''}
+              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              placeholder={t('healthRecord.symptomForm.notes')}
+              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              rows={3}
+              disabled={isSubmitting}
+            />
+          </div>
+        )}
+
         {/* Textarea for post content */}
         <div className="relative">
           <textarea
@@ -371,39 +562,91 @@ export default function PostForm({
         </div>
 
         {/* Visibility selector and submit button */}
-        <div className="flex items-center justify-between mt-4">
-          <div className="flex items-center space-x-2">
-            <label htmlFor="visibility" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className="flex flex-col space-y-4 mt-4">
+          {/* Visibility description */}
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('visibilityLabel')}
             </label>
-            <select
-              id="visibility"
-              value={visibility}
-              onChange={(e) =>
-                setVisibility(
-                  e.target.value as 'public' | 'followers_only' | 'private'
-                )
-              }
-              className="px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              disabled={isSubmitting}
-            >
-              <option value="public">{t('visibility.public')}</option>
-              <option value="followers_only">{t('visibility.followersOnly')}</option>
-              <option value="private">{t('visibility.private')}</option>
-            </select>
+            <div className="space-y-2">
+              <label className="flex items-start">
+                <input
+                  type="radio"
+                  name="visibilityMode"
+                  value="share"
+                  checked={visibility !== 'private'}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setVisibility('public');
+                    }
+                  }}
+                  className="mt-1 mr-2 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                />
+                <div>
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('visibilityDescription.share')}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {t('visibilityDescription.shareDescription')}
+                  </div>
+                  {visibility !== 'private' && (
+                    <select
+                      value={visibility}
+                      onChange={(e) =>
+                        setVisibility(
+                          e.target.value as 'public' | 'followers_only'
+                        )
+                      }
+                      className="mt-2 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    >
+                      <option value="public">{t('visibility.public')}</option>
+                      <option value="followers_only">{t('visibility.followersOnly')}</option>
+                    </select>
+                  )}
+                </div>
+              </label>
+              <label className="flex items-start">
+                <input
+                  type="radio"
+                  name="visibilityMode"
+                  value="private"
+                  checked={visibility === 'private'}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setVisibility('private');
+                    }
+                  }}
+                  className="mt-1 mr-2 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                />
+                <div>
+                  <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    {t('visibilityDescription.private')}
+                  </div>
+                  <div className="text-xs text-gray-600 dark:text-gray-400">
+                    {t('visibilityDescription.privateDescription')}
+                  </div>
+                </div>
+              </label>
+            </div>
           </div>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !content.trim()}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              isSubmitting || !content.trim()
-                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isSubmitting ? t('submitting') : t('submit')}
-          </button>
+          <div className="flex items-center justify-end">
+
+            <button
+              type="submit"
+              disabled={isSubmitting || !content.trim() || (postType === 'health_record' && !healthRecordType)}
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                isSubmitting || !content.trim() || (postType === 'health_record' && !healthRecordType)
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isSubmitting ? t('submitting') : t('submit')}
+            </button>
+          </div>
         </div>
 
         {/* Error message */}

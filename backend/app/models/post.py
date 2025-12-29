@@ -14,6 +14,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    JSON,
 )
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
@@ -51,6 +52,24 @@ class Post(Base):
         nullable=True,
         index=True,
         comment="Optional: Link post to a specific user disease",
+    )
+    post_type = Column(
+        String(20),
+        nullable=False,
+        default="regular",
+        index=True,
+        comment="post type: 'regular' for regular posts, 'health_record' for health records",
+    )
+    health_record_type = Column(
+        String(50),
+        nullable=True,
+        index=True,
+        comment="health record type: 'diary', 'symptom', 'vital', 'meal', 'medication', 'exercise', etc.",
+    )
+    health_record_data = Column(
+        JSON,
+        nullable=True,
+        comment="structured health record data (JSON format)",
     )
     is_active = Column(Boolean, nullable=False, default=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
