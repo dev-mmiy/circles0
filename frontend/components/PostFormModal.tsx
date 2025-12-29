@@ -18,12 +18,15 @@ const PostForm = dynamic(() => import('@/components/PostForm'), {
   ssr: false,
 });
 
+type VisibleMeasurement = 'blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature';
+
 interface PostFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPostCreated?: () => void | Promise<void>;
   initialPostType?: 'regular' | 'health_record';
   initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
+  visibleMeasurements?: VisibleMeasurement[];
 }
 
 export default function PostFormModal({
@@ -32,6 +35,7 @@ export default function PostFormModal({
   onPostCreated,
   initialPostType = 'regular',
   initialHealthRecordType,
+  visibleMeasurements,
 }: PostFormModalProps) {
   const t = useTranslations('postForm');
   const tDaily = useTranslations('daily');
@@ -47,6 +51,24 @@ export default function PostFormModal({
   const getModalTitle = () => {
     if (initialPostType === 'health_record' && initialHealthRecordType) {
       if (initialHealthRecordType === 'vital') {
+        // Show specific title based on visible measurements
+        if (visibleMeasurements && visibleMeasurements.length === 1) {
+          const measurement = visibleMeasurements[0];
+          switch (measurement) {
+            case 'blood_pressure_heart_rate':
+              return tDaily('addBloodPressureHeartRate');
+            case 'weight_body_fat':
+              return tDaily('addWeightBodyFat');
+            case 'blood_glucose':
+              return tDaily('addBloodGlucose');
+            case 'spo2':
+              return tDaily('addSpO2');
+            case 'temperature':
+              return tDaily('addTemperature');
+            default:
+              return tDaily('addVital');
+          }
+        }
         return tDaily('addVital');
       } else if (initialHealthRecordType === 'meal') {
         return tDaily('addMeal');
@@ -113,6 +135,7 @@ export default function PostFormModal({
                 initialHealthRecordType={initialHealthRecordType}
                 hidePostTypeSelector={initialPostType === 'health_record'}
                 hideHealthRecordTypeSelector={initialPostType === 'health_record' && !!initialHealthRecordType}
+                visibleMeasurements={visibleMeasurements}
               />
             </div>
           </div>

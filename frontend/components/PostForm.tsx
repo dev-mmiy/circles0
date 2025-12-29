@@ -11,6 +11,8 @@ import { uploadImage, uploadMultipleImages, validateImageFile, createImagePrevie
 import { debugLog } from '@/lib/utils/debug';
 import { useDisease } from '@/contexts/DiseaseContext';
 
+type VisibleMeasurement = 'blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature';
+
 interface PostFormProps {
   onPostCreated?: () => void | Promise<void>;
   placeholder?: string;
@@ -18,6 +20,7 @@ interface PostFormProps {
   initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
   hidePostTypeSelector?: boolean;
   hideHealthRecordTypeSelector?: boolean;
+  visibleMeasurements?: VisibleMeasurement[]; // 表示する測定項目を指定（未指定の場合は全て表示）
 }
 
 export default function PostForm({
@@ -27,6 +30,7 @@ export default function PostForm({
   initialHealthRecordType,
   hidePostTypeSelector = false,
   hideHealthRecordTypeSelector = false,
+  visibleMeasurements,
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
@@ -469,10 +473,13 @@ export default function PostForm({
               disabled={isSubmitting}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.bloodPressure')}
-                </label>
+              {/* 血圧・心拍数 */}
+              {(!visibleMeasurements || visibleMeasurements.includes('blood_pressure_heart_rate')) && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('healthRecord.vitalForm.bloodPressure')}
+                    </label>
                 <div className="flex items-center space-x-2">
                   <input
                     type="number"
@@ -548,6 +555,10 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
                 </div>
               </div>
+                </>
+              )}
+              {/* 体温 */}
+              {(!visibleMeasurements || visibleMeasurements.includes('temperature')) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.temperature')}
@@ -577,6 +588,10 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">°C</span>
                 </div>
               </div>
+              )}
+              {/* 体重・体脂肪率 */}
+              {(!visibleMeasurements || visibleMeasurements.includes('weight_body_fat')) && (
+                <>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.weight')}
@@ -635,6 +650,10 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
                 </div>
               </div>
+                </>
+              )}
+              {/* 血糖値 */}
+              {(!visibleMeasurements || visibleMeasurements.includes('blood_glucose')) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.bloodGlucose')}
@@ -688,6 +707,9 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">mg/dL</span>
                 </div>
               </div>
+              )}
+              {/* 血中酸素濃度 */}
+              {(!visibleMeasurements || visibleMeasurements.includes('spo2')) && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('healthRecord.vitalForm.spo2')}
@@ -716,6 +738,7 @@ export default function PostForm({
                   <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
                 </div>
               </div>
+              )}
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.vitalForm.notes')}

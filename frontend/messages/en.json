@@ -1228,6 +1228,11 @@
       "meal": "Meal"
     },
     "addVital": "Record Vital",
+    "addBloodPressureHeartRate": "Blood Pressure & Heart Rate",
+    "addWeightBodyFat": "Weight & Body Fat",
+    "addBloodGlucose": "Blood Glucose",
+    "addSpO2": "SpO2",
+    "addTemperature": "Temperature",
     "addMeal": "Record Meal",
     "vitalPlaceholder": "Enter notes or comments (optional)",
     "mealPlaceholder": "Enter notes or comments (optional)",

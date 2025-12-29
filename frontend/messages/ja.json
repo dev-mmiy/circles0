@@ -1228,6 +1228,11 @@
       "meal": "食事"
     },
     "addVital": "バイタルを記録",
+    "addBloodPressureHeartRate": "血圧・心拍数",
+    "addWeightBodyFat": "体重・体脂肪率",
+    "addBloodGlucose": "血糖値",
+    "addSpO2": "血中酸素濃度",
+    "addTemperature": "体温",
     "addMeal": "食事を記録",
     "vitalPlaceholder": "メモやコメントを入力（任意）",
     "mealPlaceholder": "メモやコメントを入力（任意）",

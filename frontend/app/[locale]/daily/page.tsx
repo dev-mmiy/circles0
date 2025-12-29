@@ -23,6 +23,7 @@ export default function DailyPage() {
   const [recordType, setRecordType] = useState<RecordType>('all');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [formType, setFormType] = useState<'vital' | 'meal'>('vital');
+  const [visibleMeasurements, setVisibleMeasurements] = useState<('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[] | undefined>(undefined);
 
   // Unified data loader for daily records
   const {
@@ -80,8 +81,9 @@ export default function DailyPage() {
   }, [refresh]);
 
   // Open form modal with specific type
-  const openFormModal = (type: 'vital' | 'meal') => {
+  const openFormModal = (type: 'vital' | 'meal', measurements?: ('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[]) => {
     setFormType(type);
+    setVisibleMeasurements(measurements);
     setIsFormModalOpen(true);
   };
 
@@ -187,17 +189,49 @@ export default function DailyPage() {
             </div>
 
             {/* Add Record Buttons */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => openFormModal('vital')}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addVital')}</span>
-              </button>
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Vital Record Buttons */}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => openFormModal('vital', ['blood_pressure_heart_rate'])}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('addBloodPressureHeartRate')}</span>
+                </button>
+                <button
+                  onClick={() => openFormModal('vital', ['weight_body_fat'])}
+                  className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('addWeightBodyFat')}</span>
+                </button>
+                <button
+                  onClick={() => openFormModal('vital', ['blood_glucose'])}
+                  className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('addBloodGlucose')}</span>
+                </button>
+                <button
+                  onClick={() => openFormModal('vital', ['spo2'])}
+                  className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('addSpO2')}</span>
+                </button>
+                <button
+                  onClick={() => openFormModal('vital', ['temperature'])}
+                  className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>{t('addTemperature')}</span>
+                </button>
+              </div>
+              {/* Meal Record Button */}
               <button
                 onClick={() => openFormModal('meal')}
-                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span>{t('addMeal')}</span>
@@ -262,6 +296,7 @@ export default function DailyPage() {
             onPostCreated={handlePostCreated}
             initialPostType="health_record"
             initialHealthRecordType={formType}
+            visibleMeasurements={visibleMeasurements}
           />
         )}
       </div>
