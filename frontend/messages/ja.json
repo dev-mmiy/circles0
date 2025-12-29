@@ -1222,8 +1222,10 @@
       "vital": "バイタル",
       "meal": "食事"
     },
-    "addVital": "バイタルを追加",
-    "addMeal": "食事を追加",
+    "addVital": "バイタルを記録",
+    "addMeal": "食事を記録",
+    "vitalPlaceholder": "メモやコメントを入力（任意）",
+    "mealPlaceholder": "メモやコメントを入力（任意）",
     "noRecords": "記録がありません",
     "loading": "読み込み中...",
     "loadMore": "さらに読み込む",

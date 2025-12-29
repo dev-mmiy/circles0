@@ -1222,8 +1222,10 @@
       "vital": "Vital",
       "meal": "Meal"
     },
-    "addVital": "Add Vital",
-    "addMeal": "Add Meal",
+    "addVital": "Record Vital",
+    "addMeal": "Record Meal",
+    "vitalPlaceholder": "Enter notes or comments (optional)",
+    "mealPlaceholder": "Enter notes or comments (optional)",
     "noRecords": "No records found",
     "loading": "Loading...",
     "loadMore": "Load More",

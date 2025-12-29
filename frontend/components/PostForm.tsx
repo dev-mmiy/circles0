@@ -14,18 +14,26 @@ import { useDisease } from '@/contexts/DiseaseContext';
 interface PostFormProps {
   onPostCreated?: () => void | Promise<void>;
   placeholder?: string;
+  initialPostType?: 'regular' | 'health_record';
+  initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
+  hidePostTypeSelector?: boolean;
+  hideHealthRecordTypeSelector?: boolean;
 }
 
 export default function PostForm({
   onPostCreated,
   placeholder,
+  initialPostType = 'regular',
+  initialHealthRecordType,
+  hidePostTypeSelector = false,
+  hideHealthRecordTypeSelector = false,
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  const [postType, setPostType] = useState<'regular' | 'health_record'>('regular');
-  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(null);
+  const [postType, setPostType] = useState<'regular' | 'health_record'>(initialPostType);
+  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(initialHealthRecordType || null);
   const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>({});
   const [content, setContent] = useState('');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
@@ -223,44 +231,46 @@ export default function PostForm({
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow">
       <form onSubmit={handleSubmit}>
         {/* Post type selector */}
-        <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('postType.title')}
-          </label>
-          <div className="flex space-x-4">
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="postType"
-                value="regular"
-                checked={postType === 'regular'}
-                onChange={(e) => {
-                  setPostType('regular');
-                  setHealthRecordType(null);
-                  setHealthRecordData({});
-                }}
-                className="mr-2 text-blue-600 focus:ring-blue-500"
-                disabled={isSubmitting}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.regular')}</span>
+        {!hidePostTypeSelector && (
+          <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('postType.title')}
             </label>
-            <label className="flex items-center">
-              <input
-                type="radio"
-                name="postType"
-                value="health_record"
-                checked={postType === 'health_record'}
-                onChange={(e) => setPostType('health_record')}
-                className="mr-2 text-blue-600 focus:ring-blue-500"
-                disabled={isSubmitting}
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.healthRecord')}</span>
-            </label>
+            <div className="flex space-x-4">
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="postType"
+                  value="regular"
+                  checked={postType === 'regular'}
+                  onChange={(e) => {
+                    setPostType('regular');
+                    setHealthRecordType(null);
+                    setHealthRecordData({});
+                  }}
+                  className="mr-2 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.regular')}</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="radio"
+                  name="postType"
+                  value="health_record"
+                  checked={postType === 'health_record'}
+                  onChange={(e) => setPostType('health_record')}
+                  className="mr-2 text-blue-600 focus:ring-blue-500"
+                  disabled={isSubmitting}
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.healthRecord')}</span>
+              </label>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Health record type selector */}
-        {postType === 'health_record' && (
+        {postType === 'health_record' && !hideHealthRecordTypeSelector && (
           <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.title')}

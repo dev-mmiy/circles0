@@ -34,12 +34,25 @@ export default function PostFormModal({
   initialHealthRecordType,
 }: PostFormModalProps) {
   const t = useTranslations('postForm');
+  const tDaily = useTranslations('daily');
 
   const handlePostCreated = async () => {
     if (onPostCreated) {
       await onPostCreated();
     }
     onClose();
+  };
+
+  // Get modal title based on health record type
+  const getModalTitle = () => {
+    if (initialPostType === 'health_record' && initialHealthRecordType) {
+      if (initialHealthRecordType === 'vital') {
+        return tDaily('addVital');
+      } else if (initialHealthRecordType === 'meal') {
+        return tDaily('addMeal');
+      }
+    }
+    return t('title') || 'Create Post';
   };
 
   if (!isOpen) return null;
@@ -62,7 +75,7 @@ export default function PostFormModal({
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
               <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                {t('title') || 'Create Post'}
+                {getModalTitle()}
               </h2>
               <button
                 onClick={onClose}
@@ -89,9 +102,17 @@ export default function PostFormModal({
             <div className="p-4 sm:p-6">
               <PostForm
                 onPostCreated={handlePostCreated}
-                placeholder={t('placeholder')}
+                placeholder={
+                  initialPostType === 'health_record' && initialHealthRecordType === 'vital'
+                    ? tDaily('vitalPlaceholder') || t('placeholder')
+                    : initialPostType === 'health_record' && initialHealthRecordType === 'meal'
+                    ? tDaily('mealPlaceholder') || t('placeholder')
+                    : t('placeholder')
+                }
                 initialPostType={initialPostType}
                 initialHealthRecordType={initialHealthRecordType}
+                hidePostTypeSelector={initialPostType === 'health_record'}
+                hideHealthRecordTypeSelector={initialPostType === 'health_record' && !!initialHealthRecordType}
               />
             </div>
           </div>
