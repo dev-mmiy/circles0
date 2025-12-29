@@ -607,6 +607,11 @@ async def get_user_posts(
     limit: int = Query(
         20, ge=1, le=100, description="Maximum number of posts to return"
     ),
+    health_record_type: Optional[str] = Query(
+        None,
+        pattern="^(diary|symptom|vital|meal|medication|exercise)$",
+        description="Filter by health record type (only for health records)"
+    ),
     db: Session = Depends(get_db),
     current_user: Optional[dict] = Depends(get_current_user_optional),
 ):
@@ -617,10 +622,12 @@ async def get_user_posts(
     - User viewing their own posts: all posts visible
     - Authenticated user: public and followers-only posts
     - Unauthenticated user: only public posts
+    
+    Can filter by health_record_type to get specific health record types.
     """
     current_user_id = get_user_id_from_token(db, current_user) if current_user else None
 
-    posts = PostService.get_user_posts(db, user_id, current_user_id, skip, limit)
+    posts = PostService.get_user_posts(db, user_id, current_user_id, skip, limit, health_record_type)
 
     # Optimize: Pre-fetch all counts, likes, hashtags, and mentions in bulk
     post_ids = [post.id for post in posts]

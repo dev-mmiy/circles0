@@ -263,9 +263,16 @@ export async function getUserPosts(
   userId: string,
   skip: number = 0,
   limit: number = 20,
+  healthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise',
   accessToken?: string // Kept for backward compatibility, but not used (apiClient handles auth)
 ): Promise<Post[]> {
-  const url = `/api/v1/posts/user/${userId}?skip=${skip}&limit=${limit}`;
+  const queryParams = new URLSearchParams();
+  queryParams.append('skip', skip.toString());
+  queryParams.append('limit', limit.toString());
+  if (healthRecordType) {
+    queryParams.append('health_record_type', healthRecordType);
+  }
+  const url = `/api/v1/posts/user/${userId}?${queryParams.toString()}`;
   const fullURL = `${apiClient.defaults.baseURL}${url}`;
   
   console.log('[getUserPosts] API call:', {

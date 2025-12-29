@@ -17,7 +17,8 @@
     "logout": "ログアウト",
     "openMenu": "メニューを開く",
     "closeMenu": "メニューを閉じる",
-    "signUp": "会員登録"
+    "signUp": "会員登録",
+    "daily": "日々の記録"
   },
   "buttons": {
     "save": "保存",
@@ -1207,5 +1208,27 @@
     "errors": {
       "loadFailed": "投稿の読み込みに失敗しました"
     }
+  },
+  "daily": {
+    "title": "日々の記録",
+    "subtitle": "バイタルと食事の記録を管理します",
+    "authRequired": "このページを表示するにはログインが必要です",
+    "viewMode": {
+      "list": "リスト",
+      "calendar": "カレンダー"
+    },
+    "filter": {
+      "all": "すべて",
+      "vital": "バイタル",
+      "meal": "食事"
+    },
+    "addVital": "バイタルを追加",
+    "addMeal": "食事を追加",
+    "noRecords": "記録がありません",
+    "loading": "読み込み中...",
+    "loadMore": "さらに読み込む",
+    "calendarComingSoon": "カレンダー表示は準備中です",
+    "vital": "バイタル",
+    "meal": "食事"
   }
 }

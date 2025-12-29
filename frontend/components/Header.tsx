@@ -177,6 +177,22 @@ export default function Header() {
               </Link>
 
               <Link
+                href="/daily"
+                className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors ${
+                  pathname.startsWith('/daily')
+                    ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                    : 'text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700'
+                }`}
+                aria-label={t('daily')}
+                title={t('daily')}
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <span className="text-xs font-medium">{t('daily')}</span>
+              </Link>
+
+              <Link
                 href="/messages"
                 className={`flex flex-col items-center gap-1 p-2 rounded-lg transition-colors relative ${
                   pathname.startsWith('/messages')
@@ -257,6 +273,16 @@ export default function Header() {
               >
                 <Search className="w-5 h-5" />
                 {t('userSearch')}
+              </Link>
+              <Link
+                href="/daily"
+                onClick={handleMobileMenuClose}
+                className="px-4 py-3 flex items-center gap-3 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 hover:text-gray-900 dark:hover:text-gray-100 font-medium transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                {t('daily')}
               </Link>
 
               <Link

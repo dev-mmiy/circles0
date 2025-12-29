@@ -22,12 +22,16 @@ interface PostFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPostCreated?: () => void | Promise<void>;
+  initialPostType?: 'regular' | 'health_record';
+  initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
 }
 
 export default function PostFormModal({
   isOpen,
   onClose,
   onPostCreated,
+  initialPostType = 'regular',
+  initialHealthRecordType,
 }: PostFormModalProps) {
   const t = useTranslations('postForm');
 
@@ -86,6 +90,8 @@ export default function PostFormModal({
               <PostForm
                 onPostCreated={handlePostCreated}
                 placeholder={t('placeholder')}
+                initialPostType={initialPostType}
+                initialHealthRecordType={initialHealthRecordType}
               />
             </div>
           </div>

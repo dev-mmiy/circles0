@@ -167,8 +167,13 @@ class PostService:
         current_user_id: Optional[UUID] = None,
         skip: int = 0,
         limit: int = 20,
+        health_record_type: Optional[str] = None,
     ) -> List[Post]:
-        """Get posts by a specific user, respecting visibility settings."""
+        """Get posts by a specific user, respecting visibility settings.
+        
+        Args:
+            health_record_type: Optional filter by health record type (e.g., 'vital', 'meal')
+        """
         # Optimize: Only load user and images (likes/comments counts are fetched separately)
         query = (
             db.query(Post)
@@ -178,6 +183,13 @@ class PostService:
             )
             .filter(Post.user_id == user_id, Post.is_active == True)
         )
+        
+        # Filter by health record type if specified
+        if health_record_type:
+            query = query.filter(
+                Post.post_type == "health_record",
+                Post.health_record_type == health_record_type
+            )
 
         # Visibility filtering
         if current_user_id == user_id:

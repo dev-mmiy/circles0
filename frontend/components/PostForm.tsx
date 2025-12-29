@@ -266,7 +266,7 @@ export default function PostForm({
               {t('healthRecord.title')}
             </label>
             <div className="flex flex-wrap gap-2">
-              {(['diary', 'symptom', 'vital', 'meal'] as const).map((type) => (
+              {(['diary', 'symptom'] as const).map((type) => (
                 <button
                   key={type}
                   type="button"

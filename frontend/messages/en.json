@@ -17,7 +17,8 @@
     "logout": "Logout",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "signUp": "Sign Up"
+    "signUp": "Sign Up",
+    "daily": "Daily Records"
   },
   "buttons": {
     "save": "Save",
@@ -1207,5 +1208,27 @@
     "errors": {
       "loadFailed": "Failed to load posts"
     }
+  },
+  "daily": {
+    "title": "Daily Records",
+    "subtitle": "Manage your vital signs and meal records",
+    "authRequired": "Please log in to view this page",
+    "viewMode": {
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "filter": {
+      "all": "All",
+      "vital": "Vital",
+      "meal": "Meal"
+    },
+    "addVital": "Add Vital",
+    "addMeal": "Add Meal",
+    "noRecords": "No records found",
+    "loading": "Loading...",
+    "loadMore": "Load More",
+    "calendarComingSoon": "Calendar view coming soon",
+    "vital": "Vital",
+    "meal": "Meal"
   }
 }
