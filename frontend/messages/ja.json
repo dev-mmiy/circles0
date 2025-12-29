@@ -1216,7 +1216,8 @@
   },
   "daily": {
     "title": "日々の記録",
-    "subtitle": "バイタルと食事の記録を管理します",
+    "subtitle": "バイタル記録を管理します",
+    "subtitleVital": "バイタル記録を管理します",
     "authRequired": "このページを表示するにはログインが必要です",
     "viewMode": {
       "list": "リスト",
@@ -1242,5 +1243,19 @@
     "calendarComingSoon": "カレンダー表示は準備中です",
     "vital": "バイタル",
     "meal": "食事"
+  },
+  "meal": {
+    "title": "食事記録",
+    "subtitle": "食事の記録を管理します",
+    "authRequired": "このページを表示するにはログインが必要です",
+    "viewMode": {
+      "list": "リスト",
+      "calendar": "カレンダー"
+    },
+    "addMeal": "食事を記録",
+    "noRecords": "記録がありません",
+    "loading": "読み込み中...",
+    "loadMore": "さらに読み込む",
+    "calendarComingSoon": "カレンダー表示は準備中です"
   }
 }

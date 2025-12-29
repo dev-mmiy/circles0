@@ -1216,7 +1216,8 @@
   },
   "daily": {
     "title": "Daily Records",
-    "subtitle": "Manage your vital signs and meal records",
+    "subtitle": "Manage your vital signs",
+    "subtitleVital": "Manage your vital signs",
     "authRequired": "Please log in to view this page",
     "viewMode": {
       "list": "List",
@@ -1242,5 +1243,19 @@
     "calendarComingSoon": "Calendar view coming soon",
     "vital": "Vital",
     "meal": "Meal"
+  },
+  "meal": {
+    "title": "Meal Records",
+    "subtitle": "Manage your meal records",
+    "authRequired": "Please log in to view this page",
+    "viewMode": {
+      "list": "List",
+      "calendar": "Calendar"
+    },
+    "addMeal": "Record Meal",
+    "noRecords": "No records found",
+    "loading": "Loading...",
+    "loadMore": "Load More",
+    "calendarComingSoon": "Calendar view coming soon"
   }
 }

@@ -14,15 +14,14 @@ import PostCard from '@/components/PostCard';
 
 type ViewMode = 'calendar' | 'list';
 
-export default function DailyPage() {
+export default function MealPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user } = useUser();
-  const t = useTranslations('daily');
+  const t = useTranslations('meal');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [visibleMeasurements, setVisibleMeasurements] = useState<('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[] | undefined>(undefined);
 
-  // Unified data loader for daily records
+  // Data loader for meal records
   const {
     items: records = [],
     isLoading,
@@ -36,21 +35,21 @@ export default function DailyPage() {
     retry,
     clearError,
   } = useDataLoader<Post>({
-      loadFn: useCallback(async (skip, limit) => {
+    loadFn: useCallback(async (skip, limit) => {
       if (!isAuthenticated || !user) {
         throw new Error('Authentication required');
       }
       const token = await getAccessTokenSilently();
       
-      // Load only vital records
-      const items = await getUserPosts(user.id, skip, limit, 'vital', token);
+      // Load only meal records
+      const items = await getUserPosts(user.id, skip, limit, 'meal', token);
       
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
     limit: 20,
   });
 
-  // Load records when component mounts or filters change
+  // Load records when component mounts
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
       load();
@@ -62,12 +61,6 @@ export default function DailyPage() {
     refresh();
     setIsFormModalOpen(false);
   }, [refresh]);
-
-  // Open form modal with specific measurements
-  const openFormModal = (measurements?: ('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[]) => {
-    setVisibleMeasurements(measurements);
-    setIsFormModalOpen(true);
-  };
 
   if (authLoading) {
     return (
@@ -104,7 +97,7 @@ export default function DailyPage() {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
             {t('title')}
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">{t('subtitleVital')}</p>
+          <p className="text-gray-600 dark:text-gray-400">{t('subtitle')}</p>
         </div>
 
         {/* Toolbar */}
@@ -136,44 +129,14 @@ export default function DailyPage() {
               </button>
             </div>
 
-            {/* Add Record Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => openFormModal(['blood_pressure_heart_rate'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addBloodPressureHeartRate')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['weight_body_fat'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addWeightBodyFat')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['blood_glucose'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addBloodGlucose')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['spo2'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addSpO2')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['temperature'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addTemperature')}</span>
-              </button>
-            </div>
+            {/* Add Meal Button */}
+            <button
+              onClick={() => setIsFormModalOpen(true)}
+              className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{t('addMeal')}</span>
+            </button>
           </div>
         </div>
 
@@ -232,8 +195,7 @@ export default function DailyPage() {
             onClose={() => setIsFormModalOpen(false)}
             onPostCreated={handlePostCreated}
             initialPostType="health_record"
-            initialHealthRecordType="vital"
-            visibleMeasurements={visibleMeasurements}
+            initialHealthRecordType="meal"
           />
         )}
       </div>
