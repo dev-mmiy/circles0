@@ -245,7 +245,7 @@ export default function VitalRecordCard({
                 {t('bloodGlucose')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
-                {bloodGlucose.value} mg/dL {bloodGlucose.timing && `(${bloodGlucose.timing === 'fasting' ? t('bloodGlucoseFasting') : t('bloodGlucosePostprandial')})`}
+                {bloodGlucose.value} mg/dL{bloodGlucose.timing && ` (${bloodGlucose.timing === 'fasting' ? t('bloodGlucoseFasting') : t('bloodGlucosePostprandial')})`}
               </span>
             </div>
           )}
