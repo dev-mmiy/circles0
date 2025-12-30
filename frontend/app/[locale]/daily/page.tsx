@@ -59,10 +59,24 @@ export default function DailyPage() {
   }, [isAuthenticated, user, authLoading, load]);
 
   // Handle form submission
-  const handlePostCreated = useCallback(() => {
-    refresh();
+  const handlePostCreated = useCallback(async () => {
     setIsFormModalOpen(false);
-  }, [refresh]);
+    // Wait a bit for modal to close, then refresh
+    // Also ensure authentication is ready before refreshing
+    setTimeout(async () => {
+      if (isAuthenticated && user && !authLoading) {
+        try {
+          await refresh();
+        } catch (error) {
+          // If refresh fails, try load instead
+          console.warn('[DailyPage] Refresh failed, trying load:', error);
+          if (isAuthenticated && user) {
+            await load();
+          }
+        }
+      }
+    }, 300);
+  }, [refresh, load, isAuthenticated, user, authLoading]);
 
   // Open form modal with specific measurements
   const openFormModal = (measurements?: ('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[]) => {
