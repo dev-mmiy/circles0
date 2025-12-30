@@ -16,8 +16,36 @@ from app.schemas.body_fat_record import (
     BodyFatRecordUpdate,
 )
 from app.services.body_fat_record_service import BodyFatRecordService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter(prefix="/body-fat-records", tags=["body-fat-records"])
+
+
+def get_user_id_from_token(db: Session, current_user: dict) -> UUID:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database
+
+    Raises:
+        HTTPException: If user not found
+    """
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return user.id
 
 
 @router.post(
@@ -32,7 +60,7 @@ async def create_body_fat_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Create a new body fat percentage record for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BodyFatRecordService.create_record(db, user_id, record_data)
     return record
 
@@ -49,7 +77,7 @@ async def get_my_body_fat_records(
     current_user: dict = Depends(get_current_user),
 ):
     """Get body fat percentage records for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     records = BodyFatRecordService.get_user_records(db, user_id, skip, limit)
     return records
 
@@ -65,7 +93,7 @@ async def get_body_fat_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Get a specific body fat percentage record by ID."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BodyFatRecordService.get_record_by_id(db, record_id, user_id)
     if not record:
         raise HTTPException(
@@ -87,7 +115,7 @@ async def update_body_fat_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Update a body fat percentage record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BodyFatRecordService.update_record(db, record_id, user_id, record_data)
     if not record:
         raise HTTPException(
@@ -108,7 +136,7 @@ async def delete_body_fat_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Delete a body fat percentage record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     success = BodyFatRecordService.delete_record(db, record_id, user_id)
     if not success:
         raise HTTPException(

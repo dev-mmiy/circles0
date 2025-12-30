@@ -16,8 +16,36 @@ from app.schemas.temperature_record import (
     TemperatureRecordUpdate,
 )
 from app.services.temperature_record_service import TemperatureRecordService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter(prefix="/temperature-records", tags=["temperature-records"])
+
+
+def get_user_id_from_token(db: Session, current_user: dict) -> UUID:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database
+
+    Raises:
+        HTTPException: If user not found
+    """
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return user.id
 
 
 @router.post(
@@ -32,7 +60,7 @@ async def create_temperature_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Create a new temperature record for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = TemperatureRecordService.create_record(db, user_id, record_data)
     return record
 
@@ -49,7 +77,7 @@ async def get_my_temperature_records(
     current_user: dict = Depends(get_current_user),
 ):
     """Get temperature records for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     records = TemperatureRecordService.get_user_records(db, user_id, skip, limit)
     return records
 
@@ -65,7 +93,7 @@ async def get_temperature_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Get a specific temperature record by ID."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = TemperatureRecordService.get_record_by_id(db, record_id, user_id)
     if not record:
         raise HTTPException(
@@ -87,7 +115,7 @@ async def update_temperature_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Update a temperature record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = TemperatureRecordService.update_record(db, record_id, user_id, record_data)
     if not record:
         raise HTTPException(
@@ -108,7 +136,7 @@ async def delete_temperature_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Delete a temperature record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     success = TemperatureRecordService.delete_record(db, record_id, user_id)
     if not success:
         raise HTTPException(
