@@ -38,16 +38,44 @@ export default function PostForm({
   const t = useTranslations('postForm');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  const [postType, setPostType] = useState<'regular' | 'health_record'>(initialPostType);
-  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(initialHealthRecordType || null);
-  const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>({});
-  const [content, setContent] = useState('');
-  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
-    'public'
+  
+  // Initialize healthRecordData, converting recorded_at from ISO to datetime-local format if needed
+  const initializeHealthRecordData = (): Record<string, any> => {
+    if (!editingPost?.health_record_data) return {};
+    const data = { ...editingPost.health_record_data };
+    if (data.recorded_at && typeof data.recorded_at === 'string' && data.recorded_at.includes('T')) {
+      // Convert ISO string to datetime-local format
+      const date = new Date(data.recorded_at);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    return data;
+  };
+  
+  const [postType, setPostType] = useState<'regular' | 'health_record'>(
+    editingPost?.post_type || initialPostType
   );
-  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(null);
-  const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<{ url: string; file?: File }[]>([]);
+  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(
+    editingPost?.health_record_type || initialHealthRecordType || null
+  );
+  const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>(initializeHealthRecordData());
+  const [content, setContent] = useState(editingPost?.content || '');
+  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
+    (editingPost?.visibility as 'public' | 'followers_only' | 'private') || 'public'
+  );
+  const [selectedDiseaseId, setSelectedDiseaseId] = useState<number | null>(
+    editingPost?.user_disease?.id || null
+  );
+  const [imageUrls, setImageUrls] = useState<string[]>(
+    editingPost?.images?.map(img => img.image_url) || []
+  );
+  const [imagePreviews, setImagePreviews] = useState<{ url: string; file?: File }[]>(
+    editingPost?.images?.map(img => ({ url: img.image_url })) || []
+  );
   const [uploadingImages, setUploadingImages] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -182,14 +210,14 @@ export default function PostForm({
     // For health records, content is optional (stored in healthRecordData.notes instead)
     // For regular posts, content is required
     if (postType !== 'health_record') {
-      if (!content.trim()) {
-        setError(t('errors.contentRequired'));
-        return;
-      }
+    if (!content.trim()) {
+      setError(t('errors.contentRequired'));
+      return;
+    }
 
-      if (content.length > 5000) {
-        setError(t('errors.contentTooLong'));
-        return;
+    if (content.length > 5000) {
+      setError(t('errors.contentTooLong'));
+      return;
       }
     }
 
@@ -1200,27 +1228,27 @@ export default function PostForm({
 
         {/* Textarea for post content - Hide for health records (they use notes field instead) */}
         {!(postType === 'health_record') && (
-          <div className="relative">
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              placeholder={placeholder || t('placeholder')}
-              className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              rows={4}
-              maxLength={5000}
-              disabled={isSubmitting}
-            />
-            {/* Character count in bottom right */}
-            <div className="absolute bottom-2 right-2">
-              <span
-                className={`text-xs ${
-                  content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                {content.length} / 5000
-              </span>
-            </div>
+        <div className="relative">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder={placeholder || t('placeholder')}
+            className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            rows={4}
+            maxLength={5000}
+            disabled={isSubmitting}
+          />
+          {/* Character count in bottom right */}
+          <div className="absolute bottom-2 right-2">
+            <span
+              className={`text-xs ${
+                content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
+              {content.length} / 5000
+            </span>
           </div>
+        </div>
         )}
 
         {/* Detected hashtags */}
@@ -1259,10 +1287,10 @@ export default function PostForm({
 
         {/* Images - Hide for vital records */}
         {!(postType === 'health_record' && healthRecordType === 'vital') && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('imagesLabel')} ({imageUrls.length}/10)
-            </label>
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('imagesLabel')} ({imageUrls.length}/10)
+          </label>
           
           {/* Image previews */}
           {imagePreviews.length > 0 && (
@@ -1335,7 +1363,7 @@ export default function PostForm({
               </label>
             </div>
           )}
-          </div>
+        </div>
         )}
 
         {/* Disease selector */}
@@ -1389,19 +1417,19 @@ export default function PostForm({
                     {t('visibilityDescription.shareDescription')}
                   </div>
                   {visibility !== 'private' && (
-                    <select
-                      value={visibility}
-                      onChange={(e) =>
-                        setVisibility(
+            <select
+              value={visibility}
+              onChange={(e) =>
+                setVisibility(
                           e.target.value as 'public' | 'followers_only'
-                        )
-                      }
+                )
+              }
                       className="mt-2 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      disabled={isSubmitting}
-                    >
-                      <option value="public">{t('visibility.public')}</option>
-                      <option value="followers_only">{t('visibility.followersOnly')}</option>
-                    </select>
+              disabled={isSubmitting}
+            >
+              <option value="public">{t('visibility.public')}</option>
+              <option value="followers_only">{t('visibility.followersOnly')}</option>
+            </select>
                   )}
                 </div>
               </label>
@@ -1433,23 +1461,23 @@ export default function PostForm({
 
           <div className="flex items-center justify-end">
 
-            <button
-              type="submit"
+          <button
+            type="submit"
               disabled={
                 isSubmitting || 
                 (postType !== 'health_record' && !content.trim()) || 
                 (postType === 'health_record' && !healthRecordType)
               }
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                 isSubmitting || 
                 (postType !== 'health_record' && !content.trim()) || 
                 (postType === 'health_record' && !healthRecordType)
-                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {isSubmitting ? t('submitting') : t('submit')}
-            </button>
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isSubmitting ? t('submitting') : t('submit')}
+          </button>
           </div>
         </div>
 
