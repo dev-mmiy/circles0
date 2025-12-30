@@ -34,6 +34,8 @@ from app.api.posts import router as posts_router
 from app.api.users import router as users_router
 from app.api.vital_records import router as vital_records_router
 from app.api.meal_records import router as meal_records_router
+from app.api.blood_pressure_records import router as blood_pressure_records_router
+from app.api.heart_rate_records import router as heart_rate_records_router
 
 # Try to import push subscriptions router (optional - requires pywebpush)
 try:
@@ -317,6 +319,8 @@ app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"]
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
 app.include_router(vital_records_router, prefix="/api/v1", tags=["vital-records"])
 app.include_router(meal_records_router, prefix="/api/v1", tags=["meal-records"])
+app.include_router(blood_pressure_records_router, prefix="/api/v1", tags=["blood-pressure-records"])
+app.include_router(heart_rate_records_router, prefix="/api/v1", tags=["heart-rate-records"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(blocks_router, prefix="/api/v1", tags=["blocks"])
 app.include_router(groups_router, prefix="/api/v1", tags=["groups"])
