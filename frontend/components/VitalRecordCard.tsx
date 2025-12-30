@@ -8,12 +8,37 @@ import { ja } from 'date-fns/locale';
 import { Edit2, Trash2 } from 'lucide-react';
 import { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import { HeartRateRecord } from '@/lib/api/heartRateRecords';
+import { TemperatureRecord } from '@/lib/api/temperatureRecords';
+import { WeightRecord } from '@/lib/api/weightRecords';
+import { BodyFatRecord } from '@/lib/api/bodyFatRecords';
+import { BloodGlucoseRecord } from '@/lib/api/bloodGlucoseRecords';
+import { SpO2Record } from '@/lib/api/spo2Records';
 import { deleteBloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import { deleteHeartRateRecord } from '@/lib/api/heartRateRecords';
-import BloodPressureHeartRateForm from './BloodPressureHeartRateForm';
+import { deleteTemperatureRecord } from '@/lib/api/temperatureRecords';
+import { deleteWeightRecord } from '@/lib/api/weightRecords';
+import { deleteBodyFatRecord } from '@/lib/api/bodyFatRecords';
+import { deleteBloodGlucoseRecord } from '@/lib/api/bloodGlucoseRecords';
+import { deleteSpO2Record } from '@/lib/api/spo2Records';
 import dynamic from 'next/dynamic';
 
 const BloodPressureHeartRateFormModal = dynamic(() => import('./BloodPressureHeartRateFormModal'), {
+  loading: () => null,
+  ssr: false,
+});
+const TemperatureFormModal = dynamic(() => import('./TemperatureFormModal'), {
+  loading: () => null,
+  ssr: false,
+});
+const WeightBodyFatFormModal = dynamic(() => import('./WeightBodyFatFormModal'), {
+  loading: () => null,
+  ssr: false,
+});
+const BloodGlucoseFormModal = dynamic(() => import('./BloodGlucoseFormModal'), {
+  loading: () => null,
+  ssr: false,
+});
+const SpO2FormModal = dynamic(() => import('./SpO2FormModal'), {
   loading: () => null,
   ssr: false,
 });
@@ -21,6 +46,11 @@ const BloodPressureHeartRateFormModal = dynamic(() => import('./BloodPressureHea
 interface VitalRecordCardProps {
   bloodPressure?: BloodPressureRecord;
   heartRate?: HeartRateRecord;
+  temperature?: TemperatureRecord;
+  weight?: WeightRecord;
+  bodyFat?: BodyFatRecord;
+  bloodGlucose?: BloodGlucoseRecord;
+  spo2?: SpO2Record;
   onRecordUpdated?: () => void;
   onRecordDeleted?: () => void;
 }
@@ -28,12 +58,18 @@ interface VitalRecordCardProps {
 export default function VitalRecordCard({
   bloodPressure,
   heartRate,
+  temperature,
+  weight,
+  bodyFat,
+  bloodGlucose,
+  spo2,
   onRecordUpdated,
   onRecordDeleted,
 }: VitalRecordCardProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm.healthRecord.vitalForm');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editModalType, setEditModalType] = useState<'bp_hr' | 'temp' | 'weight_fat' | 'bg' | 'spo2' | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -45,12 +81,30 @@ export default function VitalRecordCard({
     try {
       const accessToken = await getAccessTokenSilently();
       
+      const deletePromises: Promise<void>[] = [];
       if (bloodPressure) {
-        await deleteBloodPressureRecord(bloodPressure.id, accessToken);
+        deletePromises.push(deleteBloodPressureRecord(bloodPressure.id, accessToken));
       }
       if (heartRate) {
-        await deleteHeartRateRecord(heartRate.id, accessToken);
+        deletePromises.push(deleteHeartRateRecord(heartRate.id, accessToken));
       }
+      if (temperature) {
+        deletePromises.push(deleteTemperatureRecord(temperature.id, accessToken));
+      }
+      if (weight) {
+        deletePromises.push(deleteWeightRecord(weight.id, accessToken));
+      }
+      if (bodyFat) {
+        deletePromises.push(deleteBodyFatRecord(bodyFat.id, accessToken));
+      }
+      if (bloodGlucose) {
+        deletePromises.push(deleteBloodGlucoseRecord(bloodGlucose.id, accessToken));
+      }
+      if (spo2) {
+        deletePromises.push(deleteSpO2Record(spo2.id, accessToken));
+      }
+
+      await Promise.all(deletePromises);
 
       if (onRecordDeleted) {
         onRecordDeleted();
@@ -64,18 +118,42 @@ export default function VitalRecordCard({
   };
 
   const handleEdit = () => {
+    // Determine which modal to open based on available records
+    if (bloodPressure || heartRate) {
+      setEditModalType('bp_hr');
+    } else if (temperature) {
+      setEditModalType('temp');
+    } else if (weight || bodyFat) {
+      setEditModalType('weight_fat');
+    } else if (bloodGlucose) {
+      setEditModalType('bg');
+    } else if (spo2) {
+      setEditModalType('spo2');
+    }
     setIsEditModalOpen(true);
   };
 
   const handleRecordUpdated = () => {
     setIsEditModalOpen(false);
+    setEditModalType(null);
     if (onRecordUpdated) {
       onRecordUpdated();
     }
   };
 
-  const recordedAt = bloodPressure?.recorded_at || heartRate?.recorded_at;
+  const recordedAt = bloodPressure?.recorded_at || heartRate?.recorded_at || temperature?.recorded_at || 
+                      weight?.recorded_at || bodyFat?.recorded_at || bloodGlucose?.recorded_at || spo2?.recorded_at;
   const displayDate = recordedAt ? format(new Date(recordedAt), 'yyyy年MM月dd日 HH:mm', { locale: ja }) : '';
+  
+  const allNotes = [
+    bloodPressure?.notes,
+    heartRate?.notes,
+    temperature?.notes,
+    weight?.notes,
+    bodyFat?.notes,
+    bloodGlucose?.notes,
+    spo2?.notes,
+  ].filter(Boolean);
 
   return (
     <>
@@ -128,23 +206,126 @@ export default function VitalRecordCard({
             </div>
           )}
 
-          {(bloodPressure?.notes || heartRate?.notes) && (
+          {temperature && (
+            <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('temperature')}:
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                {temperature.value} {temperature.unit === 'celsius' ? '°C' : '°F'}
+              </span>
+            </div>
+          )}
+
+          {weight && (
+            <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('weight')}:
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                {weight.value} {weight.unit}
+              </span>
+            </div>
+          )}
+
+          {bodyFat && (
+            <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('bodyFatPercentage')}:
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                {bodyFat.percentage}%
+              </span>
+            </div>
+          )}
+
+          {bloodGlucose && (
+            <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('bloodGlucose')}:
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                {bloodGlucose.value} mg/dL {bloodGlucose.timing && `(${bloodGlucose.timing === 'fasting' ? t('bloodGlucoseFasting') : t('bloodGlucosePostprandial')})`}
+              </span>
+            </div>
+          )}
+
+          {spo2 && (
+            <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {t('spo2')}:
+              </span>
+              <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
+                {spo2.percentage}%
+              </span>
+            </div>
+          )}
+
+          {allNotes.length > 0 && (
             <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                {bloodPressure?.notes || heartRate?.notes}
+                {allNotes.join(' / ')}
               </p>
             </div>
           )}
         </div>
       </div>
 
-      {isEditModalOpen && (
+      {isEditModalOpen && editModalType === 'bp_hr' && (
         <BloodPressureHeartRateFormModal
           isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditModalType(null);
+          }}
           onRecordCreated={handleRecordUpdated}
           editingBloodPressure={bloodPressure}
           editingHeartRate={heartRate}
+        />
+      )}
+      {isEditModalOpen && editModalType === 'temp' && (
+        <TemperatureFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditModalType(null);
+          }}
+          onRecordCreated={handleRecordUpdated}
+          editingRecord={temperature}
+        />
+      )}
+      {isEditModalOpen && editModalType === 'weight_fat' && (
+        <WeightBodyFatFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditModalType(null);
+          }}
+          onRecordCreated={handleRecordUpdated}
+          editingWeight={weight}
+          editingBodyFat={bodyFat}
+        />
+      )}
+      {isEditModalOpen && editModalType === 'bg' && (
+        <BloodGlucoseFormModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditModalType(null);
+          }}
+          onRecordCreated={handleRecordUpdated}
+          editingRecord={bloodGlucose}
+        />
+      )}
+      {isEditModalOpen && editModalType === 'spo2' && (
+        <SpO2FormModal
+          isOpen={isEditModalOpen}
+          onClose={() => {
+            setIsEditModalOpen(false);
+            setEditModalType(null);
+          }}
+          onRecordCreated={handleRecordUpdated}
+          editingRecord={spo2}
         />
       )}
     </>

@@ -7,6 +7,11 @@ import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { getBloodPressureRecords, type BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import { getHeartRateRecords, type HeartRateRecord } from '@/lib/api/heartRateRecords';
+import { getTemperatureRecords, type TemperatureRecord } from '@/lib/api/temperatureRecords';
+import { getWeightRecords, type WeightRecord } from '@/lib/api/weightRecords';
+import { getBodyFatRecords, type BodyFatRecord } from '@/lib/api/bodyFatRecords';
+import { getBloodGlucoseRecords, type BloodGlucoseRecord } from '@/lib/api/bloodGlucoseRecords';
+import { getSpO2Records, type SpO2Record } from '@/lib/api/spo2Records';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
@@ -24,6 +29,11 @@ interface VitalRecordGroup {
   recordedAt: string;
   bloodPressure?: BloodPressureRecord;
   heartRate?: HeartRateRecord;
+  temperature?: TemperatureRecord;
+  weight?: WeightRecord;
+  bodyFat?: BodyFatRecord;
+  bloodGlucose?: BloodGlucoseRecord;
+  spo2?: SpO2Record;
 }
 
 export default function DailyPage() {
@@ -70,6 +80,96 @@ export default function DailyPage() {
     autoLoad: false,
   });
 
+  // Load temperature records
+  const {
+    items: temperatureRecords = [],
+    isLoading: isLoadingTemp,
+    refresh: refreshTemp,
+  } = useDataLoader<TemperatureRecord>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getTemperatureRecords(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100,
+    autoLoad: false,
+  });
+
+  // Load weight records
+  const {
+    items: weightRecords = [],
+    isLoading: isLoadingWeight,
+    refresh: refreshWeight,
+  } = useDataLoader<WeightRecord>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getWeightRecords(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100,
+    autoLoad: false,
+  });
+
+  // Load body fat records
+  const {
+    items: bodyFatRecords = [],
+    isLoading: isLoadingBodyFat,
+    refresh: refreshBodyFat,
+  } = useDataLoader<BodyFatRecord>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getBodyFatRecords(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100,
+    autoLoad: false,
+  });
+
+  // Load blood glucose records
+  const {
+    items: bloodGlucoseRecords = [],
+    isLoading: isLoadingBG,
+    refresh: refreshBG,
+  } = useDataLoader<BloodGlucoseRecord>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getBloodGlucoseRecords(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100,
+    autoLoad: false,
+  });
+
+  // Load SpO2 records
+  const {
+    items: spo2Records = [],
+    isLoading: isLoadingSpO2,
+    refresh: refreshSpO2,
+  } = useDataLoader<SpO2Record>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getSpO2Records(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100,
+    autoLoad: false,
+  });
+
   // Group records by recorded_at (same timestamp = same session)
   const groupedRecords = useMemo(() => {
     const groups: Map<string, VitalRecordGroup> = new Map();
@@ -92,24 +192,74 @@ export default function DailyPage() {
       groups.get(key)!.heartRate = record;
     });
 
+    // Add temperature records
+    temperatureRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.temperature = record;
+    });
+
+    // Add weight records
+    weightRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.weight = record;
+    });
+
+    // Add body fat records
+    bodyFatRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.bodyFat = record;
+    });
+
+    // Add blood glucose records
+    bloodGlucoseRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.bloodGlucose = record;
+    });
+
+    // Add SpO2 records
+    spo2Records.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.spo2 = record;
+    });
+
     // Sort by recorded_at descending
     return Array.from(groups.values()).sort((a, b) => 
       new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
     );
-  }, [bloodPressureRecords, heartRateRecords]);
+  }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
 
-  const isLoading = isLoadingBP || isLoadingHR;
+  const isLoading = isLoadingBP || isLoadingHR || isLoadingTemp || isLoadingWeight || isLoadingBodyFat || isLoadingBG || isLoadingSpO2;
   const records = groupedRecords;
 
   // Load records when component mounts
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
-      // Load both blood pressure and heart rate records
+      // Load all vital records
       const loadAll = async () => {
         try {
           await Promise.all([
             refreshBP(),
             refreshHR(),
+            refreshTemp(),
+            refreshWeight(),
+            refreshBodyFat(),
+            refreshBG(),
+            refreshSpO2(),
           ]);
         } catch (error) {
           console.error('[DailyPage] Failed to load records:', error);
@@ -117,7 +267,7 @@ export default function DailyPage() {
       };
       loadAll();
     }
-  }, [isAuthenticated, user, authLoading, refreshBP, refreshHR]);
+  }, [isAuthenticated, user, authLoading, refreshBP, refreshHR, refreshTemp, refreshWeight, refreshBodyFat, refreshBG, refreshSpO2]);
 
   // Handle form submission
   const handleRecordCreated = useCallback(async () => {
@@ -126,13 +276,21 @@ export default function DailyPage() {
     setTimeout(async () => {
       if (isAuthenticated && user && !authLoading) {
         try {
-          await Promise.all([refreshBP(), refreshHR()]);
+          await Promise.all([
+            refreshBP(),
+            refreshHR(),
+            refreshTemp(),
+            refreshWeight(),
+            refreshBodyFat(),
+            refreshBG(),
+            refreshSpO2(),
+          ]);
         } catch (error) {
           console.warn('[DailyPage] Refresh failed:', error);
         }
       }
     }, 300);
-  }, [refreshBP, refreshHR, isAuthenticated, user, authLoading]);
+  }, [refreshBP, refreshHR, refreshTemp, refreshWeight, refreshBodyFat, refreshBG, refreshSpO2, isAuthenticated, user, authLoading]);
 
   // Open form modal with selected vital type
   const openFormModal = (vitalType?: VitalType) => {
@@ -226,7 +384,7 @@ export default function DailyPage() {
         </div>
 
         {/* Error Display */}
-        {(isLoadingBP || isLoadingHR) && records.length === 0 && (
+        {isLoading && records.length === 0 && (
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           </div>
@@ -246,6 +404,11 @@ export default function DailyPage() {
                     key={`${group.recordedAt}-${index}`}
                     bloodPressure={group.bloodPressure}
                     heartRate={group.heartRate}
+                    temperature={group.temperature}
+                    weight={group.weight}
+                    bodyFat={group.bodyFat}
+                    bloodGlucose={group.bloodGlucose}
+                    spo2={group.spo2}
                     onRecordUpdated={handleRecordCreated}
                     onRecordDeleted={handleRecordCreated}
                   />
