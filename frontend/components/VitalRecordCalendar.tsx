@@ -129,7 +129,7 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
                   : ''
                 }
                 ${hasRecords 
-                  ? 'bg-blue-100 dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-900/50 cursor-pointer font-semibold' 
+                  ? 'bg-blue-200 dark:bg-blue-800/50 hover:bg-blue-300 dark:hover:bg-blue-800/60 cursor-pointer font-semibold ring-2 ring-blue-400 dark:ring-blue-500 shadow-sm' 
                   : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-default'
                 }
                 ${!isCurrentMonth && hasRecords 
