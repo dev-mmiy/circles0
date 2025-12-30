@@ -123,8 +123,12 @@ export async function getAccessToken(
           timestamp: new Date().toISOString() 
         });
         
+        // If this is a retry after a "Missing Refresh Token" error, ignore cache
+        const ignoreCache = attempt > 1 && lastError?.message?.includes('Missing Refresh Token');
+        
         const auth0TokenPromise = getAccessTokenSilently({
-          cacheMode: 'on',
+          cacheMode: ignoreCache ? 'off' : 'on',
+          ignoreCache: ignoreCache,
           timeout: TOKEN_TIMEOUT, // Pass timeout to Auth0
           authorizationParams: {
             scope: 'openid profile email offline_access',
@@ -135,6 +139,28 @@ export async function getAccessToken(
             attempt,
             timestamp: new Date().toISOString()
           });
+          
+          // If "Missing Refresh Token" error, clear Auth0 cache and suggest re-login
+          if (err?.message?.includes('Missing Refresh Token')) {
+            debugLog.error('[tokenManager] Missing Refresh Token - clearing Auth0 cache', {
+              timestamp: new Date().toISOString()
+            });
+            
+            // Clear Auth0 cache from localStorage
+            if (typeof window !== 'undefined') {
+              const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
+              if (clientId) {
+                // Clear Auth0 SPA JS cache
+                Object.keys(localStorage).forEach(key => {
+                  if (key.includes('auth0') || key.includes('@@auth0spajs@@')) {
+                    localStorage.removeItem(key);
+                    debugLog.log('[tokenManager] Cleared Auth0 cache key:', key);
+                  }
+                });
+              }
+            }
+          }
+          
           throw err;
         });
         
