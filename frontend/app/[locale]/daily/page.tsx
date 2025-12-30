@@ -58,7 +58,7 @@ export default function DailyPage() {
       const items = await getBloodPressureRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100, // Load more records to group by time
+    pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
 
@@ -76,7 +76,7 @@ export default function DailyPage() {
       const items = await getHeartRateRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100, // Load more records to group by time
+    pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
 
@@ -94,7 +94,7 @@ export default function DailyPage() {
       const items = await getTemperatureRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100,
+    pageSize: 100,
     autoLoad: false,
   });
 
@@ -112,7 +112,7 @@ export default function DailyPage() {
       const items = await getWeightRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100,
+    pageSize: 100,
     autoLoad: false,
   });
 
@@ -130,7 +130,7 @@ export default function DailyPage() {
       const items = await getBodyFatRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100,
+    pageSize: 100,
     autoLoad: false,
   });
 
@@ -148,7 +148,7 @@ export default function DailyPage() {
       const items = await getBloodGlucoseRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100,
+    pageSize: 100,
     autoLoad: false,
   });
 
@@ -166,7 +166,7 @@ export default function DailyPage() {
       const items = await getSpO2Records(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 100,
+    pageSize: 100,
     autoLoad: false,
   });
 
