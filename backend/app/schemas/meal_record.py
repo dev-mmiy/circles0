@@ -33,6 +33,11 @@ class MealRecordBase(BaseModel):
     meal_type: str = Field(..., pattern="^(breakfast|lunch|dinner|snack)$", description="Type of meal")
     foods: Optional[List[FoodItem]] = Field(None, description="List of foods consumed")
     nutrition: Optional[NutritionInfo] = Field(None, description="Nutrition information")
+    visibility: str = Field(
+        default="public",
+        pattern="^(public|followers_only|private)$",
+        description="Visibility setting",
+    )
     notes: Optional[str] = Field(None, max_length=5000, description="Optional notes")
 
 
@@ -49,6 +54,7 @@ class MealRecordUpdate(BaseModel):
     meal_type: Optional[str] = Field(None, pattern="^(breakfast|lunch|dinner|snack)$")
     foods: Optional[List[FoodItem]] = None
     nutrition: Optional[NutritionInfo] = None
+    visibility: Optional[str] = Field(None, pattern="^(public|followers_only|private)$")
     notes: Optional[str] = Field(None, max_length=5000)
 
 

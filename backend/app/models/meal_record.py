@@ -63,6 +63,14 @@ class MealRecord(Base):
     # Notes
     notes = Column(Text, nullable=True, comment="Optional notes about the meal")
     
+    # Visibility
+    visibility = Column(
+        String(20),
+        nullable=False,
+        default="public",
+        comment="public, followers_only, private",
+    )
+    
     # Timestamps
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(

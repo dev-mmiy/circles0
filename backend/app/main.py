@@ -41,6 +41,7 @@ from app.api.weight_records import router as weight_records_router
 from app.api.body_fat_records import router as body_fat_records_router
 from app.api.blood_glucose_records import router as blood_glucose_records_router
 from app.api.spo2_records import router as spo2_records_router
+from app.api.timeline import router as timeline_router
 
 # Try to import push subscriptions router (optional - requires pywebpush)
 try:
@@ -331,6 +332,7 @@ app.include_router(weight_records_router, prefix="/api/v1", tags=["weight-record
 app.include_router(body_fat_records_router, prefix="/api/v1", tags=["body-fat-records"])
 app.include_router(blood_glucose_records_router, prefix="/api/v1", tags=["blood-glucose-records"])
 app.include_router(spo2_records_router, prefix="/api/v1", tags=["spo2-records"])
+app.include_router(timeline_router, prefix="/api/v1", tags=["timeline"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(blocks_router, prefix="/api/v1", tags=["blocks"])
 app.include_router(groups_router, prefix="/api/v1", tags=["groups"])

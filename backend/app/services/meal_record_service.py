@@ -36,6 +36,7 @@ class MealRecordService:
             meal_type=record_data.meal_type,
             foods=foods_json,
             nutrition=nutrition_json,
+            visibility=record_data.visibility,
             notes=record_data.notes,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
