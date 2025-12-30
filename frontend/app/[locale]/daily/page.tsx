@@ -12,6 +12,7 @@ import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
 import BloodPressureHeartRateFormModal from '@/components/BloodPressureHeartRateFormModal';
 import VitalRecordCard from '@/components/VitalRecordCard';
+import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSelector';
 
 type ViewMode = 'calendar' | 'list';
 
@@ -27,6 +28,7 @@ export default function DailyPage() {
   const t = useTranslations('daily');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [selectedVitalType, setSelectedVitalType] = useState<VitalType | null>(null);
 
   // Load blood pressure records
   const {
@@ -128,9 +130,15 @@ export default function DailyPage() {
     }, 300);
   }, [refreshBP, refreshHR, isAuthenticated, user, authLoading]);
 
-  // Open form modal
-  const openFormModal = () => {
+  // Open form modal with selected vital type
+  const openFormModal = (vitalType?: VitalType) => {
+    setSelectedVitalType(vitalType || null);
     setIsFormModalOpen(true);
+  };
+
+  // Handle vital type selection
+  const handleVitalSelect = (vitalType: VitalType) => {
+    openFormModal(vitalType);
   };
 
   if (authLoading) {
@@ -200,14 +208,14 @@ export default function DailyPage() {
               </button>
             </div>
 
-            {/* Add Record Buttons */}
-            <div className="flex flex-wrap items-center gap-2">
+            {/* Add Record Button */}
+            <div className="flex items-center gap-2">
               <button
-                onClick={openFormModal}
+                onClick={() => openFormModal()}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
-                <span>{t('addBloodPressureHeartRate')}</span>
+                <span>記録を追加</span>
               </button>
             </div>
           </div>
@@ -247,11 +255,39 @@ export default function DailyPage() {
           </div>
         )}
 
-        {/* Form Modal */}
-        {isFormModalOpen && (
+        {/* Vital Record Selector Modal */}
+        {isFormModalOpen && !selectedVitalType && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsFormModalOpen(false)} />
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    記録するバイタルを選択
+                  </h2>
+                  <button
+                    onClick={() => setIsFormModalOpen(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <VitalRecordSelector onSelect={handleVitalSelect} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form Modal for Blood Pressure & Heart Rate */}
+        {isFormModalOpen && selectedVitalType === 'blood_pressure_heart_rate' && (
           <BloodPressureHeartRateFormModal
             isOpen={isFormModalOpen}
-            onClose={() => setIsFormModalOpen(false)}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedVitalType(null);
+            }}
             onRecordCreated={handleRecordCreated}
           />
         )}
