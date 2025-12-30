@@ -1,6 +1,6 @@
 'use client';
 
-import { Activity, Droplet, Heart, Scale, Thermometer, Weight } from 'lucide-react';
+import { Activity, Droplet, Heart, Scale, Thermometer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
 export type VitalType = 'blood_pressure_heart_rate' | 'temperature' | 'weight_body_fat' | 'blood_glucose' | 'spo2';
