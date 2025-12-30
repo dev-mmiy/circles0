@@ -35,7 +35,7 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
         authorizationParams={{
           redirect_uri: redirectUri,
           audience: audience,
-          scope: 'openid profile email',
+          scope: 'openid profile email offline_access',
         }}
         useRefreshTokens={true}
         cacheLocation="localstorage"
