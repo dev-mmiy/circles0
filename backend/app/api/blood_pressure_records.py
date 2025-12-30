@@ -2,7 +2,7 @@
 API endpoints for blood pressure records.
 """
 
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -16,8 +16,36 @@ from app.schemas.blood_pressure_record import (
     BloodPressureRecordUpdate,
 )
 from app.services.blood_pressure_record_service import BloodPressureRecordService
+from app.services.user_service import UserService
+from app.utils.auth_utils import extract_auth0_id
 
 router = APIRouter(prefix="/blood-pressure-records", tags=["blood-pressure-records"])
+
+
+def get_user_id_from_token(db: Session, current_user: dict) -> UUID:
+    """
+    Get database user ID from Auth0 token.
+
+    Args:
+        db: Database session
+        current_user: Decoded Auth0 token
+
+    Returns:
+        User UUID from database
+
+    Raises:
+        HTTPException: If user not found
+    """
+    auth0_id = extract_auth0_id(current_user)
+    user = UserService.get_user_by_auth0_id(db, auth0_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    return user.id
 
 
 @router.post(
@@ -32,7 +60,7 @@ async def create_blood_pressure_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Create a new blood pressure record for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BloodPressureRecordService.create_record(db, user_id, record_data)
     return record
 
@@ -49,7 +77,7 @@ async def get_my_blood_pressure_records(
     current_user: dict = Depends(get_current_user),
 ):
     """Get blood pressure records for the current user."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     records = BloodPressureRecordService.get_user_records(db, user_id, skip, limit)
     return records
 
@@ -65,7 +93,7 @@ async def get_blood_pressure_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Get a specific blood pressure record by ID."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BloodPressureRecordService.get_record_by_id(db, record_id, user_id)
     if not record:
         raise HTTPException(
@@ -87,7 +115,7 @@ async def update_blood_pressure_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Update a blood pressure record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     record = BloodPressureRecordService.update_record(db, record_id, user_id, record_data)
     if not record:
         raise HTTPException(
@@ -108,7 +136,7 @@ async def delete_blood_pressure_record(
     current_user: dict = Depends(get_current_user),
 ):
     """Delete a blood pressure record."""
-    user_id = UUID(current_user["sub"])
+    user_id = get_user_id_from_token(db, current_user)
     success = BloodPressureRecordService.delete_record(db, record_id, user_id)
     if not success:
         raise HTTPException(
