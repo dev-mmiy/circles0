@@ -3,7 +3,7 @@
  */
 
 import { debugLog } from '@/lib/utils/debug';
-import { getApiBaseUrl } from '@/lib/apiClient';
+import { getApiBaseUrl } from '@/lib/config';
 
 const apiClient = getApiBaseUrl();
 
