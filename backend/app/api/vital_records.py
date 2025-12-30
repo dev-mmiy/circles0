@@ -1,23 +1,26 @@
 """
 API endpoints for vital records.
+
+DEPRECATED: This API is deprecated. Use separate vital record APIs instead:
+- /api/v1/blood-pressure-records
+- /api/v1/heart-rate-records
+- /api/v1/temperature-records
+- /api/v1/weight-records
+- /api/v1/body-fat-records
+- /api/v1/blood-glucose-records
+- /api/v1/spo2-records
+
+This file is kept for reference but should not be used.
 """
 
-from typing import List
-from uuid import UUID
+# DEPRECATED: All endpoints have been moved to separate API files.
+# This file is kept for reference only.
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter
 
-from app.auth.dependencies import get_current_user
-from app.database import get_db
-from app.schemas.vital_record import (
-    VitalRecordCreate,
-    VitalRecordResponse,
-    VitalRecordUpdate,
-)
-from app.services.vital_record_service import VitalRecordService
+router = APIRouter(prefix="/vital-records", tags=["vital-records-deprecated"])
 
-router = APIRouter(prefix="/vital-records", tags=["vital-records"])
+# All endpoints have been moved to separate API files.
 
 
 @router.post(
