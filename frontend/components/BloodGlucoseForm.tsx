@@ -46,9 +46,6 @@ export default function BloodGlucoseForm({
   const [value, setValue] = useState<string>(editingRecord?.value?.toString() || '');
   const [timing, setTiming] = useState<'fasting' | 'postprandial' | ''>(editingRecord?.timing || '');
   const [notes, setNotes] = useState<string>(editingRecord?.notes || '');
-  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
-    (editingRecord?.visibility || 'public') as 'public' | 'followers_only' | 'private'
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +66,7 @@ export default function BloodGlucoseForm({
         recorded_at: recordedAtISO,
         value: parseInt(value),
         timing: timing || undefined,
-        visibility,
+        visibility: 'private',
         notes: notes || undefined,
       };
 
@@ -84,7 +81,6 @@ export default function BloodGlucoseForm({
       setValue('');
       setTiming('');
       setNotes('');
-      setVisibility('public');
 
       if (onRecordCreated) {
         const result = onRecordCreated();

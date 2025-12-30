@@ -46,9 +46,6 @@ export default function TemperatureForm({
   const [value, setValue] = useState<string>(editingRecord?.value?.toString() || '');
   const [unit, setUnit] = useState<'celsius' | 'fahrenheit'>(editingRecord?.unit || 'celsius');
   const [notes, setNotes] = useState<string>(editingRecord?.notes || '');
-  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
-    (editingRecord?.visibility || 'public') as 'public' | 'followers_only' | 'private'
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +66,7 @@ export default function TemperatureForm({
         recorded_at: recordedAtISO,
         value: parseFloat(value),
         unit,
-        visibility,
+        visibility: 'private',
         notes: notes || undefined,
       };
 
@@ -84,7 +81,6 @@ export default function TemperatureForm({
       setValue('');
       setUnit('celsius');
       setNotes('');
-      setVisibility('public');
 
       if (onRecordCreated) {
         const result = onRecordCreated();

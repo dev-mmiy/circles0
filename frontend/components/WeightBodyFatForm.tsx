@@ -54,9 +54,6 @@ export default function WeightBodyFatForm({
   const [weightUnit, setWeightUnit] = useState<'kg' | 'lb'>(editingWeight?.unit || 'kg');
   const [bodyFat, setBodyFat] = useState<string>(editingBodyFat?.percentage?.toString() || '');
   const [notes, setNotes] = useState<string>(editingWeight?.notes || editingBodyFat?.notes || '');
-  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
-    (editingWeight?.visibility || editingBodyFat?.visibility || 'public') as 'public' | 'followers_only' | 'private'
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,7 +70,7 @@ export default function WeightBodyFatForm({
           recorded_at: recordedAtISO,
           value: parseFloat(weight),
           unit: weightUnit,
-          visibility,
+          visibility: 'private',
           notes: notes || undefined,
         };
 
@@ -89,7 +86,7 @@ export default function WeightBodyFatForm({
         const bodyFatData: CreateBodyFatRecordData | UpdateBodyFatRecordData = {
           recorded_at: recordedAtISO,
           percentage: parseFloat(bodyFat),
-          visibility,
+          visibility: 'private',
           notes: notes || undefined,
         };
 
@@ -113,7 +110,6 @@ export default function WeightBodyFatForm({
       setWeightUnit('kg');
       setBodyFat('');
       setNotes('');
-      setVisibility('public');
 
       if (onRecordCreated) {
         const result = onRecordCreated();

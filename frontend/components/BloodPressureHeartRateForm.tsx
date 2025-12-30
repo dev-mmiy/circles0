@@ -56,9 +56,6 @@ export default function BloodPressureHeartRateForm({
   const [diastolic, setDiastolic] = useState<string>(editingBloodPressure?.diastolic?.toString() || '');
   const [heartRate, setHeartRate] = useState<string>(editingHeartRate?.bpm?.toString() || '');
   const [notes, setNotes] = useState<string>(editingBloodPressure?.notes || editingHeartRate?.notes || '');
-  const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
-    (editingBloodPressure?.visibility || editingHeartRate?.visibility || 'public') as 'public' | 'followers_only' | 'private'
-  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,7 +80,7 @@ export default function BloodPressureHeartRateForm({
           recorded_at: recordedAtISO,
           systolic: parseInt(systolic),
           diastolic: parseInt(diastolic),
-          visibility,
+          visibility: 'private',
           notes: notes || undefined,
         };
 
@@ -99,7 +96,7 @@ export default function BloodPressureHeartRateForm({
         const hrData: CreateHeartRateRecordData | UpdateHeartRateRecordData = {
           recorded_at: recordedAtISO,
           bpm: parseInt(heartRate),
-          visibility,
+          visibility: 'private',
           notes: notes || undefined,
         };
 
@@ -123,7 +120,6 @@ export default function BloodPressureHeartRateForm({
       setDiastolic('');
       setHeartRate('');
       setNotes('');
-      setVisibility('public');
 
       // Notify parent component
       if (onRecordCreated) {
