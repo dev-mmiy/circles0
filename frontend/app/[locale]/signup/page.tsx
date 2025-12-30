@@ -73,8 +73,8 @@ export default function SignupPage() {
 
       // Redirect to Auth0 signup with email pre-filled
       await loginWithRedirect({
-        screen_hint: 'signup',
         authorizationParams: {
+          screen_hint: 'signup',
           login_hint: formData.email.trim(),
         },
         appState: {

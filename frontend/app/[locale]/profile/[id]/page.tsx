@@ -242,6 +242,7 @@ export default function PublicProfilePage() {
         profile.id,
         currentPage * POSTS_PER_PAGE,
         POSTS_PER_PAGE,
+        undefined, // healthRecordType
         accessToken
       );
 
