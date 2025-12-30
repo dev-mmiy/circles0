@@ -11,6 +11,10 @@ import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
 import BloodPressureHeartRateFormModal from '@/components/BloodPressureHeartRateFormModal';
+import TemperatureFormModal from '@/components/TemperatureFormModal';
+import WeightBodyFatFormModal from '@/components/WeightBodyFatFormModal';
+import BloodGlucoseFormModal from '@/components/BloodGlucoseFormModal';
+import SpO2FormModal from '@/components/SpO2FormModal';
 import VitalRecordCard from '@/components/VitalRecordCard';
 import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSelector';
 
@@ -280,9 +284,49 @@ export default function DailyPage() {
           </div>
         )}
 
-        {/* Form Modal for Blood Pressure & Heart Rate */}
+        {/* Form Modals for each vital type */}
         {isFormModalOpen && selectedVitalType === 'blood_pressure_heart_rate' && (
           <BloodPressureHeartRateFormModal
+            isOpen={isFormModalOpen}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedVitalType(null);
+            }}
+            onRecordCreated={handleRecordCreated}
+          />
+        )}
+        {isFormModalOpen && selectedVitalType === 'temperature' && (
+          <TemperatureFormModal
+            isOpen={isFormModalOpen}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedVitalType(null);
+            }}
+            onRecordCreated={handleRecordCreated}
+          />
+        )}
+        {isFormModalOpen && selectedVitalType === 'weight_body_fat' && (
+          <WeightBodyFatFormModal
+            isOpen={isFormModalOpen}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedVitalType(null);
+            }}
+            onRecordCreated={handleRecordCreated}
+          />
+        )}
+        {isFormModalOpen && selectedVitalType === 'blood_glucose' && (
+          <BloodGlucoseFormModal
+            isOpen={isFormModalOpen}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedVitalType(null);
+            }}
+            onRecordCreated={handleRecordCreated}
+          />
+        )}
+        {isFormModalOpen && selectedVitalType === 'spo2' && (
+          <SpO2FormModal
             isOpen={isFormModalOpen}
             onClose={() => {
               setIsFormModalOpen(false);

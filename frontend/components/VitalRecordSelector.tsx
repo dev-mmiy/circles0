@@ -3,7 +3,7 @@
 import { Activity, Droplet, Heart, Scale, Thermometer, Weight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export type VitalType = 'blood_pressure_heart_rate' | 'temperature' | 'weight' | 'body_fat' | 'blood_glucose' | 'spo2';
+export type VitalType = 'blood_pressure_heart_rate' | 'temperature' | 'weight_body_fat' | 'blood_glucose' | 'spo2';
 
 interface VitalRecordSelectorProps {
   onSelect: (type: VitalType) => void;
@@ -34,16 +34,9 @@ export default function VitalRecordSelector({ onSelect }: VitalRecordSelectorPro
       bgColor: 'bg-yellow-50 dark:bg-yellow-900/20 hover:bg-yellow-100 dark:hover:bg-yellow-900/30',
     },
     {
-      type: 'weight',
+      type: 'weight_body_fat',
       icon: <Scale className="w-6 h-6" />,
       label: t('addWeightBodyFat') || '体重・体脂肪率',
-      color: 'text-purple-600 dark:text-purple-400',
-      bgColor: 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30',
-    },
-    {
-      type: 'body_fat',
-      icon: <Weight className="w-6 h-6" />,
-      label: t('addWeightBodyFat') || '体脂肪率',
       color: 'text-purple-600 dark:text-purple-400',
       bgColor: 'bg-purple-50 dark:bg-purple-900/20 hover:bg-purple-100 dark:hover:bg-purple-900/30',
     },
