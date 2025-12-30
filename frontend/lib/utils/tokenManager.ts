@@ -130,9 +130,7 @@ export async function getAccessToken(
           cacheMode: ignoreCache ? 'off' : 'on',
           ignoreCache: ignoreCache,
           timeout: TOKEN_TIMEOUT, // Pass timeout to Auth0
-          authorizationParams: {
-            scope: 'openid profile email offline_access',
-          },
+          scope: 'openid profile email offline_access',
         }).catch((err) => {
           // Handle Auth0 specific errors
           debugLog.warn('[tokenManager] Auth0 getAccessTokenSilently error:', err, {

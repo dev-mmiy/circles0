@@ -22,10 +22,13 @@ import BloodGlucoseFormModal from '@/components/BloodGlucoseFormModal';
 import SpO2FormModal from '@/components/SpO2FormModal';
 import VitalRecordCard from '@/components/VitalRecordCard';
 import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSelector';
+import VitalRecordCalendar from '@/components/VitalRecordCalendar';
+import { format } from 'date-fns';
+import { ja } from 'date-fns/locale';
 
 type ViewMode = 'calendar' | 'list';
 
-interface VitalRecordGroup {
+export interface VitalRecordGroup {
   recordedAt: string;
   bloodPressure?: BloodPressureRecord;
   heartRate?: HeartRateRecord;
@@ -43,6 +46,9 @@ export default function DailyPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedVitalType, setSelectedVitalType] = useState<VitalType | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDateRecords, setSelectedDateRecords] = useState<VitalRecordGroup[]>([]);
+  const [isDateModalOpen, setIsDateModalOpen] = useState(false);
 
   // Load blood pressure records
   const {
@@ -170,7 +176,45 @@ export default function DailyPage() {
     autoLoad: false,
   });
 
-  // Group records by recorded_at (same timestamp = same session)
+  // Group records by date (yyyy-MM-dd) for calendar view
+  const recordsByDate = useMemo(() => {
+    const map = new Map<string, VitalRecordGroup[]>();
+    
+    // Combine all records with their types
+    const allRecords: Array<{ recordedAt: string; type: string; record: any }> = [];
+    bloodPressureRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bloodPressure', record: r }));
+    heartRateRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'heartRate', record: r }));
+    temperatureRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'temperature', record: r }));
+    weightRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'weight', record: r }));
+    bodyFatRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bodyFat', record: r }));
+    bloodGlucoseRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bloodGlucose', record: r }));
+    spo2Records.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'spo2', record: r }));
+
+    // Group by date (yyyy-MM-dd) and by exact timestamp
+    const groupsByTimestamp = new Map<string, VitalRecordGroup>();
+    
+    allRecords.forEach(({ recordedAt, type, record }) => {
+      // First, group by exact timestamp for list view compatibility
+      if (!groupsByTimestamp.has(recordedAt)) {
+        groupsByTimestamp.set(recordedAt, { recordedAt });
+      }
+      const group = groupsByTimestamp.get(recordedAt)!;
+      (group as any)[type] = record;
+    });
+
+    // Then, group by date (yyyy-MM-dd) for calendar view
+    groupsByTimestamp.forEach((group, timestamp) => {
+      const dateKey = format(new Date(timestamp), 'yyyy-MM-dd');
+      if (!map.has(dateKey)) {
+        map.set(dateKey, []);
+      }
+      map.get(dateKey)!.push(group);
+    });
+
+    return map;
+  }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
+
+  // Group records by recorded_at (same timestamp = same session) for list view
   const groupedRecords = useMemo(() => {
     const groups: Map<string, VitalRecordGroup> = new Map();
 
@@ -243,6 +287,15 @@ export default function DailyPage() {
     );
   }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
 
+  // Flatten records for calendar view
+  const calendarRecords = useMemo(() => {
+    const flatRecords: VitalRecordGroup[] = [];
+    recordsByDate.forEach((groups) => {
+      flatRecords.push(...groups);
+    });
+    return flatRecords;
+  }, [recordsByDate]);
+
   const isLoading = isLoadingBP || isLoadingHR || isLoadingTemp || isLoadingWeight || isLoadingBodyFat || isLoadingBG || isLoadingSpO2;
   const records = groupedRecords;
 
@@ -301,6 +354,13 @@ export default function DailyPage() {
   // Handle vital type selection
   const handleVitalSelect = (vitalType: VitalType) => {
     openFormModal(vitalType);
+  };
+
+  // Handle date click in calendar
+  const handleDateClick = (date: Date, records: VitalRecordGroup[]) => {
+    setSelectedDate(date);
+    setSelectedDateRecords(records);
+    setIsDateModalOpen(true);
   };
 
   if (authLoading) {
@@ -417,9 +477,10 @@ export default function DailyPage() {
             )}
           </div>
         ) : (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400">{t('calendarComingSoon')}</p>
-          </div>
+          <VitalRecordCalendar
+            records={calendarRecords}
+            onDateClick={handleDateClick}
+          />
         )}
 
         {/* Vital Record Selector Modal */}
@@ -497,6 +558,46 @@ export default function DailyPage() {
             }}
             onRecordCreated={handleRecordCreated}
           />
+        )}
+
+        {/* Date Records Modal */}
+        {isDateModalOpen && selectedDate && selectedDateRecords.length > 0 && (
+          <div className="fixed inset-0 z-50 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4">
+              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDateModalOpen(false)} />
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })}
+                  </h2>
+                  <button
+                    onClick={() => setIsDateModalOpen(false)}
+                    className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+                <div className="p-6 space-y-4">
+                  {selectedDateRecords.map((group, index) => (
+                    <VitalRecordCard
+                      key={`${group.recordedAt}-${index}`}
+                      bloodPressure={group.bloodPressure}
+                      heartRate={group.heartRate}
+                      temperature={group.temperature}
+                      weight={group.weight}
+                      bodyFat={group.bodyFat}
+                      bloodGlucose={group.bloodGlucose}
+                      spo2={group.spo2}
+                      onRecordUpdated={handleRecordCreated}
+                      onRecordDeleted={handleRecordCreated}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
