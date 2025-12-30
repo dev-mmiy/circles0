@@ -1,18 +1,25 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { getUserPosts, type Post } from '@/lib/api/posts';
+import { getBloodPressureRecords, type BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
+import { getHeartRateRecords, type HeartRateRecord } from '@/lib/api/heartRateRecords';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
-import PostFormModal from '@/components/PostFormModal';
-import PostCard from '@/components/PostCard';
+import BloodPressureHeartRateFormModal from '@/components/BloodPressureHeartRateFormModal';
+import VitalRecordCard from '@/components/VitalRecordCard';
 
 type ViewMode = 'calendar' | 'list';
+
+interface VitalRecordGroup {
+  recordedAt: string;
+  bloodPressure?: BloodPressureRecord;
+  heartRate?: HeartRateRecord;
+}
 
 export default function DailyPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -20,67 +27,109 @@ export default function DailyPage() {
   const t = useTranslations('daily');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [visibleMeasurements, setVisibleMeasurements] = useState<('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[] | undefined>(undefined);
 
-  // Unified data loader for daily records
+  // Load blood pressure records
   const {
-    items: records = [],
-    isLoading,
-    isLoadingMore,
-    isRefreshing,
-    error,
-    hasMore,
-    load,
-    loadMore,
-    refresh,
-    retry,
-    clearError,
-  } = useDataLoader<Post>({
-      loadFn: useCallback(async (skip, limit) => {
+    items: bloodPressureRecords = [],
+    isLoading: isLoadingBP,
+    refresh: refreshBP,
+  } = useDataLoader<BloodPressureRecord>({
+    loadFn: useCallback(async (skip, limit) => {
       if (!isAuthenticated || !user) {
         throw new Error('Authentication required');
       }
       const token = await getAccessTokenSilently();
-      
-      // Load only vital records
-      const items = await getUserPosts(user.id, skip, limit, 'vital', token);
-      
+      const items = await getBloodPressureRecords(skip, limit, token);
       return { items };
     }, [isAuthenticated, user, getAccessTokenSilently]),
-    limit: 20,
-    autoLoad: false, // Manually control loading after auth check
+    limit: 100, // Load more records to group by time
+    autoLoad: false,
   });
 
-  // Load records when component mounts or filters change
+  // Load heart rate records
+  const {
+    items: heartRateRecords = [],
+    isLoading: isLoadingHR,
+    refresh: refreshHR,
+  } = useDataLoader<HeartRateRecord>({
+    loadFn: useCallback(async (skip, limit) => {
+      if (!isAuthenticated || !user) {
+        throw new Error('Authentication required');
+      }
+      const token = await getAccessTokenSilently();
+      const items = await getHeartRateRecords(skip, limit, token);
+      return { items };
+    }, [isAuthenticated, user, getAccessTokenSilently]),
+    limit: 100, // Load more records to group by time
+    autoLoad: false,
+  });
+
+  // Group records by recorded_at (same timestamp = same session)
+  const groupedRecords = useMemo(() => {
+    const groups: Map<string, VitalRecordGroup> = new Map();
+
+    // Add blood pressure records
+    bloodPressureRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.bloodPressure = record;
+    });
+
+    // Add heart rate records
+    heartRateRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!groups.has(key)) {
+        groups.set(key, { recordedAt: key });
+      }
+      groups.get(key)!.heartRate = record;
+    });
+
+    // Sort by recorded_at descending
+    return Array.from(groups.values()).sort((a, b) => 
+      new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
+    );
+  }, [bloodPressureRecords, heartRateRecords]);
+
+  const isLoading = isLoadingBP || isLoadingHR;
+  const records = groupedRecords;
+
+  // Load records when component mounts
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
-      load();
+      // Load both blood pressure and heart rate records
+      const loadAll = async () => {
+        try {
+          await Promise.all([
+            refreshBP(),
+            refreshHR(),
+          ]);
+        } catch (error) {
+          console.error('[DailyPage] Failed to load records:', error);
+        }
+      };
+      loadAll();
     }
-  }, [isAuthenticated, user, authLoading, load]);
+  }, [isAuthenticated, user, authLoading, refreshBP, refreshHR]);
 
   // Handle form submission
-  const handlePostCreated = useCallback(async () => {
+  const handleRecordCreated = useCallback(async () => {
     setIsFormModalOpen(false);
     // Wait a bit for modal to close, then refresh
-    // Also ensure authentication is ready before refreshing
     setTimeout(async () => {
       if (isAuthenticated && user && !authLoading) {
         try {
-          await refresh();
+          await Promise.all([refreshBP(), refreshHR()]);
         } catch (error) {
-          // If refresh fails, try load instead
-          console.warn('[DailyPage] Refresh failed, trying load:', error);
-          if (isAuthenticated && user) {
-            await load();
-          }
+          console.warn('[DailyPage] Refresh failed:', error);
         }
       }
     }, 300);
-  }, [refresh, load, isAuthenticated, user, authLoading]);
+  }, [refreshBP, refreshHR, isAuthenticated, user, authLoading]);
 
-  // Open form modal with specific measurements
-  const openFormModal = (measurements?: ('blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature')[]) => {
-    setVisibleMeasurements(measurements);
+  // Open form modal
+  const openFormModal = () => {
     setIsFormModalOpen(true);
   };
 
@@ -154,83 +203,41 @@ export default function DailyPage() {
             {/* Add Record Buttons */}
             <div className="flex flex-wrap items-center gap-2">
               <button
-                onClick={() => openFormModal(['blood_pressure_heart_rate'])}
+                onClick={openFormModal}
                 className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
               >
                 <Plus className="w-4 h-4" />
                 <span>{t('addBloodPressureHeartRate')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['weight_body_fat'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addWeightBodyFat')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['blood_glucose'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addBloodGlucose')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['spo2'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addSpO2')}</span>
-              </button>
-              <button
-                onClick={() => openFormModal(['temperature'])}
-                className="flex items-center space-x-2 px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>{t('addTemperature')}</span>
               </button>
             </div>
           </div>
         </div>
 
         {/* Error Display */}
-        {error && (
-          <ErrorDisplay
-            error={error}
-            onRetry={retry}
-            onDismiss={clearError}
-          />
+        {(isLoadingBP || isLoadingHR) && records.length === 0 && (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          </div>
         )}
 
         {/* Content */}
         {viewMode === 'list' ? (
           <div className="space-y-4">
-            {isLoading && records.length === 0 ? (
-              <div className="flex items-center justify-center h-64">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              </div>
-            ) : records.length === 0 ? (
+            {records.length === 0 ? (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
                 <p className="text-gray-600 dark:text-gray-400">{t('noRecords')}</p>
               </div>
             ) : (
               <>
-                {records.map((record) => (
-                  <PostCard
-                    key={record.id}
-                    post={record}
-                    onPostUpdated={refresh}
-                    onPostDeleted={refresh}
+                {records.map((group, index) => (
+                  <VitalRecordCard
+                    key={`${group.recordedAt}-${index}`}
+                    bloodPressure={group.bloodPressure}
+                    heartRate={group.heartRate}
+                    onRecordUpdated={handleRecordCreated}
+                    onRecordDeleted={handleRecordCreated}
                   />
                 ))}
-                {hasMore && (
-                  <button
-                    onClick={loadMore}
-                    disabled={isLoadingMore}
-                    className="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-                  >
-                    {isLoadingMore ? t('loading') : t('loadMore')}
-                  </button>
-                )}
               </>
             )}
           </div>
@@ -242,13 +249,10 @@ export default function DailyPage() {
 
         {/* Form Modal */}
         {isFormModalOpen && (
-          <PostFormModal
+          <BloodPressureHeartRateFormModal
             isOpen={isFormModalOpen}
             onClose={() => setIsFormModalOpen(false)}
-            onPostCreated={handlePostCreated}
-            initialPostType="health_record"
-            initialHealthRecordType="vital"
-            visibleMeasurements={visibleMeasurements}
+            onRecordCreated={handleRecordCreated}
           />
         )}
       </div>
