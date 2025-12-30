@@ -454,6 +454,7 @@
         "notes": "メモ"
       },
       "vitalForm": {
+        "defaultContent": "バイタル記録",
         "recordedAt": "記録日時",
         "bloodPressure": "血圧",
         "temperature": "体温",
