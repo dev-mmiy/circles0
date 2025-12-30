@@ -5,7 +5,7 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { createBloodPressureRecord, updateBloodPressureRecord, type BloodPressureRecord, type CreateBloodPressureRecordData, type UpdateBloodPressureRecordData } from '@/lib/api/bloodPressureRecords';
 import { createHeartRateRecord, updateHeartRateRecord, type HeartRateRecord, type CreateHeartRateRecordData, type UpdateHeartRateRecordData } from '@/lib/api/heartRateRecords';
-import { debugLog } from '@/lib/debugLog';
+import { debugLog } from '@/lib/utils/debug';
 
 interface BloodPressureHeartRateFormProps {
   onRecordCreated?: () => void | Promise<void>;
