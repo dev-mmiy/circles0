@@ -50,6 +50,34 @@ export default function PostFormModal({
     onClose();
   };
 
+  // Infer visibleMeasurements from existing data when editing
+  const inferVisibleMeasurements = (): VisibleMeasurement[] | undefined => {
+    if (!editingPost || editingPost.post_type !== 'health_record' || editingPost.health_record_type !== 'vital) {
+      return visibleMeasurements;
+    }
+
+    const measurements = editingPost.health_record_data?.measurements || {};
+    const inferred: VisibleMeasurement[] = [];
+
+    if (measurements.blood_pressure || measurements.heart_rate) {
+      inferred.push('blood_pressure_heart_rate');
+    }
+    if (measurements.weight || measurements.body_fat_percentage) {
+      inferred.push('weight_body_fat');
+    }
+    if (measurements.blood_glucose) {
+      inferred.push('blood_glucose');
+    }
+    if (measurements.spo2) {
+      inferred.push('spo2');
+    }
+    if (measurements.temperature) {
+      inferred.push('temperature');
+    }
+
+    return inferred.length > 0 ? inferred : undefined;
+  };
+
   // Get modal title based on health record type
   const getModalTitle = () => {
     if (editingPost) {
@@ -149,7 +177,7 @@ export default function PostFormModal({
                 initialHealthRecordType={editingPost?.health_record_type || initialHealthRecordType}
                 hidePostTypeSelector={initialPostType === 'health_record' || editingPost?.post_type === 'health_record'}
                 hideHealthRecordTypeSelector={(initialPostType === 'health_record' && !!initialHealthRecordType) || editingPost?.post_type === 'health_record'}
-                visibleMeasurements={visibleMeasurements}
+                visibleMeasurements={editingPost ? inferVisibleMeasurements() : visibleMeasurements}
                 editingPost={editingPost}
               />
             </div>

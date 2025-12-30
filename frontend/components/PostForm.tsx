@@ -297,14 +297,28 @@ export default function PostForm({
 
       // Debug log for vital records
       if (postType === 'health_record' && healthRecordType === 'vital') {
-        debugLog.log('[PostForm] Creating vital record:', {
+        debugLog.log(`[PostForm] ${editingPost ? 'Updating' : 'Creating'} vital record:`, {
           postData,
           processedHealthRecordData,
           measurements: processedHealthRecordData.measurements,
         });
       }
 
-      await createPost(postData, accessToken);
+      // Use updatePost if editing, otherwise createPost
+      if (editingPost) {
+        const updateData: UpdatePostData = {
+          content: postData.content,
+          visibility: postData.visibility,
+          image_urls: postData.image_urls,
+          user_disease_id: postData.user_disease_id,
+          post_type: postData.post_type,
+          health_record_type: postData.health_record_type,
+          health_record_data: postData.health_record_data,
+        };
+        await updatePost(editingPost.id, updateData, accessToken);
+      } else {
+        await createPost(postData, accessToken);
+      }
 
       // Reset form
       setContent('');

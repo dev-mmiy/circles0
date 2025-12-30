@@ -1242,6 +1242,8 @@
     "addSpO2": "SpO2",
     "addTemperature": "Temperature",
     "addMeal": "Record Meal",
+    "editVital": "Edit Vital Record",
+    "editMeal": "Edit Meal Record",
     "vitalPlaceholder": "Enter notes or comments (optional)",
     "mealPlaceholder": "Enter notes or comments (optional)",
     "noRecords": "No records found",
