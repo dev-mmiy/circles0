@@ -52,7 +52,7 @@ export default function PostFormModal({
 
   // Infer visibleMeasurements from existing data when editing
   const inferVisibleMeasurements = (): VisibleMeasurement[] | undefined => {
-    if (!editingPost || editingPost.post_type !== 'health_record' || editingPost.health_record_type !== 'vital) {
+    if (!editingPost || editingPost.post_type !== 'health_record' || editingPost.health_record_type !== 'vital') {
       return visibleMeasurements;
     }
 
