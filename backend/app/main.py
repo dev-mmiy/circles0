@@ -32,7 +32,7 @@ from app.api.notifications import router as notifications_router
 from app.api.notifications_sse import router as notifications_sse_router
 from app.api.posts import router as posts_router
 from app.api.users import router as users_router
-from app.api.vital_records import router as vital_records_router
+# from app.api.vital_records import router as vital_records_router  # Deprecated: Use separate vital record APIs
 from app.api.meal_records import router as meal_records_router
 from app.api.blood_pressure_records import router as blood_pressure_records_router
 from app.api.heart_rate_records import router as heart_rate_records_router
@@ -323,7 +323,7 @@ app.include_router(auth_router)
 app.include_router(users_router, prefix="/api/v1/users", tags=["users"])
 app.include_router(diseases_router, prefix="/api/v1/diseases", tags=["diseases"])
 app.include_router(posts_router, prefix="/api/v1", tags=["posts"])
-app.include_router(vital_records_router, prefix="/api/v1", tags=["vital-records"])
+# app.include_router(vital_records_router, prefix="/api/v1", tags=["vital-records"])  # Deprecated: Use separate vital record APIs
 app.include_router(meal_records_router, prefix="/api/v1", tags=["meal-records"])
 app.include_router(blood_pressure_records_router, prefix="/api/v1", tags=["blood-pressure-records"])
 app.include_router(heart_rate_records_router, prefix="/api/v1", tags=["heart-rate-records"])
