@@ -39,6 +39,7 @@ from app.api.heart_rate_records import router as heart_rate_records_router
 from app.api.temperature_records import router as temperature_records_router
 from app.api.weight_records import router as weight_records_router
 from app.api.body_fat_records import router as body_fat_records_router
+from app.api.blood_glucose_records import router as blood_glucose_records_router
 
 # Try to import push subscriptions router (optional - requires pywebpush)
 try:
@@ -327,6 +328,7 @@ app.include_router(heart_rate_records_router, prefix="/api/v1", tags=["heart-rat
 app.include_router(temperature_records_router, prefix="/api/v1", tags=["temperature-records"])
 app.include_router(weight_records_router, prefix="/api/v1", tags=["weight-records"])
 app.include_router(body_fat_records_router, prefix="/api/v1", tags=["body-fat-records"])
+app.include_router(blood_glucose_records_router, prefix="/api/v1", tags=["blood-glucose-records"])
 app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(blocks_router, prefix="/api/v1", tags=["blocks"])
 app.include_router(groups_router, prefix="/api/v1", tags=["groups"])
