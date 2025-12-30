@@ -2,7 +2,7 @@
  * API client for blood pressure records.
  */
 
-import { debugLog } from '@/lib/debugLog';
+import { debugLog } from '@/lib/utils/debug';
 import { getApiBaseUrl } from '@/lib/apiClient';
 
 const apiClient = getApiBaseUrl();
