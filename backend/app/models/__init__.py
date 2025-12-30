@@ -25,8 +25,14 @@ from .post import Post, PostComment, PostCommentImage, PostCommentLike, PostImag
 from .push_subscription import PushSubscription
 from .user import User
 from .user_field_visibility import UserFieldVisibility
-from .vital_record import VitalRecord
 from .meal_record import MealRecord
+from .blood_pressure_record import BloodPressureRecord
+from .heart_rate_record import HeartRateRecord
+from .temperature_record import TemperatureRecord
+from .weight_record import WeightRecord
+from .body_fat_record import BodyFatRecord
+from .blood_glucose_record import BloodGlucoseRecord
+from .spo2_record import SpO2Record
 
 __all__ = [
     "Base",
@@ -64,6 +70,12 @@ __all__ = [
     "GroupMessageRead",
     "GroupMessageReaction",
     "PushSubscription",
-    "VitalRecord",
     "MealRecord",
+    "BloodPressureRecord",
+    "HeartRateRecord",
+    "TemperatureRecord",
+    "WeightRecord",
+    "BodyFatRecord",
+    "BloodGlucoseRecord",
+    "SpO2Record",
 ]

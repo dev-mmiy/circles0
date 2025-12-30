@@ -118,11 +118,29 @@ class User(Base):
     saved_posts = relationship(
         "SavedPost", back_populates="user", cascade="all, delete-orphan"
     )
-    vital_records = relationship(
-        "VitalRecord", back_populates="user", cascade="all, delete-orphan"
-    )
     meal_records = relationship(
         "MealRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    blood_pressure_records = relationship(
+        "BloodPressureRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    heart_rate_records = relationship(
+        "HeartRateRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    temperature_records = relationship(
+        "TemperatureRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    weight_records = relationship(
+        "WeightRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    body_fat_records = relationship(
+        "BodyFatRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    blood_glucose_records = relationship(
+        "BloodGlucoseRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    spo2_records = relationship(
+        "SpO2Record", back_populates="user", cascade="all, delete-orphan"
     )
 
     # Follow relationships
