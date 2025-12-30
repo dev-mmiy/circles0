@@ -13,7 +13,7 @@ class SpO2RecordBase(BaseModel):
     """Base schema for SpO2 records."""
 
     recorded_at: datetime = Field(..., description="When the measurement was taken")
-    percentage: int = Field(..., ge=0, le=100, description="Blood oxygen saturation (%)")
+    percentage: float = Field(..., ge=0.0, le=100.0, description="Blood oxygen saturation (%)")
     visibility: str = Field(
         default="public",
         pattern="^(public|followers_only|private)$",
@@ -32,7 +32,7 @@ class SpO2RecordUpdate(BaseModel):
     """Schema for updating a SpO2 record."""
 
     recorded_at: Optional[datetime] = None
-    percentage: Optional[int] = Field(None, ge=0, le=100)
+    percentage: Optional[float] = Field(None, ge=0.0, le=100.0)
     visibility: Optional[str] = Field(None, pattern="^(public|followers_only|private)$")
     notes: Optional[str] = Field(None, max_length=5000)
 

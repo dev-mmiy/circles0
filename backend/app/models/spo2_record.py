@@ -5,7 +5,7 @@ SpO2 (Blood Oxygen Saturation) record model.
 from datetime import datetime
 from uuid import UUID, uuid4
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
@@ -25,7 +25,7 @@ class SpO2Record(Base):
         index=True,
     )
     recorded_at = Column(DateTime, nullable=False, index=True, comment="When the measurement was taken")
-    percentage = Column(Integer, nullable=False, comment="Blood oxygen saturation (%)")
+    percentage = Column(Numeric(4, 1), nullable=False, comment="Blood oxygen saturation (%)")
     visibility = Column(
         String(20),
         nullable=False,

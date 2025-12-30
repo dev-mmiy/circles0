@@ -256,7 +256,7 @@ export default function VitalRecordCard({
                 {t('spo2')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
-                {spo2.percentage}%
+                {spo2.percentage.toFixed(1)}%
               </span>
             </div>
           )}

@@ -64,9 +64,19 @@ export default function SpO2Form({
         return;
       }
 
+      // Parse percentage and ensure it has 1 decimal place (default to .0 if no decimal)
+      const percentageValue = parseFloat(percentage);
+      if (isNaN(percentageValue)) {
+        setError('血中酸素濃度を正しく入力してください');
+        setIsSubmitting(false);
+        return;
+      }
+      // Round to 1 decimal place
+      const roundedPercentage = Math.round(percentageValue * 10) / 10;
+
       const data: CreateSpO2RecordData | UpdateSpO2RecordData = {
         recorded_at: recordedAtISO,
-        percentage: parseInt(percentage),
+        percentage: roundedPercentage,
         visibility,
         notes: notes || undefined,
       };
@@ -128,9 +138,10 @@ export default function SpO2Form({
             type="number"
             value={percentage}
             onChange={(e) => setPercentage(e.target.value)}
-            placeholder="98"
+            placeholder="98.0"
             min="0"
             max="100"
+            step="0.1"
             className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             required
             disabled={isSubmitting}
