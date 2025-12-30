@@ -25,6 +25,8 @@ from .post import Post, PostComment, PostCommentImage, PostCommentLike, PostImag
 from .push_subscription import PushSubscription
 from .user import User
 from .user_field_visibility import UserFieldVisibility
+from .vital_record import VitalRecord
+from .meal_record import MealRecord
 
 __all__ = [
     "Base",
@@ -62,4 +64,6 @@ __all__ = [
     "GroupMessageRead",
     "GroupMessageReaction",
     "PushSubscription",
+    "VitalRecord",
+    "MealRecord",
 ]

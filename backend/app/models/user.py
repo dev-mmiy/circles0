@@ -118,6 +118,12 @@ class User(Base):
     saved_posts = relationship(
         "SavedPost", back_populates="user", cascade="all, delete-orphan"
     )
+    vital_records = relationship(
+        "VitalRecord", back_populates="user", cascade="all, delete-orphan"
+    )
+    meal_records = relationship(
+        "MealRecord", back_populates="user", cascade="all, delete-orphan"
+    )
 
     # Follow relationships
     # Users that this user is following
