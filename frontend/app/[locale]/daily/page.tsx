@@ -315,6 +315,7 @@ export default function DailyPage() {
   // Handle form submission
   const handleRecordCreated = useCallback(async () => {
     setIsFormModalOpen(false);
+    setIsDateModalOpen(false);
     // Wait a bit for modal to close, then refresh
     setTimeout(async () => {
       if (isAuthenticated && user && !authLoading) {
@@ -554,14 +555,25 @@ export default function DailyPage() {
         {isDateModalOpen && selectedDate && selectedDateRecords.length > 0 && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4">
-              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsDateModalOpen(false)} />
-              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-50" 
+                onClick={() => {
+                  setIsDateModalOpen(false);
+                  setSelectedDate(null);
+                  setSelectedDateRecords([]);
+                }} 
+              />
+              <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto z-10">
+                <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                     {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })}
                   </h2>
                   <button
-                    onClick={() => setIsDateModalOpen(false)}
+                    onClick={() => {
+                      setIsDateModalOpen(false);
+                      setSelectedDate(null);
+                      setSelectedDateRecords([]);
+                    }}
                     className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
