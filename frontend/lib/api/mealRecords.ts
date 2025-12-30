@@ -2,8 +2,8 @@
  * API client for meal records.
  */
 
-import { debugLog } from '@/lib/debugLog';
-import { getApiBaseUrl } from '@/lib/apiClient';
+import { debugLog } from '@/lib/utils/debug';
+import { getApiBaseUrl } from '@/lib/config';
 
 const apiClient = getApiBaseUrl();
 
