@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import type { VitalRecordGroup } from '@/app/[locale]/daily/page';
+import type { VitalRecordGroup } from '@/types/vitalRecords';
 
 interface VitalRecordCalendarProps {
   records: VitalRecordGroup[];

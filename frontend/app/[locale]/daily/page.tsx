@@ -25,19 +25,9 @@ import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSel
 import VitalRecordCalendar from '@/components/VitalRecordCalendar';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+import type { VitalRecordGroup } from '@/types/vitalRecords';
 
 type ViewMode = 'calendar' | 'list';
-
-export interface VitalRecordGroup {
-  recordedAt: string;
-  bloodPressure?: BloodPressureRecord;
-  heartRate?: HeartRateRecord;
-  temperature?: TemperatureRecord;
-  weight?: WeightRecord;
-  bodyFat?: BodyFatRecord;
-  bloodGlucose?: BloodGlucoseRecord;
-  spo2?: SpO2Record;
-}
 
 export default function DailyPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
