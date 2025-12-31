@@ -1,5 +1,5 @@
 # FastAPI and ASGI server
-fastapi==0.118.0
+fastapi==0.121.3
 uvicorn[standard]==0.24.0
 sse-starlette==1.8.2
 
@@ -7,7 +7,7 @@ sse-starlette==1.8.2
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 asyncpg==0.29.0
-alembic==1.16.5
+alembic==1.17.2
 
 # HTTP client
 httpx==0.25.2
@@ -16,7 +16,7 @@ httpx==0.25.2
 python-dotenv==1.1.1
 
 # Development
-pytest==8.4.2
+pytest==9.0.1
 pytest-asyncio==0.21.1
 pytest-cov==4.1.0
 pytest-timeout==2.3.1
@@ -28,7 +28,7 @@ mypy==1.18.2
 fastapi-cors==0.0.6
 
 # Performance testing
-locust==2.17.0
+locust==2.42.5
 
 # Internationalization
 pytz==2023.3
