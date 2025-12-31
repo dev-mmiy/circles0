@@ -199,24 +199,29 @@ export default function VitalCharts({
                 dataKey="date" 
                 stroke="#6b7280"
                 tick={{ fill: '#6b7280' }}
+                className="dark:text-gray-400"
               />
               <YAxis 
                 yAxisId="left"
                 stroke="#ef4444"
                 tick={{ fill: '#6b7280' }}
+                className="dark:text-gray-400"
               />
               <YAxis 
                 yAxisId="right"
                 orientation="right"
                 stroke="#3b82f6"
                 tick={{ fill: '#6b7280' }}
+                className="dark:text-gray-400"
               />
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
+                  backgroundColor: 'var(--tooltip-bg, #fff)', 
+                  border: '1px solid var(--tooltip-border, #e5e7eb)',
                   borderRadius: '8px',
+                  color: 'var(--tooltip-text, #000)',
                 }}
+                wrapperStyle={{ color: 'inherit' }}
               />
               <Legend />
               {bpHrData.some(d => d.systolic !== undefined) && (
