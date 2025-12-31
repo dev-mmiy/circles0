@@ -204,75 +204,68 @@ export default function DailyPage() {
     return map;
   }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
 
-  // Group records by recorded_at (same timestamp = same session) for list view
+  // Flatten all records individually for list view (no grouping)
   const groupedRecords = useMemo(() => {
-    const groups: Map<string, VitalRecordGroup> = new Map();
+    const allRecords: VitalRecordGroup[] = [];
 
-    // Add blood pressure records
+    // Add each blood pressure record as a separate group
     bloodPressureRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.bloodPressure = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        bloodPressure: record,
+      });
     });
 
-    // Add heart rate records
+    // Add each heart rate record as a separate group
     heartRateRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.heartRate = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        heartRate: record,
+      });
     });
 
-    // Add temperature records
+    // Add each temperature record as a separate group
     temperatureRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.temperature = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        temperature: record,
+      });
     });
 
-    // Add weight records
+    // Add each weight record as a separate group
     weightRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.weight = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        weight: record,
+      });
     });
 
-    // Add body fat records
+    // Add each body fat record as a separate group
     bodyFatRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.bodyFat = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        bodyFat: record,
+      });
     });
 
-    // Add blood glucose records
+    // Add each blood glucose record as a separate group
     bloodGlucoseRecords.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.bloodGlucose = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        bloodGlucose: record,
+      });
     });
 
-    // Add SpO2 records
+    // Add each SpO2 record as a separate group
     spo2Records.forEach((record) => {
-      const key = record.recorded_at;
-      if (!groups.has(key)) {
-        groups.set(key, { recordedAt: key });
-      }
-      groups.get(key)!.spo2 = record;
+      allRecords.push({
+        recordedAt: record.recorded_at,
+        spo2: record,
+      });
     });
 
     // Sort by recorded_at descending
-    return Array.from(groups.values()).sort((a, b) => 
+    return allRecords.sort((a, b) => 
       new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
     );
   }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
@@ -450,20 +443,33 @@ export default function DailyPage() {
               </div>
             ) : (
               <>
-                {records.map((group, index) => (
-                  <VitalRecordCard
-                    key={`${group.recordedAt}-${index}`}
-                    bloodPressure={group.bloodPressure}
-                    heartRate={group.heartRate}
-                    temperature={group.temperature}
-                    weight={group.weight}
-                    bodyFat={group.bodyFat}
-                    bloodGlucose={group.bloodGlucose}
-                    spo2={group.spo2}
-                    onRecordUpdated={handleRecordCreated}
-                    onRecordDeleted={handleRecordCreated}
-                  />
-                ))}
+                {records.map((group, index) => {
+                  // Create a unique key for each record type
+                  const recordId = 
+                    group.bloodPressure?.id || 
+                    group.heartRate?.id || 
+                    group.temperature?.id || 
+                    group.weight?.id || 
+                    group.bodyFat?.id || 
+                    group.bloodGlucose?.id || 
+                    group.spo2?.id || 
+                    `${group.recordedAt}-${index}`;
+                  
+                  return (
+                    <VitalRecordCard
+                      key={recordId}
+                      bloodPressure={group.bloodPressure}
+                      heartRate={group.heartRate}
+                      temperature={group.temperature}
+                      weight={group.weight}
+                      bodyFat={group.bodyFat}
+                      bloodGlucose={group.bloodGlucose}
+                      spo2={group.spo2}
+                      onRecordUpdated={handleRecordCreated}
+                      onRecordDeleted={handleRecordCreated}
+                    />
+                  );
+                })}
               </>
             )}
           </div>
