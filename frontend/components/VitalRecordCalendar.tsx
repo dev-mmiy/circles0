@@ -1,7 +1,18 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths, startOfWeek, endOfWeek } from 'date-fns';
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  eachDayOfInterval,
+  isSameMonth,
+  isSameDay,
+  addMonths,
+  subMonths,
+  startOfWeek,
+  endOfWeek,
+} from 'date-fns';
 import { ja } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { VitalRecordGroup } from '@/types/vitalRecords';
@@ -120,27 +131,21 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
               disabled={!hasRecords}
               className={`
                 relative p-2 rounded-lg text-sm transition-all
-                ${!isCurrentMonth 
-                  ? 'text-gray-300 dark:text-gray-600' 
-                  : 'text-gray-900 dark:text-gray-100'
+                ${
+                  !isCurrentMonth
+                    ? 'text-gray-300 dark:text-gray-600'
+                    : 'text-gray-900 dark:text-gray-100'
                 }
-                ${isToday 
-                  ? 'ring-2 ring-blue-500 dark:ring-blue-400' 
-                  : ''
+                ${isToday ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}
+                ${
+                  hasRecords
+                    ? 'bg-blue-200 dark:bg-blue-800/50 hover:bg-blue-300 dark:hover:bg-blue-800/60 cursor-pointer font-semibold ring-2 ring-blue-400 dark:ring-blue-500 shadow-sm'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-default'
                 }
-                ${hasRecords 
-                  ? 'bg-blue-200 dark:bg-blue-800/50 hover:bg-blue-300 dark:hover:bg-blue-800/60 cursor-pointer font-semibold ring-2 ring-blue-400 dark:ring-blue-500 shadow-sm' 
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-default'
-                }
-                ${!isCurrentMonth && hasRecords 
-                  ? 'opacity-60' 
-                  : ''
-                }
+                ${!isCurrentMonth && hasRecords ? 'opacity-60' : ''}
               `}
             >
-              <div className="text-center">
-                {format(day, 'd')}
-              </div>
+              <div className="text-center">{format(day, 'd')}</div>
             </button>
           );
         })}
@@ -159,4 +164,3 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
     </div>
   );
 }
-

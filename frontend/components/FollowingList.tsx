@@ -40,7 +40,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
 
   const handleUnfollow = (followingId: string) => {
     // Remove from list optimistically
-    setFollowing((prev) => prev.filter((f) => f.following?.id !== followingId));
+    setFollowing(prev => prev.filter(f => f.following?.id !== followingId));
   };
 
   if (isLoading) {
@@ -69,7 +69,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
 
   return (
     <div className="space-y-4">
-      {following.map((follow) => {
+      {following.map(follow => {
         if (!follow.following) return null;
 
         const isCurrentUser = follow.following.id === currentUserId;
@@ -85,7 +85,7 @@ export default function FollowingList({ userId }: FollowingListProps) {
                 <FollowButton
                   userId={follow.following.id}
                   initialIsFollowing={true}
-                  onFollowChange={(isFollowing) => {
+                  onFollowChange={isFollowing => {
                     if (!isFollowing) {
                       handleUnfollow(follow.following!.id);
                     }

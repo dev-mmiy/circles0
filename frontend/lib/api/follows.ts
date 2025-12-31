@@ -47,10 +47,7 @@ export interface FollowStats {
 /**
  * Follow a user
  */
-export async function followUser(
-  userId: string,
-  accessToken: string
-): Promise<FollowResponse> {
+export async function followUser(userId: string, accessToken: string): Promise<FollowResponse> {
   const response = await fetch(`${API_BASE_URL}/api/v1/follows/users/${userId}`, {
     method: 'POST',
     headers: {
@@ -70,10 +67,7 @@ export async function followUser(
 /**
  * Unfollow a user
  */
-export async function unfollowUser(
-  userId: string,
-  accessToken: string
-): Promise<void> {
+export async function unfollowUser(userId: string, accessToken: string): Promise<void> {
   const response = await fetch(`${API_BASE_URL}/api/v1/follows/users/${userId}`, {
     method: 'DELETE',
     headers: {
@@ -130,19 +124,13 @@ export async function getFollowing(
 /**
  * Get follow statistics for a user
  */
-export async function getFollowStats(
-  userId: string,
-  accessToken?: string
-): Promise<FollowStats> {
+export async function getFollowStats(userId: string, accessToken?: string): Promise<FollowStats> {
   const headers: HeadersInit = {};
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/follows/users/${userId}/stats`,
-    { headers }
-  );
+  const response = await fetch(`${API_BASE_URL}/api/v1/follows/users/${userId}/stats`, { headers });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to get follow stats' }));
@@ -155,18 +143,12 @@ export async function getFollowStats(
 /**
  * Check if current user is following a user
  */
-export async function checkIsFollowing(
-  userId: string,
-  accessToken: string
-): Promise<boolean> {
-  const response = await fetch(
-    `${API_BASE_URL}/api/v1/follows/users/${userId}/is-following`,
-    {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export async function checkIsFollowing(userId: string, accessToken: string): Promise<boolean> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/follows/users/${userId}/is-following`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: 'Failed to check follow status' }));

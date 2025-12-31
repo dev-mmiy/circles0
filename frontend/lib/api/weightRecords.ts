@@ -47,18 +47,20 @@ export async function getWeightRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/weight-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch weight records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch weight records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -77,18 +79,20 @@ export async function getWeightRecord(
   accessToken: string
 ): Promise<WeightRecord> {
   const url = `${apiClient}/api/v1/weight-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch weight record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch weight record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -107,19 +111,21 @@ export async function createWeightRecord(
   accessToken: string
 ): Promise<WeightRecord> {
   const url = `${apiClient}/api/v1/weight-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create weight record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create weight record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -139,19 +145,21 @@ export async function updateWeightRecord(
   accessToken: string
 ): Promise<WeightRecord> {
   const url = `${apiClient}/api/v1/weight-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update weight record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update weight record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -165,23 +173,22 @@ export async function updateWeightRecord(
 /**
  * Delete a weight record.
  */
-export async function deleteWeightRecord(
-  recordId: string,
-  accessToken: string
-): Promise<void> {
+export async function deleteWeightRecord(recordId: string, accessToken: string): Promise<void> {
   const url = `${apiClient}/api/v1/weight-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete weight record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete weight record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -189,4 +196,3 @@ export async function deleteWeightRecord(
     throw error;
   }
 }
-

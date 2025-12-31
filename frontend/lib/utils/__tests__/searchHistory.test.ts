@@ -174,7 +174,7 @@ describe('searchHistory utilities', () => {
 
       const result = getSearchHistory('user');
       expect(result.length).toBe(2);
-      expect(result.find((item) => item.query === 'test2')).toBeUndefined();
+      expect(result.find(item => item.query === 'test2')).toBeUndefined();
     });
 
     it('should handle removing non-existent item', () => {
@@ -192,6 +192,3 @@ describe('searchHistory utilities', () => {
     });
   });
 });
-
-
-

@@ -1,6 +1,6 @@
 /**
  * ImageUploadPreview Component
- * 
+ *
  * Displays image preview and upload status for chat message forms
  */
 
@@ -42,11 +42,3 @@ export default function ImageUploadPreview({
     </div>
   );
 }
-
-
-
-
-
-
-
-

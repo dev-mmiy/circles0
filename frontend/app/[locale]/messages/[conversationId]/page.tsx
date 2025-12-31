@@ -58,7 +58,7 @@ export default function ConversationPage() {
   const conversationId = params.conversationId as string;
   const t = useTranslations('messages');
   const tConv = useTranslations('messages.conversation');
-  
+
   // 認証とローディング管理の共通フック
   const {
     isLoading,
@@ -72,7 +72,7 @@ export default function ConversationPage() {
     requireAuth: true,
     authTimeout: 5000,
   });
-  
+
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [page, setPage] = useState(0);
@@ -80,12 +80,12 @@ export default function ConversationPage() {
   const [isRedirecting, setIsRedirecting] = useState(false);
   // 初期ローディング状態を管理（認証が完了するまでtrue）
   const [initialLoading, setInitialLoading] = useState(true);
-  
+
   // Message form state
   const [messageContent, setMessageContent] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
-  
+
   // Image upload hook
   const {
     uploadedImageUrl,
@@ -103,21 +103,24 @@ export default function ConversationPage() {
       uploadFailed: tConv('uploadFailed'),
     },
   });
-  
+
   // Message search state
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
-  
+
   // Image viewer state
   const imageViewer = useImageViewer();
-  
+
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   // Handle image click - open image viewer
-  const handleImageClick = useCallback((imageUrl: string) => {
-    const allImages = convertMessageImagesToViewerImages(messages);
-    imageViewer.openViewer(allImages, imageUrl);
-  }, [messages, imageViewer]);
+  const handleImageClick = useCallback(
+    (imageUrl: string) => {
+      const allImages = convertMessageImagesToViewerImages(messages);
+      imageViewer.openViewer(allImages, imageUrl);
+    },
+    [messages, imageViewer]
+  );
 
   const MESSAGES_PER_PAGE = 50;
 
@@ -128,23 +131,23 @@ export default function ConversationPage() {
       if (messagesContainerRef.current) {
         const container = messagesContainerRef.current;
         const maxScrollTop = container.scrollHeight - container.clientHeight;
-        
+
         // scrollTopを直接設定（sticky要素の影響を受けない）
         if (smooth && attempt === retries) {
           // 最後の試行時のみスムーズスクロール
           container.scrollTo({
             top: maxScrollTop,
-            behavior: 'smooth'
+            behavior: 'smooth',
           });
         } else {
           // 即座にスクロール（scrollTopを直接設定）
           container.scrollTop = maxScrollTop;
         }
-        
+
         // スクロールが完了したか確認（余裕を持たせる）
         const currentScrollTop = container.scrollTop;
         const isAtBottom = Math.abs(currentScrollTop - maxScrollTop) < 5;
-        
+
         // まだ最下部に到達していない場合、再試行
         if (!isAtBottom && attempt < retries) {
           requestAnimationFrame(() => {
@@ -153,7 +156,7 @@ export default function ConversationPage() {
         }
       }
     };
-    
+
     // requestAnimationFrameを使用してDOM更新後にスクロール
     requestAnimationFrame(() => {
       attemptScroll(1);
@@ -163,20 +166,23 @@ export default function ConversationPage() {
   // 会話を取得
   const loadConversation = async () => {
     debugLog.log('[ConversationPage] loadConversation called', { conversationId });
-    
+
     if (!isMountedRef.current) {
       debugLog.log('[ConversationPage] Not mounted, returning');
       return null;
     }
 
     try {
-      const conv = await executeWithLoading(
-        () => getConversation(conversationId),
-        { reset: false, skipLoadingState: true }
-      );
-      
-      debugLog.log('[ConversationPage] loadConversation response', { conversation: !!conv, isMounted: isMountedRef.current });
-      
+      const conv = await executeWithLoading(() => getConversation(conversationId), {
+        reset: false,
+        skipLoadingState: true,
+      });
+
+      debugLog.log('[ConversationPage] loadConversation response', {
+        conversation: !!conv,
+        isMounted: isMountedRef.current,
+      });
+
       if (conv && isMountedRef.current) {
         setConversation(conv);
         clearError();
@@ -189,29 +195,34 @@ export default function ConversationPage() {
   };
 
   const loadMessages = async (reset: boolean = false, skipLoadingState: boolean = false) => {
-    debugLog.log('[ConversationPage] loadMessages called', { reset, skipLoadingState, conversationId });
-    
+    debugLog.log('[ConversationPage] loadMessages called', {
+      reset,
+      skipLoadingState,
+      conversationId,
+    });
+
     if (!isMountedRef.current) {
       debugLog.log('[ConversationPage] Not mounted, returning');
       return;
     }
 
     const currentPage = reset ? 0 : page;
-    
+
     try {
       const response = await executeWithLoading(
-        () => getMessages(
-          conversationId,
-          currentPage * MESSAGES_PER_PAGE,
-          MESSAGES_PER_PAGE,
-          searchQuery || undefined
-        ),
+        () =>
+          getMessages(
+            conversationId,
+            currentPage * MESSAGES_PER_PAGE,
+            MESSAGES_PER_PAGE,
+            searchQuery || undefined
+          ),
         { reset, skipLoadingState }
       );
 
-      debugLog.log('[ConversationPage] loadMessages response', { 
-        response: !!response, 
-        messagesCount: response?.messages?.length, 
+      debugLog.log('[ConversationPage] loadMessages response', {
+        response: !!response,
+        messagesCount: response?.messages?.length,
         isMounted: isMountedRef.current,
         responseType: typeof response,
         responseKeys: response ? Object.keys(response) : null,
@@ -220,7 +231,10 @@ export default function ConversationPage() {
 
       // executeWithLoadingはエラー時やアンマウント時にnullを返す可能性がある
       if (!response) {
-        debugLog.warn('[ConversationPage] executeWithLoading returned null (error or unmounted)', { reset, skipLoadingState });
+        debugLog.warn('[ConversationPage] executeWithLoading returned null (error or unmounted)', {
+          reset,
+          skipLoadingState,
+        });
         // エラーが発生した場合でもinitialLoadingを解除する
         if (reset) {
           setInitialLoading(false);
@@ -231,7 +245,10 @@ export default function ConversationPage() {
 
       // response.messagesが存在しない場合
       if (!response.messages) {
-        debugLog.warn('[ConversationPage] Response has no messages property', { response, responseKeys: Object.keys(response) });
+        debugLog.warn('[ConversationPage] Response has no messages property', {
+          response,
+          responseKeys: Object.keys(response),
+        });
         if (reset) {
           setInitialLoading(false);
           setMessages([]);
@@ -259,10 +276,10 @@ export default function ConversationPage() {
         setTimeout(async () => {
           if (!isMountedRef.current) return;
           try {
-            await executeWithLoading(
-              () => markMessagesAsRead(conversationId, null),
-              { reset: false, skipLoadingState: true }
-            );
+            await executeWithLoading(() => markMessagesAsRead(conversationId, null), {
+              reset: false,
+              skipLoadingState: true,
+            });
           } catch (err) {
             debugLog.error('Failed to mark messages as read:', err);
           }
@@ -270,7 +287,10 @@ export default function ConversationPage() {
       } else {
         // 古いメッセージを先頭に追加
         setMessages([...response.messages, ...messages]);
-        debugLog.log('[ConversationPage] Messages appended, total count:', response.messages.length + messages.length);
+        debugLog.log(
+          '[ConversationPage] Messages appended, total count:',
+          response.messages.length + messages.length
+        );
       }
 
       setHasMore(response.messages.length === MESSAGES_PER_PAGE);
@@ -283,8 +303,13 @@ export default function ConversationPage() {
 
   // 認証チェックと初期読み込み
   useEffect(() => {
-    debugLog.log('[ConversationPage] Auth check useEffect', { authLoading, isAuthenticated, conversationId, isRedirecting });
-    
+    debugLog.log('[ConversationPage] Auth check useEffect', {
+      authLoading,
+      isAuthenticated,
+      conversationId,
+      isRedirecting,
+    });
+
     if (authLoading && !isAuthenticated) {
       debugLog.log('[ConversationPage] Auth still loading, skipping');
       return;
@@ -303,23 +328,34 @@ export default function ConversationPage() {
 
     // 両方の読み込みを並行して実行し、どちらかが失敗してもローディングを解除する
     let isCancelled = false;
-    
+
     const loadData = async () => {
-      debugLog.log('[ConversationPage] Starting loadData', { conversationId, isMounted: isMountedRef.current });
+      debugLog.log('[ConversationPage] Starting loadData', {
+        conversationId,
+        isMounted: isMountedRef.current,
+      });
       try {
         // Promise.allSettledを使用して、どちらかが失敗しても続行する
         const results = await Promise.allSettled([
           loadConversation(),
           loadMessages(true, false), // skipLoadingState: false に変更してローディング状態を管理
         ]);
-        
-        debugLog.log('[ConversationPage] loadData results', results.map(r => ({ 
-          status: r.status, 
-          hasValue: r.status === 'fulfilled' && !!r.value,
-          valueType: r.status === 'fulfilled' ? typeof r.value : 'N/A',
-          value: r.status === 'fulfilled' ? (typeof r.value === 'object' ? Object.keys(r.value || {}) : r.value) : null,
-        })));
-        
+
+        debugLog.log(
+          '[ConversationPage] loadData results',
+          results.map(r => ({
+            status: r.status,
+            hasValue: r.status === 'fulfilled' && !!r.value,
+            valueType: r.status === 'fulfilled' ? typeof r.value : 'N/A',
+            value:
+              r.status === 'fulfilled'
+                ? typeof r.value === 'object'
+                  ? Object.keys(r.value || {})
+                  : r.value
+                : null,
+          }))
+        );
+
         // エラーをログに記録
         results.forEach((result, index) => {
           const name = index === 0 ? 'conversation' : 'messages';
@@ -329,17 +365,22 @@ export default function ConversationPage() {
             if (!result.value) {
               // executeWithLoadingはエラー時やアンマウント時にnullを返す可能性がある
               // これは正常な動作なので、警告レベルを下げる
-              debugLog.log(`[ConversationPage] ${name} returned null/undefined (likely error or unmounted)`);
+              debugLog.log(
+                `[ConversationPage] ${name} returned null/undefined (likely error or unmounted)`
+              );
             } else {
               debugLog.log(`[ConversationPage] ${name} loaded successfully`, {
                 type: typeof result.value,
-                keys: typeof result.value === 'object' && result.value ? Object.keys(result.value) : null,
+                keys:
+                  typeof result.value === 'object' && result.value
+                    ? Object.keys(result.value)
+                    : null,
                 messagesCount: index === 1 ? (result.value as any)?.messages?.length : undefined,
               });
             }
           }
         });
-        
+
         // 必ずinitialLoadingをfalseにする（成功・失敗に関わらず）
         if (!isCancelled) {
           debugLog.log('[ConversationPage] Setting initialLoading to false');
@@ -355,7 +396,7 @@ export default function ConversationPage() {
     };
 
     loadData();
-    
+
     return () => {
       isCancelled = true;
     };
@@ -364,12 +405,12 @@ export default function ConversationPage() {
 
   /**
    * Handle new message from Server-Sent Events (SSE) stream
-   * 
+   *
    * This function is called when a new message is received via the SSE connection.
    * It filters messages to only process those for the current conversation,
    * converts the SSE message format to the internal Message format,
    * and updates the UI state accordingly.
-   * 
+   *
    * @param messageEvent - Message event received from SSE stream
    */
   const handleNewMessage = (messageEvent: MessageEvent) => {
@@ -401,7 +442,7 @@ export default function ConversationPage() {
       created_at: messageEvent.created_at,
       updated_at: messageEvent.updated_at,
       sender: messageEvent.sender,
-      is_read: false,  // New messages are unread by default
+      is_read: false, // New messages are unread by default
       read_at: null,
     };
 
@@ -433,10 +474,10 @@ export default function ConversationPage() {
     if (messageEvent.sender_id !== currentUser?.id) {
       setTimeout(async () => {
         try {
-          await executeWithLoading(
-            () => markMessagesAsRead(conversationId, [messageEvent.id]),
-            { reset: false, skipLoadingState: true }
-          );
+          await executeWithLoading(() => markMessagesAsRead(conversationId, [messageEvent.id]), {
+            reset: false,
+            skipLoadingState: true,
+          });
         } catch (err) {
           debugLog.error('Failed to mark message as read:', err);
         }
@@ -449,7 +490,7 @@ export default function ConversationPage() {
   // 検索クエリが変更されたときにメッセージを再読み込み
   useEffect(() => {
     if (!isAuthenticated || !conversationId) return;
-    
+
     // 検索クエリが変更されたときのみ再読み込み
     const timeoutId = setTimeout(() => {
       setIsSearching(true);
@@ -473,7 +514,7 @@ export default function ConversationPage() {
       });
     }
   }, [messages.length, initialLoading]);
-  
+
   // 初期読み込み完了時に最下部にスクロール
   useEffect(() => {
     if (!initialLoading && messages.length > 0) {
@@ -491,7 +532,6 @@ export default function ConversationPage() {
     setPage(page + 1);
     loadMessages(false);
   };
-
 
   // メッセージを送信
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -519,7 +559,7 @@ export default function ConversationPage() {
       // Ensure content is not empty (backend requires min_length=1)
       // If content is empty but image_url exists, use a placeholder
       const trimmedContent = messageContent.trim();
-      
+
       if (!trimmedContent && !uploadedImageUrl) {
         throw new Error('Message content or image is required');
       }
@@ -530,10 +570,10 @@ export default function ConversationPage() {
         image_url: uploadedImageUrl || null,
       };
 
-      const newMessage = await executeWithLoading(
-        () => sendMessage(messageData),
-        { reset: false, skipLoadingState: true }
-      );
+      const newMessage = await executeWithLoading(() => sendMessage(messageData), {
+        reset: false,
+        skipLoadingState: true,
+      });
 
       if (!newMessage) {
         throw new Error('Failed to send message');
@@ -544,7 +584,7 @@ export default function ConversationPage() {
         currentConversationId: conversationId,
         sender_id: newMessage.sender_id,
       });
-      
+
       // Message handling strategy:
       // 1. Messages are typically added via SSE (handleNewMessage) for real-time updates
       // 2. However, SSE may be delayed or fail, so we add a fallback:
@@ -564,21 +604,21 @@ export default function ConversationPage() {
           // Scroll to bottom after adding message
           setTimeout(() => {
             requestAnimationFrame(() => {
-          setTimeout(() => {
-            scrollToBottom(true, 3);
-          }, 100);
-        });
+              setTimeout(() => {
+                scrollToBottom(true, 3);
+              }, 100);
+            });
           }, 100);
           return updated;
         });
       }, 500); // Wait 500ms for SSE, then add manually if not received
-      
+
       // フォームをクリア
       setMessageContent('');
       clearImage();
-      
+
       // 会話情報を更新（非同期で実行）
-      loadConversation().catch((err) => {
+      loadConversation().catch(err => {
         debugLog.error('Failed to load conversation:', err);
       });
     } catch (err: any) {
@@ -597,15 +637,17 @@ export default function ConversationPage() {
     try {
       // 現在のメッセージのリアクション状態を確認
       const currentMessage = messages.find(msg => msg.id === messageId);
-      const existingUserReaction = currentMessage?.reactions?.find(r => r.user_id === currentUser?.id);
+      const existingUserReaction = currentMessage?.reactions?.find(
+        r => r.user_id === currentUser?.id
+      );
       const isSameReactionType = existingUserReaction?.reaction_type === reactionType;
-      
+
       // 同じリアクションタイプの場合は、削除APIを呼び出す
       if (isSameReactionType && existingUserReaction) {
         try {
           await removeMessageReaction(messageId);
           // 状態から削除
-          setMessages(prevMessages => 
+          setMessages(prevMessages =>
             prevMessages.map(msg => {
               if (msg.id === messageId) {
                 return {
@@ -622,11 +664,11 @@ export default function ConversationPage() {
           // 削除に失敗した場合は、通常の追加処理を続行
         }
       }
-      
+
       const updatedReaction = await addMessageReaction(messageId, { reaction_type: reactionType });
-      
+
       // Update message reactions in state
-      setMessages(prevMessages => 
+      setMessages(prevMessages =>
         prevMessages.map(msg => {
           if (msg.id === messageId) {
             // If reaction was removed (null), remove it from reactions
@@ -636,11 +678,11 @@ export default function ConversationPage() {
                 reactions: msg.reactions?.filter(r => r.user_id !== currentUser?.id) || null,
               };
             }
-            
+
             // Otherwise, add or update reaction
             const existingReactions = msg.reactions || [];
             const existingIndex = existingReactions.findIndex(r => r.user_id === currentUser?.id);
-            
+
             if (existingIndex >= 0) {
               // Update existing reaction
               const updated = [...existingReactions];
@@ -659,10 +701,12 @@ export default function ConversationPage() {
       // 422エラーの場合は詳細を表示
       if (err.response?.status === 422) {
         const errorDetail = err.response?.data?.detail;
-        const errorMessage = Array.isArray(errorDetail) 
+        const errorMessage = Array.isArray(errorDetail)
           ? errorDetail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
           : errorDetail || 'Validation error';
-        alert(`${tConv('reactions.errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`);
+        alert(
+          `${tConv('reactions.errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`
+        );
       } else {
         alert(tConv('reactions.errorAddingReaction') || 'Failed to add reaction');
       }
@@ -671,13 +715,13 @@ export default function ConversationPage() {
 
   const handleDeleteMessage = async (messageId: string) => {
     setDeletingMessageId(messageId);
-    
+
     try {
-      await executeWithLoading(
-        () => deleteMessage(messageId),
-        { reset: false, skipLoadingState: true }
-      );
-      
+      await executeWithLoading(() => deleteMessage(messageId), {
+        reset: false,
+        skipLoadingState: true,
+      });
+
       if (isMountedRef.current) {
         setMessages(prev => prev.filter(m => m.id !== messageId));
       }
@@ -691,14 +735,17 @@ export default function ConversationPage() {
 
   // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string) => {
-    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
+    const userTimezone = currentUser
+      ? getUserTimezone(currentUser.timezone, currentUser.country)
+      : 'UTC';
     // Normalize date string to ensure UTC interpretation
-    const normalizedDateString = dateString.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateString) 
-      ? dateString 
-      : dateString + 'Z';
+    const normalizedDateString =
+      dateString.endsWith('Z') || /[+-]\d{2}:\d{2}$/.test(dateString)
+        ? dateString
+        : dateString + 'Z';
     const date = new Date(normalizedDateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
-    
+
     // Use Intl.DateTimeFormat to format in user's timezone
     const formatter = new Intl.DateTimeFormat(locale === 'ja' ? 'ja-JP' : 'en-US', {
       timeZone: userTimezone,
@@ -708,29 +755,28 @@ export default function ConversationPage() {
       hour: 'numeric',
       minute: '2-digit',
     });
-    
+
     // Calculate relative time
-    const relative = formatRelativeTime(dateString, locale, currentUser?.timezone, currentUser?.country);
+    const relative = formatRelativeTime(
+      dateString,
+      locale,
+      currentUser?.timezone,
+      currentUser?.country
+    );
     if (relative.minutes < 60) {
       return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
     }
-    
+
     return formatter.format(date);
   };
 
   // 日付表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatDate = (dateString: string) => {
-    return formatDateInTimezone(
-      dateString,
-      locale,
-      currentUser?.timezone,
-      currentUser?.country,
-      {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }
-    );
+    return formatDateInTimezone(dateString, locale, currentUser?.timezone, currentUser?.country, {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
   };
 
   // 認証チェック中またはリダイレクト中のみページ全体をローディング
@@ -805,7 +851,7 @@ export default function ConversationPage() {
                 </Link>
               )}
             </div>
-            
+
             {/* Message search */}
             {!initialLoading && !isLoading && (
               <div className="mt-4">
@@ -814,7 +860,7 @@ export default function ConversationPage() {
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     placeholder={tConv('searchMessages')}
                     className="w-full pl-10 pr-10 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     disabled={isSearching}
@@ -839,10 +885,7 @@ export default function ConversationPage() {
           </div>
 
           {/* Messages container */}
-          <div
-            ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0"
-          >
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
             {error && (
               <div className="mb-4">
                 <ErrorDisplay
@@ -858,7 +901,9 @@ export default function ConversationPage() {
               <div className="flex justify-center items-center py-12">
                 <div className="text-center">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                  <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loading') || '読み込み中...'}</p>
+                  <p className="mt-4 text-gray-500 dark:text-gray-400">
+                    {t('loading') || '読み込み中...'}
+                  </p>
                 </div>
               </div>
             ) : (
@@ -944,56 +989,62 @@ export default function ConversationPage() {
                 ) : (
                   <>
                     {messages.map((message, index) => {
-                  const prevMessage = index > 0 ? messages[index - 1] : null;
-                  const showDateSeparator =
-                    !prevMessage ||
-                    formatDate(prevMessage.created_at) !== formatDate(message.created_at);
-                  const isOwnMessage = currentUser?.id === message.sender_id;
+                      const prevMessage = index > 0 ? messages[index - 1] : null;
+                      const showDateSeparator =
+                        !prevMessage ||
+                        formatDate(prevMessage.created_at) !== formatDate(message.created_at);
+                      const isOwnMessage = currentUser?.id === message.sender_id;
 
-                  return (
-                    <div key={message.id}>
-                      {showDateSeparator && (
-                        <div className="text-center py-2">
-                          <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
-                            {formatDate(message.created_at)}
-                          </span>
+                      return (
+                        <div key={message.id}>
+                          {showDateSeparator && (
+                            <div className="text-center py-2">
+                              <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 px-3 py-1 rounded-full">
+                                {formatDate(message.created_at)}
+                              </span>
+                            </div>
+                          )}
+                          <ChatMessage
+                            id={message.id}
+                            sender={
+                              message.sender
+                                ? {
+                                    id: message.sender.id,
+                                    nickname: message.sender.nickname,
+                                    avatar_url: message.sender.avatar_url,
+                                  }
+                                : null
+                            }
+                            senderId={message.sender_id}
+                            content={message.content}
+                            imageUrl={message.image_url}
+                            isDeleted={message.is_deleted}
+                            createdAt={message.created_at}
+                            isOwnMessage={isOwnMessage}
+                            showAvatar={shouldShowAvatar(
+                              index,
+                              index > 0 ? messages[index - 1].sender_id : null,
+                              message.sender_id,
+                              !!message.image_url,
+                              true // Direct messages: always show avatar
+                            )}
+                            showSenderName={false}
+                            onDelete={handleDeleteMessage}
+                            isDeleting={deletingMessageId === message.id}
+                            formatTime={formatTime}
+                            deleteMessageTitle={tConv('deleteMessage')}
+                            deletedMessageText={`(${tConv('deletedMessage')})`}
+                            priority={index >= messages.length - 3}
+                            reactions={message.reactions || []}
+                            currentUserId={currentUser?.id}
+                            onReactionClick={reactionType =>
+                              handleReactionClick(message.id, reactionType)
+                            }
+                            onImageClick={handleImageClick}
+                          />
                         </div>
-                      )}
-                      <ChatMessage
-                        id={message.id}
-                        sender={message.sender ? {
-                          id: message.sender.id,
-                          nickname: message.sender.nickname,
-                          avatar_url: message.sender.avatar_url,
-                        } : null}
-                        senderId={message.sender_id}
-                        content={message.content}
-                        imageUrl={message.image_url}
-                        isDeleted={message.is_deleted}
-                        createdAt={message.created_at}
-                        isOwnMessage={isOwnMessage}
-                        showAvatar={shouldShowAvatar(
-                          index,
-                          index > 0 ? messages[index - 1].sender_id : null,
-                          message.sender_id,
-                          !!message.image_url,
-                          true // Direct messages: always show avatar
-                        )}
-                        showSenderName={false}
-                        onDelete={handleDeleteMessage}
-                        isDeleting={deletingMessageId === message.id}
-                        formatTime={formatTime}
-                        deleteMessageTitle={tConv('deleteMessage')}
-                        deletedMessageText={`(${tConv('deletedMessage')})`}
-                        priority={index >= messages.length - 3}
-                        reactions={message.reactions || []}
-                        currentUserId={currentUser?.id}
-                        onReactionClick={(reactionType) => handleReactionClick(message.id, reactionType)}
-                        onImageClick={handleImageClick}
-                      />
-                    </div>
-                  );
-                })}
+                      );
+                    })}
                   </>
                 )}
               </>
@@ -1014,13 +1065,13 @@ export default function ConversationPage() {
               <div className="flex gap-2 items-start">
                 <textarea
                   value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
+                  onChange={e => setMessageContent(e.target.value)}
                   placeholder={tConv('messagePlaceholder')}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   rows={1}
                   maxLength={5000}
                   disabled={isSending || uploadingImage}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage(e);
@@ -1046,16 +1097,14 @@ export default function ConversationPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
+                  disabled={
+                    isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)
+                  }
                   className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-0.5 flex-shrink-0"
                 >
                   {isSending ? (
                     <>
-                      <svg
-                        className="animate-spin h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                         <circle
                           className="opacity-25"
                           cx="12"
@@ -1096,4 +1145,3 @@ export default function ConversationPage() {
     </>
   );
 }
-

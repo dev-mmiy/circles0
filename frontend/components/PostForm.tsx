@@ -4,14 +4,31 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useMemo, useState, useRef, useEffect } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import Image from 'next/image';
-import { createPost, updatePost, type CreatePostData, type UpdatePostData, type Post } from '@/lib/api/posts';
+import {
+  createPost,
+  updatePost,
+  type CreatePostData,
+  type UpdatePostData,
+  type Post,
+} from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
-import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
+import {
+  uploadImage,
+  uploadMultipleImages,
+  validateImageFile,
+  createImagePreview,
+  type UploadImageResponse,
+} from '@/lib/api/images';
 import { debugLog } from '@/lib/utils/debug';
 import { useDisease } from '@/contexts/DiseaseContext';
 
-type VisibleMeasurement = 'blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature';
+type VisibleMeasurement =
+  | 'blood_pressure_heart_rate'
+  | 'weight_body_fat'
+  | 'blood_glucose'
+  | 'spo2'
+  | 'temperature';
 
 interface PostFormProps {
   onPostCreated?: () => void | Promise<void>;
@@ -38,12 +55,16 @@ export default function PostForm({
   const t = useTranslations('postForm');
   const locale = useLocale();
   const { userDiseases } = useDisease();
-  
+
   // Initialize healthRecordData, converting recorded_at from ISO to datetime-local format if needed
   const initializeHealthRecordData = (): Record<string, any> => {
     if (!editingPost?.health_record_data) return {};
     const data = { ...editingPost.health_record_data };
-    if (data.recorded_at && typeof data.recorded_at === 'string' && data.recorded_at.includes('T')) {
+    if (
+      data.recorded_at &&
+      typeof data.recorded_at === 'string' &&
+      data.recorded_at.includes('T')
+    ) {
       // Convert ISO string to datetime-local format
       const date = new Date(data.recorded_at);
       const year = date.getFullYear();
@@ -55,14 +76,16 @@ export default function PostForm({
     }
     return data;
   };
-  
+
   const [postType, setPostType] = useState<'regular' | 'health_record'>(
     editingPost?.post_type || initialPostType
   );
-  const [healthRecordType, setHealthRecordType] = useState<'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null>(
-    editingPost?.health_record_type || initialHealthRecordType || null
+  const [healthRecordType, setHealthRecordType] = useState<
+    'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise' | null
+  >(editingPost?.health_record_type || initialHealthRecordType || null);
+  const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>(
+    initializeHealthRecordData()
   );
-  const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>(initializeHealthRecordData());
   const [content, setContent] = useState(editingPost?.content || '');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     (editingPost?.visibility as 'public' | 'followers_only' | 'private') || 'public'
@@ -94,7 +117,7 @@ export default function PostForm({
   // Set default recorded_at when vital or meal type is selected (only for new records)
   useEffect(() => {
     if (!editingPost && (healthRecordType === 'vital' || healthRecordType === 'meal')) {
-      setHealthRecordData((prev) => {
+      setHealthRecordData(prev => {
         // Only set default if recorded_at is not already set
         if (prev.recorded_at) {
           return prev;
@@ -107,7 +130,7 @@ export default function PostForm({
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const defaultDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
-        
+
         return {
           ...prev,
           recorded_at: defaultDateTime,
@@ -160,7 +183,7 @@ export default function PostForm({
         // Update image URLs
         const newImageUrls = [...imageUrls, ...uploadResponse.urls];
         setImageUrls(newImageUrls);
-        
+
         // Update previews with uploaded URLs
         const newPreviews = [...imagePreviews];
         uploadResponse.urls.forEach((url, index) => {
@@ -179,14 +202,14 @@ export default function PostForm({
       }
     } catch (err: any) {
       debugLog.error('Failed to upload images:', err);
-      
+
       // Handle 503 error (GCS not configured)
       if (err.response?.status === 503) {
         setError(t('errors.uploadServiceNotConfigured'));
       } else {
         setError(err.response?.data?.detail || err.message || t('errors.uploadFailed'));
       }
-      
+
       // Remove failed previews
       setImagePreviews(imagePreviews.slice(0, imagePreviews.length - validFiles.length));
     } finally {
@@ -210,14 +233,14 @@ export default function PostForm({
     // For health records, content is optional (stored in healthRecordData.notes instead)
     // For regular posts, content is required
     if (postType !== 'health_record') {
-    if (!content.trim()) {
-      setError(t('errors.contentRequired'));
-      return;
-    }
+      if (!content.trim()) {
+        setError(t('errors.contentRequired'));
+        return;
+      }
 
-    if (content.length > 5000) {
-      setError(t('errors.contentTooLong'));
-      return;
+      if (content.length > 5000) {
+        setError(t('errors.contentTooLong'));
+        return;
       }
     }
 
@@ -237,9 +260,10 @@ export default function PostForm({
       if (postType === 'health_record' && healthRecordData.recorded_at) {
         // Convert datetime-local format (YYYY-MM-DDTHH:mm) to ISO string
         const recordedAt = healthRecordData.recorded_at;
-        const isoDate = recordedAt.includes('T') && !recordedAt.includes('Z') && !recordedAt.includes('+')
-          ? new Date(recordedAt).toISOString()
-          : recordedAt;
+        const isoDate =
+          recordedAt.includes('T') && !recordedAt.includes('Z') && !recordedAt.includes('+')
+            ? new Date(recordedAt).toISOString()
+            : recordedAt;
         processedHealthRecordData = {
           ...healthRecordData,
           recorded_at: isoDate,
@@ -249,28 +273,39 @@ export default function PostForm({
       // Validate vital record measurements
       if (postType === 'health_record' && healthRecordType === 'vital') {
         const measurements = processedHealthRecordData.measurements || {};
-        
+
         // Check if at least one measurement is provided
-        const hasBloodPressure = measurements.blood_pressure?.systolic || measurements.blood_pressure?.diastolic;
+        const hasBloodPressure =
+          measurements.blood_pressure?.systolic || measurements.blood_pressure?.diastolic;
         const hasHeartRate = measurements.heart_rate?.value;
         const hasTemperature = measurements.temperature?.value;
         const hasWeight = measurements.weight?.value;
         const hasBodyFat = measurements.body_fat_percentage?.value;
         const hasBloodGlucose = measurements.blood_glucose?.value;
         const hasSpO2 = measurements.spo2?.value;
-        
-        const hasAnyMeasurement = hasBloodPressure || hasHeartRate || hasTemperature || hasWeight || hasBodyFat || hasBloodGlucose || hasSpO2;
-        
+
+        const hasAnyMeasurement =
+          hasBloodPressure ||
+          hasHeartRate ||
+          hasTemperature ||
+          hasWeight ||
+          hasBodyFat ||
+          hasBloodGlucose ||
+          hasSpO2;
+
         if (!hasAnyMeasurement) {
           setError(t('errors.vitalMeasurementRequired') || 'At least one measurement is required');
           setIsSubmitting(false);
           return;
         }
-        
+
         // For blood_pressure_heart_rate group, check if at least one is provided
         if (visibleMeasurements?.includes('blood_pressure_heart_rate')) {
           if (!hasBloodPressure && !hasHeartRate) {
-            setError(t('errors.bloodPressureOrHeartRateRequired') || 'Blood pressure or heart rate is required');
+            setError(
+              t('errors.bloodPressureOrHeartRateRequired') ||
+                'Blood pressure or heart rate is required'
+            );
             setIsSubmitting(false);
             return;
           }
@@ -281,18 +316,28 @@ export default function PostForm({
         // For health records, use notes from healthRecordData if content is empty
         // Otherwise use content (for regular posts or health records with content)
         // If both are empty, use a default message
-        content: postType === 'health_record' && !content.trim() 
-          ? (processedHealthRecordData.notes || t('healthRecord.vitalForm.defaultContent') || 'Health record')
-          : content.trim(),
+        content:
+          postType === 'health_record' && !content.trim()
+            ? processedHealthRecordData.notes ||
+              t('healthRecord.vitalForm.defaultContent') ||
+              'Health record'
+            : content.trim(),
         visibility,
         // Don't include images for vital records
-        image_urls: (postType === 'health_record' && healthRecordType === 'vital') 
-          ? undefined 
-          : (imageUrls.length > 0 ? imageUrls : undefined),
+        image_urls:
+          postType === 'health_record' && healthRecordType === 'vital'
+            ? undefined
+            : imageUrls.length > 0
+            ? imageUrls
+            : undefined,
         user_disease_id: selectedDiseaseId || undefined,
         post_type: postType,
-        health_record_type: postType === 'health_record' ? healthRecordType || undefined : undefined,
-        health_record_data: postType === 'health_record' && Object.keys(processedHealthRecordData).length > 0 ? processedHealthRecordData : undefined,
+        health_record_type:
+          postType === 'health_record' ? healthRecordType || undefined : undefined,
+        health_record_data:
+          postType === 'health_record' && Object.keys(processedHealthRecordData).length > 0
+            ? processedHealthRecordData
+            : undefined,
       };
 
       // Debug log for vital records
@@ -334,25 +379,31 @@ export default function PostForm({
       if (onPostCreated) {
         const result = onPostCreated();
         // Check if result is a Promise-like object
-        if (result && typeof result === 'object' && 'then' in result && typeof (result as any).then === 'function') {
+        if (
+          result &&
+          typeof result === 'object' &&
+          'then' in result &&
+          typeof (result as any).then === 'function'
+        ) {
           await result;
         }
       }
     } catch (err: any) {
       debugLog.error('Failed to create post:', err);
-      
+
       // Extract more detailed error message
       let errorMessage = t('errors.createFailed');
       if (err.message) {
         errorMessage = err.message;
       } else if (err.response?.data?.detail) {
-        errorMessage = typeof err.response.data.detail === 'string' 
-          ? err.response.data.detail 
-          : JSON.stringify(err.response.data.detail);
+        errorMessage =
+          typeof err.response.data.detail === 'string'
+            ? err.response.data.detail
+            : JSON.stringify(err.response.data.detail);
       } else if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -360,18 +411,16 @@ export default function PostForm({
   };
 
   // Get localized disease name
-  const getDiseaseName = (disease: typeof userDiseases[0]): string => {
+  const getDiseaseName = (disease: (typeof userDiseases)[0]): string => {
     if (!disease.disease) {
       return `${t('diseaseId')}: ${disease.disease_id}`;
     }
     if (disease.disease.translations && disease.disease.translations.length > 0) {
-      const translation = disease.disease.translations.find(
-        (t) => t.language_code === locale
-      );
+      const translation = disease.disease.translations.find(t => t.language_code === locale);
       if (translation) {
         return translation.translated_name;
       }
-      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = disease.disease.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -395,7 +444,7 @@ export default function PostForm({
                   name="postType"
                   value="regular"
                   checked={postType === 'regular'}
-                  onChange={(e) => {
+                  onChange={e => {
                     setPostType('regular');
                     setHealthRecordType(null);
                     setHealthRecordData({});
@@ -403,7 +452,9 @@ export default function PostForm({
                   className="mr-2 text-blue-600 focus:ring-blue-500"
                   disabled={isSubmitting}
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.regular')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('postType.regular')}
+                </span>
               </label>
               <label className="flex items-center">
                 <input
@@ -411,11 +462,13 @@ export default function PostForm({
                   name="postType"
                   value="health_record"
                   checked={postType === 'health_record'}
-                  onChange={(e) => setPostType('health_record')}
+                  onChange={e => setPostType('health_record')}
                   className="mr-2 text-blue-600 focus:ring-blue-500"
                   disabled={isSubmitting}
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">{t('postType.healthRecord')}</span>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  {t('postType.healthRecord')}
+                </span>
               </label>
             </div>
           </div>
@@ -428,7 +481,7 @@ export default function PostForm({
               {t('healthRecord.title')}
             </label>
             <div className="flex flex-wrap gap-2">
-              {(['diary', 'symptom'] as const).map((type) => (
+              {(['diary', 'symptom'] as const).map(type => (
                 <button
                   key={type}
                   type="button"
@@ -457,19 +510,24 @@ export default function PostForm({
               {t('healthRecord.diaryForm.mood')}
             </label>
             <div className="flex space-x-4 mb-4">
-              {(['good', 'neutral', 'bad'] as const).map((mood) => (
+              {(['good', 'neutral', 'bad'] as const).map(mood => (
                 <label key={mood} className="flex items-center">
                   <input
                     type="radio"
                     name="mood"
                     value={mood}
                     checked={healthRecordData.mood === mood}
-                    onChange={(e) => setHealthRecordData({ ...healthRecordData, mood: e.target.value })}
+                    onChange={e =>
+                      setHealthRecordData({ ...healthRecordData, mood: e.target.value })
+                    }
                     className="mr-2 text-blue-600 focus:ring-blue-500"
                     disabled={isSubmitting}
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
-                    {mood === 'good' && '😊'} {mood === 'neutral' && '😐'} {mood === 'bad' && '😢'} {t(`healthRecord.diaryForm.mood${mood.charAt(0).toUpperCase() + mood.slice(1)}`)}
+                    {mood === 'good' && '😊'} {mood === 'neutral' && '😐'} {mood === 'bad' && '😢'}{' '}
+                    {t(
+                      `healthRecord.diaryForm.mood${mood.charAt(0).toUpperCase() + mood.slice(1)}`
+                    )}
                   </span>
                 </label>
               ))}
@@ -479,7 +537,7 @@ export default function PostForm({
             </label>
             <textarea
               value={healthRecordData.notes || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
               placeholder={t('healthRecord.diaryForm.notes')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               rows={3}
@@ -490,9 +548,18 @@ export default function PostForm({
             </label>
             <input
               type="text"
-              value={healthRecordData.tags ? (Array.isArray(healthRecordData.tags) ? healthRecordData.tags.join(', ') : healthRecordData.tags) : ''}
-              onChange={(e) => {
-                const tags = e.target.value.split(',').map(t => t.trim()).filter(t => t);
+              value={
+                healthRecordData.tags
+                  ? Array.isArray(healthRecordData.tags)
+                    ? healthRecordData.tags.join(', ')
+                    : healthRecordData.tags
+                  : ''
+              }
+              onChange={e => {
+                const tags = e.target.value
+                  .split(',')
+                  .map(t => t.trim())
+                  .filter(t => t);
                 setHealthRecordData({ ...healthRecordData, tags });
               }}
               placeholder="#体調良好 #外出"
@@ -510,7 +577,9 @@ export default function PostForm({
             <input
               type="text"
               value={healthRecordData.symptomName || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, symptomName: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, symptomName: e.target.value })
+              }
               placeholder={t('healthRecord.symptomForm.symptomName')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
               disabled={isSubmitting}
@@ -523,12 +592,16 @@ export default function PostForm({
               min="1"
               max="10"
               value={healthRecordData.severity || 5}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, severity: parseInt(e.target.value) })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, severity: parseInt(e.target.value) })
+              }
               className="w-full mb-2"
               disabled={isSubmitting}
             />
             <div className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              {t('healthRecord.symptomForm.severityLabel', { value: healthRecordData.severity || 5 })}
+              {t('healthRecord.symptomForm.severityLabel', {
+                value: healthRecordData.severity || 5,
+              })}
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.symptomForm.duration')}
@@ -536,7 +609,7 @@ export default function PostForm({
             <input
               type="text"
               value={healthRecordData.duration || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, duration: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, duration: e.target.value })}
               placeholder="2時間"
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
               disabled={isSubmitting}
@@ -547,7 +620,7 @@ export default function PostForm({
             <input
               type="text"
               value={healthRecordData.location || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, location: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, location: e.target.value })}
               placeholder="前頭部"
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 mb-4"
               disabled={isSubmitting}
@@ -557,7 +630,7 @@ export default function PostForm({
             </label>
             <textarea
               value={healthRecordData.notes || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
               placeholder={t('healthRecord.symptomForm.notes')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               rows={3}
@@ -574,276 +647,287 @@ export default function PostForm({
             <input
               type="datetime-local"
               value={healthRecordData.recorded_at || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })
+              }
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               {/* 血圧・心拍数 */}
-              {(!visibleMeasurements || visibleMeasurements.includes('blood_pressure_heart_rate')) && (
+              {(!visibleMeasurements ||
+                visibleMeasurements.includes('blood_pressure_heart_rate')) && (
                 <>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {t('healthRecord.vitalForm.bloodPressure')}
                     </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.blood_pressure?.systolic || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          blood_pressure: {
-                            ...measurements.blood_pressure,
-                            systolic: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'mmHg'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="120"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400">/</span>
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.blood_pressure?.diastolic || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          blood_pressure: {
-                            ...measurements.blood_pressure,
-                            diastolic: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'mmHg'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="80"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">mmHg</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.heartRate')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.heart_rate?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          heart_rate: {
-                            value: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'bpm'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="72"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
-                </div>
-              </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={healthRecordData.measurements?.blood_pressure?.systolic || ''}
+                        onChange={e => {
+                          const measurements = healthRecordData.measurements || {};
+                          setHealthRecordData({
+                            ...healthRecordData,
+                            measurements: {
+                              ...measurements,
+                              blood_pressure: {
+                                ...measurements.blood_pressure,
+                                systolic: e.target.value ? parseInt(e.target.value) : undefined,
+                                unit: 'mmHg',
+                              },
+                            },
+                          });
+                        }}
+                        placeholder="120"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-gray-500 dark:text-gray-400">/</span>
+                      <input
+                        type="number"
+                        value={healthRecordData.measurements?.blood_pressure?.diastolic || ''}
+                        onChange={e => {
+                          const measurements = healthRecordData.measurements || {};
+                          setHealthRecordData({
+                            ...healthRecordData,
+                            measurements: {
+                              ...measurements,
+                              blood_pressure: {
+                                ...measurements.blood_pressure,
+                                diastolic: e.target.value ? parseInt(e.target.value) : undefined,
+                                unit: 'mmHg',
+                              },
+                            },
+                          });
+                        }}
+                        placeholder="80"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">mmHg</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('healthRecord.vitalForm.heartRate')}
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        value={healthRecordData.measurements?.heart_rate?.value || ''}
+                        onChange={e => {
+                          const measurements = healthRecordData.measurements || {};
+                          setHealthRecordData({
+                            ...healthRecordData,
+                            measurements: {
+                              ...measurements,
+                              heart_rate: {
+                                value: e.target.value ? parseInt(e.target.value) : undefined,
+                                unit: 'bpm',
+                              },
+                            },
+                          });
+                        }}
+                        placeholder="72"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">bpm</span>
+                    </div>
+                  </div>
                 </>
               )}
               {/* 体温 */}
               {(!visibleMeasurements || visibleMeasurements.includes('temperature')) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.temperature')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={healthRecordData.measurements?.temperature?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          temperature: {
-                            value: e.target.value ? parseFloat(e.target.value) : undefined,
-                            unit: 'celsius'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="36.5"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">°C</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('healthRecord.vitalForm.temperature')}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={healthRecordData.measurements?.temperature?.value || ''}
+                      onChange={e => {
+                        const measurements = healthRecordData.measurements || {};
+                        setHealthRecordData({
+                          ...healthRecordData,
+                          measurements: {
+                            ...measurements,
+                            temperature: {
+                              value: e.target.value ? parseFloat(e.target.value) : undefined,
+                              unit: 'celsius',
+                            },
+                          },
+                        });
+                      }}
+                      placeholder="36.5"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">°C</span>
+                  </div>
                 </div>
-              </div>
               )}
               {/* 体重・体脂肪率 */}
               {(!visibleMeasurements || visibleMeasurements.includes('weight_body_fat')) && (
                 <>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.weight')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={healthRecordData.measurements?.weight?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          weight: {
-                            value: e.target.value ? parseFloat(e.target.value) : undefined,
-                            unit: 'kg'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="65.0"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">kg</span>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.bodyFatPercentage')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={healthRecordData.measurements?.body_fat_percentage?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          body_fat_percentage: {
-                            value: e.target.value ? parseFloat(e.target.value) : undefined,
-                            unit: 'percent'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="20.0"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
-                </div>
-              </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('healthRecord.vitalForm.weight')}
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={healthRecordData.measurements?.weight?.value || ''}
+                        onChange={e => {
+                          const measurements = healthRecordData.measurements || {};
+                          setHealthRecordData({
+                            ...healthRecordData,
+                            measurements: {
+                              ...measurements,
+                              weight: {
+                                value: e.target.value ? parseFloat(e.target.value) : undefined,
+                                unit: 'kg',
+                              },
+                            },
+                          });
+                        }}
+                        placeholder="65.0"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">kg</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      {t('healthRecord.vitalForm.bodyFatPercentage')}
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={healthRecordData.measurements?.body_fat_percentage?.value || ''}
+                        onChange={e => {
+                          const measurements = healthRecordData.measurements || {};
+                          setHealthRecordData({
+                            ...healthRecordData,
+                            measurements: {
+                              ...measurements,
+                              body_fat_percentage: {
+                                value: e.target.value ? parseFloat(e.target.value) : undefined,
+                                unit: 'percent',
+                              },
+                            },
+                          });
+                        }}
+                        placeholder="20.0"
+                        className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
+                    </div>
+                  </div>
                 </>
               )}
               {/* 血糖値 */}
               {(!visibleMeasurements || visibleMeasurements.includes('blood_glucose')) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.bloodGlucose')}
-                </label>
-                <div className="mb-2">
-                  <select
-                    value={healthRecordData.measurements?.blood_glucose?.timing || 'fasting'}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          blood_glucose: {
-                            ...measurements.blood_glucose,
-                            timing: e.target.value,
-                            unit: 'mg/dL'
-                          }
-                        }
-                      });
-                    }}
-                    className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
-                    disabled={isSubmitting}
-                  >
-                    <option value="fasting">{t('healthRecord.vitalForm.bloodGlucoseFasting')}</option>
-                    <option value="postprandial">{t('healthRecord.vitalForm.bloodGlucosePostprandial')}</option>
-                  </select>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('healthRecord.vitalForm.bloodGlucose')}
+                  </label>
+                  <div className="mb-2">
+                    <select
+                      value={healthRecordData.measurements?.blood_glucose?.timing || 'fasting'}
+                      onChange={e => {
+                        const measurements = healthRecordData.measurements || {};
+                        setHealthRecordData({
+                          ...healthRecordData,
+                          measurements: {
+                            ...measurements,
+                            blood_glucose: {
+                              ...measurements.blood_glucose,
+                              timing: e.target.value,
+                              unit: 'mg/dL',
+                            },
+                          },
+                        });
+                      }}
+                      className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 text-sm"
+                      disabled={isSubmitting}
+                    >
+                      <option value="fasting">
+                        {t('healthRecord.vitalForm.bloodGlucoseFasting')}
+                      </option>
+                      <option value="postprandial">
+                        {t('healthRecord.vitalForm.bloodGlucosePostprandial')}
+                      </option>
+                    </select>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={healthRecordData.measurements?.blood_glucose?.value || ''}
+                      onChange={e => {
+                        const measurements = healthRecordData.measurements || {};
+                        setHealthRecordData({
+                          ...healthRecordData,
+                          measurements: {
+                            ...measurements,
+                            blood_glucose: {
+                              ...measurements.blood_glucose,
+                              value: e.target.value ? parseInt(e.target.value) : undefined,
+                              unit: 'mg/dL',
+                            },
+                          },
+                        });
+                      }}
+                      placeholder={
+                        healthRecordData.measurements?.blood_glucose?.timing === 'postprandial'
+                          ? '140'
+                          : '100'
+                      }
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">mg/dL</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.blood_glucose?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          blood_glucose: {
-                            ...measurements.blood_glucose,
-                            value: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'mg/dL'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder={healthRecordData.measurements?.blood_glucose?.timing === 'postprandial' ? '140' : '100'}
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">mg/dL</span>
-                </div>
-              </div>
               )}
               {/* 血中酸素濃度 */}
               {(!visibleMeasurements || visibleMeasurements.includes('spo2')) && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {t('healthRecord.vitalForm.spo2')}
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="number"
-                    value={healthRecordData.measurements?.spo2?.value || ''}
-                    onChange={(e) => {
-                      const measurements = healthRecordData.measurements || {};
-                      setHealthRecordData({
-                        ...healthRecordData,
-                        measurements: {
-                          ...measurements,
-                          spo2: {
-                            value: e.target.value ? parseInt(e.target.value) : undefined,
-                            unit: 'percent'
-                          }
-                        }
-                      });
-                    }}
-                    placeholder="98"
-                    className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {t('healthRecord.vitalForm.spo2')}
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      value={healthRecordData.measurements?.spo2?.value || ''}
+                      onChange={e => {
+                        const measurements = healthRecordData.measurements || {};
+                        setHealthRecordData({
+                          ...healthRecordData,
+                          measurements: {
+                            ...measurements,
+                            spo2: {
+                              value: e.target.value ? parseInt(e.target.value) : undefined,
+                              unit: 'percent',
+                            },
+                          },
+                        });
+                      }}
+                      placeholder="98"
+                      className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                    <span className="text-gray-500 dark:text-gray-400 text-sm">%</span>
+                  </div>
                 </div>
-              </div>
               )}
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -851,7 +935,7 @@ export default function PostForm({
             </label>
             <textarea
               value={healthRecordData.notes || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
               placeholder={t('healthRecord.vitalForm.notes')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               rows={3}
@@ -867,7 +951,9 @@ export default function PostForm({
             </label>
             <select
               value={healthRecordData.meal_type || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })
+              }
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             >
@@ -883,7 +969,9 @@ export default function PostForm({
             <input
               type="datetime-local"
               value={healthRecordData.recorded_at || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })
+              }
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             />
@@ -896,7 +984,7 @@ export default function PostForm({
                   <input
                     type="text"
                     value={food.name || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const foods = [...(healthRecordData.foods || [])];
                       foods[index] = { ...foods[index], name: e.target.value };
                       setHealthRecordData({ ...healthRecordData, foods });
@@ -909,9 +997,12 @@ export default function PostForm({
                     type="number"
                     step="0.1"
                     value={food.amount || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const foods = [...(healthRecordData.foods || [])];
-                      foods[index] = { ...foods[index], amount: e.target.value ? parseFloat(e.target.value) : undefined };
+                      foods[index] = {
+                        ...foods[index],
+                        amount: e.target.value ? parseFloat(e.target.value) : undefined,
+                      };
                       setHealthRecordData({ ...healthRecordData, foods });
                     }}
                     placeholder={t('healthRecord.mealForm.amount')}
@@ -921,7 +1012,7 @@ export default function PostForm({
                   <input
                     type="text"
                     value={food.unit || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const foods = [...(healthRecordData.foods || [])];
                       foods[index] = { ...foods[index], unit: e.target.value };
                       setHealthRecordData({ ...healthRecordData, foods });
@@ -947,7 +1038,10 @@ export default function PostForm({
               <button
                 type="button"
                 onClick={() => {
-                  const foods = [...(healthRecordData.foods || []), { name: '', amount: undefined, unit: 'g' }];
+                  const foods = [
+                    ...(healthRecordData.foods || []),
+                    { name: '', amount: undefined, unit: 'g' },
+                  ];
                   setHealthRecordData({ ...healthRecordData, foods });
                 }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -967,11 +1061,14 @@ export default function PostForm({
                 <input
                   type="number"
                   value={healthRecordData.nutrition?.calories || ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     setHealthRecordData({
                       ...healthRecordData,
-                      nutrition: { ...nutrition, calories: e.target.value ? parseInt(e.target.value) : undefined }
+                      nutrition: {
+                        ...nutrition,
+                        calories: e.target.value ? parseInt(e.target.value) : undefined,
+                      },
                     });
                   }}
                   placeholder="500"
@@ -987,11 +1084,14 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.protein || ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     setHealthRecordData({
                       ...healthRecordData,
-                      nutrition: { ...nutrition, protein: e.target.value ? parseFloat(e.target.value) : undefined }
+                      nutrition: {
+                        ...nutrition,
+                        protein: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
                     });
                   }}
                   placeholder="20"
@@ -1007,11 +1107,14 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.carbs || ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     setHealthRecordData({
                       ...healthRecordData,
-                      nutrition: { ...nutrition, carbs: e.target.value ? parseFloat(e.target.value) : undefined }
+                      nutrition: {
+                        ...nutrition,
+                        carbs: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
                     });
                   }}
                   placeholder="60"
@@ -1027,11 +1130,14 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.fat || ''}
-                  onChange={(e) => {
+                  onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     setHealthRecordData({
                       ...healthRecordData,
-                      nutrition: { ...nutrition, fat: e.target.value ? parseFloat(e.target.value) : undefined }
+                      nutrition: {
+                        ...nutrition,
+                        fat: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
                     });
                   }}
                   placeholder="15"
@@ -1045,7 +1151,7 @@ export default function PostForm({
             </label>
             <textarea
               value={healthRecordData.notes || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
               placeholder={t('healthRecord.mealForm.notes')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               rows={3}
@@ -1061,7 +1167,9 @@ export default function PostForm({
             </label>
             <select
               value={healthRecordData.meal_type || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })
+              }
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             >
@@ -1077,7 +1185,9 @@ export default function PostForm({
             <input
               type="datetime-local"
               value={healthRecordData.recorded_at || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })}
+              onChange={e =>
+                setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })
+              }
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
               disabled={isSubmitting}
             />
@@ -1090,7 +1200,7 @@ export default function PostForm({
                   <input
                     type="text"
                     value={food.name || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const newFoods = [...(healthRecordData.foods || [])];
                       newFoods[index] = { ...newFoods[index], name: e.target.value };
                       setHealthRecordData({ ...healthRecordData, foods: newFoods });
@@ -1103,9 +1213,13 @@ export default function PostForm({
                     type="number"
                     step="0.1"
                     value={food.amount || ''}
-                    onChange={(e) => {
+                    onChange={e => {
                       const newFoods = [...(healthRecordData.foods || [])];
-                      newFoods[index] = { ...newFoods[index], amount: e.target.value ? parseFloat(e.target.value) : undefined, unit: 'g' };
+                      newFoods[index] = {
+                        ...newFoods[index],
+                        amount: e.target.value ? parseFloat(e.target.value) : undefined,
+                        unit: 'g',
+                      };
                       setHealthRecordData({ ...healthRecordData, foods: newFoods });
                     }}
                     placeholder={t('healthRecord.mealForm.amount')}
@@ -1116,14 +1230,21 @@ export default function PostForm({
                   <button
                     type="button"
                     onClick={() => {
-                      const newFoods = (healthRecordData.foods || []).filter((_: any, i: number) => i !== index);
+                      const newFoods = (healthRecordData.foods || []).filter(
+                        (_: any, i: number) => i !== index
+                      );
                       setHealthRecordData({ ...healthRecordData, foods: newFoods });
                     }}
                     className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
                     disabled={isSubmitting}
                   >
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -1133,7 +1254,10 @@ export default function PostForm({
                 onClick={() => {
                   setHealthRecordData({
                     ...healthRecordData,
-                    foods: [...(healthRecordData.foods || []), { name: '', amount: undefined, unit: 'g' }]
+                    foods: [
+                      ...(healthRecordData.foods || []),
+                      { name: '', amount: undefined, unit: 'g' },
+                    ],
                   });
                 }}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -1153,13 +1277,15 @@ export default function PostForm({
                 <input
                   type="number"
                   value={healthRecordData.nutrition?.calories || ''}
-                  onChange={(e) => setHealthRecordData({
-                    ...healthRecordData,
-                    nutrition: {
-                      ...healthRecordData.nutrition,
-                      calories: e.target.value ? parseFloat(e.target.value) : undefined
-                    }
-                  })}
+                  onChange={e =>
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...healthRecordData.nutrition,
+                        calories: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    })
+                  }
                   placeholder="500"
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
@@ -1173,13 +1299,15 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.protein || ''}
-                  onChange={(e) => setHealthRecordData({
-                    ...healthRecordData,
-                    nutrition: {
-                      ...healthRecordData.nutrition,
-                      protein: e.target.value ? parseFloat(e.target.value) : undefined
-                    }
-                  })}
+                  onChange={e =>
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...healthRecordData.nutrition,
+                        protein: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    })
+                  }
                   placeholder="20"
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
@@ -1193,13 +1321,15 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.carbs || ''}
-                  onChange={(e) => setHealthRecordData({
-                    ...healthRecordData,
-                    nutrition: {
-                      ...healthRecordData.nutrition,
-                      carbs: e.target.value ? parseFloat(e.target.value) : undefined
-                    }
-                  })}
+                  onChange={e =>
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...healthRecordData.nutrition,
+                        carbs: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    })
+                  }
                   placeholder="60"
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
@@ -1213,13 +1343,15 @@ export default function PostForm({
                   type="number"
                   step="0.1"
                   value={healthRecordData.nutrition?.fat || ''}
-                  onChange={(e) => setHealthRecordData({
-                    ...healthRecordData,
-                    nutrition: {
-                      ...healthRecordData.nutrition,
-                      fat: e.target.value ? parseFloat(e.target.value) : undefined
-                    }
-                  })}
+                  onChange={e =>
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...healthRecordData.nutrition,
+                        fat: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    })
+                  }
                   placeholder="15"
                   className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
@@ -1231,7 +1363,7 @@ export default function PostForm({
             </label>
             <textarea
               value={healthRecordData.notes || ''}
-              onChange={(e) => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
+              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
               placeholder={t('healthRecord.mealForm.notes')}
               className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
               rows={3}
@@ -1242,27 +1374,29 @@ export default function PostForm({
 
         {/* Textarea for post content - Hide for health records (they use notes field instead) */}
         {!(postType === 'health_record') && (
-        <div className="relative">
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder={placeholder || t('placeholder')}
-            className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-            rows={4}
-            maxLength={5000}
-            disabled={isSubmitting}
-          />
-          {/* Character count in bottom right */}
-          <div className="absolute bottom-2 right-2">
-            <span
-              className={`text-xs ${
-                content.length > 4500 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
-              }`}
-            >
-              {content.length} / 5000
-            </span>
+          <div className="relative">
+            <textarea
+              value={content}
+              onChange={e => setContent(e.target.value)}
+              placeholder={placeholder || t('placeholder')}
+              className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+              rows={4}
+              maxLength={5000}
+              disabled={isSubmitting}
+            />
+            {/* Character count in bottom right */}
+            <div className="absolute bottom-2 right-2">
+              <span
+                className={`text-xs ${
+                  content.length > 4500
+                    ? 'text-red-500 dark:text-red-400'
+                    : 'text-gray-500 dark:text-gray-400'
+                }`}
+              >
+                {content.length} / 5000
+              </span>
+            </div>
           </div>
-        </div>
         )}
 
         {/* Detected hashtags */}
@@ -1301,103 +1435,115 @@ export default function PostForm({
 
         {/* Images - Hide for vital records */}
         {!(postType === 'health_record' && healthRecordType === 'vital') && (
-        <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            {t('imagesLabel')} ({imageUrls.length}/10)
-          </label>
-          
-          {/* Image previews */}
-          {imagePreviews.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
-              {imagePreviews.map((preview, index) => (
-                <div
-                  key={index}
-                  className="relative inline-block group w-20 h-20"
-                >
-                  <Image
-                    src={preview.url}
-                    alt={`Image ${index + 1}`}
-                    width={80}
-                    height={80}
-                    className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                  />
-                  {uploadingImages && preview.file && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-red-600"
-                    disabled={isSubmitting || uploadingImages}
-                    title={t('removeImage')}
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              {t('imagesLabel')} ({imageUrls.length}/10)
+            </label>
 
-          {/* Upload options */}
-          {imageUrls.length < 10 && (
-            <div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                multiple
-                onChange={handleFileSelect}
-                disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
-                className="hidden"
-                id="image-upload"
-              />
-              <label
-                htmlFor="image-upload"
-                className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                  isSubmitting || uploadingImages || imageUrls.length >= 10
-                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
-                }`}
-              >
-                {uploadingImages ? (
-                  <>
-                    <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                    {t('uploading')}
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    {t('uploadImage')}
-                  </>
-                )}
-              </label>
-            </div>
-          )}
-        </div>
+            {/* Image previews */}
+            {imagePreviews.length > 0 && (
+              <div className="mb-3 flex flex-wrap gap-2">
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} className="relative inline-block group w-20 h-20">
+                    <Image
+                      src={preview.url}
+                      alt={`Image ${index + 1}`}
+                      width={80}
+                      height={80}
+                      className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                    />
+                    {uploadingImages && preview.file && (
+                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                        <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveImage(index)}
+                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-red-600"
+                      disabled={isSubmitting || uploadingImages}
+                      title={t('removeImage')}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Upload options */}
+            {imageUrls.length < 10 && (
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                  multiple
+                  onChange={handleFileSelect}
+                  disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
+                  className="hidden"
+                  id="image-upload"
+                />
+                <label
+                  htmlFor="image-upload"
+                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                    isSubmitting || uploadingImages || imageUrls.length >= 10
+                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {uploadingImages ? (
+                    <>
+                      <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                      {t('uploading')}
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
+                      </svg>
+                      {t('uploadImage')}
+                    </>
+                  )}
+                </label>
+              </div>
+            )}
+          </div>
         )}
 
         {/* Disease selector */}
         <div className="mt-4">
-          <label htmlFor="disease-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="disease-select"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('diseaseLabel')}
           </label>
           <select
             id="disease-select"
             value={selectedDiseaseId || ''}
-            onChange={(e) => setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)}
+            onChange={e => setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)}
             className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             disabled={isSubmitting}
           >
             <option value="">{t('diseaseNone')}</option>
-            {userDiseases?.filter(d => d.is_active).map((disease) => (
-              <option key={disease.id} value={disease.id}>
-                {getDiseaseName(disease)}
-              </option>
-            ))}
+            {userDiseases
+              ?.filter(d => d.is_active)
+              .map(disease => (
+                <option key={disease.id} value={disease.id}>
+                  {getDiseaseName(disease)}
+                </option>
+              ))}
           </select>
         </div>
 
@@ -1415,7 +1561,7 @@ export default function PostForm({
                   name="visibilityMode"
                   value="share"
                   checked={visibility !== 'private'}
-                  onChange={(e) => {
+                  onChange={e => {
                     if (e.target.checked) {
                       setVisibility('public');
                     }
@@ -1431,19 +1577,15 @@ export default function PostForm({
                     {t('visibilityDescription.shareDescription')}
                   </div>
                   {visibility !== 'private' && (
-            <select
-              value={visibility}
-              onChange={(e) =>
-                setVisibility(
-                          e.target.value as 'public' | 'followers_only'
-                )
-              }
+                    <select
+                      value={visibility}
+                      onChange={e => setVisibility(e.target.value as 'public' | 'followers_only')}
                       className="mt-2 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-              disabled={isSubmitting}
-            >
-              <option value="public">{t('visibility.public')}</option>
-              <option value="followers_only">{t('visibility.followersOnly')}</option>
-            </select>
+                      disabled={isSubmitting}
+                    >
+                      <option value="public">{t('visibility.public')}</option>
+                      <option value="followers_only">{t('visibility.followersOnly')}</option>
+                    </select>
                   )}
                 </div>
               </label>
@@ -1453,7 +1595,7 @@ export default function PostForm({
                   name="visibilityMode"
                   value="private"
                   checked={visibility === 'private'}
-                  onChange={(e) => {
+                  onChange={e => {
                     if (e.target.checked) {
                       setVisibility('private');
                     }
@@ -1474,24 +1616,23 @@ export default function PostForm({
           </div>
 
           <div className="flex items-center justify-end">
-
-          <button
-            type="submit"
+            <button
+              type="submit"
               disabled={
-                isSubmitting || 
-                (postType !== 'health_record' && !content.trim()) || 
+                isSubmitting ||
+                (postType !== 'health_record' && !content.trim()) ||
                 (postType === 'health_record' && !healthRecordType)
               }
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-                isSubmitting || 
-                (postType !== 'health_record' && !content.trim()) || 
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                isSubmitting ||
+                (postType !== 'health_record' && !content.trim()) ||
                 (postType === 'health_record' && !healthRecordType)
-                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {isSubmitting ? t('submitting') : t('submit')}
-          </button>
+                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-600 text-white hover:bg-blue-700'
+              }`}
+            >
+              {isSubmitting ? t('submitting') : t('submit')}
+            </button>
           </div>
         </div>
 

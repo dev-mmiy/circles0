@@ -52,7 +52,9 @@ export default function DailyPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateRecords, setSelectedDateRecords] = useState<VitalRecordGroup[]>([]);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
-  const [filter, setFilter] = useState<'all' | 'bp_hr' | 'weight_fat' | 'temperature' | 'blood_glucose' | 'spo2'>('all');
+  const [filter, setFilter] = useState<
+    'all' | 'bp_hr' | 'weight_fat' | 'temperature' | 'blood_glucose' | 'spo2'
+  >('all');
   const [chartPeriod, setChartPeriod] = useState<Period>('1month');
 
   // Load blood pressure records
@@ -61,14 +63,17 @@ export default function DailyPage() {
     isLoading: isLoadingBP,
     refresh: refreshBP,
   } = useDataLoader<BloodPressureRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getBloodPressureRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getBloodPressureRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
@@ -79,14 +84,17 @@ export default function DailyPage() {
     isLoading: isLoadingHR,
     refresh: refreshHR,
   } = useDataLoader<HeartRateRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getHeartRateRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getHeartRateRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
@@ -97,14 +105,17 @@ export default function DailyPage() {
     isLoading: isLoadingTemp,
     refresh: refreshTemp,
   } = useDataLoader<TemperatureRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getTemperatureRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getTemperatureRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100,
     autoLoad: false,
   });
@@ -115,14 +126,17 @@ export default function DailyPage() {
     isLoading: isLoadingWeight,
     refresh: refreshWeight,
   } = useDataLoader<WeightRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getWeightRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getWeightRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100,
     autoLoad: false,
   });
@@ -133,14 +147,17 @@ export default function DailyPage() {
     isLoading: isLoadingBodyFat,
     refresh: refreshBodyFat,
   } = useDataLoader<BodyFatRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getBodyFatRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getBodyFatRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100,
     autoLoad: false,
   });
@@ -151,14 +168,17 @@ export default function DailyPage() {
     isLoading: isLoadingBG,
     refresh: refreshBG,
   } = useDataLoader<BloodGlucoseRecord>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getBloodGlucoseRecords(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getBloodGlucoseRecords(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100,
     autoLoad: false,
   });
@@ -169,14 +189,17 @@ export default function DailyPage() {
     isLoading: isLoadingSpO2,
     refresh: refreshSpO2,
   } = useDataLoader<SpO2Record>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      const items = await getSpO2Records(skip, limit, token);
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+        const items = await getSpO2Records(skip, limit, token);
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 100,
     autoLoad: false,
   });
@@ -184,20 +207,34 @@ export default function DailyPage() {
   // Group records by date (yyyy-MM-dd) for calendar view
   const recordsByDate = useMemo(() => {
     const map = new Map<string, VitalRecordGroup[]>();
-    
+
     // Combine all records with their types
     const allRecords: Array<{ recordedAt: string; type: string; record: any }> = [];
-    bloodPressureRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bloodPressure', record: r }));
-    heartRateRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'heartRate', record: r }));
-    temperatureRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'temperature', record: r }));
-    weightRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'weight', record: r }));
-    bodyFatRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bodyFat', record: r }));
-    bloodGlucoseRecords.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'bloodGlucose', record: r }));
-    spo2Records.forEach(r => allRecords.push({ recordedAt: r.recorded_at, type: 'spo2', record: r }));
+    bloodPressureRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'bloodPressure', record: r })
+    );
+    heartRateRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'heartRate', record: r })
+    );
+    temperatureRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'temperature', record: r })
+    );
+    weightRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'weight', record: r })
+    );
+    bodyFatRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'bodyFat', record: r })
+    );
+    bloodGlucoseRecords.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'bloodGlucose', record: r })
+    );
+    spo2Records.forEach(r =>
+      allRecords.push({ recordedAt: r.recorded_at, type: 'spo2', record: r })
+    );
 
     // Group by date (yyyy-MM-dd) and by exact timestamp
     const groupsByTimestamp = new Map<string, VitalRecordGroup>();
-    
+
     allRecords.forEach(({ recordedAt, type, record }) => {
       // First, group by exact timestamp for list view compatibility
       if (!groupsByTimestamp.has(recordedAt)) {
@@ -217,7 +254,15 @@ export default function DailyPage() {
     });
 
     return map;
-  }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
+  }, [
+    bloodPressureRecords,
+    heartRateRecords,
+    temperatureRecords,
+    weightRecords,
+    bodyFatRecords,
+    bloodGlucoseRecords,
+    spo2Records,
+  ]);
 
   // Group records for list view: BP/HR are grouped together, Weight/BodyFat are grouped together, others are individual
   const groupedRecords = useMemo(() => {
@@ -226,7 +271,7 @@ export default function DailyPage() {
     const weightFatGroupsByTimestamp = new Map<string, VitalRecordGroup>();
 
     // Group blood pressure and heart rate by timestamp (together)
-    bloodPressureRecords.forEach((record) => {
+    bloodPressureRecords.forEach(record => {
       const key = record.recorded_at;
       if (!bpHrGroupsByTimestamp.has(key)) {
         bpHrGroupsByTimestamp.set(key, { recordedAt: key });
@@ -234,7 +279,7 @@ export default function DailyPage() {
       bpHrGroupsByTimestamp.get(key)!.bloodPressure = record;
     });
 
-    heartRateRecords.forEach((record) => {
+    heartRateRecords.forEach(record => {
       const key = record.recorded_at;
       if (!bpHrGroupsByTimestamp.has(key)) {
         bpHrGroupsByTimestamp.set(key, { recordedAt: key });
@@ -243,7 +288,7 @@ export default function DailyPage() {
     });
 
     // Group weight and body fat by timestamp (together)
-    weightRecords.forEach((record) => {
+    weightRecords.forEach(record => {
       const key = record.recorded_at;
       if (!weightFatGroupsByTimestamp.has(key)) {
         weightFatGroupsByTimestamp.set(key, { recordedAt: key });
@@ -251,7 +296,7 @@ export default function DailyPage() {
       weightFatGroupsByTimestamp.get(key)!.weight = record;
     });
 
-    bodyFatRecords.forEach((record) => {
+    bodyFatRecords.forEach(record => {
       const key = record.recorded_at;
       if (!weightFatGroupsByTimestamp.has(key)) {
         weightFatGroupsByTimestamp.set(key, { recordedAt: key });
@@ -260,35 +305,35 @@ export default function DailyPage() {
     });
 
     // Add BP/HR groups (only if they have BP or HR)
-    bpHrGroupsByTimestamp.forEach((group) => {
+    bpHrGroupsByTimestamp.forEach(group => {
       if (group.bloodPressure || group.heartRate) {
         allRecords.push(group);
       }
     });
 
     // Add Weight/BodyFat groups (only if they have Weight or BodyFat)
-    weightFatGroupsByTimestamp.forEach((group) => {
+    weightFatGroupsByTimestamp.forEach(group => {
       if (group.weight || group.bodyFat) {
         allRecords.push(group);
       }
     });
 
     // Add other records individually (temperature, blood glucose, SpO2)
-    temperatureRecords.forEach((record) => {
+    temperatureRecords.forEach(record => {
       allRecords.push({
         recordedAt: record.recorded_at,
         temperature: record,
       });
     });
 
-    bloodGlucoseRecords.forEach((record) => {
+    bloodGlucoseRecords.forEach(record => {
       allRecords.push({
         recordedAt: record.recorded_at,
         bloodGlucose: record,
       });
     });
 
-    spo2Records.forEach((record) => {
+    spo2Records.forEach(record => {
       allRecords.push({
         recordedAt: record.recorded_at,
         spo2: record,
@@ -296,29 +341,44 @@ export default function DailyPage() {
     });
 
     // Sort by recorded_at descending
-    return allRecords.sort((a, b) => 
-      new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
+    return allRecords.sort(
+      (a, b) => new Date(b.recordedAt).getTime() - new Date(a.recordedAt).getTime()
     );
-  }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
+  }, [
+    bloodPressureRecords,
+    heartRateRecords,
+    temperatureRecords,
+    weightRecords,
+    bodyFatRecords,
+    bloodGlucoseRecords,
+    spo2Records,
+  ]);
 
   // Flatten records for calendar view
   const calendarRecords = useMemo(() => {
     const flatRecords: VitalRecordGroup[] = [];
-    recordsByDate.forEach((groups) => {
+    recordsByDate.forEach(groups => {
       flatRecords.push(...groups);
     });
     return flatRecords;
   }, [recordsByDate]);
 
-  const isLoading = isLoadingBP || isLoadingHR || isLoadingTemp || isLoadingWeight || isLoadingBodyFat || isLoadingBG || isLoadingSpO2;
-  
+  const isLoading =
+    isLoadingBP ||
+    isLoadingHR ||
+    isLoadingTemp ||
+    isLoadingWeight ||
+    isLoadingBodyFat ||
+    isLoadingBG ||
+    isLoadingSpO2;
+
   // Filter records based on selected filter
   const filteredRecords = useMemo(() => {
     if (filter === 'all') {
       return groupedRecords;
     }
-    
-    return groupedRecords.filter((group) => {
+
+    return groupedRecords.filter(group => {
       switch (filter) {
         case 'bp_hr':
           return !!(group.bloodPressure || group.heartRate);
@@ -335,7 +395,7 @@ export default function DailyPage() {
       }
     });
   }, [groupedRecords, filter]);
-  
+
   const records = filteredRecords;
 
   // Load records when component mounts
@@ -359,7 +419,18 @@ export default function DailyPage() {
       };
       loadAll();
     }
-  }, [isAuthenticated, user, authLoading, refreshBP, refreshHR, refreshTemp, refreshWeight, refreshBodyFat, refreshBG, refreshSpO2]);
+  }, [
+    isAuthenticated,
+    user,
+    authLoading,
+    refreshBP,
+    refreshHR,
+    refreshTemp,
+    refreshWeight,
+    refreshBodyFat,
+    refreshBG,
+    refreshSpO2,
+  ]);
 
   // Handle form submission
   const handleRecordCreated = useCallback(async () => {
@@ -383,7 +454,18 @@ export default function DailyPage() {
         }
       }
     }, 300);
-  }, [refreshBP, refreshHR, refreshTemp, refreshWeight, refreshBodyFat, refreshBG, refreshSpO2, isAuthenticated, user, authLoading]);
+  }, [
+    refreshBP,
+    refreshHR,
+    refreshTemp,
+    refreshWeight,
+    refreshBodyFat,
+    refreshBG,
+    refreshSpO2,
+    isAuthenticated,
+    user,
+    authLoading,
+  ]);
 
   // Open form modal with selected vital type
   const openFormModal = (vitalType?: VitalType) => {
@@ -435,9 +517,7 @@ export default function DailyPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('title')}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t('subtitleVital')}</p>
         </div>
 
@@ -501,7 +581,7 @@ export default function DailyPage() {
                 <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                 <select
                   value={filter}
-                  onChange={(e) => setFilter(e.target.value as typeof filter)}
+                  onChange={e => setFilter(e.target.value as typeof filter)}
                   className="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
                   <option value="all">{t('filter.all')}</option>
@@ -515,10 +595,12 @@ export default function DailyPage() {
             )}
             {viewMode === 'chart' && (
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('chart.period') || '期間'}:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {t('chart.period') || '期間'}:
+                </span>
                 <select
                   value={chartPeriod}
-                  onChange={(e) => setChartPeriod(e.target.value as Period)}
+                  onChange={e => setChartPeriod(e.target.value as Period)}
                   className="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
                   <option value="1week">{t('chart.periods.1week') || '1週間'}</option>
@@ -549,16 +631,16 @@ export default function DailyPage() {
               <>
                 {records.map((group, index) => {
                   // Create a unique key for each record type
-                  const recordId = 
-                    group.bloodPressure?.id || 
-                    group.heartRate?.id || 
-                    group.temperature?.id || 
-                    group.weight?.id || 
-                    group.bodyFat?.id || 
-                    group.bloodGlucose?.id || 
-                    group.spo2?.id || 
+                  const recordId =
+                    group.bloodPressure?.id ||
+                    group.heartRate?.id ||
+                    group.temperature?.id ||
+                    group.weight?.id ||
+                    group.bodyFat?.id ||
+                    group.bloodGlucose?.id ||
+                    group.spo2?.id ||
                     `${group.recordedAt}-${index}`;
-                  
+
                   return (
                     <VitalRecordCard
                       key={recordId}
@@ -578,10 +660,7 @@ export default function DailyPage() {
             )}
           </div>
         ) : viewMode === 'calendar' ? (
-          <VitalRecordCalendar
-            records={calendarRecords}
-            onDateClick={handleDateClick}
-          />
+          <VitalRecordCalendar records={calendarRecords} onDateClick={handleDateClick} />
         ) : (
           <VitalCharts
             period={chartPeriod}
@@ -599,7 +678,10 @@ export default function DailyPage() {
         {isFormModalOpen && !selectedVitalType && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4">
-              <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsFormModalOpen(false)} />
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50"
+                onClick={() => setIsFormModalOpen(false)}
+              />
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -610,7 +692,12 @@ export default function DailyPage() {
                     className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -676,13 +763,13 @@ export default function DailyPage() {
         {isDateModalOpen && selectedDate && selectedDateRecords.length > 0 && (
           <div className="fixed inset-0 z-50 overflow-y-auto">
             <div className="flex min-h-full items-center justify-center p-4">
-              <div 
-                className="fixed inset-0 bg-black bg-opacity-50" 
+              <div
+                className="fixed inset-0 bg-black bg-opacity-50"
                 onClick={() => {
                   setIsDateModalOpen(false);
                   setSelectedDate(null);
                   setSelectedDateRecords([]);
-                }} 
+                }}
               />
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto z-10">
                 <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
@@ -698,7 +785,12 @@ export default function DailyPage() {
                     className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
                     </svg>
                   </button>
                 </div>
@@ -726,4 +818,3 @@ export default function DailyPage() {
     </div>
   );
 }
-

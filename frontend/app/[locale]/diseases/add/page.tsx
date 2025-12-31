@@ -11,14 +11,8 @@ import { UserDiseaseCreate, UserDiseaseUpdate } from '@/lib/api/users';
 export default function AddDiseasePage() {
   const t = useTranslations('addDiseasePage');
   const router = useRouter();
-  const {
-    diseases,
-    categories,
-    statuses,
-    addDisease,
-    searchDiseasesByName,
-    loadingMasterData,
-  } = useDisease();
+  const { diseases, categories, statuses, addDisease, searchDiseasesByName, loadingMasterData } =
+    useDisease();
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +55,7 @@ export default function AddDiseasePage() {
         {/* Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('title')}</h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {t('description')}
-          </p>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">{t('description')}</p>
         </div>
 
         {/* Error Message */}

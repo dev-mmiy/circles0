@@ -3,7 +3,7 @@
  * Different countries have different popular social media platforms
  */
 
-export type ShareOptionType = 
+export type ShareOptionType =
   | 'copyUrl'
   | 'twitter'
   | 'facebook'
@@ -31,7 +31,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'facebook', order: 4 },
     { type: 'message', order: 5 },
   ],
-  
+
   // South Korea: KakaoTalk is dominant
   KR: [
     { type: 'copyUrl', order: 1 },
@@ -40,7 +40,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'facebook', order: 4 },
     { type: 'message', order: 5 },
   ],
-  
+
   // China: WeChat and Weibo are popular
   CN: [
     { type: 'copyUrl', order: 1 },
@@ -48,7 +48,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'weibo', order: 3 },
     { type: 'message', order: 4 },
   ],
-  
+
   // Taiwan: LINE and Facebook are popular
   TW: [
     { type: 'copyUrl', order: 1 },
@@ -57,7 +57,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 4 },
     { type: 'message', order: 5 },
   ],
-  
+
   // Hong Kong: Facebook and WhatsApp (via message) are popular
   HK: [
     { type: 'copyUrl', order: 1 },
@@ -65,7 +65,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 3 },
     { type: 'message', order: 4 },
   ],
-  
+
   // Thailand, Indonesia, Philippines: LINE is popular
   TH: [
     { type: 'copyUrl', order: 1 },
@@ -88,7 +88,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 4 },
     { type: 'message', order: 5 },
   ],
-  
+
   // Singapore, Malaysia: Facebook is popular
   SG: [
     { type: 'copyUrl', order: 1 },
@@ -103,7 +103,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 3 },
     { type: 'message', order: 4 },
   ],
-  
+
   // United States, Canada: Facebook and Twitter are popular
   US: [
     { type: 'copyUrl', order: 1 },
@@ -117,7 +117,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 3 },
     { type: 'message', order: 4 },
   ],
-  
+
   // Europe: Facebook and Twitter are popular
   GB: [
     { type: 'copyUrl', order: 1 },
@@ -149,7 +149,7 @@ const COUNTRY_SHARE_OPTIONS: Record<string, ShareOption[]> = {
     { type: 'twitter', order: 3 },
     { type: 'message', order: 4 },
   ],
-  
+
   // Default (for countries not listed above)
   DEFAULT: [
     { type: 'copyUrl', order: 1 },
@@ -168,10 +168,10 @@ export function getShareOptionsForCountry(countryCode?: string | null): ShareOpt
   if (!countryCode) {
     return COUNTRY_SHARE_OPTIONS.DEFAULT;
   }
-  
+
   const normalizedCode = countryCode.toUpperCase();
   const options = COUNTRY_SHARE_OPTIONS[normalizedCode] || COUNTRY_SHARE_OPTIONS.DEFAULT;
-  
+
   // Sort by order
   return [...options].sort((a, b) => a.order - b.order);
 }
@@ -179,8 +179,10 @@ export function getShareOptionsForCountry(countryCode?: string | null): ShareOpt
 /**
  * Check if a share option is available for a country
  */
-export function hasShareOption(countryCode: string | null | undefined, optionType: ShareOptionType): boolean {
+export function hasShareOption(
+  countryCode: string | null | undefined,
+  optionType: ShareOptionType
+): boolean {
   const options = getShareOptionsForCountry(countryCode);
   return options.some(opt => opt.type === optionType);
 }
-

@@ -3,8 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { createBloodPressureRecord, updateBloodPressureRecord, type BloodPressureRecord, type CreateBloodPressureRecordData, type UpdateBloodPressureRecordData } from '@/lib/api/bloodPressureRecords';
-import { createHeartRateRecord, updateHeartRateRecord, type HeartRateRecord, type CreateHeartRateRecordData, type UpdateHeartRateRecordData } from '@/lib/api/heartRateRecords';
+import {
+  createBloodPressureRecord,
+  updateBloodPressureRecord,
+  type BloodPressureRecord,
+  type CreateBloodPressureRecordData,
+  type UpdateBloodPressureRecordData,
+} from '@/lib/api/bloodPressureRecords';
+import {
+  createHeartRateRecord,
+  updateHeartRateRecord,
+  type HeartRateRecord,
+  type CreateHeartRateRecordData,
+  type UpdateHeartRateRecordData,
+} from '@/lib/api/heartRateRecords';
 import { debugLog } from '@/lib/utils/debug';
 
 interface BloodPressureHeartRateFormProps {
@@ -46,16 +58,22 @@ export default function BloodPressureHeartRateForm({
   };
 
   const [recordedAt, setRecordedAt] = useState<string>(
-    editingBloodPressure?.recorded_at 
+    editingBloodPressure?.recorded_at
       ? convertISOToLocal(editingBloodPressure.recorded_at)
       : editingHeartRate?.recorded_at
       ? convertISOToLocal(editingHeartRate.recorded_at)
       : getDefaultDateTime()
   );
-  const [systolic, setSystolic] = useState<string>(editingBloodPressure?.systolic?.toString() || '');
-  const [diastolic, setDiastolic] = useState<string>(editingBloodPressure?.diastolic?.toString() || '');
+  const [systolic, setSystolic] = useState<string>(
+    editingBloodPressure?.systolic?.toString() || ''
+  );
+  const [diastolic, setDiastolic] = useState<string>(
+    editingBloodPressure?.diastolic?.toString() || ''
+  );
   const [heartRate, setHeartRate] = useState<string>(editingHeartRate?.bpm?.toString() || '');
-  const [notes, setNotes] = useState<string>(editingBloodPressure?.notes || editingHeartRate?.notes || '');
+  const [notes, setNotes] = useState<string>(
+    editingBloodPressure?.notes || editingHeartRate?.notes || ''
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -85,7 +103,11 @@ export default function BloodPressureHeartRateForm({
         };
 
         if (editingBloodPressure) {
-          await updateBloodPressureRecord(editingBloodPressure.id, bpData as UpdateBloodPressureRecordData, accessToken);
+          await updateBloodPressureRecord(
+            editingBloodPressure.id,
+            bpData as UpdateBloodPressureRecordData,
+            accessToken
+          );
         } else {
           await createBloodPressureRecord(bpData as CreateBloodPressureRecordData, accessToken);
         }
@@ -101,7 +123,11 @@ export default function BloodPressureHeartRateForm({
         };
 
         if (editingHeartRate) {
-          await updateHeartRateRecord(editingHeartRate.id, hrData as UpdateHeartRateRecordData, accessToken);
+          await updateHeartRateRecord(
+            editingHeartRate.id,
+            hrData as UpdateHeartRateRecordData,
+            accessToken
+          );
         } else {
           await createHeartRateRecord(hrData as CreateHeartRateRecordData, accessToken);
         }
@@ -152,7 +178,7 @@ export default function BloodPressureHeartRateForm({
         <input
           type="datetime-local"
           value={recordedAt}
-          onChange={(e) => setRecordedAt(e.target.value)}
+          onChange={e => setRecordedAt(e.target.value)}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           required
           disabled={isSubmitting}
@@ -168,7 +194,7 @@ export default function BloodPressureHeartRateForm({
           <input
             type="number"
             value={systolic}
-            onChange={(e) => setSystolic(e.target.value)}
+            onChange={e => setSystolic(e.target.value)}
             placeholder="120"
             min="0"
             max="300"
@@ -179,7 +205,7 @@ export default function BloodPressureHeartRateForm({
           <input
             type="number"
             value={diastolic}
-            onChange={(e) => setDiastolic(e.target.value)}
+            onChange={e => setDiastolic(e.target.value)}
             placeholder="80"
             min="0"
             max="300"
@@ -199,7 +225,7 @@ export default function BloodPressureHeartRateForm({
           <input
             type="number"
             value={heartRate}
-            onChange={(e) => setHeartRate(e.target.value)}
+            onChange={e => setHeartRate(e.target.value)}
             placeholder="72"
             min="0"
             max="300"
@@ -217,7 +243,7 @@ export default function BloodPressureHeartRateForm({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder={t('notes')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -242,4 +268,3 @@ export default function BloodPressureHeartRateForm({
     </form>
   );
 }
-

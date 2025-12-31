@@ -69,7 +69,7 @@ export default function GroupChatPage() {
   const [messageContent, setMessageContent] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [deletingMessageId, setDeletingMessageId] = useState<string | null>(null);
-  
+
   // Image upload hook
   const {
     uploadedImageUrl,
@@ -193,7 +193,10 @@ export default function GroupChatPage() {
         );
         if (unreadMessages.length > 0) {
           try {
-            await markGroupMessagesAsRead(groupId, unreadMessages.map(m => m.id));
+            await markGroupMessagesAsRead(
+              groupId,
+              unreadMessages.map(m => m.id)
+            );
           } catch (err) {
             console.error('Failed to mark messages as read:', err);
             // 既読マークの失敗はローディング状態に影響しない
@@ -242,7 +245,6 @@ export default function GroupChatPage() {
     loadMessages(false);
   };
 
-
   // メッセージを送信
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -280,7 +282,7 @@ export default function GroupChatPage() {
       // For now, let's wait for the response to ensure it's sent, but rely on SSE for the list update to avoid duplicates if we're not careful
       // Actually, the existing logic adds it manually. Let's keep it but be careful with duplicates in the SSE effect.
       const newMessage = await sendGroupMessage(groupId, messageData);
-      
+
       debugLog.log('[handleSendMessage] Message sent successfully:', {
         id: newMessage.id,
         image_url: newMessage.image_url,
@@ -311,15 +313,17 @@ export default function GroupChatPage() {
     try {
       // 現在のメッセージのリアクション状態を確認
       const currentMessage = messages.find(msg => msg.id === messageId);
-      const existingUserReaction = currentMessage?.reactions?.find(r => r.user_id === currentUser?.id);
+      const existingUserReaction = currentMessage?.reactions?.find(
+        r => r.user_id === currentUser?.id
+      );
       const isSameReactionType = existingUserReaction?.reaction_type === reactionType;
-      
+
       // 同じリアクションタイプの場合は、削除APIを呼び出す
       if (isSameReactionType && existingUserReaction) {
         try {
           await removeGroupMessageReaction(groupId, messageId);
           // 状態から削除
-          setMessages(prevMessages => 
+          setMessages(prevMessages =>
             prevMessages.map(msg => {
               if (msg.id === messageId) {
                 return {
@@ -336,11 +340,13 @@ export default function GroupChatPage() {
           // 削除に失敗した場合は、通常の追加処理を続行
         }
       }
-      
-      const updatedReaction = await addGroupMessageReaction(groupId, messageId, { reaction_type: reactionType });
-      
+
+      const updatedReaction = await addGroupMessageReaction(groupId, messageId, {
+        reaction_type: reactionType,
+      });
+
       // Update message reactions in state
-      setMessages(prevMessages => 
+      setMessages(prevMessages =>
         prevMessages.map(msg => {
           if (msg.id === messageId) {
             // If reaction was removed (null), remove it from reactions
@@ -350,11 +356,11 @@ export default function GroupChatPage() {
                 reactions: msg.reactions?.filter(r => r.user_id !== currentUser?.id) || null,
               };
             }
-            
+
             // Otherwise, add or update reaction
             const existingReactions = msg.reactions || [];
             const existingIndex = existingReactions.findIndex(r => r.user_id === currentUser?.id);
-            
+
             if (existingIndex >= 0) {
               // Update existing reaction
               const updated = [...existingReactions];
@@ -373,7 +379,7 @@ export default function GroupChatPage() {
       // 422エラーの場合は詳細を表示
       if (err.response?.status === 422) {
         const errorDetail = err.response?.data?.detail;
-        const errorMessage = Array.isArray(errorDetail) 
+        const errorMessage = Array.isArray(errorDetail)
           ? errorDetail.map((e: any) => e.msg || e.message || JSON.stringify(e)).join(', ')
           : errorDetail || 'Validation error';
         alert(`${tChat('errorAddingReaction') || 'Failed to add reaction'}: ${errorMessage}`);
@@ -413,7 +419,9 @@ export default function GroupChatPage() {
     if (!dateString) {
       return '';
     }
-    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
+    const userTimezone = currentUser
+      ? getUserTimezone(currentUser.timezone, currentUser.country)
+      : 'UTC';
     const date = new Date(dateString);
     // Check if date is valid
     if (isNaN(date.getTime())) {
@@ -492,7 +500,9 @@ export default function GroupChatPage() {
                   {group && (
                     <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                       <Users className="w-4 h-4" />
-                      <span>{group.member_count} {t('members')}</span>
+                      <span>
+                        {group.member_count} {t('members')}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -508,10 +518,7 @@ export default function GroupChatPage() {
           </div>
 
           {/* Messages */}
-          <div
-            ref={messagesContainerRef}
-            className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0"
-          >
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto py-4 space-y-4 min-h-0">
             {isLoadingMore && (
               <div className="flex justify-center py-4">
                 <button
@@ -535,7 +542,9 @@ export default function GroupChatPage() {
                 false // Group chats: show avatar based on sender change or image
               );
               // Compare dates in user's timezone
-              const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : undefined;
+              const userTimezone = currentUser
+                ? getUserTimezone(currentUser.timezone, currentUser.country)
+                : undefined;
               const currentDate = formatDateInTimezone(
                 message.created_at,
                 locale,
@@ -543,13 +552,16 @@ export default function GroupChatPage() {
                 currentUser?.country,
                 { year: 'numeric', month: 'long', day: 'numeric' }
               );
-              const prevDate = index > 0 ? formatDateInTimezone(
-                messages[index - 1].created_at,
-                locale,
-                currentUser?.timezone,
-                currentUser?.country,
-                { year: 'numeric', month: 'long', day: 'numeric' }
-              ) : '';
+              const prevDate =
+                index > 0
+                  ? formatDateInTimezone(
+                      messages[index - 1].created_at,
+                      locale,
+                      currentUser?.timezone,
+                      currentUser?.country,
+                      { year: 'numeric', month: 'long', day: 'numeric' }
+                    )
+                  : '';
               const showDate = index === 0 || currentDate !== prevDate;
 
               return (
@@ -571,11 +583,15 @@ export default function GroupChatPage() {
                   )}
                   <ChatMessage
                     id={message.id}
-                    sender={message.sender ? {
-                      id: message.sender.id,
-                      nickname: message.sender.nickname,
-                      avatar_url: message.sender.avatar_url,
-                    } : null}
+                    sender={
+                      message.sender
+                        ? {
+                            id: message.sender.id,
+                            nickname: message.sender.nickname,
+                            avatar_url: message.sender.avatar_url,
+                          }
+                        : null
+                    }
                     senderId={message.sender_id}
                     content={message.content}
                     imageUrl={message.image_url}
@@ -592,7 +608,7 @@ export default function GroupChatPage() {
                     priority={index >= messages.length - 3}
                     reactions={message.reactions || []}
                     currentUserId={currentUser?.id}
-                    onReactionClick={(reactionType) => handleReactionClick(message.id, reactionType)}
+                    onReactionClick={reactionType => handleReactionClick(message.id, reactionType)}
                   />
                 </div>
               );
@@ -607,7 +623,7 @@ export default function GroupChatPage() {
                 <input
                   type="text"
                   value={messageContent}
-                  onChange={(e) => setMessageContent(e.target.value)}
+                  onChange={e => setMessageContent(e.target.value)}
                   placeholder={tChat('typeMessage')}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                   maxLength={5000}
@@ -643,7 +659,9 @@ export default function GroupChatPage() {
                 </label>
                 <button
                   type="submit"
-                  disabled={isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)}
+                  disabled={
+                    isSending || uploadingImage || (!messageContent.trim() && !uploadedImageUrl)
+                  }
                   className="px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   {isSending ? (
@@ -669,4 +687,3 @@ export default function GroupChatPage() {
     </>
   );
 }
-

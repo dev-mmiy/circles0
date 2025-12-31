@@ -35,17 +35,20 @@ export default function MealPage() {
     retry,
     clearError,
   } = useDataLoader<Post>({
-    loadFn: useCallback(async (skip, limit) => {
-      if (!isAuthenticated || !user) {
-        throw new Error('Authentication required');
-      }
-      const token = await getAccessTokenSilently();
-      
-      // Load only meal records
-      const items = await getUserPosts(user.id, skip, limit, 'meal', token);
-      
-      return { items };
-    }, [isAuthenticated, user, getAccessTokenSilently]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        if (!isAuthenticated || !user) {
+          throw new Error('Authentication required');
+        }
+        const token = await getAccessTokenSilently();
+
+        // Load only meal records
+        const items = await getUserPosts(user.id, skip, limit, 'meal', token);
+
+        return { items };
+      },
+      [isAuthenticated, user, getAccessTokenSilently]
+    ),
     pageSize: 20,
     autoLoad: false, // Manually control loading after auth check
   });
@@ -95,9 +98,7 @@ export default function MealPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-            {t('title')}
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
           <p className="text-gray-600 dark:text-gray-400">{t('subtitle')}</p>
         </div>
 
@@ -142,13 +143,7 @@ export default function MealPage() {
         </div>
 
         {/* Error Display */}
-        {error && (
-          <ErrorDisplay
-            error={error}
-            onRetry={retry}
-            onDismiss={clearError}
-          />
-        )}
+        {error && <ErrorDisplay error={error} onRetry={retry} onDismiss={clearError} />}
 
         {/* Content */}
         {viewMode === 'list' ? (
@@ -163,7 +158,7 @@ export default function MealPage() {
               </div>
             ) : (
               <>
-                {records.map((record) => (
+                {records.map(record => (
                   <PostCard
                     key={record.id}
                     post={record}
@@ -203,4 +198,3 @@ export default function MealPage() {
     </div>
   );
 }
-

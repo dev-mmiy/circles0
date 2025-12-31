@@ -3,8 +3,20 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { createWeightRecord, updateWeightRecord, type WeightRecord, type CreateWeightRecordData, type UpdateWeightRecordData } from '@/lib/api/weightRecords';
-import { createBodyFatRecord, updateBodyFatRecord, type BodyFatRecord, type CreateBodyFatRecordData, type UpdateBodyFatRecordData } from '@/lib/api/bodyFatRecords';
+import {
+  createWeightRecord,
+  updateWeightRecord,
+  type WeightRecord,
+  type CreateWeightRecordData,
+  type UpdateWeightRecordData,
+} from '@/lib/api/weightRecords';
+import {
+  createBodyFatRecord,
+  updateBodyFatRecord,
+  type BodyFatRecord,
+  type CreateBodyFatRecordData,
+  type UpdateBodyFatRecordData,
+} from '@/lib/api/bodyFatRecords';
 import { debugLog } from '@/lib/utils/debug';
 
 interface WeightBodyFatFormProps {
@@ -44,7 +56,7 @@ export default function WeightBodyFatForm({
   };
 
   const [recordedAt, setRecordedAt] = useState<string>(
-    editingWeight?.recorded_at 
+    editingWeight?.recorded_at
       ? convertISOToLocal(editingWeight.recorded_at)
       : editingBodyFat?.recorded_at
       ? convertISOToLocal(editingBodyFat.recorded_at)
@@ -75,7 +87,11 @@ export default function WeightBodyFatForm({
         };
 
         if (editingWeight) {
-          await updateWeightRecord(editingWeight.id, weightData as UpdateWeightRecordData, accessToken);
+          await updateWeightRecord(
+            editingWeight.id,
+            weightData as UpdateWeightRecordData,
+            accessToken
+          );
         } else {
           await createWeightRecord(weightData as CreateWeightRecordData, accessToken);
         }
@@ -91,7 +107,11 @@ export default function WeightBodyFatForm({
         };
 
         if (editingBodyFat) {
-          await updateBodyFatRecord(editingBodyFat.id, bodyFatData as UpdateBodyFatRecordData, accessToken);
+          await updateBodyFatRecord(
+            editingBodyFat.id,
+            bodyFatData as UpdateBodyFatRecordData,
+            accessToken
+          );
         } else {
           await createBodyFatRecord(bodyFatData as CreateBodyFatRecordData, accessToken);
         }
@@ -140,7 +160,7 @@ export default function WeightBodyFatForm({
         <input
           type="datetime-local"
           value={recordedAt}
-          onChange={(e) => setRecordedAt(e.target.value)}
+          onChange={e => setRecordedAt(e.target.value)}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           required
           disabled={isSubmitting}
@@ -155,7 +175,7 @@ export default function WeightBodyFatForm({
           <input
             type="number"
             value={weight}
-            onChange={(e) => setWeight(e.target.value)}
+            onChange={e => setWeight(e.target.value)}
             placeholder="65.0"
             min="0"
             max="500"
@@ -165,7 +185,7 @@ export default function WeightBodyFatForm({
           />
           <select
             value={weightUnit}
-            onChange={(e) => setWeightUnit(e.target.value as 'kg' | 'lb')}
+            onChange={e => setWeightUnit(e.target.value as 'kg' | 'lb')}
             className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             disabled={isSubmitting}
           >
@@ -183,7 +203,7 @@ export default function WeightBodyFatForm({
           <input
             type="number"
             value={bodyFat}
-            onChange={(e) => setBodyFat(e.target.value)}
+            onChange={e => setBodyFat(e.target.value)}
             placeholder="20.0"
             min="0"
             max="100"
@@ -201,7 +221,7 @@ export default function WeightBodyFatForm({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder={t('notes')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -225,4 +245,3 @@ export default function WeightBodyFatForm({
     </form>
   );
 }
-

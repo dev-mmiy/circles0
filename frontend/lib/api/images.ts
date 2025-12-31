@@ -21,10 +21,7 @@ export interface UploadMultipleImagesResponse {
 /**
  * Upload a single image file
  */
-export async function uploadImage(
-  file: File,
-  authToken: string
-): Promise<UploadImageResponse> {
+export async function uploadImage(file: File, authToken: string): Promise<UploadImageResponse> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -33,7 +30,7 @@ export async function uploadImage(
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${authToken}`,
+        Authorization: `Bearer ${authToken}`,
         'Content-Type': 'multipart/form-data',
       },
     }
@@ -54,7 +51,7 @@ export async function uploadMultipleImages(
   }
 
   const formData = new FormData();
-  files.forEach((file) => {
+  files.forEach(file => {
     formData.append('files', file);
   });
 
@@ -63,7 +60,7 @@ export async function uploadMultipleImages(
     formData,
     {
       headers: {
-        'Authorization': `Bearer ${authToken}`,
+        Authorization: `Bearer ${authToken}`,
         'Content-Type': 'multipart/form-data',
       },
     }
@@ -75,13 +72,10 @@ export async function uploadMultipleImages(
 /**
  * Delete an image from storage
  */
-export async function deleteImage(
-  imageUrl: string,
-  authToken: string
-): Promise<void> {
+export async function deleteImage(imageUrl: string, authToken: string): Promise<void> {
   await axios.delete(`${API_BASE_URL}/api/v1/images/delete`, {
     headers: {
-      'Authorization': `Bearer ${authToken}`,
+      Authorization: `Bearer ${authToken}`,
     },
     params: {
       image_url: imageUrl,
@@ -120,7 +114,7 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 export function createImagePreview(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = e => {
       if (e.target?.result) {
         resolve(e.target.result as string);
       } else {
@@ -131,4 +125,3 @@ export function createImagePreview(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
-

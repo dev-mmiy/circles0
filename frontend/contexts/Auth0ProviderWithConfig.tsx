@@ -12,16 +12,16 @@ export default function Auth0ProviderWithConfig({ children }: Auth0ProviderWithC
   // Auth0設定値（環境変数から取得、フォールバックとしてハードコードされた値を使用）
   const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || 'dev-2mqgvitlgxdwl5ea.us.auth0.com';
   const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || 'YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD';
-  const redirectUri =
-    process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI ||
-    'https://lifry.com/callback';
+  const redirectUri = process.env.NEXT_PUBLIC_AUTH0_REDIRECT_URI || 'https://lifry.com/callback';
   const audience = process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com';
 
   // 設定値が不足している場合はAuth0を無効化
   if (!domain || !clientId || !redirectUri) {
     // Only warn in development or verbose mode
-    if (process.env.NODE_ENV === 'development' || 
-        (typeof window !== 'undefined' && localStorage.getItem('debugAuth0') === 'true')) {
+    if (
+      process.env.NODE_ENV === 'development' ||
+      (typeof window !== 'undefined' && localStorage.getItem('debugAuth0') === 'true')
+    ) {
       console.warn('Auth0 configuration missing. Authentication will be disabled.');
     }
     return <>{children}</>;

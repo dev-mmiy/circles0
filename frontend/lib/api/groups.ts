@@ -130,18 +130,13 @@ export async function createGroup(data: CreateGroupData): Promise<Group> {
 /**
  * Get all groups for the current user
  */
-export async function getGroups(
-  skip: number = 0,
-  limit: number = 20
-): Promise<GroupListResponse> {
+export async function getGroups(skip: number = 0, limit: number = 20): Promise<GroupListResponse> {
   const params = new URLSearchParams({
     skip: skip.toString(),
     limit: limit.toString(),
   });
 
-  const response = await apiClient.get<GroupListResponse>(
-    `/api/v1/groups?${params.toString()}`
-  );
+  const response = await apiClient.get<GroupListResponse>(`/api/v1/groups?${params.toString()}`);
   return response.data;
 }
 
@@ -176,10 +171,7 @@ export async function getGroup(groupId: string): Promise<Group> {
 /**
  * Update a group
  */
-export async function updateGroup(
-  groupId: string,
-  data: UpdateGroupData
-): Promise<Group> {
+export async function updateGroup(groupId: string, data: UpdateGroupData): Promise<Group> {
   const response = await apiClient.put<Group>(`/api/v1/groups/${groupId}`, data);
   return response.data;
 }
@@ -194,24 +186,15 @@ export async function deleteGroup(groupId: string): Promise<void> {
 /**
  * Add members to a group
  */
-export async function addMembers(
-  groupId: string,
-  data: AddMemberData
-): Promise<Group> {
-  const response = await apiClient.post<Group>(
-    `/api/v1/groups/${groupId}/members`,
-    data
-  );
+export async function addMembers(groupId: string, data: AddMemberData): Promise<Group> {
+  const response = await apiClient.post<Group>(`/api/v1/groups/${groupId}/members`, data);
   return response.data;
 }
 
 /**
  * Remove a member from a group
  */
-export async function removeMember(
-  groupId: string,
-  userId: string
-): Promise<void> {
+export async function removeMember(groupId: string, userId: string): Promise<void> {
   await apiClient.delete(`/api/v1/groups/${groupId}/members/${userId}`);
 }
 
@@ -237,10 +220,7 @@ export async function sendGroupMessage(
   groupId: string,
   data: CreateGroupMessageData
 ): Promise<GroupMessage> {
-  const response = await apiClient.post<GroupMessage>(
-    `/api/v1/groups/${groupId}/messages`,
-    data
-  );
+  const response = await apiClient.post<GroupMessage>(`/api/v1/groups/${groupId}/messages`, data);
   return response.data;
 }
 
@@ -280,10 +260,7 @@ export async function markGroupMessagesAsRead(
 /**
  * Delete a group message (soft delete)
  */
-export async function deleteGroupMessage(
-  groupId: string,
-  messageId: string
-): Promise<void> {
+export async function deleteGroupMessage(groupId: string, messageId: string): Promise<void> {
   await apiClient.delete(`/api/v1/groups/${groupId}/messages/${messageId}`);
 }
 
@@ -336,9 +313,7 @@ export async function removeGroupMessageReaction(
   groupId: string,
   messageId: string
 ): Promise<void> {
-  await apiClient.delete(
-    `/api/v1/groups/${groupId}/messages/${messageId}/reactions`
-  );
+  await apiClient.delete(`/api/v1/groups/${groupId}/messages/${messageId}/reactions`);
 }
 
 /**
@@ -353,5 +328,3 @@ export async function getGroupMessageReactions(
   );
   return response.data;
 }
-
-

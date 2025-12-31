@@ -61,7 +61,7 @@ export function useMessageStream(
   const wasConnectedRef = useRef(false);
   // Keep onMessage callback in a ref to avoid recreating connection when it changes
   const onMessageRef = useRef(onMessage);
-  
+
   // Update the ref when onMessage changes
   useEffect(() => {
     onMessageRef.current = onMessage;
@@ -70,7 +70,11 @@ export function useMessageStream(
   const closeConnection = () => {
     if (eventSourceRef.current) {
       // Only log in verbose mode
-      if (wasConnectedRef.current && typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true') {
+      if (
+        wasConnectedRef.current &&
+        typeof window !== 'undefined' &&
+        localStorage.getItem('debugSSE') === 'true'
+      ) {
         debugLog.log('[Message SSE] Closing connection');
       }
       eventSourceRef.current.close();
@@ -98,13 +102,14 @@ export function useMessageStream(
 
     try {
       // Get authentication token using tokenManager to prevent conflicts with other API calls
-      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      const isVerbose =
+        typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
       let token: string;
       try {
         token = await getAccessTokenFromManager(getAccessTokenSilently);
       } catch (tokenError: any) {
         debugLog.error('[Message SSE] Failed to get token for SSE connection:', tokenError);
-        
+
         // Don't throw - just set error and return
         // The connection will be retried automatically by the error handler
         setError(tokenError instanceof Error ? tokenError : new Error('Failed to get token'));
@@ -122,7 +127,7 @@ export function useMessageStream(
       eventSourceRef.current = eventSource;
 
       // Connection established
-      eventSource.addEventListener('connected', (event) => {
+      eventSource.addEventListener('connected', event => {
         if (isVerbose) {
           debugLog.log('[Message SSE] Connected:', event.data);
         }
@@ -134,7 +139,7 @@ export function useMessageStream(
       });
 
       // New message received
-      eventSource.addEventListener('message', (event) => {
+      eventSource.addEventListener('message', event => {
         try {
           const message: MessageEvent = JSON.parse(event.data);
           if (isVerbose) {
@@ -151,7 +156,7 @@ export function useMessageStream(
       });
 
       // New group message received
-      eventSource.addEventListener('group_message', (event) => {
+      eventSource.addEventListener('group_message', event => {
         try {
           const message: MessageEvent = JSON.parse(event.data);
           if (isVerbose) {
@@ -168,12 +173,12 @@ export function useMessageStream(
       });
 
       // Heartbeat (keep-alive ping)
-      eventSource.addEventListener('ping', (event) => {
+      eventSource.addEventListener('ping', event => {
         // Heartbeat received - no need to log every ping
       });
 
       // Server requests reconnection (before timeout)
-      eventSource.addEventListener('reconnect', (event) => {
+      eventSource.addEventListener('reconnect', event => {
         if (isVerbose) {
           debugLog.log('[Message SSE] Server requested reconnection:', event.data);
         }
@@ -182,19 +187,20 @@ export function useMessageStream(
       });
 
       // Error event
-      eventSource.addEventListener('error', (errorEvent) => {
+      eventSource.addEventListener('error', errorEvent => {
         const eventSource = errorEvent.target as EventSource;
         const readyState = eventSource.readyState;
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
-        
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+
         // EventSource readyState:
         // 0 = CONNECTING (connection not yet established or lost)
         // 1 = OPEN (connection is open and data can be received)
         // 2 = CLOSED (connection is closed)
-        
+
         // Check if page is visible (not in background)
         const isPageVisible = typeof document !== 'undefined' && !document.hidden;
-        
+
         // Only log actual errors, not connection attempts
         if (readyState === EventSource.CLOSED) {
           // Connection was closed - this is normal if it was previously connected
@@ -202,7 +208,7 @@ export function useMessageStream(
           if (wasConnectedRef.current && isVerbose) {
             debugLog.log('[Message SSE] Connection closed, will reconnect when page is visible');
           }
-          
+
           // Only reconnect if page is visible
           if (!isPageVisible) {
             // Page is in background, don't reconnect yet
@@ -225,16 +231,16 @@ export function useMessageStream(
             debugLog.error('[Message SSE] Unexpected error state:', readyState, errorEvent);
           }
         }
-        
+
         setIsConnected(false);
         wasConnectedRef.current = false;
-        
+
         // Only reconnect if page is visible
         if (!isPageVisible) {
           // Page is in background, don't reconnect yet
           return;
         }
-        
+
         closeConnection();
 
         // Schedule reconnection with exponential backoff
@@ -282,11 +288,12 @@ export function useMessageStream(
 
     const handleVisibilityChange = () => {
       const isVisible = !document.hidden;
-      
+
       if (isVisible) {
         // Page became visible, reconnect if authenticated and enabled
         if (enabled && isAuthenticated && !eventSourceRef.current) {
-          const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+          const isVerbose =
+            typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
           if (isVerbose) {
             debugLog.log('[Message SSE] Page became visible, reconnecting...');
           }
@@ -295,7 +302,8 @@ export function useMessageStream(
       } else {
         // Page went to background, close connection to save resources
         // ERR_NETWORK_IO_SUSPENDED will occur, which is normal
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
         if (isVerbose && wasConnectedRef.current) {
           debugLog.log('[Message SSE] Page went to background, connection will be suspended');
         }
@@ -305,7 +313,7 @@ export function useMessageStream(
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -321,12 +329,12 @@ export function useMessageStream(
         // Page is in background, don't connect yet
         return;
       }
-      
+
       // Delay SSE connection to let other critical API calls complete first
       const timeoutId = setTimeout(() => {
         connect();
       }, 500); // 500ms delay to let UserProvider and other providers initialize first
-      
+
       return () => {
         clearTimeout(timeoutId);
         closeConnection();
@@ -342,4 +350,3 @@ export function useMessageStream(
     error,
   };
 }
-

@@ -141,7 +141,7 @@ export async function getTotalUnreadCount(): Promise<number> {
     // Only get the first page of conversations to avoid timeout
     // In production, this should be replaced with a dedicated API endpoint
     const response = await getConversations(0, 20);
-    
+
     // Sum up unread counts from the first page only
     const totalUnread = response.conversations.reduce((sum, conv) => sum + conv.unread_count, 0);
 
@@ -163,18 +163,18 @@ export async function getConversation(conversationId: string): Promise<Conversat
   });
 
   const url = `/api/v1/messages/conversations/${conversationId}`;
-    debugLog.log('[getConversation] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+  debugLog.log('[getConversation] Full URL:', `${apiClient.defaults.baseURL}${url}`);
 
   try {
     const response = await apiClient.get<Conversation>(url);
-      debugLog.log('[getConversation] API response:', {
+    debugLog.log('[getConversation] API response:', {
       status: response.status,
       data: response.data,
       hasData: !!response.data,
     });
     return response.data;
   } catch (error: any) {
-      debugLog.error('[getConversation] API error:', {
+    debugLog.error('[getConversation] API error:', {
       message: error.message,
       code: error.code,
       response: error.response?.data,
@@ -203,7 +203,7 @@ export async function sendMessage(data: CreateMessageData): Promise<Message> {
     data,
     baseURL: apiClient.defaults.baseURL,
   });
-  
+
   try {
     const response = await apiClient.post<Message>('/api/v1/messages', data);
     debugLog.log('[sendMessage] API response:', response.data);
@@ -241,11 +241,11 @@ export async function getMessages(
   }
 
   const url = `/api/v1/messages/conversations/${conversationId}/messages?${params.toString()}`;
-    debugLog.log('[getMessages] Full URL:', `${apiClient.defaults.baseURL}${url}`);
+  debugLog.log('[getMessages] Full URL:', `${apiClient.defaults.baseURL}${url}`);
 
   try {
     const response = await apiClient.get<MessageListResponse>(url);
-      debugLog.log('[getMessages] API response:', {
+    debugLog.log('[getMessages] API response:', {
       status: response.status,
       data: response.data,
       messagesCount: response.data?.messages?.length,
@@ -253,7 +253,7 @@ export async function getMessages(
     });
     return response.data;
   } catch (error: any) {
-      debugLog.error('[getMessages] API error:', {
+    debugLog.error('[getMessages] API error:', {
       message: error.message,
       code: error.code,
       response: error.response?.data,
@@ -291,13 +291,8 @@ export async function deleteMessage(messageId: string): Promise<void> {
  * Create a new conversation with a specific user
  * Returns the conversation (creates if doesn't exist)
  */
-export async function createConversation(
-  data: CreateConversationData
-): Promise<Conversation> {
-  const response = await apiClient.post<Conversation>(
-    '/api/v1/messages/conversations',
-    data
-  );
+export async function createConversation(data: CreateConversationData): Promise<Conversation> {
+  const response = await apiClient.post<Conversation>('/api/v1/messages/conversations', data);
   return response.data;
 }
 
@@ -316,7 +311,7 @@ export async function findOrCreateConversation(recipientId: string): Promise<str
   while (true) {
     const conversationsResponse = await getConversations(skip, limit);
     foundConversation = conversationsResponse.conversations.find(
-      (conv) => conv.other_user?.id === recipientId
+      conv => conv.other_user?.id === recipientId
     );
 
     if (foundConversation) {
@@ -380,13 +375,9 @@ export async function removeMessageReaction(messageId: string): Promise<void> {
 /**
  * Get all reactions for a message
  */
-export async function getMessageReactions(
-  messageId: string
-): Promise<MessageReaction[]> {
+export async function getMessageReactions(messageId: string): Promise<MessageReaction[]> {
   const response = await apiClient.get<MessageReaction[]>(
     `/api/v1/messages/${messageId}/reactions`
   );
   return response.data;
 }
-
-

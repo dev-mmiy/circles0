@@ -41,17 +41,17 @@ export default function BlocksPage() {
 
   const handleUnblock = async (userId: string) => {
     try {
-      setUnblockingIds((prev) => new Set(prev).add(userId));
+      setUnblockingIds(prev => new Set(prev).add(userId));
       const accessToken = await getAccessTokenSilently();
       await unblockUser(accessToken, userId);
-      
+
       // Remove from list
-      setBlockedUsers((prev) => prev.filter((user) => user.id !== userId));
+      setBlockedUsers(prev => prev.filter(user => user.id !== userId));
     } catch (err: any) {
       console.error('Failed to unblock user:', err);
       alert(err.message || t('errors.unblockFailed'));
     } finally {
-      setUnblockingIds((prev) => {
+      setUnblockingIds(prev => {
         const next = new Set(prev);
         next.delete(userId);
         return next;
@@ -109,8 +109,11 @@ export default function BlocksPage() {
               </div>
             ) : (
               <ul className="divide-y divide-gray-200 dark:divide-gray-700">
-                {blockedUsers.map((user) => (
-                  <li key={user.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                {blockedUsers.map(user => (
+                  <li
+                    key={user.id}
+                    className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
                         {/* Avatar */}
@@ -197,5 +200,3 @@ export default function BlocksPage() {
     </div>
   );
 }
-
-

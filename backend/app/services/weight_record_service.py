@@ -102,4 +102,3 @@ class WeightRecordService:
         db.delete(record)
         db.commit()
         return True
-

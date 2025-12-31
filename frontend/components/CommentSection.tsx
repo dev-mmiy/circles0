@@ -171,7 +171,7 @@ export default function CommentSection({
       <form onSubmit={handleSubmitComment} className="mb-6">
         <textarea
           value={newCommentContent}
-          onChange={(e) => setNewCommentContent(e.target.value)}
+          onChange={e => setNewCommentContent(e.target.value)}
           placeholder={t('placeholder')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -221,19 +221,21 @@ export default function CommentSection({
             disabled={isSubmitting || uploadingImages || !isAuthenticated || imageUrls.length >= 5}
             className="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {uploadingImages ? t('uploadingImages') || 'アップロード中...' : t('addImage') || '画像を追加'}
+            {uploadingImages
+              ? t('uploadingImages') || 'アップロード中...'
+              : t('addImage') || '画像を追加'}
           </button>
           {imageUrls.length > 0 && (
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              ({imageUrls.length}/5)
-            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400">({imageUrls.length}/5)</span>
           )}
         </div>
 
         <div className="flex items-center justify-between mt-2">
           <span
             className={`text-sm ${
-              newCommentContent.length > 1800 ? 'text-red-500 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'
+              newCommentContent.length > 1800
+                ? 'text-red-500 dark:text-red-400'
+                : 'text-gray-500 dark:text-gray-400'
             }`}
           >
             {newCommentContent.length} / 2000
@@ -241,9 +243,17 @@ export default function CommentSection({
 
           <button
             type="submit"
-            disabled={isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated}
+            disabled={
+              isSubmitting ||
+              uploadingImages ||
+              (!newCommentContent.trim() && imageUrls.length === 0) ||
+              !isAuthenticated
+            }
             className={`px-2 py-2 rounded-lg font-medium transition-colors ${
-              isSubmitting || uploadingImages || (!newCommentContent.trim() && imageUrls.length === 0) || !isAuthenticated
+              isSubmitting ||
+              uploadingImages ||
+              (!newCommentContent.trim() && imageUrls.length === 0) ||
+              !isAuthenticated
                 ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
@@ -261,8 +271,11 @@ export default function CommentSection({
         {!isAuthenticated && (
           <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
             {t.rich('loginPrompt', {
-              login: (chunks) => (
-                <I18nLink href="/login" className="text-blue-600 dark:text-blue-400 hover:underline">
+              login: chunks => (
+                <I18nLink
+                  href="/login"
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
                   {chunks}
                 </I18nLink>
               ),
@@ -274,11 +287,9 @@ export default function CommentSection({
       {/* Comments list */}
       <div className="space-y-4">
         {comments.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 text-center py-8">
-            {t('noComments')}
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 text-center py-8">{t('noComments')}</p>
         ) : (
-          comments.map((comment) => (
+          comments.map(comment => (
             <CommentItem
               key={comment.id}
               comment={comment}
@@ -304,12 +315,7 @@ interface CommentItemProps {
   isReply?: boolean;
 }
 
-function CommentItem({
-  comment,
-  postId,
-  onReplyAdded,
-  isReply = false,
-}: CommentItemProps) {
+function CommentItem({ comment, postId, onReplyAdded, isReply = false }: CommentItemProps) {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const { user } = useUser();
   const router = useRouter();
@@ -340,17 +346,11 @@ function CommentItem({
     } else if (relative.hours < 24) {
       return t('time.hoursAgo', { hours: relative.hours });
     } else {
-      return formatDateInTimezone(
-        dateString,
-        locale,
-        user?.timezone,
-        user?.country,
-        {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        }
-      );
+      return formatDateInTimezone(dateString, locale, user?.timezone, user?.country, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
     }
   };
 
@@ -456,7 +456,7 @@ function CommentItem({
             <p className="text-gray-800 dark:text-gray-200 text-sm whitespace-pre-wrap break-words">
               {comment.content}
             </p>
-            
+
             {/* Comment images */}
             {comment.images && comment.images.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-2">
@@ -506,7 +506,7 @@ function CommentItem({
             <form onSubmit={handleSubmitReply} className="mt-3">
               <textarea
                 value={replyContent}
-                onChange={(e) => setReplyContent(e.target.value)}
+                onChange={e => setReplyContent(e.target.value)}
                 placeholder={t('replyPlaceholder')}
                 className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 rows={2}
@@ -543,7 +543,7 @@ function CommentItem({
           {/* Replies */}
           {showReplies && replies.length > 0 && (
             <div className="mt-3 space-y-3">
-              {replies.map((reply) => (
+              {replies.map(reply => (
                 <CommentItem
                   key={reply.id}
                   comment={reply}

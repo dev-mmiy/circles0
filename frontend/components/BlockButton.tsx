@@ -12,11 +12,7 @@ interface BlockButtonProps {
   className?: string;
 }
 
-export default function BlockButton({
-  userId,
-  onBlockChange,
-  className = '',
-}: BlockButtonProps) {
+export default function BlockButton({ userId, onBlockChange, className = '' }: BlockButtonProps) {
   const { getAccessTokenSilently, isAuthenticated, loginWithRedirect } = useAuth0();
   const t = useTranslations('blockButton');
   const [blockStatus, setBlockStatus] = useState<BlockStatus | null>(null);
@@ -146,7 +142,3 @@ export default function BlockButton({
     </button>
   );
 }
-
-
-
-

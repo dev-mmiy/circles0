@@ -20,4 +20,3 @@ export interface VitalRecordGroup {
   bloodGlucose?: BloodGlucoseRecord;
   spo2?: SpO2Record;
 }
-

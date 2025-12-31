@@ -31,7 +31,9 @@ export default function EditProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('pleaseLogIn')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            {t('pleaseLogIn')}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{t('loginRequired')}</p>
           <Link
             href="/"
@@ -48,7 +50,9 @@ export default function EditProfilePage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">{t('profileNotFound')}</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+            {t('profileNotFound')}
+          </h1>
           <p className="text-gray-600 dark:text-gray-400 mb-4">{t('profileLoadFailed')}</p>
           <button
             onClick={() => window.location.reload()}

@@ -68,12 +68,12 @@ export const COUNTRIES: Country[] = [
  */
 export function getCountryName(countryCode: string, locale: string = 'ja'): string {
   if (!countryCode) return countryCode;
-  
+
   // Normalize country code to uppercase for matching
   const normalizedCode = countryCode.toUpperCase();
   const country = COUNTRIES.find(c => c.code === normalizedCode);
   if (!country) return countryCode;
-  
+
   return locale === 'ja' ? country.nameJa : country.nameEn;
 }
 
@@ -83,5 +83,3 @@ export function getCountryName(countryCode: string, locale: string = 'ja'): stri
 export function getCountryByCode(code: string): Country | undefined {
   return COUNTRIES.find(c => c.code === code);
 }
-
-

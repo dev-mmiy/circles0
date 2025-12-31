@@ -86,7 +86,7 @@ export function DiseaseSearch({
 
       const searchResults = await onSearch(params);
       setResults(searchResults);
-      
+
       // Save to search history if query exists
       if (searchQuery.trim()) {
         addToSearchHistory('disease', searchQuery, {
@@ -97,7 +97,7 @@ export function DiseaseSearch({
         });
         setSearchHistory(getSearchHistory('disease'));
       }
-      
+
       setShowHistory(false);
     } catch (err) {
       console.error('Search error:', err);
@@ -110,7 +110,7 @@ export function DiseaseSearch({
   // Load search history and filter settings on mount
   useEffect(() => {
     setSearchHistory(getSearchHistory('disease'));
-    
+
     // Restore saved filter settings
     const savedSettings = getDiseaseSearchFilterSettings();
     if (savedSettings) {
@@ -126,7 +126,7 @@ export function DiseaseSearch({
   // Autocomplete ICD codes for single code input
   useEffect(() => {
     if (useRangeSearch) return; // Skip if range search is enabled
-    
+
     const fetchAutocomplete = async () => {
       if (icdCode && icdCode.length >= 1) {
         try {
@@ -152,7 +152,7 @@ export function DiseaseSearch({
   // Autocomplete ICD codes for range search - From
   useEffect(() => {
     if (!useRangeSearch) return; // Skip if range search is disabled
-    
+
     const fetchAutocomplete = async () => {
       if (icdCodeFrom && icdCodeFrom.length >= 1) {
         try {
@@ -178,7 +178,7 @@ export function DiseaseSearch({
   // Autocomplete ICD codes for range search - To
   useEffect(() => {
     if (!useRangeSearch) return; // Skip if range search is disabled
-    
+
     const fetchAutocomplete = async () => {
       if (icdCodeTo && icdCodeTo.length >= 1) {
         try {
@@ -245,10 +245,8 @@ export function DiseaseSearch({
   };
 
   const toggleCategory = (categoryId: number) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((id) => id !== categoryId)
-        : [...prev, categoryId]
+    setSelectedCategories(prev =>
+      prev.includes(categoryId) ? prev.filter(id => id !== categoryId) : [...prev, categoryId]
     );
   };
 
@@ -257,15 +255,13 @@ export function DiseaseSearch({
       return disease.name;
     }
 
-    const translation = disease.translations.find(
-      (t) => t.language_code === preferredLanguage
-    );
+    const translation = disease.translations.find(t => t.language_code === preferredLanguage);
 
     if (translation) {
       return translation.translated_name;
     }
 
-    const jaTranslation = disease.translations.find((t) => t.language_code === 'ja');
+    const jaTranslation = disease.translations.find(t => t.language_code === 'ja');
     return jaTranslation?.translated_name || disease.name;
   };
 
@@ -277,7 +273,7 @@ export function DiseaseSearch({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => {
+            onChange={e => {
               setSearchQuery(e.target.value);
               setShowHistory(e.target.value === '' && searchHistory.length > 0);
             }}
@@ -286,11 +282,11 @@ export function DiseaseSearch({
                 setShowHistory(true);
               }
             }}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyPress={e => e.key === 'Enter' && handleSearch()}
             placeholder={t('placeholder')}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
-          
+
           {/* Search History Dropdown */}
           {showHistory && searchHistory.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -307,16 +303,18 @@ export function DiseaseSearch({
                 </button>
               </div>
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                {searchHistory.map((item) => (
+                {searchHistory.map(item => (
                   <div
                     key={`${item.query}-${item.timestamp}`}
                     onClick={() => handleHistoryClick(item)}
                     className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group cursor-pointer"
                   >
-                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                      {item.query}
+                    </span>
                     <button
                       type="button"
-                      onClick={(e) => handleRemoveHistoryItem(e, item.query)}
+                      onClick={e => handleRemoveHistoryItem(e, item.query)}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
                       aria-label="Remove"
                     >
@@ -342,14 +340,9 @@ export function DiseaseSearch({
           {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
       </div>
-      
+
       {/* Click outside to close history */}
-      {showHistory && (
-        <div
-          className="fixed inset-0 z-0"
-          onClick={() => setShowHistory(false)}
-        />
-      )}
+      {showHistory && <div className="fixed inset-0 z-0" onClick={() => setShowHistory(false)} />}
 
       {/* Advanced Search Options */}
       {showAdvanced && (
@@ -379,7 +372,7 @@ export function DiseaseSearch({
                 <input
                   type="checkbox"
                   checked={useRangeSearch}
-                  onChange={(e) => {
+                  onChange={e => {
                     setUseRangeSearch(e.target.checked);
                     if (!e.target.checked) {
                       setIcdCodeFrom('');
@@ -403,10 +396,14 @@ export function DiseaseSearch({
                   <input
                     type="text"
                     value={icdCodeFrom}
-                    onChange={(e) => {
+                    onChange={e => {
                       setIcdCodeFrom(e.target.value);
                     }}
-                    onFocus={() => setShowAutocompleteFrom(icdCodeFrom.length >= 1 && icdCodeFromSuggestions.length > 0)}
+                    onFocus={() =>
+                      setShowAutocompleteFrom(
+                        icdCodeFrom.length >= 1 && icdCodeFromSuggestions.length > 0
+                      )
+                    }
                     onBlur={() => setTimeout(() => setShowAutocompleteFrom(false), 200)}
                     placeholder={t('icdCodeFromPlaceholder')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -416,7 +413,7 @@ export function DiseaseSearch({
                       <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                         {t('autocompleteSuggestions')}
                       </div>
-                      {icdCodeFromSuggestions.map((code) => (
+                      {icdCodeFromSuggestions.map(code => (
                         <button
                           key={code}
                           onClick={() => {
@@ -438,10 +435,14 @@ export function DiseaseSearch({
                   <input
                     type="text"
                     value={icdCodeTo}
-                    onChange={(e) => {
+                    onChange={e => {
                       setIcdCodeTo(e.target.value);
                     }}
-                    onFocus={() => setShowAutocompleteTo(icdCodeTo.length >= 1 && icdCodeToSuggestions.length > 0)}
+                    onFocus={() =>
+                      setShowAutocompleteTo(
+                        icdCodeTo.length >= 1 && icdCodeToSuggestions.length > 0
+                      )
+                    }
                     onBlur={() => setTimeout(() => setShowAutocompleteTo(false), 200)}
                     placeholder={t('icdCodeToPlaceholder')}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -451,7 +452,7 @@ export function DiseaseSearch({
                       <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                         {t('autocompleteSuggestions')}
                       </div>
-                      {icdCodeToSuggestions.map((code) => (
+                      {icdCodeToSuggestions.map(code => (
                         <button
                           key={code}
                           onClick={() => {
@@ -475,11 +476,13 @@ export function DiseaseSearch({
                 <input
                   type="text"
                   value={icdCode}
-                  onChange={(e) => {
+                  onChange={e => {
                     setIcdCode(e.target.value);
                     setShowAutocomplete(e.target.value.length >= 1);
                   }}
-                  onFocus={() => setShowAutocomplete(icdCode.length >= 1 && icdCodeSuggestions.length > 0)}
+                  onFocus={() =>
+                    setShowAutocomplete(icdCode.length >= 1 && icdCodeSuggestions.length > 0)
+                  }
                   onBlur={() => setTimeout(() => setShowAutocomplete(false), 200)}
                   placeholder={t('icdCodePlaceholder')}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
@@ -489,7 +492,7 @@ export function DiseaseSearch({
                     <div className="p-2 text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                       {t('autocompleteSuggestions')}
                     </div>
-                    {icdCodeSuggestions.map((code) => (
+                    {icdCodeSuggestions.map(code => (
                       <button
                         key={code}
                         onClick={() => {
@@ -514,7 +517,7 @@ export function DiseaseSearch({
                 {t('categoryLabel')}
               </label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                {categories.map((category) => (
+                {categories.map(category => (
                   <label
                     key={category.id}
                     className="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
@@ -525,7 +528,9 @@ export function DiseaseSearch({
                       onChange={() => toggleCategory(category.id)}
                       className="mr-2 w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700"
                     />
-                    <span className="text-sm text-gray-900 dark:text-gray-100">{category.name}</span>
+                    <span className="text-sm text-gray-900 dark:text-gray-100">
+                      {category.name}
+                    </span>
                   </label>
                 ))}
               </div>
@@ -540,7 +545,7 @@ export function DiseaseSearch({
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'name' | 'disease_code' | 'created_at')}
+                onChange={e => setSortBy(e.target.value as 'name' | 'disease_code' | 'created_at')}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="name">{t('sortByName')}</option>
@@ -554,7 +559,7 @@ export function DiseaseSearch({
               </label>
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="asc">{t('sortOrderAsc')}</option>
@@ -579,7 +584,7 @@ export function DiseaseSearch({
             {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-2">
-            {results.map((disease) => (
+            {results.map(disease => (
               <div
                 key={disease.id}
                 onClick={() => onSelect && onSelect(disease)}
@@ -598,13 +603,15 @@ export function DiseaseSearch({
                       </p>
                     )}
                     {disease.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{disease.description}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+                        {disease.description}
+                      </p>
                     )}
                   </div>
                   {onSelect && (
                     <button
                       type="button"
-                      onClick={(e) => {
+                      onClick={e => {
                         e.stopPropagation();
                         onSelect(disease);
                       }}
@@ -622,9 +629,7 @@ export function DiseaseSearch({
 
       {/* No Results */}
       {!loading && results.length === 0 && searchQuery && (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-          {t('noResults')}
-        </div>
+        <div className="text-center py-8 text-gray-500 dark:text-gray-400">{t('noResults')}</div>
       )}
     </div>
   );

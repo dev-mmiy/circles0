@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { createBloodGlucoseRecord, updateBloodGlucoseRecord, type BloodGlucoseRecord, type CreateBloodGlucoseRecordData, type UpdateBloodGlucoseRecordData } from '@/lib/api/bloodGlucoseRecords';
+import {
+  createBloodGlucoseRecord,
+  updateBloodGlucoseRecord,
+  type BloodGlucoseRecord,
+  type CreateBloodGlucoseRecordData,
+  type UpdateBloodGlucoseRecordData,
+} from '@/lib/api/bloodGlucoseRecords';
 import { debugLog } from '@/lib/utils/debug';
 
 interface BloodGlucoseFormProps {
@@ -44,7 +50,9 @@ export default function BloodGlucoseForm({
     editingRecord?.recorded_at ? convertISOToLocal(editingRecord.recorded_at) : getDefaultDateTime()
   );
   const [value, setValue] = useState<string>(editingRecord?.value?.toString() || '');
-  const [timing, setTiming] = useState<'fasting' | 'postprandial' | ''>(editingRecord?.timing || '');
+  const [timing, setTiming] = useState<'fasting' | 'postprandial' | ''>(
+    editingRecord?.timing || ''
+  );
   const [notes, setNotes] = useState<string>(editingRecord?.notes || '');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +79,11 @@ export default function BloodGlucoseForm({
       };
 
       if (editingRecord) {
-        await updateBloodGlucoseRecord(editingRecord.id, data as UpdateBloodGlucoseRecordData, accessToken);
+        await updateBloodGlucoseRecord(
+          editingRecord.id,
+          data as UpdateBloodGlucoseRecordData,
+          accessToken
+        );
       } else {
         await createBloodGlucoseRecord(data as CreateBloodGlucoseRecordData, accessToken);
       }
@@ -111,7 +123,7 @@ export default function BloodGlucoseForm({
         <input
           type="datetime-local"
           value={recordedAt}
-          onChange={(e) => setRecordedAt(e.target.value)}
+          onChange={e => setRecordedAt(e.target.value)}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           required
           disabled={isSubmitting}
@@ -125,7 +137,7 @@ export default function BloodGlucoseForm({
         <div className="mb-2">
           <select
             value={timing}
-            onChange={(e) => setTiming(e.target.value as 'fasting' | 'postprandial' | '')}
+            onChange={e => setTiming(e.target.value as 'fasting' | 'postprandial' | '')}
             className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             disabled={isSubmitting}
           >
@@ -138,7 +150,7 @@ export default function BloodGlucoseForm({
           <input
             type="number"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             placeholder={timing === 'fasting' ? '100' : '140'}
             min="0"
             max="1000"
@@ -156,7 +168,7 @@ export default function BloodGlucoseForm({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder={t('notes')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -180,4 +192,3 @@ export default function BloodGlucoseForm({
     </form>
   );
 }
-

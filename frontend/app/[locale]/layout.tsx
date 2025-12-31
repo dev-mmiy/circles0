@@ -19,7 +19,7 @@ export const metadata: Metadata = {
 
 export default async function LocaleLayout({
   children,
-  params: { locale }
+  params: { locale },
 }: {
   children: React.ReactNode;
   params: { locale: string };
@@ -40,23 +40,23 @@ export default async function LocaleLayout({
 
   return (
     <>
-        <ScrollHandler />
-        <ThemeProvider>
-          <NextIntlClientProvider messages={messages}>
-            <Auth0ProviderWithConfig>
-              <UserProvider>
-                <DiseaseProvider>
-                  <NotificationProvider>
-                    <ApiProvider>
-                      {children}
-                      <ToasterProvider />
-                    </ApiProvider>
-                  </NotificationProvider>
-                </DiseaseProvider>
-              </UserProvider>
-            </Auth0ProviderWithConfig>
-          </NextIntlClientProvider>
-        </ThemeProvider>
+      <ScrollHandler />
+      <ThemeProvider>
+        <NextIntlClientProvider messages={messages}>
+          <Auth0ProviderWithConfig>
+            <UserProvider>
+              <DiseaseProvider>
+                <NotificationProvider>
+                  <ApiProvider>
+                    {children}
+                    <ToasterProvider />
+                  </ApiProvider>
+                </NotificationProvider>
+              </DiseaseProvider>
+            </UserProvider>
+          </Auth0ProviderWithConfig>
+        </NextIntlClientProvider>
+      </ThemeProvider>
     </>
   );
 }

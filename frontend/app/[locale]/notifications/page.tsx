@@ -72,7 +72,7 @@ export default function NotificationsPage() {
   // 認証チェックと初期読み込み
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!isAuthenticated) {
       // 未認証の場合はホームにリダイレクト
       if (!isRedirecting) {
@@ -81,7 +81,7 @@ export default function NotificationsPage() {
       }
       return;
     }
-    
+
     loadNotifications(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authLoading, isAuthenticated, filterType]);
@@ -145,7 +145,9 @@ export default function NotificationsPage() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Page Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('pageTitle')}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {t('pageTitle')}
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">{t('pageSubtitle')}</p>
           </div>
 
@@ -220,9 +222,7 @@ export default function NotificationsPage() {
                   />
                 </svg>
                 <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
-                  {filterType === 'unread'
-                    ? t('noUnreadNotifications')
-                    : t('noNotifications')}
+                  {filterType === 'unread' ? t('noUnreadNotifications') : t('noNotifications')}
                 </h3>
                 <p className="mt-2 text-gray-500 dark:text-gray-400">
                   {filterType === 'unread'
@@ -233,7 +233,7 @@ export default function NotificationsPage() {
             ) : (
               <>
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {notifications.map((notification) => (
+                  {notifications.map(notification => (
                     <NotificationItem
                       key={notification.id}
                       notification={notification}
@@ -299,4 +299,3 @@ export default function NotificationsPage() {
     </>
   );
 }
-

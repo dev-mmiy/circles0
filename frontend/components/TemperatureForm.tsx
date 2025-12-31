@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { createTemperatureRecord, updateTemperatureRecord, type TemperatureRecord, type CreateTemperatureRecordData, type UpdateTemperatureRecordData } from '@/lib/api/temperatureRecords';
+import {
+  createTemperatureRecord,
+  updateTemperatureRecord,
+  type TemperatureRecord,
+  type CreateTemperatureRecordData,
+  type UpdateTemperatureRecordData,
+} from '@/lib/api/temperatureRecords';
 import { debugLog } from '@/lib/utils/debug';
 
 interface TemperatureFormProps {
@@ -11,10 +17,7 @@ interface TemperatureFormProps {
   editingRecord?: TemperatureRecord | null;
 }
 
-export default function TemperatureForm({
-  onRecordCreated,
-  editingRecord,
-}: TemperatureFormProps) {
+export default function TemperatureForm({ onRecordCreated, editingRecord }: TemperatureFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm.healthRecord.vitalForm');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +74,11 @@ export default function TemperatureForm({
       };
 
       if (editingRecord) {
-        await updateTemperatureRecord(editingRecord.id, data as UpdateTemperatureRecordData, accessToken);
+        await updateTemperatureRecord(
+          editingRecord.id,
+          data as UpdateTemperatureRecordData,
+          accessToken
+        );
       } else {
         await createTemperatureRecord(data as CreateTemperatureRecordData, accessToken);
       }
@@ -111,7 +118,7 @@ export default function TemperatureForm({
         <input
           type="datetime-local"
           value={recordedAt}
-          onChange={(e) => setRecordedAt(e.target.value)}
+          onChange={e => setRecordedAt(e.target.value)}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           required
           disabled={isSubmitting}
@@ -126,7 +133,7 @@ export default function TemperatureForm({
           <input
             type="number"
             value={value}
-            onChange={(e) => setValue(e.target.value)}
+            onChange={e => setValue(e.target.value)}
             placeholder="36.5"
             min="30"
             max="45"
@@ -137,7 +144,7 @@ export default function TemperatureForm({
           />
           <select
             value={unit}
-            onChange={(e) => setUnit(e.target.value as 'celsius' | 'fahrenheit')}
+            onChange={e => setUnit(e.target.value as 'celsius' | 'fahrenheit')}
             className="p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             disabled={isSubmitting}
           >
@@ -153,7 +160,7 @@ export default function TemperatureForm({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder={t('notes')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -177,4 +184,3 @@ export default function TemperatureForm({
     </form>
   );
 }
-

@@ -1,6 +1,6 @@
 /**
  * MessageImage Component
- * 
+ *
  * Displays an image attached to a message (for both direct messages and group messages)
  */
 
@@ -32,12 +32,14 @@ export default function MessageImage({
         width={400}
         height={400}
         sizes="(max-width: 768px) 100vw, 400px"
-        className={`${className} ${onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''}`}
+        className={`${className} ${
+          onClick ? 'cursor-pointer hover:opacity-90 transition-opacity' : ''
+        }`}
         style={{ width: 'auto', height: 'auto' }}
         priority={priority}
         loading={priority ? undefined : 'lazy'}
         onClick={onClick}
-        onError={(e) => {
+        onError={e => {
           debugLog.error('[MessageImage] Image load error:', {
             messageId,
             image_url: imageUrl,
@@ -55,4 +57,3 @@ export default function MessageImage({
     </div>
   );
 }
-

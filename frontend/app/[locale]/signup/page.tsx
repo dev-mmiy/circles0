@@ -115,7 +115,10 @@ export default function SignupPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t('email')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
@@ -126,7 +129,9 @@ export default function SignupPage() {
                 onChange={handleChange}
                 required
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
-                  errors.email ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.email
+                    ? 'border-red-300 dark:border-red-600'
+                    : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder={t('emailPlaceholder')}
               />
@@ -137,7 +142,10 @@ export default function SignupPage() {
 
             {/* Nickname */}
             <div>
-              <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="nickname"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t('nickname')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
@@ -149,7 +157,9 @@ export default function SignupPage() {
                 required
                 maxLength={50}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
-                  errors.nickname ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.nickname
+                    ? 'border-red-300 dark:border-red-600'
+                    : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder={t('nicknamePlaceholder')}
               />
@@ -161,7 +171,10 @@ export default function SignupPage() {
 
             {/* Username */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="username"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t('username')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
@@ -173,7 +186,9 @@ export default function SignupPage() {
                 required
                 maxLength={50}
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 ${
-                  errors.username ? 'border-red-300 dark:border-red-600' : 'border-gray-300 dark:border-gray-600'
+                  errors.username
+                    ? 'border-red-300 dark:border-red-600'
+                    : 'border-gray-300 dark:border-gray-600'
                 }`}
                 placeholder={t('usernamePlaceholder')}
               />
@@ -198,7 +213,10 @@ export default function SignupPage() {
           <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
             <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
               {t('alreadyHaveAccount')}{' '}
-              <Link href="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium">
+              <Link
+                href="/login"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
                 {t('loginLink')}
               </Link>
             </p>
@@ -208,4 +226,3 @@ export default function SignupPage() {
     </div>
   );
 }
-

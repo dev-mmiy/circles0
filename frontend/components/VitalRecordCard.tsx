@@ -69,7 +69,9 @@ export default function VitalRecordCard({
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm.healthRecord.vitalForm');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editModalType, setEditModalType] = useState<'bp_hr' | 'temp' | 'weight_fat' | 'bg' | 'spo2' | null>(null);
+  const [editModalType, setEditModalType] = useState<
+    'bp_hr' | 'temp' | 'weight_fat' | 'bg' | 'spo2' | null
+  >(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -80,7 +82,7 @@ export default function VitalRecordCard({
     setIsDeleting(true);
     try {
       const accessToken = await getAccessTokenSilently();
-      
+
       const deletePromises: Promise<void>[] = [];
       if (bloodPressure) {
         deletePromises.push(deleteBloodPressureRecord(bloodPressure.id, accessToken));
@@ -141,10 +143,18 @@ export default function VitalRecordCard({
     }
   };
 
-  const recordedAt = bloodPressure?.recorded_at || heartRate?.recorded_at || temperature?.recorded_at || 
-                      weight?.recorded_at || bodyFat?.recorded_at || bloodGlucose?.recorded_at || spo2?.recorded_at;
-  const displayDate = recordedAt ? format(new Date(recordedAt), 'yyyy年MM月dd日 HH:mm', { locale: ja }) : '';
-  
+  const recordedAt =
+    bloodPressure?.recorded_at ||
+    heartRate?.recorded_at ||
+    temperature?.recorded_at ||
+    weight?.recorded_at ||
+    bodyFat?.recorded_at ||
+    bloodGlucose?.recorded_at ||
+    spo2?.recorded_at;
+  const displayDate = recordedAt
+    ? format(new Date(recordedAt), 'yyyy年MM月dd日 HH:mm', { locale: ja })
+    : '';
+
   const allNotes = [
     bloodPressure?.notes,
     heartRate?.notes,
@@ -245,7 +255,13 @@ export default function VitalRecordCard({
                 {t('bloodGlucose')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
-                {bloodGlucose.value} mg/dL{bloodGlucose.timing && ` (${bloodGlucose.timing === 'fasting' ? t('bloodGlucoseFasting') : t('bloodGlucosePostprandial')})`}
+                {bloodGlucose.value} mg/dL
+                {bloodGlucose.timing &&
+                  ` (${
+                    bloodGlucose.timing === 'fasting'
+                      ? t('bloodGlucoseFasting')
+                      : t('bloodGlucosePostprandial')
+                  })`}
               </span>
             </div>
           )}
@@ -263,9 +279,7 @@ export default function VitalRecordCard({
 
           {allNotes.length > 0 && (
             <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-              <p className="text-sm text-gray-700 dark:text-gray-300">
-                {allNotes.join(' / ')}
-              </p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{allNotes.join(' / ')}</p>
             </div>
           )}
         </div>
@@ -331,4 +345,3 @@ export default function VitalRecordCard({
     </>
   );
 }
-

@@ -6,7 +6,16 @@ import { useTranslations, useLocale } from 'next-intl';
 import { Link, useRouter } from '@/i18n/routing';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
-import { likePost, unlikePost, deletePost, savePost, unsavePost, type Post, type PostLike, type ReactionType } from '@/lib/api/posts';
+import {
+  likePost,
+  unlikePost,
+  deletePost,
+  savePost,
+  unsavePost,
+  type Post,
+  type PostLike,
+  type ReactionType,
+} from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { formatDateInTimezone, formatRelativeTime, getUserTimezone } from '@/lib/utils/timezone';
 import toast from 'react-hot-toast';
@@ -52,7 +61,7 @@ export default function PostCard({
   const tSaved = useTranslations('savedPosts');
   const tHealthRecord = useTranslations('postForm.healthRecord');
   const [reactions, setReactions] = useState<PostLike[]>(post.likes || []);
-  
+
   // Update reactions when post.likes changes (e.g., when post is refreshed)
   useEffect(() => {
     if (post.likes) {
@@ -96,17 +105,11 @@ export default function PostCard({
       return t('time.daysAgo', { days: relative.days });
     } else {
       // Format date in user's timezone (or browser's local timezone if user not logged in)
-      return formatDateInTimezone(
-        dateString,
-        locale,
-        user?.timezone,
-        user?.country,
-        {
-          year: 'numeric',
-          month: 'short',
-          day: 'numeric',
-        }
-      );
+      return formatDateInTimezone(dateString, locale, user?.timezone, user?.country, {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
     }
   };
 
@@ -150,7 +153,11 @@ export default function PostCard({
       const currentUserReaction = reactions.find(r => r.user_id === user?.id);
       const isSameReactionType = currentUserReaction?.reaction_type === reactionType;
 
-      const updatedReaction = await likePost(post.id, { reaction_type: reactionType as ReactionType }, accessToken);
+      const updatedReaction = await likePost(
+        post.id,
+        { reaction_type: reactionType as ReactionType },
+        accessToken
+      );
 
       // Update reactions state
       if (updatedReaction === null) {
@@ -194,7 +201,7 @@ export default function PostCard({
     setIsSaving(true);
     try {
       const token = await getAccessTokenSilently();
-      
+
       if (isSaved) {
         await unsavePost(post.id, token);
         setIsSaved(false);
@@ -214,13 +221,13 @@ export default function PostCard({
         // Fallback to error message
         errorMessage = error.message;
       }
-      
+
       // Log error (503 Service Unavailable is expected when feature is not available)
       const isServiceUnavailable = error?.response?.status === 503;
-      const isFeatureNotAvailable = isServiceUnavailable && 
-        (errorMessage?.includes('not available') || 
-         errorMessage?.includes('migrations'));
-      
+      const isFeatureNotAvailable =
+        isServiceUnavailable &&
+        (errorMessage?.includes('not available') || errorMessage?.includes('migrations'));
+
       if (isFeatureNotAvailable) {
         // Log as warning for expected service unavailable errors
         debugLog.warn('Save feature not available:', errorMessage);
@@ -228,7 +235,7 @@ export default function PostCard({
         // Log other errors normally
         debugLog.error('Failed to toggle save:', error);
       }
-      
+
       toast.error(errorMessage);
     } finally {
       setIsSaving(false);
@@ -243,13 +250,13 @@ export default function PostCard({
     try {
       const accessToken = await getAccessTokenSilently();
       await deletePost(post.id, accessToken);
-      
+
       // Show success toast
       toast.success(t('deleteSuccess'));
-      
+
       // Close modal first
       setIsDeleteConfirmOpen(false);
-      
+
       // Wait a bit for modal to close, then refresh feed
       setTimeout(() => {
         // Notify parent to refresh feed
@@ -317,13 +324,13 @@ export default function PostCard({
       tempElement.style.padding = getComputedStyle(contentRef.current).padding;
       tempElement.textContent = post.content;
       document.body.appendChild(tempElement);
-      
+
       const lineHeight = parseFloat(getComputedStyle(tempElement).lineHeight) || 24;
       const maxHeight = lineHeight * POST_CONFIG.MAX_LINES_TO_SHOW;
       const actualHeight = tempElement.scrollHeight;
-      
+
       setShouldShowExpandButton(actualHeight > maxHeight);
-      
+
       document.body.removeChild(tempElement);
     } else {
       setShouldShowExpandButton(false);
@@ -333,14 +340,19 @@ export default function PostCard({
   // Get localized disease name
   const getDiseaseName = (): string | null => {
     if (!post.user_disease) return null;
-    if (post.user_disease.disease_translations && post.user_disease.disease_translations.length > 0) {
+    if (
+      post.user_disease.disease_translations &&
+      post.user_disease.disease_translations.length > 0
+    ) {
       const translation = post.user_disease.disease_translations.find(
-        (t) => t.language_code === locale
+        t => t.language_code === locale
       );
       if (translation) {
         return translation.translated_name;
       }
-      const jaTranslation = post.user_disease.disease_translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = post.user_disease.disease_translations.find(
+        t => t.language_code === 'ja'
+      );
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -393,16 +405,36 @@ export default function PostCard({
               {getVisibilityBadge(post.visibility)}
               {post.post_type === 'health_record' && post.health_record_type && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-medium">
-                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <svg
+                    className="w-3 h-3 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
                   </svg>
                   {t(`healthRecord.${post.health_record_type}`)}
                 </span>
               )}
               {post.visibility === 'private' && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 text-xs font-medium">
-                  <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  <svg
+                    className="w-3 h-3 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
                   </svg>
                   {t('visibility.private')}
                 </span>
@@ -451,12 +483,8 @@ export default function PostCard({
       {/* Post content or deleted message */}
       {!post.is_active ? (
         <div className="mb-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 text-center border border-gray-200 dark:border-gray-600">
-          <p className="text-gray-500 dark:text-gray-400 font-medium">
-            {t('deleted')}
-          </p>
-          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-            {t('deletedByAuthor')}
-          </p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">{t('deleted')}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">{t('deletedByAuthor')}</p>
         </div>
       ) : (
         <div className="mb-2">
@@ -471,25 +499,32 @@ export default function PostCard({
                         {tHealthRecord('diaryForm.mood')}:
                       </span>
                       <span className="text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.mood === 'good' && '😊'} 
-                        {post.health_record_data.mood === 'neutral' && '😐'} 
-                        {post.health_record_data.mood === 'bad' && '😢'} 
-                        {tHealthRecord(`diaryForm.mood${post.health_record_data.mood.charAt(0).toUpperCase() + post.health_record_data.mood.slice(1)}`)}
+                        {post.health_record_data.mood === 'good' && '😊'}
+                        {post.health_record_data.mood === 'neutral' && '😐'}
+                        {post.health_record_data.mood === 'bad' && '😢'}
+                        {tHealthRecord(
+                          `diaryForm.mood${
+                            post.health_record_data.mood.charAt(0).toUpperCase() +
+                            post.health_record_data.mood.slice(1)
+                          }`
+                        )}
                       </span>
                     </div>
                   )}
-                  {post.health_record_data.tags && Array.isArray(post.health_record_data.tags) && post.health_record_data.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {post.health_record_data.tags.map((tag: string, index: number) => (
-                        <span
-                          key={index}
-                          className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium"
-                        >
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
+                  {post.health_record_data.tags &&
+                    Array.isArray(post.health_record_data.tags) &&
+                    post.health_record_data.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {post.health_record_data.tags.map((tag: string, index: number) => (
+                          <span
+                            key={index}
+                            className="inline-flex items-center px-2 py-0.5 rounded-md bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300 text-xs font-medium"
+                          >
+                            #{tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                 </div>
               )}
               {post.health_record_type === 'symptom' && (
@@ -510,7 +545,9 @@ export default function PostCard({
                         {tHealthRecord('symptomForm.severity')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {tHealthRecord('symptomForm.severityLabel', { value: post.health_record_data.severity })}
+                        {tHealthRecord('symptomForm.severityLabel', {
+                          value: post.health_record_data.severity,
+                        })}
                       </span>
                     </div>
                   )}
@@ -554,7 +591,9 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.bloodPressure')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.blood_pressure.systolic} / {post.health_record_data.measurements.blood_pressure.diastolic} {post.health_record_data.measurements.blood_pressure.unit || 'mmHg'}
+                        {post.health_record_data.measurements.blood_pressure.systolic} /{' '}
+                        {post.health_record_data.measurements.blood_pressure.diastolic}{' '}
+                        {post.health_record_data.measurements.blood_pressure.unit || 'mmHg'}
                       </span>
                     </div>
                   )}
@@ -564,7 +603,10 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.temperature')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.temperature.value} {post.health_record_data.measurements.temperature.unit === 'celsius' ? '°C' : '°F'}
+                        {post.health_record_data.measurements.temperature.value}{' '}
+                        {post.health_record_data.measurements.temperature.unit === 'celsius'
+                          ? '°C'
+                          : '°F'}
                       </span>
                     </div>
                   )}
@@ -574,7 +616,8 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.weight')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.weight.value} {post.health_record_data.measurements.weight.unit || 'kg'}
+                        {post.health_record_data.measurements.weight.value}{' '}
+                        {post.health_record_data.measurements.weight.unit || 'kg'}
                       </span>
                     </div>
                   )}
@@ -584,7 +627,8 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.heartRate')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.heart_rate.value} {post.health_record_data.measurements.heart_rate.unit || 'bpm'}
+                        {post.health_record_data.measurements.heart_rate.value}{' '}
+                        {post.health_record_data.measurements.heart_rate.unit || 'bpm'}
                       </span>
                     </div>
                   )}
@@ -594,7 +638,10 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.bodyFatPercentage')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.body_fat_percentage.value} {post.health_record_data.measurements.body_fat_percentage.unit === 'percent' ? '%' : post.health_record_data.measurements.body_fat_percentage.unit || '%'}
+                        {post.health_record_data.measurements.body_fat_percentage.value}{' '}
+                        {post.health_record_data.measurements.body_fat_percentage.unit === 'percent'
+                          ? '%'
+                          : post.health_record_data.measurements.body_fat_percentage.unit || '%'}
                       </span>
                     </div>
                   )}
@@ -604,14 +651,18 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.bloodGlucose')}
                         {post.health_record_data.measurements.blood_glucose.timing && (
                           <span className="text-xs text-gray-500 dark:text-gray-400 ml-1">
-                            ({post.health_record_data.measurements.blood_glucose.timing === 'fasting' 
+                            (
+                            {post.health_record_data.measurements.blood_glucose.timing === 'fasting'
                               ? tHealthRecord('vitalForm.bloodGlucoseFasting')
-                              : tHealthRecord('vitalForm.bloodGlucosePostprandial')})
+                              : tHealthRecord('vitalForm.bloodGlucosePostprandial')}
+                            )
                           </span>
-                        )}:
+                        )}
+                        :
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.blood_glucose.value} {post.health_record_data.measurements.blood_glucose.unit || 'mg/dL'}
+                        {post.health_record_data.measurements.blood_glucose.value}{' '}
+                        {post.health_record_data.measurements.blood_glucose.unit || 'mg/dL'}
                       </span>
                     </div>
                   )}
@@ -621,7 +672,10 @@ export default function PostCard({
                         {tHealthRecord('vitalForm.spo2')}:
                       </span>
                       <span className="ml-2 text-gray-600 dark:text-gray-400">
-                        {post.health_record_data.measurements.spo2.value} {post.health_record_data.measurements.spo2.unit === 'percent' ? '%' : post.health_record_data.measurements.spo2.unit || '%'}
+                        {post.health_record_data.measurements.spo2.value}{' '}
+                        {post.health_record_data.measurements.spo2.unit === 'percent'
+                          ? '%'
+                          : post.health_record_data.measurements.spo2.unit || '%'}
                       </span>
                     </div>
                   )}
@@ -649,20 +703,22 @@ export default function PostCard({
                       </span>
                     </div>
                   )}
-                  {post.health_record_data.foods && Array.isArray(post.health_record_data.foods) && post.health_record_data.foods.length > 0 && (
-                    <div className="text-sm">
-                      <span className="font-medium text-gray-700 dark:text-gray-300">
-                        {tHealthRecord('mealForm.foods')}:
-                      </span>
-                      <div className="mt-1 space-y-1">
-                        {post.health_record_data.foods.map((food: any, index: number) => (
-                          <div key={index} className="text-gray-600 dark:text-gray-400">
-                            • {food.name} {food.amount && `(${food.amount}${food.unit || 'g'})`}
-                          </div>
-                        ))}
+                  {post.health_record_data.foods &&
+                    Array.isArray(post.health_record_data.foods) &&
+                    post.health_record_data.foods.length > 0 && (
+                      <div className="text-sm">
+                        <span className="font-medium text-gray-700 dark:text-gray-300">
+                          {tHealthRecord('mealForm.foods')}:
+                        </span>
+                        <div className="mt-1 space-y-1">
+                          {post.health_record_data.foods.map((food: any, index: number) => (
+                            <div key={index} className="text-gray-600 dark:text-gray-400">
+                              • {food.name} {food.amount && `(${food.amount}${food.unit || 'g'})`}
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    )}
                   {post.health_record_data.nutrition && (
                     <div className="text-sm">
                       <span className="font-medium text-gray-700 dark:text-gray-300">
@@ -670,16 +726,28 @@ export default function PostCard({
                       </span>
                       <div className="mt-1 grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
                         {post.health_record_data.nutrition.calories && (
-                          <div>{tHealthRecord('mealForm.calories')}: {post.health_record_data.nutrition.calories} kcal</div>
+                          <div>
+                            {tHealthRecord('mealForm.calories')}:{' '}
+                            {post.health_record_data.nutrition.calories} kcal
+                          </div>
                         )}
                         {post.health_record_data.nutrition.protein && (
-                          <div>{tHealthRecord('mealForm.protein')}: {post.health_record_data.nutrition.protein} g</div>
+                          <div>
+                            {tHealthRecord('mealForm.protein')}:{' '}
+                            {post.health_record_data.nutrition.protein} g
+                          </div>
                         )}
                         {post.health_record_data.nutrition.carbs && (
-                          <div>{tHealthRecord('mealForm.carbs')}: {post.health_record_data.nutrition.carbs} g</div>
+                          <div>
+                            {tHealthRecord('mealForm.carbs')}:{' '}
+                            {post.health_record_data.nutrition.carbs} g
+                          </div>
                         )}
                         {post.health_record_data.nutrition.fat && (
-                          <div>{tHealthRecord('mealForm.fat')}: {post.health_record_data.nutrition.fat} g</div>
+                          <div>
+                            {tHealthRecord('mealForm.fat')}: {post.health_record_data.nutrition.fat}{' '}
+                            g
+                          </div>
                         )}
                       </div>
                     </div>
@@ -691,9 +759,7 @@ export default function PostCard({
           <p
             ref={contentRef}
             className={`text-gray-800 dark:text-gray-200 break-words ${
-              !isExpanded && shouldShowExpandButton
-                ? ''
-                : 'whitespace-pre-wrap'
+              !isExpanded && shouldShowExpandButton ? '' : 'whitespace-pre-wrap'
             }`}
             style={
               !isExpanded && shouldShowExpandButton
@@ -734,7 +800,7 @@ export default function PostCard({
       {/* Hashtags (only show if post is active) */}
       {post.is_active && post.hashtags && post.hashtags.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-1.5">
-          {post.hashtags.map((hashtag) => (
+          {post.hashtags.map(hashtag => (
             <Link
               key={hashtag.id}
               href={`/search?q=${encodeURIComponent(hashtag.name)}&type=hashtags`}
@@ -752,7 +818,7 @@ export default function PostCard({
           <span className="text-sm text-gray-600 dark:text-gray-400 font-medium mr-1">
             {t('mentions')}:
           </span>
-          {post.mentions.map((mention) => (
+          {post.mentions.map(mention => (
             <Link
               key={mention.id}
               href={`/profile/${mention.id}`}
@@ -767,20 +833,20 @@ export default function PostCard({
       {/* Images (only show if post is active) */}
       {post.is_active && post.images && post.images.length > 0 && (
         <div className="mb-2">
-          <div className={`grid gap-2 ${
-            post.images.length === 1
-              ? 'grid-cols-1'
-              : post.images.length === 2
-              ? 'grid-cols-2'
-              : 'grid-cols-2'
-          }`}>
+          <div
+            className={`grid gap-2 ${
+              post.images.length === 1
+                ? 'grid-cols-1'
+                : post.images.length === 2
+                ? 'grid-cols-2'
+                : 'grid-cols-2'
+            }`}
+          >
             {post.images.map((image, index) => (
               <div
                 key={image.id}
                 className={`relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 ${
-                  post.images!.length === 1
-                    ? 'w-full aspect-video'
-                    : 'aspect-square'
+                  post.images!.length === 1 ? 'w-full aspect-video' : 'aspect-square'
                 }`}
               >
                 {post.images!.length === 1 ? (
@@ -791,14 +857,15 @@ export default function PostCard({
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
                     className="object-contain cursor-pointer hover:opacity-90 transition-opacity"
                     priority={priority && index === 0}
-                    loading={priority && index === 0 ? undefined : "lazy"}
+                    loading={priority && index === 0 ? undefined : 'lazy'}
                     onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback
                       const target = e.target as HTMLImageElement;
                       if (target) {
-                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                        target.src =
+                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
                       }
                     }}
                   />
@@ -810,14 +877,15 @@ export default function PostCard({
                     sizes="(max-width: 768px) 50vw, (max-width: 1200px) 40vw, 600px"
                     className="object-cover cursor-pointer hover:opacity-90 transition-opacity"
                     priority={priority && index === 0}
-                    loading={priority && index === 0 ? undefined : "lazy"}
+                    loading={priority && index === 0 ? undefined : 'lazy'}
                     onClick={() => handleImageClick(image.id)}
                     onError={(e: any) => {
                       console.error('Failed to load image:', image.image_url);
                       // Show fallback
                       const target = e.target as HTMLImageElement;
                       if (target) {
-                        target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
+                        target.src =
+                          'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="400"%3E%3Crect fill="%23ddd" width="400" height="400"/%3E%3Ctext fill="%23999" font-family="sans-serif" font-size="18" dy="10.5" font-weight="bold" x="50%25" y="50%25" text-anchor="middle"%3E画像を読み込めませんでした%3C/text%3E%3C/svg%3E';
                       }
                     }}
                   />
@@ -833,7 +901,12 @@ export default function PostCard({
         <div className="mb-2">
           <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300 text-sm font-medium">
             <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             {diseaseName}
           </span>
@@ -853,12 +926,14 @@ export default function PostCard({
                   user_id: r.user_id,
                   reaction_type: r.reaction_type as MessageReactionType,
                   created_at: r.created_at,
-                  user: r.user ? {
-                    id: r.user.id,
-                    nickname: r.user.nickname,
-                    username: r.user.username || null,
-                    avatar_url: r.user.avatar_url || null,
-                  } : null,
+                  user: r.user
+                    ? {
+                        id: r.user.id,
+                        nickname: r.user.nickname,
+                        username: r.user.username || null,
+                        avatar_url: r.user.avatar_url || null,
+                      }
+                    : null,
                 }))}
                 currentUserId={user?.id}
                 onReactionClick={handleReactionClick}
@@ -867,55 +942,50 @@ export default function PostCard({
               />
             </div>
 
-        {/* Comment button/link */}
-        <Link
-          href={`/posts/${post.id}`}
-          className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-        >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-          <span className="font-medium">{post.comment_count}</span>
-        </Link>
-
-        {/* Save button (between comment and share) */}
-        {isAuthenticated && (
-          <button
-            onClick={handleSaveToggle}
-            disabled={isSaving}
-            className={`transition-colors ${
-              isSaved
-                ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300'
-                : 'text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400'
-            } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-            title={isSaved ? tSaved('unsave') : tSaved('save')}
-            aria-label={isSaved ? tSaved('unsave') : tSaved('save')}
-          >
-            <svg
-              className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`}
-              fill={isSaved ? 'currentColor' : 'none'}
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {/* Comment button/link */}
+            <Link
+              href={`/posts/${post.id}`}
+              className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
-              />
-            </svg>
-          </button>
-        )}
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                />
+              </svg>
+              <span className="font-medium">{post.comment_count}</span>
+            </Link>
+
+            {/* Save button (between comment and share) */}
+            {isAuthenticated && (
+              <button
+                onClick={handleSaveToggle}
+                disabled={isSaving}
+                className={`transition-colors ${
+                  isSaved
+                    ? 'text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400'
+                } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                title={isSaved ? tSaved('unsave') : tSaved('save')}
+                aria-label={isSaved ? tSaved('unsave') : tSaved('save')}
+              >
+                <svg
+                  className={`w-5 h-5 ${isSaved ? 'fill-current' : ''}`}
+                  fill={isSaved ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+              </button>
+            )}
 
             {/* Share button */}
             <ShareButton
@@ -938,16 +1008,18 @@ export default function PostCard({
       )}
 
       {/* Vital Edit Modal - For vital records */}
-      {isVitalEditModalOpen && post.post_type === 'health_record' && post.health_record_type === 'vital' && (
-        <PostFormModal
-          isOpen={isVitalEditModalOpen}
-          onClose={handleVitalEditModalClose}
-          onPostCreated={handlePostUpdated}
-          initialPostType="health_record"
-          initialHealthRecordType="vital"
-          editingPost={post}
-        />
-      )}
+      {isVitalEditModalOpen &&
+        post.post_type === 'health_record' &&
+        post.health_record_type === 'vital' && (
+          <PostFormModal
+            isOpen={isVitalEditModalOpen}
+            onClose={handleVitalEditModalClose}
+            onPostCreated={handlePostUpdated}
+            initialPostType="health_record"
+            initialHealthRecordType="vital"
+            editingPost={post}
+          />
+        )}
 
       {/* Delete Confirmation Dialog */}
       {isDeleteConfirmOpen && (
@@ -989,16 +1061,12 @@ export default function PostCard({
                 {/* Post Preview */}
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-4 border border-gray-200 dark:border-gray-600">
                   <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-3 break-words">
-                    {post.content.length > 150
-                      ? post.content.slice(0, 150) + '...'
-                      : post.content}
+                    {post.content.length > 150 ? post.content.slice(0, 150) + '...' : post.content}
                   </p>
                 </div>
 
                 {/* Impact Message */}
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                  {t('deleteImpact')}
-                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">{t('deleteImpact')}</p>
 
                 {/* Buttons */}
                 <div className="flex justify-end gap-3">

@@ -137,7 +137,14 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     } finally {
       setIsLoading(false);
     }
-  }, [isSupported, registration, isAuthenticated, permission, requestPermission, getAccessTokenSilently]);
+  }, [
+    isSupported,
+    registration,
+    isAuthenticated,
+    permission,
+    requestPermission,
+    getAccessTokenSilently,
+  ]);
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
@@ -175,4 +182,3 @@ export function usePushNotifications(): UsePushNotificationsReturn {
     unsubscribe,
   };
 }
-

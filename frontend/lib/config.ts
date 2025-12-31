@@ -25,7 +25,7 @@ export function getApiBaseUrl(): string {
   // In browser environment, use the runtime API URL from ApiContext
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    
+
     // For localhost, try to use WSL2 IP if available, otherwise use localhost
     if (hostname === 'localhost' || hostname === '127.0.0.1') {
       // Try to detect if we're in WSL2 environment and use WSL2 IP
@@ -43,7 +43,7 @@ export function getApiBaseUrl(): string {
       console.log('[getApiBaseUrl] Using localhost:8000 (if this fails, set NEXT_PUBLIC_WSL2_IP)');
       return 'http://localhost:8000';
     }
-    
+
     // For other hostnames, use production API
     return 'https://api.lifry.com';
   }
@@ -53,13 +53,13 @@ export function getApiBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_API_URL) {
     return process.env.NEXT_PUBLIC_API_URL;
   }
-  
+
   // For SSR, try to determine production URL based on NODE_ENV
   // In production, default to api.lifry.com
   if (process.env.NODE_ENV === 'production') {
     return 'https://api.lifry.com';
   }
-  
+
   // Default to localhost for development SSR
   return 'http://localhost:8000';
 }

@@ -1,7 +1,18 @@
 'use client';
 
 import { useMemo } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+} from 'recharts';
 import { format, subDays, subMonths, subYears, parseISO } from 'date-fns';
 import { ja } from 'date-fns/locale';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
@@ -39,7 +50,7 @@ export default function VitalCharts({
   const dateRange = useMemo(() => {
     const now = new Date();
     let startDate: Date;
-    
+
     switch (period) {
       case '1week':
         startDate = subDays(now, 7);
@@ -54,7 +65,7 @@ export default function VitalCharts({
         startDate = subYears(now, 1);
         break;
     }
-    
+
     return { startDate, endDate: now };
   }, [period]);
 
@@ -87,9 +98,12 @@ export default function VitalCharts({
   const bpHrData = useMemo(() => {
     const bpFiltered = filterByDateRange(bloodPressureRecords);
     const hrFiltered = filterByDateRange(heartRateRecords);
-    
-    const dataMap = new Map<string, { date: string; systolic?: number; diastolic?: number; heartRate?: number }>();
-    
+
+    const dataMap = new Map<
+      string,
+      { date: string; systolic?: number; diastolic?: number; heartRate?: number }
+    >();
+
     bpFiltered.forEach(record => {
       const key = record.recorded_at;
       if (!dataMap.has(key)) {
@@ -99,7 +113,7 @@ export default function VitalCharts({
       data.systolic = record.systolic;
       data.diastolic = record.diastolic;
     });
-    
+
     hrFiltered.forEach(record => {
       const key = record.recorded_at;
       if (!dataMap.has(key)) {
@@ -108,7 +122,7 @@ export default function VitalCharts({
       const data = dataMap.get(key)!;
       data.heartRate = record.bpm;
     });
-    
+
     return Array.from(dataMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(item => ({
@@ -121,9 +135,9 @@ export default function VitalCharts({
   const weightFatData = useMemo(() => {
     const weightFiltered = filterByDateRange(weightRecords);
     const fatFiltered = filterByDateRange(bodyFatRecords);
-    
+
     const dataMap = new Map<string, { date: string; weight?: number; bodyFat?: number }>();
-    
+
     weightFiltered.forEach(record => {
       const key = record.recorded_at;
       if (!dataMap.has(key)) {
@@ -132,7 +146,7 @@ export default function VitalCharts({
       const data = dataMap.get(key)!;
       data.weight = record.value;
     });
-    
+
     fatFiltered.forEach(record => {
       const key = record.recorded_at;
       if (!dataMap.has(key)) {
@@ -141,7 +155,7 @@ export default function VitalCharts({
       const data = dataMap.get(key)!;
       data.bodyFat = record.percentage;
     });
-    
+
     return Array.from(dataMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(item => ({
@@ -193,84 +207,84 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={bpHrData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6b7280"
-                tick={{ fill: '#6b7280' }}
-                className="dark:text-gray-400"
-              />
-              <YAxis 
-                yAxisId="bp"
-                label={{ value: '血圧 (mmHg)', angle: -90, position: 'insideLeft' }}
-                stroke="#ef4444"
-                tick={{ fill: '#6b7280' }}
-                className="dark:text-gray-400"
-              />
-              <YAxis 
-                yAxisId="hr"
-                orientation="right"
-                label={{ value: '心拍数 (bpm)', angle: 90, position: 'insideRight' }}
-                stroke="#3b82f6"
-                tick={{ fill: '#6b7280' }}
-                className="dark:text-gray-400"
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: 'var(--tooltip-bg, #fff)', 
-                  border: '1px solid var(--tooltip-border, #e5e7eb)',
-                  borderRadius: '8px',
-                  color: 'var(--tooltip-text, #000)',
-                }}
-                wrapperStyle={{ color: 'inherit' }}
-                formatter={(value: any, name: string) => {
-                  if (name === '収縮期血圧 (mmHg)') {
-                    return [`${value} mmHg`, name];
-                  } else if (name === '拡張期血圧 (mmHg)') {
-                    return [`${value} mmHg`, name];
-                  } else if (name === '心拍数 (bpm)') {
-                    return [`${value} bpm`, name];
-                  }
-                  return [value, name];
-                }}
-              />
-              <Legend />
-              {bpHrData.some(d => d.systolic !== undefined) && (
-                <Line 
-                  yAxisId="bp"
-                  type="linear" 
-                  dataKey="systolic" 
-                  stroke="#ef4444" 
-                  strokeWidth={2}
-                  name="収縮期血圧 (mmHg)"
-                  dot={{ r: 4 }}
+              <LineChart data={bpHrData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis
+                  dataKey="date"
+                  stroke="#6b7280"
+                  tick={{ fill: '#6b7280' }}
+                  className="dark:text-gray-400"
                 />
-              )}
-              {bpHrData.some(d => d.diastolic !== undefined) && (
-                <Line 
+                <YAxis
                   yAxisId="bp"
-                  type="linear" 
-                  dataKey="diastolic" 
-                  stroke="#dc2626" 
-                  strokeWidth={2}
-                  name="拡張期血圧 (mmHg)"
-                  dot={{ r: 4 }}
+                  label={{ value: '血圧 (mmHg)', angle: -90, position: 'insideLeft' }}
+                  stroke="#ef4444"
+                  tick={{ fill: '#6b7280' }}
+                  className="dark:text-gray-400"
                 />
-              )}
-              {bpHrData.some(d => d.heartRate !== undefined) && (
-                <Line 
+                <YAxis
                   yAxisId="hr"
-                  type="linear" 
-                  dataKey="heartRate" 
-                  stroke="#3b82f6" 
-                  strokeWidth={2}
-                  name="心拍数 (bpm)"
-                  dot={{ r: 4 }}
+                  orientation="right"
+                  label={{ value: '心拍数 (bpm)', angle: 90, position: 'insideRight' }}
+                  stroke="#3b82f6"
+                  tick={{ fill: '#6b7280' }}
+                  className="dark:text-gray-400"
                 />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--tooltip-bg, #fff)',
+                    border: '1px solid var(--tooltip-border, #e5e7eb)',
+                    borderRadius: '8px',
+                    color: 'var(--tooltip-text, #000)',
+                  }}
+                  wrapperStyle={{ color: 'inherit' }}
+                  formatter={(value: any, name: string) => {
+                    if (name === '収縮期血圧 (mmHg)') {
+                      return [`${value} mmHg`, name];
+                    } else if (name === '拡張期血圧 (mmHg)') {
+                      return [`${value} mmHg`, name];
+                    } else if (name === '心拍数 (bpm)') {
+                      return [`${value} bpm`, name];
+                    }
+                    return [value, name];
+                  }}
+                />
+                <Legend />
+                {bpHrData.some(d => d.systolic !== undefined) && (
+                  <Line
+                    yAxisId="bp"
+                    type="linear"
+                    dataKey="systolic"
+                    stroke="#ef4444"
+                    strokeWidth={2}
+                    name="収縮期血圧 (mmHg)"
+                    dot={{ r: 4 }}
+                  />
+                )}
+                {bpHrData.some(d => d.diastolic !== undefined) && (
+                  <Line
+                    yAxisId="bp"
+                    type="linear"
+                    dataKey="diastolic"
+                    stroke="#dc2626"
+                    strokeWidth={2}
+                    name="拡張期血圧 (mmHg)"
+                    dot={{ r: 4 }}
+                  />
+                )}
+                {bpHrData.some(d => d.heartRate !== undefined) && (
+                  <Line
+                    yAxisId="hr"
+                    type="linear"
+                    dataKey="heartRate"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    name="心拍数 (bpm)"
+                    dot={{ r: 4 }}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
           ) : null}
         </div>
       )}
@@ -283,56 +297,48 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={weightFatData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6b7280"
-                tick={{ fill: '#6b7280' }}
-              />
-              <YAxis 
-                yAxisId="left"
-                stroke="#10b981"
-                tick={{ fill: '#6b7280' }}
-              />
-              <YAxis 
-                yAxisId="right"
-                orientation="right"
-                stroke="#059669"
-                tick={{ fill: '#6b7280' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              {weightFatData.some(d => d.weight !== undefined) && (
-                <Line 
-                  yAxisId="left"
-                  type="monotone" 
-                  dataKey="weight" 
-                  stroke="#10b981" 
-                  strokeWidth={2}
-                  name="体重 (kg)"
-                  dot={{ r: 4 }}
-                />
-              )}
-              {weightFatData.some(d => d.bodyFat !== undefined) && (
-                <Line 
+              <LineChart data={weightFatData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis yAxisId="left" stroke="#10b981" tick={{ fill: '#6b7280' }} />
+                <YAxis
                   yAxisId="right"
-                  type="monotone" 
-                  dataKey="bodyFat" 
-                  stroke="#059669" 
-                  strokeWidth={2}
-                  name="体脂肪率 (%)"
-                  dot={{ r: 4 }}
+                  orientation="right"
+                  stroke="#059669"
+                  tick={{ fill: '#6b7280' }}
                 />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                {weightFatData.some(d => d.weight !== undefined) && (
+                  <Line
+                    yAxisId="left"
+                    type="monotone"
+                    dataKey="weight"
+                    stroke="#10b981"
+                    strokeWidth={2}
+                    name="体重 (kg)"
+                    dot={{ r: 4 }}
+                  />
+                )}
+                {weightFatData.some(d => d.bodyFat !== undefined) && (
+                  <Line
+                    yAxisId="right"
+                    type="monotone"
+                    dataKey="bodyFat"
+                    stroke="#059669"
+                    strokeWidth={2}
+                    name="体脂肪率 (%)"
+                    dot={{ r: 4 }}
+                  />
+                )}
+              </LineChart>
+            </ResponsiveContainer>
           ) : null}
         </div>
       )}
@@ -340,41 +346,32 @@ export default function VitalCharts({
       {/* Temperature Chart */}
       {temperatureData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            体温
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">体温</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={temperatureData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6b7280"
-                tick={{ fill: '#6b7280' }}
-              />
-              <YAxis 
-                stroke="#3b82f6"
-                tick={{ fill: '#6b7280' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="temperature" 
-                stroke="#3b82f6" 
-                fill="#3b82f6"
-                fillOpacity={0.3}
-                strokeWidth={2}
-                name="体温 (°C)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+              <AreaChart data={temperatureData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#3b82f6" tick={{ fill: '#6b7280' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="temperature"
+                  stroke="#3b82f6"
+                  fill="#3b82f6"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  name="体温 (°C)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           ) : null}
         </div>
       )}
@@ -382,41 +379,32 @@ export default function VitalCharts({
       {/* Blood Glucose Chart */}
       {bloodGlucoseData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-            血糖値
-          </h3>
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">血糖値</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={bloodGlucoseData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6b7280"
-                tick={{ fill: '#6b7280' }}
-              />
-              <YAxis 
-                stroke="#f97316"
-                tick={{ fill: '#6b7280' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="bloodGlucose" 
-                stroke="#f97316" 
-                fill="#f97316"
-                fillOpacity={0.3}
-                strokeWidth={2}
-                name="血糖値 (mg/dL)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+              <AreaChart data={bloodGlucoseData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#f97316" tick={{ fill: '#6b7280' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="bloodGlucose"
+                  stroke="#f97316"
+                  fill="#f97316"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  name="血糖値 (mg/dL)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           ) : null}
         </div>
       )}
@@ -429,50 +417,43 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={spo2Data}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-              <XAxis 
-                dataKey="date" 
-                stroke="#6b7280"
-                tick={{ fill: '#6b7280' }}
-              />
-              <YAxis 
-                stroke="#ec4899"
-                tick={{ fill: '#6b7280' }}
-              />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#fff', 
-                  border: '1px solid #e5e7eb',
-                  borderRadius: '8px',
-                }}
-              />
-              <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="spo2" 
-                stroke="#ec4899" 
-                fill="#ec4899"
-                fillOpacity={0.3}
-                strokeWidth={2}
-                name="SpO2 (%)"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+              <AreaChart data={spo2Data}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#ec4899" tick={{ fill: '#6b7280' }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                  }}
+                />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="spo2"
+                  stroke="#ec4899"
+                  fill="#ec4899"
+                  fillOpacity={0.3}
+                  strokeWidth={2}
+                  name="SpO2 (%)"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
           ) : null}
         </div>
       )}
 
       {/* No Data Message */}
-      {bpHrData.length === 0 && weightFatData.length === 0 && temperatureData.length === 0 && 
-       bloodGlucoseData.length === 0 && spo2Data.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            選択した期間に記録がありません
-          </p>
-        </div>
-      )}
+      {bpHrData.length === 0 &&
+        weightFatData.length === 0 &&
+        temperatureData.length === 0 &&
+        bloodGlucoseData.length === 0 &&
+        spo2Data.length === 0 && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+            <p className="text-gray-600 dark:text-gray-400">選択した期間に記録がありません</p>
+          </div>
+        )}
     </div>
   );
 }
-

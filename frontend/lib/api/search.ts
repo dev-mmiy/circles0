@@ -13,12 +13,14 @@ function extractErrorMessage(error: any, defaultMessage: string): string {
   if (error.detail) {
     if (Array.isArray(error.detail)) {
       // Validation errors - format array of errors
-      return error.detail.map((e: any) => {
-        if (typeof e === 'string') return e;
-        if (e.msg) return e.msg;
-        if (e.loc && e.msg) return `${e.loc.join('.')}: ${e.msg}`;
-        return JSON.stringify(e);
-      }).join(', ');
+      return error.detail
+        .map((e: any) => {
+          if (typeof e === 'string') return e;
+          if (e.msg) return e.msg;
+          if (e.loc && e.msg) return `${e.loc.join('.')}: ${e.msg}`;
+          return JSON.stringify(e);
+        })
+        .join(', ');
     } else if (typeof error.detail === 'string') {
       return error.detail;
     } else {
@@ -208,13 +210,10 @@ export async function searchHashtags(
     headers['Authorization'] = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/hashtags?${queryParams.toString()}`,
-    {
-      method: 'GET',
-      headers,
-    }
-  );
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/hashtags?${queryParams.toString()}`, {
+    method: 'GET',
+    headers,
+  });
 
   if (!response.ok) {
     let errorMessage = 'Failed to search hashtags';
@@ -298,7 +297,9 @@ export async function getPostsByHashtag(
   }
 
   const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/hashtag/${encodeURIComponent(hashtagName)}?${queryParams.toString()}`,
+    `${getApiBaseUrl()}/api/v1/posts/hashtag/${encodeURIComponent(
+      hashtagName
+    )}?${queryParams.toString()}`,
     {
       method: 'GET',
       headers,

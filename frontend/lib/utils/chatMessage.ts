@@ -1,12 +1,12 @@
 /**
  * Chat message utility functions
- * 
+ *
  * Common utilities for chat message display logic
  */
 
 /**
  * Calculate whether to show avatar for a message
- * 
+ *
  * @param index - Current message index
  * @param prevSenderId - Previous message sender ID (or null if first message)
  * @param currentSenderId - Current message sender ID
@@ -30,15 +30,5 @@ export function shouldShowAvatar(
   // 1. First message
   // 2. Previous message is from different sender
   // 3. Current message has an image (always show avatar for images in group chats)
-  return index === 0 || 
-         prevSenderId !== currentSenderId ||
-         hasImage;
+  return index === 0 || prevSenderId !== currentSenderId || hasImage;
 }
-
-
-
-
-
-
-
-

@@ -79,10 +79,10 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 768); // md breakpoint
     };
-    
+
     checkMobile();
     window.addEventListener('resize', checkMobile);
-    
+
     return () => {
       window.removeEventListener('resize', checkMobile);
     };
@@ -135,21 +135,27 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
   return (
     <div
       ref={dropdownRef}
-      className={`${isMobile ? 'fixed' : 'absolute'} mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 sm:w-96`}
-      style={isMobile ? {
-        left: '50%',
-        right: 'auto',
-        top: '4rem',
-        transform: 'translateX(-50%)',
-        width: 'calc(100vw - 2rem)',
-        maxWidth: '384px'
-      } : {
-        right: '1rem',
-        left: 'auto',
-        transform: 'none',
-        width: 'min(calc(100vw - 2rem), 384px)',
-        maxWidth: '384px'
-      }}
+      className={`${
+        isMobile ? 'fixed' : 'absolute'
+      } mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50 sm:w-96`}
+      style={
+        isMobile
+          ? {
+              left: '50%',
+              right: 'auto',
+              top: '4rem',
+              transform: 'translateX(-50%)',
+              width: 'calc(100vw - 2rem)',
+              maxWidth: '384px',
+            }
+          : {
+              right: '1rem',
+              left: 'auto',
+              transform: 'none',
+              width: 'min(calc(100vw - 2rem), 384px)',
+              maxWidth: '384px',
+            }
+      }
     >
       {/* ヘッダー */}
       <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
@@ -178,7 +184,7 @@ export default function NotificationDropdown({ isOpen, onClose }: NotificationDr
           </div>
         ) : (
           <div className="divide-y divide-gray-100 dark:divide-gray-700">
-            {notifications.map((notification) => (
+            {notifications.map(notification => (
               <NotificationItem
                 key={notification.id}
                 notification={notification}

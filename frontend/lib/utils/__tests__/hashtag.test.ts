@@ -78,7 +78,9 @@ describe('hashtag utilities', () => {
 
     it('should highlight multiple hashtags', () => {
       const result = highlightHashtags('Hello #world and #test');
-      expect(result).toBe('Hello <span class="hashtag">#world</span> and <span class="hashtag">#test</span>');
+      expect(result).toBe(
+        'Hello <span class="hashtag">#world</span> and <span class="hashtag">#test</span>'
+      );
     });
 
     it('should handle empty string', () => {
@@ -93,8 +95,9 @@ describe('hashtag utilities', () => {
 
     it('should preserve case', () => {
       const result = highlightHashtags('#Hello #WORLD');
-      expect(result).toBe('<span class="hashtag">#Hello</span> <span class="hashtag">#WORLD</span>');
+      expect(result).toBe(
+        '<span class="hashtag">#Hello</span> <span class="hashtag">#WORLD</span>'
+      );
     });
   });
 });
-

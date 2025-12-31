@@ -1,6 +1,6 @@
 /**
  * useImageUpload Hook
- * 
+ *
  * Common hook for handling image upload in chat forms
  */
 
@@ -58,9 +58,13 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     } catch (err: any) {
       debugLog.error('Failed to upload image:', err);
       setImagePreview(null);
-      const errorMessage = err.response?.status === 503
-        ? (options.translationKeys?.uploadServiceNotConfigured || 'Upload service not configured')
-        : (err.response?.data?.detail || err.message || options.translationKeys?.uploadFailed || 'Upload failed');
+      const errorMessage =
+        err.response?.status === 503
+          ? options.translationKeys?.uploadServiceNotConfigured || 'Upload service not configured'
+          : err.response?.data?.detail ||
+            err.message ||
+            options.translationKeys?.uploadFailed ||
+            'Upload failed';
       alert(errorMessage);
       options.onUploadError?.(err);
     } finally {
@@ -95,11 +99,3 @@ export function useImageUpload(options: UseImageUploadOptions = {}) {
     clearImage,
   };
 }
-
-
-
-
-
-
-
-

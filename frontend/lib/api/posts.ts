@@ -62,12 +62,12 @@ export interface Post {
   like_count: number;
   comment_count: number;
   is_liked_by_current_user: boolean;
-  is_saved_by_current_user?: boolean;  // Whether the post is saved by current user
+  is_saved_by_current_user?: boolean; // Whether the post is saved by current user
   hashtags?: Hashtag[];
   mentions?: Mention[];
   images?: PostImage[];
-  likes?: PostLike[];  // Reactions to the post
-  user_disease?: PostDisease;  // Disease information if post is linked to a disease
+  likes?: PostLike[]; // Reactions to the post
+  user_disease?: PostDisease; // Disease information if post is linked to a disease
 }
 
 export interface PostDetail extends Post {
@@ -75,13 +75,43 @@ export interface PostDetail extends Post {
   likes: PostLike[];
 }
 
-export type ReactionType = 
-  | 'like' | 'love' | 'haha' | 'wow' | 'sad' | 'angry'
-  | 'thumbs_up' | 'thumbs_down' | 'clap' | 'fire' | 'party' | 'pray'
-  | 'heart_eyes' | 'kiss' | 'thinking' | 'cool' | 'ok_hand' | 'victory'
-  | 'muscle' | 'point_up' | 'point_down' | 'wave' | 'handshake' | 'fist_bump'
-  | 'rocket' | 'star' | 'trophy' | 'medal' | 'crown' | 'gem'
-  | 'balloon' | 'cake' | 'gift' | 'confetti' | 'sparkles' | 'rainbow';
+export type ReactionType =
+  | 'like'
+  | 'love'
+  | 'haha'
+  | 'wow'
+  | 'sad'
+  | 'angry'
+  | 'thumbs_up'
+  | 'thumbs_down'
+  | 'clap'
+  | 'fire'
+  | 'party'
+  | 'pray'
+  | 'heart_eyes'
+  | 'kiss'
+  | 'thinking'
+  | 'cool'
+  | 'ok_hand'
+  | 'victory'
+  | 'muscle'
+  | 'point_up'
+  | 'point_down'
+  | 'wave'
+  | 'handshake'
+  | 'fist_bump'
+  | 'rocket'
+  | 'star'
+  | 'trophy'
+  | 'medal'
+  | 'crown'
+  | 'gem'
+  | 'balloon'
+  | 'cake'
+  | 'gift'
+  | 'confetti'
+  | 'sparkles'
+  | 'rainbow';
 
 export interface PostLike {
   id: number;
@@ -154,10 +184,7 @@ export interface CreateLikeData {
 /**
  * Create a new post
  */
-export async function createPost(
-  data: CreatePostData,
-  accessToken: string
-): Promise<Post> {
+export async function createPost(data: CreatePostData, accessToken: string): Promise<Post> {
   console.log('[createPost] Sending request:', {
     post_type: data.post_type,
     health_record_type: data.health_record_type,
@@ -176,14 +203,20 @@ export async function createPost(
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
+    const error = await response
+      .json()
+      .catch(() => ({ detail: `HTTP ${response.status}: ${response.statusText}` }));
     console.error('[createPost] API error:', {
       status: response.status,
       statusText: response.statusText,
       error,
       timestamp: new Date().toISOString(),
     });
-    throw new Error(error.detail || error.message || `Failed to create post: ${response.status} ${response.statusText}`);
+    throw new Error(
+      error.detail ||
+        error.message ||
+        `Failed to create post: ${response.status} ${response.statusText}`
+    );
   }
 
   const result = await response.json();
@@ -202,7 +235,13 @@ export async function getFeed(
   skip: number = 0,
   limit: number = 20,
   accessToken?: string, // Kept for backward compatibility, but not used (apiClient handles auth)
-  filterType: 'all' | 'following' | 'disease' | 'my_posts' | 'following_and_my_posts' | 'not_following' = 'all',
+  filterType:
+    | 'all'
+    | 'following'
+    | 'disease'
+    | 'my_posts'
+    | 'following_and_my_posts'
+    | 'not_following' = 'all',
   diseaseId?: number
 ): Promise<Post[]> {
   const queryParams = new URLSearchParams();
@@ -215,7 +254,7 @@ export async function getFeed(
 
   const url = `/api/v1/posts?${queryParams.toString()}`;
   const fullURL = `${apiClient.defaults.baseURL}${url}`;
-  
+
   console.log('[getFeed] API call:', {
     skip,
     limit,
@@ -251,10 +290,7 @@ export async function getFeed(
 /**
  * Get a specific post by ID
  */
-export async function getPost(
-  postId: string,
-  accessToken?: string
-): Promise<PostDetail> {
+export async function getPost(postId: string, accessToken?: string): Promise<PostDetail> {
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
   };
@@ -294,7 +330,7 @@ export async function getUserPosts(
   }
   const url = `/api/v1/posts/user/${userId}?${queryParams.toString()}`;
   const fullURL = `${apiClient.defaults.baseURL}${url}`;
-  
+
   console.log('[getUserPosts] API call:', {
     userId,
     skip,
@@ -353,10 +389,7 @@ export async function updatePost(
 /**
  * Delete a post
  */
-export async function deletePost(
-  postId: string,
-  accessToken: string
-): Promise<void> {
+export async function deletePost(postId: string, accessToken: string): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/${postId}`, {
     method: 'DELETE',
     headers: {
@@ -380,17 +413,14 @@ export async function likePost(
   data: CreateLikeData = { reaction_type: 'like' },
   accessToken: string
 ): Promise<PostLike | null> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/${postId}/like`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/${postId}/like`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
 
   if (response.status === 204) {
     // Reaction was toggled off (same reaction type sent)
@@ -408,19 +438,13 @@ export async function likePost(
 /**
  * Unlike a post
  */
-export async function unlikePost(
-  postId: string,
-  accessToken: string
-): Promise<void> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/${postId}/like`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export async function unlikePost(postId: string, accessToken: string): Promise<void> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/${postId}/like`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -464,17 +488,14 @@ export async function createComment(
   data: CreateCommentData,
   accessToken: string
 ): Promise<Comment> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/${postId}/comments`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/${postId}/comments`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -544,17 +565,14 @@ export async function updateComment(
   data: UpdateCommentData,
   accessToken: string
 ): Promise<Comment> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/comments/${commentId}`,
-    {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/comments/${commentId}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${accessToken}`,
+    },
+    body: JSON.stringify(data),
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -567,19 +585,13 @@ export async function updateComment(
 /**
  * Delete a comment
  */
-export async function deleteComment(
-  commentId: string,
-  accessToken: string
-): Promise<void> {
-  const response = await fetch(
-    `${getApiBaseUrl()}/api/v1/posts/comments/${commentId}`,
-    {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    }
-  );
+export async function deleteComment(commentId: string, accessToken: string): Promise<void> {
+  const response = await fetch(`${getApiBaseUrl()}/api/v1/posts/comments/${commentId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
 
   if (!response.ok) {
     const error = await response.json();
@@ -592,10 +604,7 @@ export async function deleteComment(
 /**
  * Save a post
  */
-export async function savePost(
-  postId: string,
-  token: string
-): Promise<void> {
+export async function savePost(postId: string, token: string): Promise<void> {
   await apiClient.post(
     `/api/v1/posts/${postId}/save`,
     {},
@@ -610,10 +619,7 @@ export async function savePost(
 /**
  * Unsave a post
  */
-export async function unsavePost(
-  postId: string,
-  token: string
-): Promise<void> {
+export async function unsavePost(postId: string, token: string): Promise<void> {
   await apiClient.delete(`/api/v1/posts/${postId}/save`, {
     headers: {
       Authorization: `Bearer ${token}`,
@@ -648,20 +654,14 @@ export async function getSavedPosts(
 /**
  * Check if posts are saved
  */
-export async function checkSavedPosts(
-  postIds: string[],
-  token: string
-): Promise<string[]> {
-  const response = await apiClient.get<{ saved_post_ids: string[] }>(
-    `/api/v1/posts/saved/check`,
-    {
-      params: {
-        post_ids: postIds.join(','),
-      },
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+export async function checkSavedPosts(postIds: string[], token: string): Promise<string[]> {
+  const response = await apiClient.get<{ saved_post_ids: string[] }>(`/api/v1/posts/saved/check`, {
+    params: {
+      post_ids: postIds.join(','),
+    },
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
   return response.data.saved_post_ids;
 }

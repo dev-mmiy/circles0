@@ -7,7 +7,13 @@ import Image from 'next/image';
 import { updatePost, type Post, type UpdatePostData } from '@/lib/api/posts';
 import { extractHashtags } from '@/lib/utils/hashtag';
 import { extractMentions } from '@/lib/utils/mention';
-import { uploadImage, uploadMultipleImages, validateImageFile, createImagePreview, type UploadImageResponse } from '@/lib/api/images';
+import {
+  uploadImage,
+  uploadMultipleImages,
+  validateImageFile,
+  createImagePreview,
+  type UploadImageResponse,
+} from '@/lib/api/images';
 import { useDisease } from '@/contexts/DiseaseContext';
 
 interface EditPostModalProps {
@@ -58,18 +64,16 @@ export default function EditPostModal({
   }, [isOpen, post]);
 
   // Get localized disease name
-  const getDiseaseName = (disease: typeof userDiseases[0]): string => {
+  const getDiseaseName = (disease: (typeof userDiseases)[0]): string => {
     if (!disease.disease) {
       return `${t('diseaseId')}: ${disease.disease_id}`;
     }
     if (disease.disease.translations && disease.disease.translations.length > 0) {
-      const translation = disease.disease.translations.find(
-        (t) => t.language_code === locale
-      );
+      const translation = disease.disease.translations.find(t => t.language_code === locale);
       if (translation) {
         return translation.translated_name;
       }
-      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = disease.disease.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -131,7 +135,7 @@ export default function EditPostModal({
         // Update image URLs
         const newImageUrls = [...imageUrls, ...uploadResponse.urls];
         setImageUrls(newImageUrls);
-        
+
         // Update previews with uploaded URLs
         const newPreviews = [...imagePreviews];
         uploadResponse.urls.forEach((url, index) => {
@@ -146,14 +150,14 @@ export default function EditPostModal({
       }
     } catch (err: any) {
       console.error('Failed to upload images:', err);
-      
+
       // Handle 503 error (GCS not configured)
       if (err.response?.status === 503) {
         setError(t('errors.uploadServiceNotConfigured'));
       } else {
         setError(err.response?.data?.detail || err.message || t('errors.uploadFailed'));
       }
-      
+
       // Remove failed previews
       setImagePreviews(imagePreviews);
     } finally {
@@ -223,17 +227,16 @@ export default function EditPostModal({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose} />
 
       {/* Modal */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{t('editTitle')}</h2>
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+              {t('editTitle')}
+            </h2>
             <button
               onClick={onClose}
               className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
@@ -260,13 +263,16 @@ export default function EditPostModal({
 
             {/* Content textarea */}
             <div className="mb-4">
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="content"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {t('contentLabel')}
               </label>
               <textarea
                 id="content"
                 value={content}
-                onChange={(e) => setContent(e.target.value)}
+                onChange={e => setContent(e.target.value)}
                 rows={6}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('contentPlaceholder')}
@@ -320,15 +326,12 @@ export default function EditPostModal({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('imagesLabel')} ({imageUrls.length}/10)
               </label>
-              
+
               {/* Image previews */}
               {imagePreviews.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {imagePreviews.map((preview, index) => (
-                    <div
-                      key={index}
-                      className="relative inline-block group w-20 h-20"
-                    >
+                    <div key={index} className="relative inline-block group w-20 h-20">
                       <Image
                         src={preview.url}
                         alt={`Image ${index + 1}`}
@@ -383,8 +386,18 @@ export default function EditPostModal({
                       </>
                     ) : (
                       <>
-                        <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        <svg
+                          className="w-4 h-4 mr-2"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                         {t('uploadImage')}
                       </>
@@ -396,22 +409,29 @@ export default function EditPostModal({
 
             {/* Disease selector */}
             <div className="mb-4">
-              <label htmlFor="disease-select-edit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              <label
+                htmlFor="disease-select-edit"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+              >
                 {t('diseaseLabel')}
               </label>
               <select
                 id="disease-select-edit"
                 value={selectedDiseaseId || ''}
-                onChange={(e) => setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)}
+                onChange={e =>
+                  setSelectedDiseaseId(e.target.value ? parseInt(e.target.value) : null)
+                }
                 className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                 disabled={isSubmitting}
               >
                 <option value="">{t('diseaseNone')}</option>
-                {userDiseases?.filter(d => d.is_active).map((disease) => (
-                  <option key={disease.id} value={disease.id}>
-                    {getDiseaseName(disease)}
-                  </option>
-                ))}
+                {userDiseases
+                  ?.filter(d => d.is_active)
+                  .map(disease => (
+                    <option key={disease.id} value={disease.id}>
+                      {getDiseaseName(disease)}
+                    </option>
+                  ))}
               </select>
             </div>
 
@@ -422,7 +442,9 @@ export default function EditPostModal({
               </label>
               <select
                 value={visibility}
-                onChange={(e) => setVisibility(e.target.value as 'public' | 'followers_only' | 'private')}
+                onChange={e =>
+                  setVisibility(e.target.value as 'public' | 'followers_only' | 'private')
+                }
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 [&>option]:bg-white [&>option]:dark:bg-gray-700 [&>option]:text-gray-900 [&>option]:dark:text-gray-100"
                 disabled={isSubmitting}
               >
@@ -456,4 +478,3 @@ export default function EditPostModal({
     </div>
   );
 }
-

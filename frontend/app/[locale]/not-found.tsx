@@ -24,9 +24,7 @@ export default function NotFound() {
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">
-          {t('notFound')}
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('notFound')}</h1>
         <p className="text-gray-600 mb-6">
           {t('notFound')} - The page you are looking for could not be found.
         </p>
@@ -40,4 +38,3 @@ export default function NotFound() {
     </div>
   );
 }
-

@@ -34,7 +34,7 @@ export default function NewGroupPage() {
   // 認証チェック
   useEffect(() => {
     if (authLoading) return;
-    
+
     if (!isAuthenticated) {
       if (!isRedirecting) {
         setIsRedirecting(true);
@@ -75,10 +75,7 @@ export default function NewGroupPage() {
 
       const results = await searchUsers(params, accessToken);
       // 既に選択されているユーザーと自分を除外
-      const selectedIds = new Set([
-        ...selectedMembers.map(m => m.id),
-        currentUser?.id || '',
-      ]);
+      const selectedIds = new Set([...selectedMembers.map(m => m.id), currentUser?.id || '']);
       setSearchResults(results.filter(u => !selectedIds.has(u.id)));
     } catch (err: any) {
       console.error('Search error:', err);
@@ -177,18 +174,16 @@ export default function NewGroupPage() {
               <ArrowLeft className="w-5 h-5 mr-2" />
               {t('backToGroups')}
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">{t('createGroup')}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
+              {t('createGroup')}
+            </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-2">{t('createGroupDescription')}</p>
           </div>
 
           {/* Error message */}
           {error && (
             <div className="mb-6">
-              <ErrorDisplay
-                error={error}
-                onRetry={() => {}}
-                showDetails={false}
-              />
+              <ErrorDisplay error={error} onRetry={() => {}} showDetails={false} />
             </div>
           )}
 
@@ -196,14 +191,17 @@ export default function NewGroupPage() {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             {/* Group Name */}
             <div className="mb-6">
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="name"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {t('groupName')} <span className="text-red-500 dark:text-red-400">*</span>
               </label>
               <input
                 type="text"
                 id="name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={e => setName(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('groupNamePlaceholder')}
                 maxLength={255}
@@ -212,13 +210,16 @@ export default function NewGroupPage() {
 
             {/* Group Description */}
             <div className="mb-6">
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label
+                htmlFor="description"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              >
                 {t('groupDescription')}
               </label>
               <textarea
                 id="description"
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={e => setDescription(e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                 placeholder={t('groupDescriptionPlaceholder')}
                 rows={4}
@@ -231,14 +232,14 @@ export default function NewGroupPage() {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 {t('addMembers')}
               </label>
-              
+
               {/* Search Input */}
               <div className="flex gap-2 mb-4">
                 <div className="flex-1 relative">
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={e => setSearchQuery(e.target.value)}
                     onKeyPress={handleSearchKeyPress}
                     className="w-full px-4 py-2 pl-10 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
                     placeholder={t('searchUsersPlaceholder')}
@@ -261,7 +262,7 @@ export default function NewGroupPage() {
               {/* Search Results */}
               {searchResults.length > 0 && (
                 <div className="mb-4 border border-gray-200 dark:border-gray-700 rounded-lg max-h-60 overflow-y-auto bg-white dark:bg-gray-700">
-                  {searchResults.map((user) => (
+                  {searchResults.map(user => (
                     <div
                       key={user.id}
                       className="p-3 hover:bg-gray-50 dark:hover:bg-gray-600 flex items-center justify-between border-b border-gray-100 dark:border-gray-600 last:border-b-0"
@@ -283,9 +284,13 @@ export default function NewGroupPage() {
                           </div>
                         )}
                         <div>
-                          <div className="font-medium text-gray-900 dark:text-gray-100">{user.nickname}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100">
+                            {user.nickname}
+                          </div>
                           {user.username && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">@{user.username}</div>
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              @{user.username}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -308,7 +313,7 @@ export default function NewGroupPage() {
                     {t('selectedMembers')} ({selectedMembers.length})
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {selectedMembers.map((member) => (
+                    {selectedMembers.map(member => (
                       <div
                         key={member.id}
                         className="inline-flex items-center gap-2 px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full"
@@ -356,5 +361,3 @@ export default function NewGroupPage() {
     </>
   );
 }
-
-

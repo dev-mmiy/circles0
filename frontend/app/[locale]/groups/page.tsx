@@ -9,12 +9,7 @@ import { Link } from '@/i18n/routing';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { extractErrorInfo } from '@/lib/utils/errorHandler';
-import {
-  getGroups,
-  searchGroups,
-  deleteGroup,
-  Group,
-} from '@/lib/api/groups';
+import { getGroups, searchGroups, deleteGroup, Group } from '@/lib/api/groups';
 import { formatDistanceToNow } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
 import { useLocale } from 'next-intl';
@@ -47,18 +42,21 @@ export default function GroupsPage() {
     retry,
     clearError,
   } = useDataLoader<Group>({
-    loadFn: useCallback(async (skip, limit) => {
-      let response;
-      if (searchQuery.trim()) {
-        response = await searchGroups(searchQuery, skip, limit);
-      } else {
-        response = await getGroups(skip, limit);
-      }
-      return {
-        items: response.groups,
-        total: response.total,
-      };
-    }, [searchQuery]),
+    loadFn: useCallback(
+      async (skip, limit) => {
+        let response;
+        if (searchQuery.trim()) {
+          response = await searchGroups(searchQuery, skip, limit);
+        } else {
+          response = await getGroups(skip, limit);
+        }
+        return {
+          items: response.groups,
+          total: response.total,
+        };
+      },
+      [searchQuery]
+    ),
     pageSize: 20,
     autoLoad: true,
     requireAuth: true,
@@ -77,12 +75,12 @@ export default function GroupsPage() {
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   useEffect(() => {
     if (authLoading || !isAuthenticated) return;
-    
+
     // Clear previous timeout
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
+
     // Debounce search queries
     searchTimeoutRef.current = setTimeout(() => {
       load(true);
@@ -133,7 +131,9 @@ export default function GroupsPage() {
   // 時間表示のフォーマット（ユーザーのタイムゾーンを使用）
   const formatTime = (dateString: string | null) => {
     if (!dateString) return '';
-    const userTimezone = currentUser ? getUserTimezone(currentUser.timezone, currentUser.country) : 'UTC';
+    const userTimezone = currentUser
+      ? getUserTimezone(currentUser.timezone, currentUser.country)
+      : 'UTC';
     const date = new Date(dateString);
     const dateLocale = locale === 'ja' ? ja : enUS;
     return formatDistanceToNow(date, { addSuffix: true, locale: dateLocale });
@@ -191,11 +191,7 @@ export default function GroupsPage() {
           {/* Error message - shown even when data exists (optimistic UI) */}
           {error && (
             <div className="mb-6">
-              <ErrorDisplay
-                error={error}
-                onRetry={retry}
-                showDetails={false}
-              />
+              <ErrorDisplay error={error} onRetry={retry} showDetails={false} />
             </div>
           )}
 
@@ -217,7 +213,9 @@ export default function GroupsPage() {
                 <div className="flex justify-center items-center">
                   <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 </div>
-                <p className="mt-4 text-gray-500 dark:text-gray-400">{t('loading') || '読み込み中...'}</p>
+                <p className="mt-4 text-gray-500 dark:text-gray-400">
+                  {t('loading') || '読み込み中...'}
+                </p>
               </div>
             ) : groups.length === 0 ? (
               <div className="p-12 text-center">
@@ -237,9 +235,7 @@ export default function GroupsPage() {
                 <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
                   {t('noGroups')}
                 </h3>
-                <p className="mt-2 text-gray-500 dark:text-gray-400">
-                  {t('noGroupsMessage')}
-                </p>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">{t('noGroupsMessage')}</p>
                 <Link
                   href="/groups/new"
                   className="mt-4 inline-flex items-center px-2 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -251,7 +247,7 @@ export default function GroupsPage() {
             ) : (
               <>
                 <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                  {groups.map((group) => (
+                  {groups.map(group => (
                     <div
                       key={group.id}
                       className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
@@ -299,7 +295,9 @@ export default function GroupsPage() {
                               <p className="text-sm text-gray-600 dark:text-gray-400 truncate mt-1">
                                 {group.last_message.is_deleted
                                   ? `(${t('deletedMessage')})`
-                                  : `${group.last_message.sender?.nickname || 'Unknown'}: ${group.last_message.content}`}
+                                  : `${group.last_message.sender?.nickname || 'Unknown'}: ${
+                                      group.last_message.content
+                                    }`}
                               </p>
                             )}
                             <div className="flex items-center gap-4 mt-1">
@@ -318,22 +316,22 @@ export default function GroupsPage() {
                         {/* Delete button (only for creator or admin) */}
                         {(group.creator_id === currentUser?.id ||
                           group.members.find(m => m.user_id === currentUser?.id && m.is_admin)) && (
-                            <button
-                              onClick={(e) => {
-                                e.preventDefault();
-                                handleDeleteGroup(group.id);
-                              }}
-                              disabled={deletingGroupId === group.id}
-                              className="ml-4 p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
-                              title={t('deleteGroup')}
-                            >
-                              {deletingGroupId === group.id ? (
-                                <div className="w-5 h-5 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
-                              ) : (
-                                <Trash2 className="w-5 h-5" />
-                              )}
-                            </button>
-                          )}
+                          <button
+                            onClick={e => {
+                              e.preventDefault();
+                              handleDeleteGroup(group.id);
+                            }}
+                            disabled={deletingGroupId === group.id}
+                            className="ml-4 p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50 transition-colors"
+                            title={t('deleteGroup')}
+                          >
+                            {deletingGroupId === group.id ? (
+                              <div className="w-5 h-5 border-4 border-red-600 dark:border-red-400 border-t-transparent rounded-full animate-spin"></div>
+                            ) : (
+                              <Trash2 className="w-5 h-5" />
+                            )}
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -345,10 +343,11 @@ export default function GroupsPage() {
                     <button
                       onClick={loadMore}
                       disabled={isLoadingMore}
-                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${isLoadingMore
-                        ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
-                        }`}
+                      className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                        isLoadingMore
+                          ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600'
+                      }`}
                     >
                       {isLoadingMore ? (
                         <span className="flex items-center">
@@ -394,6 +393,3 @@ export default function GroupsPage() {
     </>
   );
 }
-
-
-

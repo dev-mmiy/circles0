@@ -75,7 +75,7 @@ export function UserSearch({
 
       const searchResults = await onSearch(params);
       setResults(searchResults);
-      
+
       // Save to search history if query exists
       if (searchQuery.trim()) {
         addToSearchHistory('user', searchQuery, {
@@ -85,7 +85,7 @@ export function UserSearch({
         });
         setSearchHistory(getSearchHistory('user'));
       }
-      
+
       setShowHistory(false);
     } catch (err) {
       console.error('Search error:', err);
@@ -101,7 +101,7 @@ export function UserSearch({
   useEffect(() => {
     if (!hasInitialized) {
       setSearchHistory(getSearchHistory('user'));
-      
+
       if (initialDiseaseId) {
         // Set initial disease ID and trigger search
         setSelectedDiseases([initialDiseaseId]);
@@ -126,7 +126,12 @@ export function UserSearch({
 
   // Auto-search when initialDiseaseId is set and selected
   useEffect(() => {
-    if (hasInitialized && initialDiseaseId && selectedDiseases.includes(initialDiseaseId) && selectedDiseases.length === 1) {
+    if (
+      hasInitialized &&
+      initialDiseaseId &&
+      selectedDiseases.includes(initialDiseaseId) &&
+      selectedDiseases.length === 1
+    ) {
       // Trigger search after state is set
       setTimeout(() => {
         handleSearch();
@@ -145,10 +150,8 @@ export function UserSearch({
   }, [selectedDiseases, sortBy, sortOrder]);
 
   const toggleDisease = (diseaseId: number) => {
-    setSelectedDiseases((prev) =>
-      prev.includes(diseaseId)
-        ? prev.filter((id) => id !== diseaseId)
-        : [...prev, diseaseId]
+    setSelectedDiseases(prev =>
+      prev.includes(diseaseId) ? prev.filter(id => id !== diseaseId) : [...prev, diseaseId]
     );
   };
 
@@ -191,7 +194,7 @@ export function UserSearch({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => {
+            onChange={e => {
               setSearchQuery(e.target.value);
               setShowHistory(e.target.value === '' && searchHistory.length > 0);
             }}
@@ -200,11 +203,11 @@ export function UserSearch({
                 setShowHistory(true);
               }
             }}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+            onKeyPress={e => e.key === 'Enter' && handleSearch()}
             placeholder={t('placeholder')}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           />
-          
+
           {/* Search History Dropdown */}
           {showHistory && searchHistory.length > 0 && (
             <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -221,15 +224,17 @@ export function UserSearch({
                 </button>
               </div>
               <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                {searchHistory.map((item) => (
+                {searchHistory.map(item => (
                   <button
                     key={`${item.query}-${item.timestamp}`}
                     onClick={() => handleHistoryClick(item)}
                     className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-between group"
                   >
-                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">{item.query}</span>
+                    <span className="text-sm text-gray-700 dark:text-gray-300 flex-1">
+                      {item.query}
+                    </span>
                     <button
-                      onClick={(e) => handleRemoveHistoryItem(e, item.query)}
+                      onClick={e => handleRemoveHistoryItem(e, item.query)}
                       className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-opacity"
                       aria-label="Remove"
                     >
@@ -255,14 +260,9 @@ export function UserSearch({
           {showAdvanced ? t('hideAdvanced') : t('advancedSearch')}
         </button>
       </div>
-      
+
       {/* Click outside to close history */}
-      {showHistory && (
-        <div
-          className="fixed inset-0 z-0"
-          onClick={() => setShowHistory(false)}
-        />
-      )}
+      {showHistory && <div className="fixed inset-0 z-0" onClick={() => setShowHistory(false)} />}
 
       {/* Advanced Search Options */}
       {showAdvanced && (
@@ -289,7 +289,7 @@ export function UserSearch({
                 {t('diseaseFilterLabel')}
               </label>
               <div className="max-h-60 overflow-y-auto space-y-1">
-                {diseases.map((disease) => (
+                {diseases.map(disease => (
                   <label
                     key={disease.id}
                     className="flex items-center p-2 border border-gray-200 dark:border-gray-700 rounded cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors bg-white dark:bg-gray-800"
@@ -302,9 +302,9 @@ export function UserSearch({
                     />
                     <span className="text-sm text-gray-900 dark:text-gray-100">
                       {disease.translations && disease.translations.length > 0
-                        ? disease.translations.find((t) => t.language_code === preferredLanguage)
+                        ? disease.translations.find(t => t.language_code === preferredLanguage)
                             ?.translated_name ||
-                          disease.translations.find((t) => t.language_code === 'ja')
+                          disease.translations.find(t => t.language_code === 'ja')
                             ?.translated_name ||
                           disease.name
                         : disease.name}
@@ -323,7 +323,11 @@ export function UserSearch({
               </label>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'created_at' | 'last_login_at' | 'nickname' | 'post_count')}
+                onChange={e =>
+                  setSortBy(
+                    e.target.value as 'created_at' | 'last_login_at' | 'nickname' | 'post_count'
+                  )
+                }
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="created_at">{t('sortByDate')}</option>
@@ -338,7 +342,7 @@ export function UserSearch({
               </label>
               <select
                 value={sortOrder}
-                onChange={(e) => setSortOrder(e.target.value as 'asc' | 'desc')}
+                onChange={e => setSortOrder(e.target.value as 'asc' | 'desc')}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
               >
                 <option value="asc">{t('sortOrderAsc')}</option>
@@ -363,7 +367,7 @@ export function UserSearch({
             {t('resultsTitle', { count: results.length })}
           </h3>
           <div className="space-y-4">
-            {results.map((user) => (
+            {results.map(user => (
               <Link
                 key={user.id}
                 href={`/profile/${user.id}`}
@@ -391,9 +395,13 @@ export function UserSearch({
                   <div className="flex-1">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{user.nickname}</h4>
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                          {user.nickname}
+                        </h4>
                         {user.username && (
-                          <p className="text-sm text-gray-600 dark:text-gray-400">@{user.username}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            @{user.username}
+                          </p>
                         )}
                       </div>
                       {user.post_count !== undefined && (
@@ -403,18 +411,20 @@ export function UserSearch({
                       )}
                     </div>
 
-                    {user.bio && <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">{user.bio}</p>}
+                    {user.bio && (
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-2">{user.bio}</p>
+                    )}
 
                     {/* Diseases */}
                     {user.diseases && user.diseases.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {user.diseases.map((disease) => {
+                        {user.diseases.map(disease => {
                           const diseaseName =
                             disease.translations && disease.translations.length > 0
                               ? disease.translations.find(
-                                  (t) => t.language_code === preferredLanguage
+                                  t => t.language_code === preferredLanguage
                                 )?.translated_name ||
-                                disease.translations.find((t) => t.language_code === 'ja')
+                                disease.translations.find(t => t.language_code === 'ja')
                                   ?.translated_name ||
                                 disease.name
                               : disease.name;

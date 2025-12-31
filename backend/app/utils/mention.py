@@ -58,4 +58,3 @@ def normalize_mention(mention: str) -> str:
     """
     return mention.lower().strip()
 
-

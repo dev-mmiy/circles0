@@ -36,10 +36,7 @@ describe('errorHandler utilities', () => {
         response: {
           status: 422,
           data: {
-            detail: [
-              { msg: 'Field is required' },
-              { message: 'Invalid format' },
-            ],
+            detail: [{ msg: 'Field is required' }, { message: 'Invalid format' }],
           },
         },
         message: 'Validation failed',
@@ -209,4 +206,3 @@ describe('errorHandler utilities', () => {
     });
   });
 });
-

@@ -8,7 +8,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   try {
     const headersList = await headers();
     const pathname = headersList.get('x-pathname') || '';
-    
+
     if (pathname) {
       const segments = pathname.split('/').filter(Boolean);
       const firstSegment = segments[0];
@@ -23,9 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <body className="font-sans">
-        {children}
-      </body>
+      <body className="font-sans">{children}</body>
     </html>
   );
 }

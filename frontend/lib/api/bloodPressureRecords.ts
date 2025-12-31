@@ -47,18 +47,20 @@ export async function getBloodPressureRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/blood-pressure-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch blood pressure records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch blood pressure records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -77,18 +79,20 @@ export async function getBloodPressureRecord(
   accessToken: string
 ): Promise<BloodPressureRecord> {
   const url = `${apiClient}/api/v1/blood-pressure-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch blood pressure record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch blood pressure record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -107,19 +111,21 @@ export async function createBloodPressureRecord(
   accessToken: string
 ): Promise<BloodPressureRecord> {
   const url = `${apiClient}/api/v1/blood-pressure-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create blood pressure record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create blood pressure record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -139,19 +145,21 @@ export async function updateBloodPressureRecord(
   accessToken: string
 ): Promise<BloodPressureRecord> {
   const url = `${apiClient}/api/v1/blood-pressure-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update blood pressure record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update blood pressure record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -170,18 +178,20 @@ export async function deleteBloodPressureRecord(
   accessToken: string
 ): Promise<void> {
   const url = `${apiClient}/api/v1/blood-pressure-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete blood pressure record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete blood pressure record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -189,4 +199,3 @@ export async function deleteBloodPressureRecord(
     throw error;
   }
 }
-

@@ -26,7 +26,7 @@ export function EditDiseaseModal({
   onSave,
 }: EditDiseaseModalProps) {
   const t = useTranslations('diseaseForm');
-  
+
   // Form state
   const [formData, setFormData] = useState<UserDiseaseUpdate>({
     status_id: userDisease.status_id,

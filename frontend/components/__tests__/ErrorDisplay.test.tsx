@@ -60,10 +60,10 @@ describe('ErrorDisplay', () => {
       message: 'Network error',
     };
     render(<ErrorDisplay error={errorInfo} onRetry={onRetry} />);
-    
+
     const retryButton = screen.getByText(/retry/i);
     expect(retryButton).toBeInTheDocument();
-    
+
     retryButton.click();
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
@@ -74,7 +74,7 @@ describe('ErrorDisplay', () => {
       message: 'Network error',
     };
     render(<ErrorDisplay error={errorInfo} />);
-    
+
     const retryButton = screen.queryByText(/retry/i);
     expect(retryButton).not.toBeInTheDocument();
   });
@@ -84,9 +84,7 @@ describe('ErrorDisplay', () => {
       type: ErrorType.NETWORK,
       message: 'Network error',
     };
-    const { container } = render(
-      <ErrorDisplay error={errorInfo} className="custom-class" />
-    );
+    const { container } = render(<ErrorDisplay error={errorInfo} className="custom-class" />);
     expect(container.firstChild).toHaveClass('custom-class');
   });
 
@@ -113,4 +111,3 @@ describe('ErrorDisplay', () => {
     });
   });
 });
-

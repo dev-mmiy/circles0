@@ -3,7 +3,12 @@
 import { Activity, Droplet, Heart, Scale, Thermometer } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 
-export type VitalType = 'blood_pressure_heart_rate' | 'temperature' | 'weight_body_fat' | 'blood_glucose' | 'spo2';
+export type VitalType =
+  | 'blood_pressure_heart_rate'
+  | 'temperature'
+  | 'weight_body_fat'
+  | 'blood_glucose'
+  | 'spo2';
 
 interface VitalRecordSelectorProps {
   onSelect: (type: VitalType) => void;
@@ -58,7 +63,7 @@ export default function VitalRecordSelector({ onSelect }: VitalRecordSelectorPro
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-      {vitals.map((vital) => (
+      {vitals.map(vital => (
         <button
           key={vital.type}
           onClick={() => onSelect(vital.type)}
@@ -71,4 +76,3 @@ export default function VitalRecordSelector({ onSelect }: VitalRecordSelectorPro
     </div>
   );
 }
-

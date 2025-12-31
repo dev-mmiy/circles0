@@ -17,16 +17,14 @@ export function getLocalizedDiseaseName(
   }
 
   // Try to find exact language match
-  const translation = disease.translations.find(
-    (t) => t.language_code === preferredLanguage
-  );
+  const translation = disease.translations.find(t => t.language_code === preferredLanguage);
 
   if (translation) {
     return translation.translated_name;
   }
 
   // Fallback: try Japanese, then English name
-  const jaTranslation = disease.translations.find((t) => t.language_code === 'ja');
+  const jaTranslation = disease.translations.find(t => t.language_code === 'ja');
   return jaTranslation?.translated_name || disease.name;
 }
 
@@ -243,7 +241,7 @@ export async function updateCurrentUserProfile(
   if (!response.ok) {
     const error = await response.json();
     debugLog.error('Update profile error response:', error);
-    
+
     // Handle structured error responses with code and localized messages
     if (error.detail && typeof error.detail === 'object') {
       const detail = error.detail;
@@ -253,10 +251,9 @@ export async function updateCurrentUserProfile(
       (errorWithCode as any).message_ja = detail.message_ja;
       throw errorWithCode;
     }
-    
-    const errorMessage = typeof error.detail === 'string'
-      ? error.detail
-      : JSON.stringify(error.detail || error);
+
+    const errorMessage =
+      typeof error.detail === 'string' ? error.detail : JSON.stringify(error.detail || error);
     throw new Error(errorMessage || 'Failed to update user profile');
   }
 
@@ -484,7 +481,9 @@ export async function removeUserDisease(accessToken: string, diseaseId: number):
 /**
  * Get all field visibility settings for current user
  */
-export async function getFieldVisibilities(accessToken: string): Promise<AllFieldVisibilityResponse> {
+export async function getFieldVisibilities(
+  accessToken: string
+): Promise<AllFieldVisibilityResponse> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/users/me/field-visibility`, {
     method: 'GET',
     headers: {
@@ -560,10 +559,7 @@ export interface BlockStatus {
 /**
  * Block a user
  */
-export async function blockUser(
-  accessToken: string,
-  userId: string
-): Promise<BlockResponse> {
+export async function blockUser(accessToken: string, userId: string): Promise<BlockResponse> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}`, {
     method: 'POST',
     headers: {
@@ -583,10 +579,7 @@ export async function blockUser(
 /**
  * Unblock a user
  */
-export async function unblockUser(
-  accessToken: string,
-  userId: string
-): Promise<void> {
+export async function unblockUser(accessToken: string, userId: string): Promise<void> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}`, {
     method: 'DELETE',
     headers: {
@@ -604,10 +597,7 @@ export async function unblockUser(
 /**
  * Check block status between current user and another user
  */
-export async function checkBlockStatus(
-  accessToken: string,
-  userId: string
-): Promise<BlockStatus> {
+export async function checkBlockStatus(accessToken: string, userId: string): Promise<BlockStatus> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/blocks/users/${userId}/status`, {
     method: 'GET',
     headers: {

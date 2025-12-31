@@ -81,7 +81,10 @@ export async function getNotifications(
  */
 export async function getUnreadCount(): Promise<number> {
   console.log('[getUnreadCount] Calling API with baseURL:', apiClient.defaults.baseURL);
-  console.log('[getUnreadCount] Full URL will be:', `${apiClient.defaults.baseURL}/notifications/unread-count`);
+  console.log(
+    '[getUnreadCount] Full URL will be:',
+    `${apiClient.defaults.baseURL}/notifications/unread-count`
+  );
   try {
     const response = await apiClient.get<UnreadCountResponse>('/api/v1/notifications/unread-count');
     return response.data.unread_count;

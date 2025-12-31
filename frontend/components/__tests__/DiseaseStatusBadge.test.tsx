@@ -50,9 +50,7 @@ describe('DiseaseStatusBadge', () => {
   });
 
   it('should apply correct size classes', () => {
-    const { container, rerender } = render(
-      <DiseaseStatusBadge status={mockStatus} size="sm" />
-    );
+    const { container, rerender } = render(<DiseaseStatusBadge status={mockStatus} size="sm" />);
     expect(container.firstChild).toHaveClass('text-xs');
 
     rerender(<DiseaseStatusBadge status={mockStatus} size="md" />);
@@ -63,41 +61,31 @@ describe('DiseaseStatusBadge', () => {
   });
 
   it('should apply correct color classes for ACTIVE status', () => {
-    const { container } = render(
-      <DiseaseStatusBadge statusCode="ACTIVE" />
-    );
+    const { container } = render(<DiseaseStatusBadge statusCode="ACTIVE" />);
     expect(container.firstChild).toHaveClass('bg-red-100');
     expect(container.firstChild).toHaveClass('text-red-800');
   });
 
   it('should apply correct color classes for REMISSION status', () => {
-    const { container } = render(
-      <DiseaseStatusBadge statusCode="REMISSION" />
-    );
+    const { container } = render(<DiseaseStatusBadge statusCode="REMISSION" />);
     expect(container.firstChild).toHaveClass('bg-green-100');
     expect(container.firstChild).toHaveClass('text-green-800');
   });
 
   it('should apply correct color classes for CURED status', () => {
-    const { container } = render(
-      <DiseaseStatusBadge statusCode="CURED" />
-    );
+    const { container } = render(<DiseaseStatusBadge statusCode="CURED" />);
     expect(container.firstChild).toHaveClass('bg-blue-100');
     expect(container.firstChild).toHaveClass('text-blue-800');
   });
 
   it('should apply correct color classes for SUSPECTED status', () => {
-    const { container } = render(
-      <DiseaseStatusBadge statusCode="SUSPECTED" />
-    );
+    const { container } = render(<DiseaseStatusBadge statusCode="SUSPECTED" />);
     expect(container.firstChild).toHaveClass('bg-yellow-100');
     expect(container.firstChild).toHaveClass('text-yellow-800');
   });
 
   it('should apply correct color classes for UNDER_TREATMENT status', () => {
-    const { container } = render(
-      <DiseaseStatusBadge statusCode="UNDER_TREATMENT" />
-    );
+    const { container } = render(<DiseaseStatusBadge statusCode="UNDER_TREATMENT" />);
     expect(container.firstChild).toHaveClass('bg-purple-100');
     expect(container.firstChild).toHaveClass('text-purple-800');
   });
@@ -107,10 +95,7 @@ describe('DiseaseStatusBadge', () => {
       ...mockStatus,
       status_code: 'CURED',
     } as DiseaseStatus;
-    render(
-      <DiseaseStatusBadge status={statusWithCode} statusCode="ACTIVE" />
-    );
+    render(<DiseaseStatusBadge status={statusWithCode} statusCode="ACTIVE" />);
     expect(screen.getByText('完治')).toBeInTheDocument();
   });
 });
-

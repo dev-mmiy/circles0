@@ -32,9 +32,9 @@ interface UserProfileCardProps {
   onAvatarUpdate?: (avatarUrl: string | null) => Promise<void>;
 }
 
-export function UserProfileCard({ 
-  user, 
-  onEdit, 
+export function UserProfileCard({
+  user,
+  onEdit,
   showPrivateInfo = false,
   userDiseases,
   onEditDisease,
@@ -51,10 +51,10 @@ export function UserProfileCard({
   const locale = useLocale();
   const { user: auth0User } = useAuth0();
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-  
+
   // Use avatar_url if available, otherwise fallback to Auth0 picture
   const avatarUrl = user.avatar_url || auth0User?.picture;
-  
+
   // Format date for display
   const formatDate = (dateString?: string) => {
     if (!dateString) return t('notAvailable');
@@ -143,7 +143,9 @@ export function UserProfileCard({
           <div className="flex-1">
             <h2 className="text-2xl font-bold text-white">{user.nickname}</h2>
             {user.username && <p className="text-blue-100 dark:text-blue-200">@{user.username}</p>}
-            <p className="text-sm text-blue-200 dark:text-blue-100 mt-1">{t('memberId')}: {user.member_id}</p>
+            <p className="text-sm text-blue-200 dark:text-blue-100 mt-1">
+              {t('memberId')}: {user.member_id}
+            </p>
           </div>
           {onEdit && (
             <div className="flex items-center gap-2">
@@ -171,7 +173,9 @@ export function UserProfileCard({
         {/* Bio */}
         {user.bio && (
           <div className="mb-6">
-            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">{t('bio')}</h3>
+            <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">
+              {t('bio')}
+            </h3>
             <p className="text-gray-700 dark:text-gray-300">{user.bio}</p>
           </div>
         )}
@@ -180,14 +184,22 @@ export function UserProfileCard({
         <div className="grid grid-cols-2 gap-4 mb-6">
           {user.country && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('country')}</h3>
-              <p className="text-gray-700 dark:text-gray-300">{getCountryName(user.country, locale)}</p>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                {t('country')}
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                {getCountryName(user.country, locale)}
+              </p>
             </div>
           )}
           {user.preferred_language && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('language')}</h3>
-              <p className="text-gray-700 dark:text-gray-300">{formatLanguage(user.preferred_language)}</p>
+              <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                {t('language')}
+              </h3>
+              <p className="text-gray-700 dark:text-gray-300">
+                {formatLanguage(user.preferred_language)}
+              </p>
             </div>
           )}
         </div>
@@ -195,22 +207,30 @@ export function UserProfileCard({
         {/* Private information (only shown to owner) */}
         {showPrivateInfo && (
           <div className="border-t dark:border-gray-700 pt-6">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">{t('privateInfo')}</h3>
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
+              {t('privateInfo')}
+            </h3>
             <div className="grid grid-cols-2 gap-4">
               {user.first_name && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('firstName')}</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    {t('firstName')}
+                  </h4>
                   <p className="text-gray-700 dark:text-gray-300">{user.first_name}</p>
                 </div>
               )}
               {user.last_name && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('lastName')}</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    {t('lastName')}
+                  </h4>
                   <p className="text-gray-700 dark:text-gray-300">{user.last_name}</p>
                 </div>
               )}
               <div>
-                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('email')}</h4>
+                <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                  {t('email')}
+                </h4>
                 <p className="text-gray-700 dark:text-gray-300">{user.email}</p>
                 {user.email_verified && (
                   <span className="inline-block mt-1 px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded">
@@ -220,30 +240,39 @@ export function UserProfileCard({
               </div>
               {user.phone && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('phone')}</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    {t('phone')}
+                  </h4>
                   <p className="text-gray-700 dark:text-gray-300">{user.phone}</p>
                 </div>
               )}
               {user.date_of_birth && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('dateOfBirth')}</h4>
-                  <p className="text-gray-700 dark:text-gray-300">{formatDate(user.date_of_birth)}</p>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    {t('dateOfBirth')}
+                  </h4>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {formatDate(user.date_of_birth)}
+                  </p>
                 </div>
               )}
               {user.gender && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">{t('gender')}</h4>
+                  <h4 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase mb-1">
+                    {t('gender')}
+                  </h4>
                   <p className="text-gray-700 dark:text-gray-300">{formatGender(user.gender)}</p>
                 </div>
               )}
             </div>
 
- 
             {/* User Diseases - shown at the end of private information */}
             {userDiseases !== undefined && (
               <div className="mt-6 pt-6 border-t dark:border-gray-700">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">{t('myDiseases')}</h3>
+                  <h3 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase">
+                    {t('myDiseases')}
+                  </h3>
                   {addDiseaseButtonHref && (
                     <Link
                       href={addDiseaseButtonHref}
@@ -253,11 +282,12 @@ export function UserProfileCard({
                     </Link>
                   )}
                 </div>
-              {/* Disease count */}
+                {/* Disease count */}
                 {user.diseases && user.diseases.length > 0 && (
                   <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
                     <p className="text-sm text-blue-800 dark:text-blue-200">
-                      {t('diseaseCount')}: <span className="font-semibold">{user.diseases.length}</span>
+                      {t('diseaseCount')}:{' '}
+                      <span className="font-semibold">{user.diseases.length}</span>
                     </p>
                   </div>
                 )}
@@ -299,7 +329,6 @@ export function UserProfileCard({
             )}
           </div>
         </div>
-
       </div>
 
       {/* Avatar Upload Modal */}
@@ -307,7 +336,7 @@ export function UserProfileCard({
         <AvatarUploadModal
           isOpen={isAvatarModalOpen}
           onClose={() => setIsAvatarModalOpen(false)}
-          onUploadComplete={async (avatarUrl) => {
+          onUploadComplete={async avatarUrl => {
             await onAvatarUpdate(avatarUrl);
           }}
           currentAvatarUrl={avatarUrl}

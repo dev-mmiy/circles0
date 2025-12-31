@@ -1,6 +1,6 @@
 /**
  * ImageViewerPageWrapper Component
- * 
+ *
  * Common wrapper component for image viewer pages that handles
  * loading, error, and empty states
  */
@@ -72,9 +72,7 @@ export default function ImageViewerPageWrapper({
           <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
             {errorTitle}
           </h3>
-          <p className="mt-2 text-gray-500 dark:text-gray-400">
-            {errorMessage || error}
-          </p>
+          <p className="mt-2 text-gray-500 dark:text-gray-400">{errorMessage || error}</p>
           <div className="mt-6">
             <button
               onClick={() => router.push('/feed')}
@@ -92,9 +90,7 @@ export default function ImageViewerPageWrapper({
     return (
       <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-12 text-center max-w-md mx-4">
-          <p className="text-gray-500 dark:text-gray-400">
-            {emptyMessage || emptyTitle}
-          </p>
+          <p className="text-gray-500 dark:text-gray-400">{emptyMessage || emptyTitle}</p>
           <div className="mt-6">
             <button
               onClick={handleBack}
@@ -110,4 +106,3 @@ export default function ImageViewerPageWrapper({
 
   return <>{children}</>;
 }
-

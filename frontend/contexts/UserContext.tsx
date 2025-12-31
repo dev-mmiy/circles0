@@ -94,12 +94,12 @@ export function UserProvider({ children }: UserProviderProps) {
 
     // Map preferred_language to locale (support ja, en)
     const preferredLocale = user.preferred_language === 'en' ? 'en' : 'ja';
-    
+
     // Only switch if current locale differs from preferred locale
     if (locale !== preferredLocale) {
       // Silent locale switch, no log needed
       setHasAutoSwitched(true);
-      
+
       // Navigate to the same pathname with the new locale
       router.replace(pathname, { locale: preferredLocale });
     }

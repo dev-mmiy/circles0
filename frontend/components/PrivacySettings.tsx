@@ -8,7 +8,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { UserProfile, getFieldVisibilities, setFieldVisibility, updateCurrentUserProfile } from '@/lib/api/users';
+import {
+  UserProfile,
+  getFieldVisibilities,
+  setFieldVisibility,
+  updateCurrentUserProfile,
+} from '@/lib/api/users';
 import { debugLog } from '@/lib/utils/debug';
 
 interface PrivacySettingsProps {
@@ -19,7 +24,9 @@ interface PrivacySettingsProps {
 export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySettingsProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('userProfileEdit');
-  const [profileVisibility, setProfileVisibility] = useState<'public' | 'limited' | 'private'>(user.profile_visibility || 'limited');
+  const [profileVisibility, setProfileVisibility] = useState<'public' | 'limited' | 'private'>(
+    user.profile_visibility || 'limited'
+  );
   const [fieldVisibilities, setFieldVisibilities] = useState<Record<string, string>>({});
   const [loadingVisibilities, setLoadingVisibilities] = useState(true);
   const [updatingVisibility, setUpdatingVisibility] = useState<string | null>(null);
@@ -44,11 +51,13 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
   }, [getAccessTokenSilently]);
 
   // Handle preset selection
-  const handlePresetSelect = async (preset: 'public' | 'limited' | 'private' | 'same_disease_only') => {
+  const handlePresetSelect = async (
+    preset: 'public' | 'limited' | 'private' | 'same_disease_only'
+  ) => {
     try {
       setError(null);
       const accessToken = await getAccessTokenSilently();
-      
+
       // Update profile visibility
       let newProfileVisibility: 'public' | 'limited' | 'private' = 'limited';
       if (preset === 'public') {
@@ -58,34 +67,82 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
       } else {
         newProfileVisibility = 'limited';
       }
-      
+
       setUpdatingProfileVisibility(true);
       await updateCurrentUserProfile(accessToken, { profile_visibility: newProfileVisibility });
       setProfileVisibility(newProfileVisibility);
       if (onProfileVisibilityUpdate) {
         onProfileVisibilityUpdate(newProfileVisibility);
       }
-      
+
       // Update field visibilities based on preset
-      const fieldVisibilityMap: Record<string, 'public' | 'limited' | 'private' | 'same_disease_only'> = {
-        username: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        bio: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        country: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        date_of_birth: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        gender: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        preferred_language: preset === 'public' ? 'public' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        email: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
-        online_status: preset === 'private' ? 'private' : preset === 'same_disease_only' ? 'same_disease_only' : 'limited',
+      const fieldVisibilityMap: Record<
+        string,
+        'public' | 'limited' | 'private' | 'same_disease_only'
+      > = {
+        username:
+          preset === 'public'
+            ? 'public'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        bio:
+          preset === 'public'
+            ? 'public'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        country:
+          preset === 'public'
+            ? 'public'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        date_of_birth:
+          preset === 'private'
+            ? 'private'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        gender:
+          preset === 'private'
+            ? 'private'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        language:
+          preset === 'public'
+            ? 'public'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        preferred_language:
+          preset === 'public'
+            ? 'public'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        email:
+          preset === 'private'
+            ? 'private'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
+        online_status:
+          preset === 'private'
+            ? 'private'
+            : preset === 'same_disease_only'
+            ? 'same_disease_only'
+            : 'limited',
       };
-      
+
       // Update all field visibilities
       const updates = Object.entries(fieldVisibilityMap).map(([field, visibility]) =>
         setFieldVisibility(accessToken, field, visibility)
       );
-      
+
       await Promise.all(updates);
-      
+
       // Update local state
       setFieldVisibilities(prev => ({ ...prev, ...fieldVisibilityMap }));
     } catch (err) {
@@ -129,7 +186,9 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           {t('visibilityPresets.title')}
         </label>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{t('visibilityPresets.description')}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+          {t('visibilityPresets.description')}
+        </p>
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
@@ -190,13 +249,19 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
 
       {/* Field-Level Visibility Settings */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('sections.fieldVisibility')}</h3>
-        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">{t('fieldVisibility.description')}</p>
+        <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+          {t('sections.fieldVisibility')}
+        </h3>
+        <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
+          {t('fieldVisibility.description')}
+        </p>
 
         {loadingVisibilities ? (
           <div className="text-center py-4">
             <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">{t('fieldVisibility.loading')}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {t('fieldVisibility.loading')}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -211,12 +276,21 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
               { field: 'email', label: t('fields.email') },
               { field: 'online_status', label: t('fields.onlineStatus') },
             ].map(({ field, label }) => (
-              <div key={field} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+              <div
+                key={field}
+                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+              >
+                <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {label}
+                </label>
                 <select
                   value={fieldVisibilities[field] || 'limited'}
-                  onChange={async (e) => {
-                    const newVisibility = e.target.value as 'public' | 'limited' | 'private' | 'same_disease_only';
+                  onChange={async e => {
+                    const newVisibility = e.target.value as
+                      | 'public'
+                      | 'limited'
+                      | 'private'
+                      | 'same_disease_only';
                     setUpdatingVisibility(field);
                     try {
                       const accessToken = await getAccessTokenSilently();
@@ -224,7 +298,9 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
                       setFieldVisibilities(prev => ({ ...prev, [field]: newVisibility }));
                     } catch (err) {
                       debugLog.error(`Failed to update visibility for ${field}:`, err);
-                      setError(err instanceof Error ? err.message : t('fieldVisibility.updateFailed'));
+                      setError(
+                        err instanceof Error ? err.message : t('fieldVisibility.updateFailed')
+                      );
                     } finally {
                       setUpdatingVisibility(null);
                     }
@@ -235,7 +311,9 @@ export function PrivacySettings({ user, onProfileVisibilityUpdate }: PrivacySett
                   <option value="public">{t('fieldVisibility.options.public')}</option>
                   <option value="limited">{t('fieldVisibility.options.limited')}</option>
                   <option value="private">{t('fieldVisibility.options.private')}</option>
-                  <option value="same_disease_only">{t('fieldVisibility.options.sameDiseaseOnly')}</option>
+                  <option value="same_disease_only">
+                    {t('fieldVisibility.options.sameDiseaseOnly')}
+                  </option>
                 </select>
               </div>
             ))}

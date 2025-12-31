@@ -3,7 +3,13 @@
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
-import { createSpO2Record, updateSpO2Record, type SpO2Record, type CreateSpO2RecordData, type UpdateSpO2RecordData } from '@/lib/api/spo2Records';
+import {
+  createSpO2Record,
+  updateSpO2Record,
+  type SpO2Record,
+  type CreateSpO2RecordData,
+  type UpdateSpO2RecordData,
+} from '@/lib/api/spo2Records';
 import { debugLog } from '@/lib/utils/debug';
 
 interface SpO2FormProps {
@@ -11,10 +17,7 @@ interface SpO2FormProps {
   editingRecord?: SpO2Record | null;
 }
 
-export default function SpO2Form({
-  onRecordCreated,
-  editingRecord,
-}: SpO2FormProps) {
+export default function SpO2Form({ onRecordCreated, editingRecord }: SpO2FormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm.healthRecord.vitalForm');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,7 +121,7 @@ export default function SpO2Form({
         <input
           type="datetime-local"
           value={recordedAt}
-          onChange={(e) => setRecordedAt(e.target.value)}
+          onChange={e => setRecordedAt(e.target.value)}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
           required
           disabled={isSubmitting}
@@ -133,7 +136,7 @@ export default function SpO2Form({
           <input
             type="number"
             value={percentage}
-            onChange={(e) => setPercentage(e.target.value)}
+            onChange={e => setPercentage(e.target.value)}
             placeholder="98.0"
             min="0"
             max="100"
@@ -152,7 +155,7 @@ export default function SpO2Form({
         </label>
         <textarea
           value={notes}
-          onChange={(e) => setNotes(e.target.value)}
+          onChange={e => setNotes(e.target.value)}
           placeholder={t('notes')}
           className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
           rows={3}
@@ -176,4 +179,3 @@ export default function SpO2Form({
     </form>
   );
 }
-

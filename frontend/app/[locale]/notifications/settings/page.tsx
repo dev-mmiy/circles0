@@ -35,12 +35,8 @@ export default function NotificationSettingsPage() {
         <div className="container mx-auto px-4 py-8 max-w-2xl">
           <div className="bg-white rounded-lg shadow-md p-8 text-center">
             <Bell className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h1 className="text-2xl font-bold text-gray-800 mb-2">
-              {t('settingsTitle')}
-            </h1>
-            <p className="text-gray-600 mb-6">
-              {t('settingsDescription')}
-            </p>
+            <h1 className="text-2xl font-bold text-gray-800 mb-2">{t('settingsTitle')}</h1>
+            <p className="text-gray-600 mb-6">{t('settingsDescription')}</p>
             <button
               onClick={() => loginWithRedirect()}
               className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
@@ -70,12 +66,8 @@ export default function NotificationSettingsPage() {
               <Settings className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">
-                {t('settingsTitle')}
-              </h1>
-              <p className="text-gray-600 text-sm">
-                {t('settingsDescription')}
-              </p>
+              <h1 className="text-2xl font-bold text-gray-800">{t('settingsTitle')}</h1>
+              <p className="text-gray-600 text-sm">{t('settingsDescription')}</p>
             </div>
           </div>
         </div>
@@ -89,18 +81,12 @@ export default function NotificationSettingsPage() {
                 <h2 className="text-lg font-semibold text-gray-800 mb-1">
                   {t('pushNotifications')}
                 </h2>
-                <p className="text-sm text-gray-600">
-                  {t('enableDescription')}
-                </p>
+                <p className="text-sm text-gray-600">{t('enableDescription')}</p>
                 {!isSupported && (
-                  <p className="text-sm text-orange-600 mt-2">
-                    {t('notSupported')}
-                  </p>
+                  <p className="text-sm text-orange-600 mt-2">{t('notSupported')}</p>
                 )}
                 {permission === 'denied' && (
-                  <p className="text-sm text-red-600 mt-2">
-                    {t('permissionDenied')}
-                  </p>
+                  <p className="text-sm text-red-600 mt-2">{t('permissionDenied')}</p>
                 )}
               </div>
               <div className="ml-4">
@@ -111,9 +97,7 @@ export default function NotificationSettingsPage() {
 
           {/* Status */}
           <div className="p-6 bg-gray-50">
-            <h3 className="text-sm font-medium text-gray-700 mb-3">
-              ステータス
-            </h3>
+            <h3 className="text-sm font-medium text-gray-700 mb-3">ステータス</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">ブラウザサポート</span>
@@ -123,14 +107,20 @@ export default function NotificationSettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">通知権限</span>
-                <span className={
-                  permission === 'granted' ? 'text-green-600' :
-                  permission === 'denied' ? 'text-red-600' :
-                  'text-yellow-600'
-                }>
-                  {permission === 'granted' ? '許可済み' :
-                   permission === 'denied' ? '拒否' :
-                   '未設定'}
+                <span
+                  className={
+                    permission === 'granted'
+                      ? 'text-green-600'
+                      : permission === 'denied'
+                      ? 'text-red-600'
+                      : 'text-yellow-600'
+                  }
+                >
+                  {permission === 'granted'
+                    ? '許可済み'
+                    : permission === 'denied'
+                    ? '拒否'
+                    : '未設定'}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -145,9 +135,7 @@ export default function NotificationSettingsPage() {
           {/* Help text */}
           {permission === 'denied' && (
             <div className="p-6 bg-yellow-50 border-t border-yellow-100">
-              <h3 className="text-sm font-medium text-yellow-800 mb-2">
-                通知を有効にするには
-              </h3>
+              <h3 className="text-sm font-medium text-yellow-800 mb-2">通知を有効にするには</h3>
               <ol className="text-sm text-yellow-700 list-decimal list-inside space-y-1">
                 <li>ブラウザのアドレスバー左側の鍵アイコンをクリック</li>
                 <li>「サイトの設定」を開く</li>
@@ -161,9 +149,7 @@ export default function NotificationSettingsPage() {
         {/* Future: Notification type toggles */}
         {isSubscribed && (
           <div className="mt-6 bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-4">
-              通知タイプの設定
-            </h2>
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">通知タイプの設定</h2>
             <p className="text-sm text-gray-500">
               今後のアップデートで、通知タイプごとの設定が可能になります。
             </p>

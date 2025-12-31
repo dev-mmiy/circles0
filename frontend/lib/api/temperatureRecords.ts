@@ -47,18 +47,20 @@ export async function getTemperatureRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/temperature-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch temperature records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch temperature records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -77,18 +79,20 @@ export async function getTemperatureRecord(
   accessToken: string
 ): Promise<TemperatureRecord> {
   const url = `${apiClient}/api/v1/temperature-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch temperature record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch temperature record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -107,19 +111,21 @@ export async function createTemperatureRecord(
   accessToken: string
 ): Promise<TemperatureRecord> {
   const url = `${apiClient}/api/v1/temperature-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create temperature record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create temperature record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -139,19 +145,21 @@ export async function updateTemperatureRecord(
   accessToken: string
 ): Promise<TemperatureRecord> {
   const url = `${apiClient}/api/v1/temperature-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update temperature record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update temperature record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -170,18 +178,20 @@ export async function deleteTemperatureRecord(
   accessToken: string
 ): Promise<void> {
   const url = `${apiClient}/api/v1/temperature-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete temperature record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete temperature record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -189,4 +199,3 @@ export async function deleteTemperatureRecord(
     throw error;
   }
 }
-

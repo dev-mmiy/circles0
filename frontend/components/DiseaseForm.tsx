@@ -47,7 +47,7 @@ export function DiseaseForm({
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('diseaseForm');
   const tErrors = useTranslations('errors');
-  
+
   // Form state
   const [formData, setFormData] = useState<UserDiseaseCreate | UserDiseaseUpdate>({
     disease_id: initialData?.disease_id,
@@ -81,7 +81,9 @@ export function DiseaseForm({
   const getDiseaseName = (diseaseId: number): string => {
     const disease = diseases.find(d => d.id === diseaseId);
     const jaTranslation = disease?.translations?.find(t => t.language_code === 'ja');
-    return jaTranslation?.translated_name || disease?.name || `${t('diseaseIdPrefix')} ${diseaseId}`;
+    return (
+      jaTranslation?.translated_name || disease?.name || `${t('diseaseIdPrefix')} ${diseaseId}`
+    );
   };
 
   // Get status name by ID
@@ -190,7 +192,7 @@ export function DiseaseForm({
     }
     try {
       let submitData = { ...formData };
-      
+
       // Business Logic: Handle "Other" disease option
       // When a user selects "Other" and enters a custom disease name, we need to:
       // 1. Create a new disease entry in the backend database first
@@ -206,19 +208,19 @@ export function DiseaseForm({
           setSubmitting(false);
           return;
         }
-        
+
         try {
           // Step 1: Get access token for authenticated API call
           const accessToken = await getAccessTokenSilently();
-          
+
           // Step 2: Create the new disease in the backend
           // This will create a new disease record with the user-provided name
           const newDisease = await createDisease(otherDiseaseName.trim(), accessToken);
-          
+
           // Step 3: Use the newly created disease's ID for the user's disease association
           // In 'add' mode, submitData is UserDiseaseCreate which includes disease_id
           (submitData as UserDiseaseCreate).disease_id = newDisease.id;
-          
+
           // Step 4: Add the custom disease name to notes for reference
           // This helps identify that this disease was created by the user
           // Format: "その他の疾患: [disease name]" (or "Other Disease: [disease name]" in English)
@@ -229,9 +231,8 @@ export function DiseaseForm({
           // If disease creation fails, show error and stop submission
           // This prevents partial data (user disease without disease record)
           debugLog.error('Error creating disease:', createErr);
-          const errorMessage = createErr instanceof Error 
-            ? createErr.message 
-            : t('errors.createDiseaseFailed');
+          const errorMessage =
+            createErr instanceof Error ? createErr.message : t('errors.createDiseaseFailed');
           setError(errorMessage);
           setSubmitting(false);
           return;
@@ -253,7 +254,10 @@ export function DiseaseForm({
     .sort((a, b) => a.display_order - b.display_order);
 
   return (
-    <form onSubmit={handleSubmit} className={`${compact ? 'p-4' : 'bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4'}`}>
+    <form
+      onSubmit={handleSubmit}
+      className={`${compact ? 'p-4' : 'bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4'}`}
+    >
       {!compact && (
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">
           {mode === 'add' ? t('title.add') : t('title.edit')}
@@ -269,7 +273,9 @@ export function DiseaseForm({
       {/* Disease Selection (Add mode only) */}
       {mode === 'add' && (
         <div className="mb-4 space-y-3">
-          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.diseaseSelection')}</h3>
+          <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">
+            {t('sections.diseaseSelection')}
+          </h3>
 
           {/* Step 1: Category Selection */}
           <div>
@@ -287,7 +293,9 @@ export function DiseaseForm({
                     type="button"
                     onClick={() => selectCategory(category.id)}
                     className={`w-full text-left px-3 py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
-                      isSelected ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold' : ''
+                      isSelected
+                        ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold'
+                        : ''
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -295,7 +303,9 @@ export function DiseaseForm({
                         <span className="text-gray-400 dark:text-gray-500 mr-3 select-none">
                           {isLastCategory ? '└─' : '├─'}
                         </span>
-                        <span className="text-gray-900 dark:text-gray-100">{getCategoryName(category.id)}</span>
+                        <span className="text-gray-900 dark:text-gray-100">
+                          {getCategoryName(category.id)}
+                        </span>
                       </div>
                       {isSelected && (
                         <span className="text-blue-600 dark:text-blue-400">
@@ -318,7 +328,9 @@ export function DiseaseForm({
                 type="button"
                 onClick={() => selectCategory('other')}
                 className={`w-full text-left px-3 py-2 border-t-2 border-gray-300 dark:border-gray-600 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
-                  isOther ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold' : ''
+                  isOther
+                    ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-semibold'
+                    : ''
                 }`}
               >
                 <div className="flex items-center justify-between">
@@ -359,7 +371,9 @@ export function DiseaseForm({
                       type="button"
                       onClick={() => selectDisease(disease.id)}
                       className={`w-full text-left px-3 py-2 border-b border-gray-200 dark:border-gray-700 last:border-b-0 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors ${
-                        isSelected ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-medium' : ''
+                        isSelected
+                          ? 'bg-blue-100 dark:bg-blue-900/50 border-l-4 border-blue-600 dark:border-blue-500 font-medium'
+                          : ''
                       }`}
                     >
                       <div className="flex items-center justify-between">
@@ -411,7 +425,9 @@ export function DiseaseForm({
                 className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
                 required={isOther}
               />
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('descriptions.otherDiseaseNote')}</p>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                {t('descriptions.otherDiseaseNote')}
+              </p>
             </div>
           )}
 
@@ -431,7 +447,9 @@ export function DiseaseForm({
 
       {/* Diagnosis Information */}
       <div className="mb-4 space-y-3">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.diagnosisInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">
+          {t('sections.diagnosisInfo')}
+        </h3>
 
         <div className="grid grid-cols-2 gap-3">
           {/* Diagnosis Date */}
@@ -516,7 +534,10 @@ export function DiseaseForm({
 
           {/* Disease Status */}
           <div className="col-span-2">
-            <label htmlFor="status_id" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="status_id"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.status')}
             </label>
             <select
@@ -539,11 +560,16 @@ export function DiseaseForm({
 
       {/* Clinical Information */}
       <div className="mb-4 space-y-3">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.clinicalInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2">
+          {t('sections.clinicalInfo')}
+        </h3>
 
         {/* Symptoms */}
         <div>
-          <label htmlFor="symptoms" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="symptoms"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('fields.symptoms')}
           </label>
           <textarea
@@ -559,7 +585,10 @@ export function DiseaseForm({
 
         {/* Limitations */}
         <div>
-          <label htmlFor="limitations" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="limitations"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('fields.limitations')}
           </label>
           <textarea
@@ -575,7 +604,10 @@ export function DiseaseForm({
 
         {/* Medications */}
         <div>
-          <label htmlFor="medications" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="medications"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('fields.medications')}
           </label>
           <textarea
@@ -591,7 +623,10 @@ export function DiseaseForm({
 
         {/* Course */}
         <div>
-          <label htmlFor="course" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="course"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('fields.course')}
           </label>
           <textarea
@@ -607,7 +642,10 @@ export function DiseaseForm({
 
         {/* Notes */}
         <div>
-          <label htmlFor="notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          <label
+            htmlFor="notes"
+            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+          >
             {t('fields.notes')}
           </label>
           <textarea
@@ -624,7 +662,9 @@ export function DiseaseForm({
 
       {/* Privacy Settings */}
       <div className="mb-4">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">{t('sections.privacySettings')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 border-b border-gray-200 dark:border-gray-700 pb-2 mb-3">
+          {t('sections.privacySettings')}
+        </h3>
 
         <div className="space-y-2">
           <label className="flex items-center">
@@ -636,8 +676,12 @@ export function DiseaseForm({
               className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.public')}</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.publicDescription')}</p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {t('fields.public')}
+              </span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('descriptions.publicDescription')}
+              </p>
             </span>
           </label>
 
@@ -650,8 +694,12 @@ export function DiseaseForm({
               className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
             />
             <span className="ml-3">
-              <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.searchable')}</span>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.searchableDescription')}</p>
+              <span className="font-medium text-gray-700 dark:text-gray-300">
+                {t('fields.searchable')}
+              </span>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {t('descriptions.searchableDescription')}
+              </p>
             </span>
           </label>
 
@@ -665,8 +713,12 @@ export function DiseaseForm({
                 className="w-4 h-4 text-blue-600 border-gray-300 dark:border-gray-600 rounded focus:ring-blue-500 bg-white dark:bg-gray-700 accent-blue-600 dark:accent-blue-500"
               />
               <span className="ml-3">
-                <span className="font-medium text-gray-700 dark:text-gray-300">{t('fields.active')}</span>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{t('descriptions.activeDescription')}</p>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  {t('fields.active')}
+                </span>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  {t('descriptions.activeDescription')}
+                </p>
               </span>
             </label>
           )}
@@ -688,7 +740,11 @@ export function DiseaseForm({
           disabled={submitting}
           className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {submitting ? t('buttons.saving') : mode === 'add' ? t('buttons.add') : t('buttons.update')}
+          {submitting
+            ? t('buttons.saving')
+            : mode === 'add'
+            ? t('buttons.add')
+            : t('buttons.update')}
         </button>
       </div>
     </form>

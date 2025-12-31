@@ -1,6 +1,6 @@
 /**
  * useImageViewer Hook
- * 
+ *
  * Custom hook for managing image viewer state
  */
 
@@ -24,13 +24,13 @@ export function useImageViewer(): UseImageViewerReturn {
 
   const openViewer = useCallback((newImages: ImageViewerImage[], initialImageUrlOrId: string) => {
     if (newImages.length === 0) return;
-    
+
     // Try to find by URL first, then by ID
     let index = findImageIndexByUrl(newImages, initialImageUrlOrId);
     if (index === 0 && newImages[0]?.image_url !== initialImageUrlOrId) {
       index = findImageIndexById(newImages, initialImageUrlOrId);
     }
-    
+
     setImages(newImages);
     setCurrentIndex(index);
     setIsOpen(true);
@@ -38,7 +38,7 @@ export function useImageViewer(): UseImageViewerReturn {
 
   const openViewerByIndex = useCallback((newImages: ImageViewerImage[], initialIndex: number) => {
     if (newImages.length === 0) return;
-    
+
     const index = Math.max(0, Math.min(initialIndex, newImages.length - 1));
     setImages(newImages);
     setCurrentIndex(index);
@@ -60,9 +60,3 @@ export function useImageViewer(): UseImageViewerReturn {
     closeViewer,
   };
 }
-
-
-
-
-
-

@@ -86,7 +86,7 @@ const sizeClasses = {
 export function DiseaseStatusBadge({ status, statusCode, size = 'md' }: DiseaseStatusBadgeProps) {
   const t = useTranslations('diseaseStatusBadge');
   const locale = useLocale();
-  
+
   // Determine the status code to use
   const code = status?.status_code || statusCode || 'DEFAULT';
 
@@ -161,7 +161,7 @@ const severityLabels: Record<number, string> = {
 
 export function SeverityBadge({ level, size = 'md' }: SeverityBadgeProps) {
   const t = useTranslations('diseaseStatusBadge');
-  
+
   // Ensure level is within valid range
   const validLevel = Math.max(1, Math.min(5, level));
   const colors = severityColors[validLevel];
@@ -175,7 +175,8 @@ export function SeverityBadge({ level, size = 'md' }: SeverityBadgeProps) {
         ${sizeClasses[size]}
       `}
     >
-      {label} ({t('levelPrefix')}{validLevel})
+      {label} ({t('levelPrefix')}
+      {validLevel})
     </span>
   );
 }

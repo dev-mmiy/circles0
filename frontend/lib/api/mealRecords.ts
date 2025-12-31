@@ -60,18 +60,20 @@ export async function getMealRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/meal-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch meal records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch meal records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -85,23 +87,22 @@ export async function getMealRecords(
 /**
  * Get a specific meal record by ID.
  */
-export async function getMealRecord(
-  recordId: string,
-  accessToken: string
-): Promise<MealRecord> {
+export async function getMealRecord(recordId: string, accessToken: string): Promise<MealRecord> {
   const url = `${apiClient}/api/v1/meal-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch meal record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch meal record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -120,19 +121,21 @@ export async function createMealRecord(
   accessToken: string
 ): Promise<MealRecord> {
   const url = `${apiClient}/api/v1/meal-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create meal record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create meal record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -152,19 +155,21 @@ export async function updateMealRecord(
   accessToken: string
 ): Promise<MealRecord> {
   const url = `${apiClient}/api/v1/meal-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update meal record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update meal record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -178,23 +183,22 @@ export async function updateMealRecord(
 /**
  * Delete a meal record.
  */
-export async function deleteMealRecord(
-  recordId: string,
-  accessToken: string
-): Promise<void> {
+export async function deleteMealRecord(recordId: string, accessToken: string): Promise<void> {
   const url = `${apiClient}/api/v1/meal-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete meal record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete meal record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -202,4 +206,3 @@ export async function deleteMealRecord(
     throw error;
   }
 }
-

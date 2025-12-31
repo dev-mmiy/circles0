@@ -29,7 +29,7 @@ export function CategorySelector({
   const t = useTranslations('categorySelector');
   const locale = useLocale();
   const [selectedId, setSelectedId] = useState<number | undefined>(selectedCategoryId);
-  
+
   // Use provided label/placeholder or fallback to translations
   const displayLabel = label ?? t('label');
   const displayPlaceholder = placeholder ?? t('placeholder');
@@ -135,7 +135,7 @@ interface CategoryBreadcrumbProps {
 
 export function CategoryBreadcrumb({ categories, categoryId }: CategoryBreadcrumbProps) {
   const locale = useLocale();
-  
+
   // Get category name
   const getCategoryName = (category: DiseaseCategory): string => {
     if (category.translations && category.translations.length > 0) {

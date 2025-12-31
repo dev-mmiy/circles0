@@ -20,7 +20,7 @@ interface EditDiseaseFormProps {
 
 export function EditDiseaseForm({ userDisease, statuses, onSave, onCancel }: EditDiseaseFormProps) {
   const t = useTranslations('diseaseForm');
-  
+
   // Form state
   const [formData, setFormData] = useState<UserDiseaseUpdate>({
     status_id: userDisease.status_id,

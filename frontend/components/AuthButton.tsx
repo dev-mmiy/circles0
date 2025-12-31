@@ -152,8 +152,6 @@ export default function AuthButton() {
     );
   }
 
-
-
   if (authState === 'authenticated' && user) {
     // Display nickname from UserContext if available, fallback to Auth0 user data
     const displayName = currentUser?.nickname || user.name || user.email || 'User';
@@ -176,7 +174,9 @@ export default function AuthButton() {
               className="w-8 h-8 rounded-full"
             />
           )}
-          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">{displayName}</span>
+          <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
+            {displayName}
+          </span>
         </button>
 
         {isDropdownOpen && (
@@ -220,9 +220,15 @@ export default function AuthButton() {
     return (
       <div className="flex flex-col items-center space-y-2">
         <div className="text-red-600 dark:text-red-400 text-sm font-bold">{t('loginError')}</div>
-        <div className="text-red-600 dark:text-red-400 text-sm">{t('authError')}: {error?.message || t('unknownError')}</div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">{t('errorType')}: {error?.name || t('unknown')}</div>
-        <div className="text-xs text-gray-500 dark:text-gray-400">{t('timestamp')}: {new Date().toISOString()}</div>
+        <div className="text-red-600 dark:text-red-400 text-sm">
+          {t('authError')}: {error?.message || t('unknownError')}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          {t('errorType')}: {error?.name || t('unknown')}
+        </div>
+        <div className="text-xs text-gray-500 dark:text-gray-400">
+          {t('timestamp')}: {new Date().toISOString()}
+        </div>
         <div className="text-xs text-blue-500 dark:text-blue-400">{t('autoClearingCache')}</div>
         <button
           onClick={() => {

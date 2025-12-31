@@ -281,10 +281,7 @@ export async function getDiseaseTranslation(
 /**
  * Create a new disease
  */
-export async function createDisease(
-  name: string,
-  accessToken: string
-): Promise<Disease> {
+export async function createDisease(name: string, accessToken: string): Promise<Disease> {
   const response = await fetch(`${getApiBaseUrl()}/api/v1/diseases/`, {
     method: 'POST',
     headers: {

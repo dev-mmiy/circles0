@@ -24,9 +24,7 @@ export default function CommentImageViewerPage() {
   // Load post
   const loadPost = useCallback(async () => {
     try {
-      const accessToken = isAuthenticated
-        ? await getAccessTokenSilently()
-        : undefined;
+      const accessToken = isAuthenticated ? await getAccessTokenSilently() : undefined;
 
       const fetchedPost = await getPost(postId, accessToken);
       setPost(fetchedPost);
@@ -50,7 +48,7 @@ export default function CommentImageViewerPage() {
   }, [router, postId, locale]);
 
   // Find comment and its images
-  const comment = post?.comments?.find((c) => c.id === commentId);
+  const comment = post?.comments?.find(c => c.id === commentId);
   const images = comment?.images ? convertPostImagesToViewerImages(comment.images) : [];
   const initialIndex = images.length > 0 ? findImageIndexById(images, imageId) : 0;
 
@@ -76,4 +74,3 @@ export default function CommentImageViewerPage() {
     </ImageViewerPageWrapper>
   );
 }
-

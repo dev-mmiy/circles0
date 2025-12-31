@@ -29,21 +29,21 @@ export function extractErrorInfo(error: any): ErrorInfo {
   // Axios errors
   if (error?.isAxiosError) {
     const axiosError = error as AxiosError;
-    
+
     if (axiosError.response) {
       // Server responded with error status
       const status = axiosError.response.status;
       const data = axiosError.response.data as any;
-      
+
       let message = data?.detail || data?.message || axiosError.message || 'An error occurred';
-      
+
       // Handle validation errors
       if (status === 422 && data?.detail) {
         if (Array.isArray(data.detail)) {
           message = data.detail.map((err: any) => err.msg || err.message).join(', ');
         }
       }
-      
+
       return {
         type: getErrorTypeFromStatus(status),
         message,
@@ -52,16 +52,17 @@ export function extractErrorInfo(error: any): ErrorInfo {
       };
     } else if (axiosError.request) {
       // Request made but no response received (network error or timeout)
-      const isTimeout = axiosError.code === 'ECONNABORTED' || 
-                       axiosError.message?.includes('timeout') ||
-                       axiosError.message?.includes('exceeded');
-      
+      const isTimeout =
+        axiosError.code === 'ECONNABORTED' ||
+        axiosError.message?.includes('timeout') ||
+        axiosError.message?.includes('exceeded');
+
       // Extract timeout details for better error messages
       const config = axiosError.config as any;
       const requestStartTime = config?.__requestStartTime;
       const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
       const configuredTimeout = config?.timeout;
-      
+
       if (isTimeout) {
         let timeoutMessage = 'Request timeout: The server is taking too long to respond.';
         if (configuredTimeout && elapsed) {
@@ -70,7 +71,7 @@ export function extractErrorInfo(error: any): ErrorInfo {
           timeoutMessage += ` (Timeout: ${configuredTimeout}ms)`;
         }
         timeoutMessage += ' Please try again.';
-        
+
         return {
           type: ErrorType.NETWORK,
           message: timeoutMessage,
@@ -79,12 +80,13 @@ export function extractErrorInfo(error: any): ErrorInfo {
             timeoutDetails: {
               configuredTimeout,
               actualElapsed: elapsed,
-              timeoutExceeded: elapsed && configuredTimeout ? elapsed > configuredTimeout : undefined,
+              timeoutExceeded:
+                elapsed && configuredTimeout ? elapsed > configuredTimeout : undefined,
             },
           },
         };
       }
-      
+
       return {
         type: ErrorType.NETWORK,
         message: 'Network error: Unable to connect to the server',
@@ -92,7 +94,7 @@ export function extractErrorInfo(error: any): ErrorInfo {
       };
     }
   }
-  
+
   // Standard Error objects
   if (error instanceof Error) {
     return {
@@ -101,7 +103,7 @@ export function extractErrorInfo(error: any): ErrorInfo {
       originalError: error,
     };
   }
-  
+
   // String errors
   if (typeof error === 'string') {
     return {
@@ -110,7 +112,7 @@ export function extractErrorInfo(error: any): ErrorInfo {
       originalError: error,
     };
   }
-  
+
   // Fallback
   return {
     type: ErrorType.UNKNOWN,
@@ -156,16 +158,17 @@ export function requiresAuthRedirect(error: ErrorInfo): boolean {
 export function getErrorMessageKey(error: ErrorInfo): string {
   // Check if it's a timeout error
   if (error.type === ErrorType.NETWORK) {
-    const isTimeout = error.originalError?.code === 'ECONNABORTED' || 
-                     error.originalError?.message?.includes('timeout') ||
-                     error.originalError?.message?.includes('exceeded') ||
-                     error.message?.includes('timeout') ||
-                     error.message?.includes('taking too long');
+    const isTimeout =
+      error.originalError?.code === 'ECONNABORTED' ||
+      error.originalError?.message?.includes('timeout') ||
+      error.originalError?.message?.includes('exceeded') ||
+      error.message?.includes('timeout') ||
+      error.message?.includes('taking too long');
     if (isTimeout) {
       return 'timeout';
     }
   }
-  
+
   switch (error.type) {
     case ErrorType.NETWORK:
       return 'network';
@@ -183,4 +186,3 @@ export function getErrorMessageKey(error: ErrorInfo): string {
       return 'general';
   }
 }
-

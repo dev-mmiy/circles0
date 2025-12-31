@@ -9,7 +9,12 @@ import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
-import { searchHashtags, getPostsByHashtag, getPopularHashtags, type Hashtag } from '@/lib/api/search';
+import {
+  searchHashtags,
+  getPostsByHashtag,
+  getPopularHashtags,
+  type Hashtag,
+} from '@/lib/api/search';
 import { Post } from '@/lib/api/posts';
 import PostCard from './PostCard';
 
@@ -124,8 +129,8 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
     try {
       const accessToken = await getAccessTokenSilently().catch(() => undefined);
       const newPosts = await getPostsByHashtag(selectedHashtag, skip + limit, limit, accessToken);
-      setPosts((prev) => [...prev, ...newPosts]);
-      setSkip((prev) => prev + limit);
+      setPosts(prev => [...prev, ...newPosts]);
+      setSkip(prev => prev + limit);
     } catch (err) {
       console.error('Failed to load more posts:', err);
       setError(err instanceof Error ? err.message : t('errors.loadPostsFailed'));
@@ -143,7 +148,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => {
+              onChange={e => {
                 setSearchQuery(e.target.value);
                 setSelectedHashtag(null);
                 setPosts([]);
@@ -178,13 +183,15 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
         {/* Suggestions Dropdown */}
         {showSuggestions && hashtagSuggestions.length > 0 && (
           <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-            {hashtagSuggestions.map((hashtag) => (
+            {hashtagSuggestions.map(hashtag => (
               <button
                 key={hashtag.id}
                 onClick={() => handleHashtagSelect(hashtag.name)}
                 className="w-full px-4 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <span className="text-blue-600 dark:text-blue-400 font-medium">#{hashtag.name}</span>
+                <span className="text-blue-600 dark:text-blue-400 font-medium">
+                  #{hashtag.name}
+                </span>
               </button>
             ))}
           </div>
@@ -194,9 +201,11 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
       {/* Popular Hashtags */}
       {!selectedHashtag && popularHashtags.length > 0 && (
         <div>
-          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('popularHashtags')}</h3>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('popularHashtags')}
+          </h3>
           <div className="flex flex-wrap gap-2">
-            {popularHashtags.map((hashtag) => (
+            {popularHashtags.map(hashtag => (
               <button
                 key={hashtag.id}
                 onClick={() => handleHashtagSelect(hashtag.name)}
@@ -237,7 +246,7 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
           ) : (
             <>
               <div className="space-y-4">
-                {posts.map((post) => (
+                {posts.map(post => (
                   <PostCard key={post.id} post={post} />
                 ))}
               </div>
@@ -260,4 +269,3 @@ export function HashtagSearch({ onSearch, initialHashtag }: HashtagSearchProps) 
     </div>
   );
 }
-

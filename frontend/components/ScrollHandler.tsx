@@ -38,4 +38,3 @@ export default function ScrollHandler() {
 
   return null;
 }
-

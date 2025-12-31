@@ -32,10 +32,10 @@ export default function LanguageSwitcher() {
 
   const handleLanguageChange = (newLocale: 'ja' | 'en') => {
     setIsOpen(false);
-    
+
     // Mark that user has manually overridden locale preference
     localStorage.setItem('locale_override', 'true');
-    
+
     startTransition(() => {
       // Navigate to the same page but with the new locale
       router.replace(pathname, { locale: newLocale });
@@ -66,7 +66,9 @@ export default function LanguageSwitcher() {
           <button
             onClick={() => handleLanguageChange('ja')}
             className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
-              locale === 'ja' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'
+              locale === 'ja'
+                ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300'
             }`}
             disabled={isPending || locale === 'ja'}
           >
@@ -76,7 +78,9 @@ export default function LanguageSwitcher() {
           <button
             onClick={() => handleLanguageChange('en')}
             className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors flex items-center justify-between ${
-              locale === 'en' ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium' : 'text-gray-700 dark:text-gray-300'
+              locale === 'en'
+                ? 'bg-blue-50 dark:bg-blue-900 text-blue-600 dark:text-blue-400 font-medium'
+                : 'text-gray-700 dark:text-gray-300'
             }`}
             disabled={isPending || locale === 'en'}
           >

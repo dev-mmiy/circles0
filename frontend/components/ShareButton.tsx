@@ -15,17 +15,13 @@ interface ShareButtonProps {
   authorName?: string;
 }
 
-export default function ShareButton({
-  postId,
-  postContent,
-  authorName,
-}: ShareButtonProps) {
+export default function ShareButton({ postId, postContent, authorName }: ShareButtonProps) {
   const t = useTranslations('post');
   const locale = useLocale();
   const router = useRouter();
   const { user } = useUser();
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
-  
+
   // Get share options based on user's country
   const shareOptions = getShareOptionsForCountry(user?.country);
 
@@ -55,7 +51,9 @@ export default function ShareButton({
     const text = postContent
       ? `${postContent.slice(0, 100)}${postContent.length > 100 ? '...' : ''}`
       : '';
-    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    const twitterUrl = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+      url
+    )}&text=${encodeURIComponent(text)}`;
     window.open(twitterUrl, '_blank', 'width=550,height=420');
     setIsShareMenuOpen(false);
   };
@@ -75,7 +73,9 @@ export default function ShareButton({
     const text = postContent
       ? `${postContent.slice(0, 100)}${postContent.length > 100 ? '...' : ''}`
       : '';
-    const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(
+      url
+    )}&text=${encodeURIComponent(text)}`;
     window.open(lineUrl, '_blank', 'width=550,height=420');
     setIsShareMenuOpen(false);
   };
@@ -87,7 +87,9 @@ export default function ShareButton({
       ? `${postContent.slice(0, 100)}${postContent.length > 100 ? '...' : ''}`
       : '';
     // KakaoTalk share URL format
-    const kakaoUrl = `https://story.kakao.com/share?url=${encodeURIComponent(url)}&text=${encodeURIComponent(text)}`;
+    const kakaoUrl = `https://story.kakao.com/share?url=${encodeURIComponent(
+      url
+    )}&text=${encodeURIComponent(text)}`;
     window.open(kakaoUrl, '_blank', 'width=550,height=420');
     setIsShareMenuOpen(false);
   };
@@ -96,11 +98,14 @@ export default function ShareButton({
   const handleShareWeChat = () => {
     const url = getPostUrl();
     // WeChat share requires QR code generation, so we'll copy the URL
-    navigator.clipboard.writeText(url).then(() => {
-      toast.success(t('share.urlCopied'));
-    }).catch(() => {
-      toast.error(t('share.copyFailed'));
-    });
+    navigator.clipboard
+      .writeText(url)
+      .then(() => {
+        toast.success(t('share.urlCopied'));
+      })
+      .catch(() => {
+        toast.error(t('share.copyFailed'));
+      });
     setIsShareMenuOpen(false);
   };
 
@@ -110,7 +115,9 @@ export default function ShareButton({
     const text = postContent
       ? `${postContent.slice(0, 100)}${postContent.length > 100 ? '...' : ''}`
       : '';
-    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`;
+    const weiboUrl = `https://service.weibo.com/share/share.php?url=${encodeURIComponent(
+      url
+    )}&title=${encodeURIComponent(text)}`;
     window.open(weiboUrl, '_blank', 'width=550,height=420');
     setIsShareMenuOpen(false);
   };
@@ -121,10 +128,10 @@ export default function ShareButton({
       // Copy URL to clipboard first
       const url = getPostUrl();
       await navigator.clipboard.writeText(url);
-      
+
       // Navigate to messages page
       router.push('/messages');
-      
+
       // Show toast notification
       toast.success(t('share.urlCopiedAndRedirected'));
     } catch (error) {
@@ -144,12 +151,7 @@ export default function ShareButton({
         aria-label={t('share.share')}
         title={t('share.share')}
       >
-        <svg
-          className="w-5 h-5"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -164,23 +166,20 @@ export default function ShareButton({
       {isShareMenuOpen && (
         <>
           {/* Overlay to close menu */}
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setIsShareMenuOpen(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setIsShareMenuOpen(false)} />
           {/* Menu */}
           <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50">
             <div className="py-1">
               {shareOptions.map((option, index) => {
                 // Add separator before message option
                 const showSeparator = option.type === 'message' && index > 0;
-                
+
                 return (
                   <div key={option.type}>
                     {showSeparator && (
                       <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                     )}
-                    
+
                     {option.type === 'copyUrl' && (
                       <button
                         onClick={handleCopyUrl}
@@ -202,7 +201,7 @@ export default function ShareButton({
                         <span>{t('share.copyUrl')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'twitter' && (
                       <button
                         onClick={handleShareTwitter}
@@ -214,7 +213,7 @@ export default function ShareButton({
                         <span>{t('share.shareToTwitter')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'facebook' && (
                       <button
                         onClick={handleShareFacebook}
@@ -226,7 +225,7 @@ export default function ShareButton({
                         <span>{t('share.shareToFacebook')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'line' && (
                       <button
                         onClick={handleShareLINE}
@@ -238,7 +237,7 @@ export default function ShareButton({
                         <span>{t('share.shareToLINE')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'kakaotalk' && (
                       <button
                         onClick={handleShareKakaoTalk}
@@ -250,7 +249,7 @@ export default function ShareButton({
                         <span>{t('share.shareToKakaoTalk')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'wechat' && (
                       <button
                         onClick={handleShareWeChat}
@@ -262,7 +261,7 @@ export default function ShareButton({
                         <span>{t('share.shareToWeChat')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'weibo' && (
                       <button
                         onClick={handleShareWeibo}
@@ -274,7 +273,7 @@ export default function ShareButton({
                         <span>{t('share.shareToWeibo')}</span>
                       </button>
                     )}
-                    
+
                     {option.type === 'message' && (
                       <button
                         onClick={handleShareToMessage}
@@ -306,4 +305,3 @@ export default function ShareButton({
     </div>
   );
 }
-

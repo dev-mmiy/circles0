@@ -19,7 +19,12 @@ const PostForm = dynamic(() => import('@/components/PostForm'), {
   ssr: false,
 });
 
-type VisibleMeasurement = 'blood_pressure_heart_rate' | 'weight_body_fat' | 'blood_glucose' | 'spo2' | 'temperature';
+type VisibleMeasurement =
+  | 'blood_pressure_heart_rate'
+  | 'weight_body_fat'
+  | 'blood_glucose'
+  | 'spo2'
+  | 'temperature';
 
 interface PostFormModalProps {
   isOpen: boolean;
@@ -52,7 +57,11 @@ export default function PostFormModal({
 
   // Infer visibleMeasurements from existing data when editing
   const inferVisibleMeasurements = (): VisibleMeasurement[] | undefined => {
-    if (!editingPost || editingPost.post_type !== 'health_record' || editingPost.health_record_type !== 'vital') {
+    if (
+      !editingPost ||
+      editingPost.post_type !== 'health_record' ||
+      editingPost.health_record_type !== 'vital'
+    ) {
       return visibleMeasurements;
     }
 
@@ -84,12 +93,15 @@ export default function PostFormModal({
       // Edit mode
       if (editingPost.post_type === 'health_record' && editingPost.health_record_type === 'vital') {
         return tDaily('editVital') || 'Edit Vital Record';
-      } else if (editingPost.post_type === 'health_record' && editingPost.health_record_type === 'meal') {
+      } else if (
+        editingPost.post_type === 'health_record' &&
+        editingPost.health_record_type === 'meal'
+      ) {
         return tDaily('editMeal') || 'Edit Meal Record';
       }
       return t('editTitle') || 'Edit Post';
     }
-    
+
     // Create mode
     if (initialPostType === 'health_record' && initialHealthRecordType) {
       if (initialHealthRecordType === 'vital') {
@@ -128,13 +140,13 @@ export default function PostFormModal({
         className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
         onClick={onClose}
       />
-      
+
       {/* Modal */}
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex min-h-full items-center justify-center p-2 sm:p-4">
           <div
             className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700">
@@ -146,12 +158,7 @@ export default function PostFormModal({
                 className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
                 aria-label="Close"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -175,8 +182,13 @@ export default function PostFormModal({
                 }
                 initialPostType={editingPost?.post_type || initialPostType}
                 initialHealthRecordType={editingPost?.health_record_type || initialHealthRecordType}
-                hidePostTypeSelector={initialPostType === 'health_record' || editingPost?.post_type === 'health_record'}
-                hideHealthRecordTypeSelector={(initialPostType === 'health_record' && !!initialHealthRecordType) || editingPost?.post_type === 'health_record'}
+                hidePostTypeSelector={
+                  initialPostType === 'health_record' || editingPost?.post_type === 'health_record'
+                }
+                hideHealthRecordTypeSelector={
+                  (initialPostType === 'health_record' && !!initialHealthRecordType) ||
+                  editingPost?.post_type === 'health_record'
+                }
                 visibleMeasurements={editingPost ? inferVisibleMeasurements() : visibleMeasurements}
                 editingPost={editingPost}
               />
@@ -187,4 +199,3 @@ export default function PostFormModal({
     </>
   );
 }
-

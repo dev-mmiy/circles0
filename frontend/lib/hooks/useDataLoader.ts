@@ -123,7 +123,7 @@ export interface UseDataLoaderReturn<T> {
 
 /**
  * Unified data loading hook
- * 
+ *
  * Features:
  * - Consistent loading states (initial, more, refresh)
  * - Error handling with retry logic
@@ -133,10 +133,10 @@ export interface UseDataLoaderReturn<T> {
  */
 /**
  * Unified data loading hook with pagination, error handling, retry logic, and caching.
- * 
+ *
  * This hook provides a consistent interface for loading paginated data across the application.
  * It handles common concerns like authentication, error handling, retry logic, and caching.
- * 
+ *
  * Key Features:
  * 1. Automatic pagination: Supports "load more" functionality with configurable page size
  * 2. Error handling: Standardized error handling with retry logic and user-friendly messages
@@ -144,7 +144,7 @@ export interface UseDataLoaderReturn<T> {
  * 4. Caching: Optional caching to reduce unnecessary API calls (default: 5 minutes)
  * 5. Retry logic: Automatic retry on network errors with exponential backoff
  * 6. Loading states: Separate states for initial load, loading more, and refreshing
- * 
+ *
  * Usage Example:
  * ```typescript
  * const { items, isLoading, error, loadMore, refresh } = useDataLoader({
@@ -157,14 +157,12 @@ export interface UseDataLoaderReturn<T> {
  *   autoLoad: true,
  * });
  * ```
- * 
+ *
  * @template T - Type of items being loaded
  * @param options - Configuration options for the data loader
  * @returns Object containing items, loading states, error, and control functions
  */
-export function useDataLoader<T>(
-  options: UseDataLoaderOptions<T>
-): UseDataLoaderReturn<T> {
+export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoaderReturn<T> {
   const {
     loadFn,
     pageSize = 20,
@@ -174,11 +172,7 @@ export function useDataLoader<T>(
     cacheConfig = {},
   } = options;
 
-  const {
-    maxRetries = 3,
-    retryDelay = 1000,
-    autoRetry = true,
-  } = retryConfig;
+  const { maxRetries = 3, retryDelay = 1000, autoRetry = true } = retryConfig;
 
   const {
     enabled: cacheEnabled = true,
@@ -205,7 +199,7 @@ export function useDataLoader<T>(
   const hasAutoLoadedRef = useRef(false); // Track if auto-load has been executed
   const lastAuthStateRef = useRef<string | null>(null); // Track last auth state for which we loaded
   const loadFnRef = useRef<((reset?: boolean) => Promise<void>) | null>(null); // Ref to latest load function
-  
+
   // Memoize loadFn to prevent unnecessary re-renders
   const memoizedLoadFn = useRef(loadFn);
   useEffect(() => {
@@ -224,7 +218,7 @@ export function useDataLoader<T>(
     // This prevents issues with stale cached data on subsequent page loads
     cacheRef.current = null;
     debugLog.log('[useDataLoader] Component mounted, resetting state', {
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
     return () => {
       isMountedRef.current = false;
@@ -243,7 +237,7 @@ export function useDataLoader<T>(
 
   /**
    * Internal load function with retry logic and error handling.
-   * 
+   *
    * This function handles the actual data loading with the following steps:
    * 1. Check component mount state (prevent state updates on unmounted components)
    * 2. Prevent duplicate requests (using isLoadingRef)
@@ -251,17 +245,17 @@ export function useDataLoader<T>(
    * 4. Get access token (with timeout handling)
    * 5. Execute loadFn with retry logic
    * 6. Update state with results or errors
-   * 
+   *
    * Retry Logic:
    * - Automatically retries on network errors (up to maxRetries times)
    * - Uses exponential backoff for retry delays
    * - Only retries on network errors, not on validation or authentication errors
-   * 
+   *
    * Caching:
    * - Uses cache if enabled and data is fresh (within TTL)
    * - Cache is cleared on component mount to ensure fresh data
    * - Cache is not used for refresh operations
-   * 
+   *
    * @param skip - Number of items to skip (for pagination)
    * @param reset - Whether to reset the items list (true for initial load/refresh)
    * @param showLoading - Whether to show loading state
@@ -321,44 +315,45 @@ export function useDataLoader<T>(
         // This must complete before making API calls
         if (isAuthenticated) {
           try {
-            debugLog.log('[useDataLoader] Getting token before API call...', { 
+            debugLog.log('[useDataLoader] Getting token before API call...', {
               timestamp: new Date().toISOString(),
-              hasToken: !!apiClient.defaults.headers.common['Authorization']
+              hasToken: !!apiClient.defaults.headers.common['Authorization'],
             });
-            
+
             // Get token - tokenManager handles its own timeout (15s per attempt, 3 attempts)
             // We don't add an additional timeout here to avoid conflicts
             const token = await getAccessTokenFromManager(getAccessTokenSilently);
-            
+
             if (!isMountedRef.current) {
               debugLog.log('[useDataLoader] Component unmounted after token retrieval, aborting');
               isLoadingRef.current = false;
               return;
             }
-            
+
             setAuthToken(token);
-            debugLog.log('[useDataLoader] Token set in API client', { 
-              timestamp: new Date().toISOString()
+            debugLog.log('[useDataLoader] Token set in API client', {
+              timestamp: new Date().toISOString(),
             });
           } catch (tokenError: any) {
-            debugLog.error('[useDataLoader] Failed to get token:', tokenError, { 
+            debugLog.error('[useDataLoader] Failed to get token:', tokenError, {
               timestamp: new Date().toISOString(),
               errorMessage: tokenError?.message,
               errorName: tokenError?.name,
-              isTimeout: tokenError?.message?.includes('timeout')
+              isTimeout: tokenError?.message?.includes('timeout'),
             });
-            
+
             // Always abort the request if token retrieval fails when auth is required
             isLoadingRef.current = false;
             if (!isMountedRef.current) {
               return;
             }
-            
+
             if (requireAuth) {
               // Provide more detailed error message
               let errorMessage = 'Failed to get authentication token';
               if (tokenError?.message?.includes('timeout')) {
-                errorMessage = 'Authentication token request timed out. Please check your connection and try again.';
+                errorMessage =
+                  'Authentication token request timed out. Please check your connection and try again.';
               } else if (tokenError?.message) {
                 errorMessage = `Authentication failed: ${tokenError.message}`;
               }
@@ -371,11 +366,11 @@ export function useDataLoader<T>(
               setIsLoading(false);
               setIsLoadingMore(false);
               setIsRefreshing(false);
-              
+
               // Don't proceed with the request
               return;
             }
-            
+
             // For non-auth required requests, continue without token
             debugLog.warn('[useDataLoader] Continuing without token (auth not required)');
           }
@@ -401,19 +396,19 @@ export function useDataLoader<T>(
         }
 
         // Load data - ensure token is set before this point
-        debugLog.log('[useDataLoader] Calling loadFn...', { 
-          skip, 
+        debugLog.log('[useDataLoader] Calling loadFn...', {
+          skip,
           pageSize,
           hasToken: !!apiClient.defaults.headers.common['Authorization'],
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
         const loadStartTime = Date.now();
         const result = await memoizedLoadFn.current(skip, pageSize);
         const loadElapsed = Date.now() - loadStartTime;
-        debugLog.log('[useDataLoader] loadFn completed', { 
+        debugLog.log('[useDataLoader] loadFn completed', {
           elapsed: loadElapsed,
           itemsCount: result.items?.length,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
         if (!isMountedRef.current) return;
@@ -423,7 +418,7 @@ export function useDataLoader<T>(
           setItems(result.items);
           currentPageRef.current = 0;
         } else {
-          setItems((prev) => [...prev, ...result.items]);
+          setItems(prev => [...prev, ...result.items]);
         }
 
         setHasMore(result.items.length === pageSize);
@@ -471,8 +466,10 @@ export function useDataLoader<T>(
         ) {
           retryCountRef.current++;
           const delay = retryDelay * Math.pow(2, retryCountRef.current - 1); // Exponential backoff
-          debugLog.log(`[useDataLoader] Auto-retrying in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})`);
-          
+          debugLog.log(
+            `[useDataLoader] Auto-retrying in ${delay}ms (attempt ${retryCountRef.current}/${maxRetries})`
+          );
+
           setTimeout(() => {
             if (isMountedRef.current) {
               loadInternal(skip, reset, showLoading, isRefresh);
@@ -493,7 +490,7 @@ export function useDataLoader<T>(
               debugLog.log('[useDataLoader] Clearing cache due to error', {
                 errorType: errorInfo.type,
                 cacheAge,
-                cacheExpired: cacheAge >= cacheTtl
+                cacheExpired: cacheAge >= cacheTtl,
               });
               cacheRef.current = null;
             }
@@ -517,18 +514,18 @@ export function useDataLoader<T>(
   // Load function (public API)
   const load = useCallback(
     async (reset: boolean = true) => {
-      debugLog.log('[useDataLoader] load() called', { 
-        reset, 
+      debugLog.log('[useDataLoader] load() called', {
+        reset,
         isLoadingRef: isLoadingRef.current,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
-      
+
       // Prevent duplicate requests
       if (isLoadingRef.current && !reset) {
         debugLog.log('[useDataLoader] Load already in progress, skipping');
         return;
       }
-      
+
       if (reset) {
         currentPageRef.current = 0;
         retryCountRef.current = 0;
@@ -588,7 +585,7 @@ export function useDataLoader<T>(
   // Best Practice: Separate concerns - check auth state first, then load
   useEffect(() => {
     if (!autoLoad) return;
-    
+
     // Step 1: Check if auth is required and ready
     if (requireAuth) {
       // If auth is still loading, wait
@@ -596,17 +593,17 @@ export function useDataLoader<T>(
         console.log('[useDataLoader] Waiting for auth to complete...', {
           authLoading,
           isAuthenticated,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
         return;
       }
-      
+
       // If not authenticated, don't load
       if (!isAuthenticated) {
         debugLog.log('[useDataLoader] Not authenticated, skipping auto-load', {
           authLoading,
           isAuthenticated,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
         return;
       }
@@ -614,27 +611,25 @@ export function useDataLoader<T>(
 
     // Step 2: Check if we've already loaded for this auth state
     // Use a simple key based on auth state
-    const authStateKey = requireAuth 
-      ? `auth-${isAuthenticated}-${authLoading}` 
-      : 'no-auth';
-    
+    const authStateKey = requireAuth ? `auth-${isAuthenticated}-${authLoading}` : 'no-auth';
+
     if (hasAutoLoadedRef.current && lastAuthStateRef.current === authStateKey) {
-      debugLog.log('[useDataLoader] Already loaded for this auth state, skipping', { 
+      debugLog.log('[useDataLoader] Already loaded for this auth state, skipping', {
         authStateKey,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       return;
     }
 
     // Step 3: Mark as loading for this auth state
-    debugLog.log('[useDataLoader] Starting auto-load...', { 
-      authStateKey, 
-      isAuthenticated, 
+    debugLog.log('[useDataLoader] Starting auto-load...', {
+      authStateKey,
+      isAuthenticated,
       authLoading,
       requireAuth,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-    
+
     hasAutoLoadedRef.current = true;
     lastAuthStateRef.current = authStateKey;
 
@@ -648,7 +643,7 @@ export function useDataLoader<T>(
         debugLog.log('[useDataLoader] Using cached data while loading fresh data', {
           cacheAge,
           itemsCount: cacheRef.current.items.length,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
         setItems(cacheRef.current.items);
         setIsLoading(false);
@@ -656,7 +651,7 @@ export function useDataLoader<T>(
         debugLog.log('[useDataLoader] Cache too old for optimistic UI, waiting for fresh data', {
           cacheAge,
           maxAge: MAX_CACHE_AGE_FOR_OPTIMISTIC_UI,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
         // Clear old cache to force fresh load
         cacheRef.current = null;
@@ -667,21 +662,21 @@ export function useDataLoader<T>(
     // Best Practice: Use ref to access latest load function without adding to deps
     // Use a separate async function to avoid issues with useEffect cleanup
     let isCancelled = false;
-    
+
     const performLoad = async () => {
       try {
         // Small delay to ensure Auth0 is fully ready (Best Practice: debounce rapid state changes)
         await new Promise(resolve => setTimeout(resolve, 50));
-        
+
         if (isCancelled || !isMountedRef.current) {
           debugLog.log('[useDataLoader] Load cancelled or component unmounted');
           return;
         }
 
         debugLog.log('[useDataLoader] Executing load...', {
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
-        
+
         // Use ref to get latest load function
         if (loadFnRef.current) {
           await loadFnRef.current(true);
@@ -692,7 +687,7 @@ export function useDataLoader<T>(
       } catch (err) {
         if (!isCancelled && isMountedRef.current) {
           debugLog.error('[useDataLoader] Auto-load failed:', err, {
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
           });
           // Reset flags on error to allow retry
           hasAutoLoadedRef.current = false;
@@ -725,4 +720,3 @@ export function useDataLoader<T>(
     clearError,
   };
 }
-

@@ -5,11 +5,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import FollowButton from './FollowButton';
 import UserListItem from './UserListItem';
-import {
-  getFollowers,
-  getFollowStats,
-  type FollowerResponse,
-} from '@/lib/api/follows';
+import { getFollowers, getFollowStats, type FollowerResponse } from '@/lib/api/follows';
 import { useUser } from '@/contexts/UserContext';
 
 interface FollowersListProps {
@@ -36,7 +32,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
       // Load follow stats for each follower
       if (isAuthenticated) {
         const accessToken = await getAccessTokenSilently();
-        const statsPromises = data.map(async (follower) => {
+        const statsPromises = data.map(async follower => {
           if (!follower.follower) return null;
           try {
             const stats = await getFollowStats(follower.follower.id, accessToken);
@@ -48,7 +44,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
 
         const statsResults = await Promise.all(statsPromises);
         const statsMap: Record<string, boolean> = {};
-        statsResults.forEach((stat) => {
+        statsResults.forEach(stat => {
           if (stat) {
             statsMap[stat.userId] = stat.isFollowing;
           }
@@ -70,7 +66,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
   }, [loadFollowers]);
 
   const handleFollowChange = (followerId: string, isFollowing: boolean) => {
-    setFollowStats((prev) => ({
+    setFollowStats(prev => ({
       ...prev,
       [followerId]: isFollowing,
     }));
@@ -102,7 +98,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
 
   return (
     <div className="space-y-4">
-      {followers.map((follower) => {
+      {followers.map(follower => {
         if (!follower.follower) return null;
 
         const isCurrentUser = follower.follower.id === currentUserId;
@@ -118,7 +114,7 @@ export default function FollowersList({ userId }: FollowersListProps) {
                 <FollowButton
                   userId={follower.follower.id}
                   initialIsFollowing={followStats[follower.follower.id] || false}
-                  onFollowChange={(isFollowing) =>
+                  onFollowChange={isFollowing =>
                     handleFollowChange(follower.follower!.id, isFollowing)
                   }
                   className="text-sm px-3 py-1.5"

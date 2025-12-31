@@ -54,7 +54,8 @@ export function useNotificationStream(
 
   const closeConnection = useCallback(() => {
     if (eventSourceRef.current) {
-      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      const isVerbose =
+        typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
       if (isVerbose) {
         console.log('[SSE] Closing connection');
       }
@@ -101,7 +102,7 @@ export function useNotificationStream(
       eventSourceRef.current = eventSource;
 
       // Connection established
-      eventSource.addEventListener('connected', (event) => {
+      eventSource.addEventListener('connected', event => {
         if (isVerbose) {
           console.log('[SSE] Connected:', event.data);
         }
@@ -112,7 +113,7 @@ export function useNotificationStream(
       });
 
       // New notification received
-      eventSource.addEventListener('notification', (event) => {
+      eventSource.addEventListener('notification', event => {
         try {
           const notification: NotificationEvent = JSON.parse(event.data);
           if (isVerbose) {
@@ -132,12 +133,12 @@ export function useNotificationStream(
       });
 
       // Heartbeat (keep-alive ping)
-      eventSource.addEventListener('ping', (event) => {
+      eventSource.addEventListener('ping', event => {
         // Silently handle ping events (no logging needed)
       });
 
       // Server requests reconnection (before timeout)
-      eventSource.addEventListener('reconnect', (event) => {
+      eventSource.addEventListener('reconnect', event => {
         if (isVerbose) {
           console.log('[SSE] Server requested reconnection:', event.data);
         }
@@ -146,9 +147,10 @@ export function useNotificationStream(
       });
 
       // Error event (custom event listener)
-      eventSource.addEventListener('error', (event) => {
+      eventSource.addEventListener('error', event => {
         // This is a custom error event from the server, not the standard EventSource error
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
         if (isVerbose) {
           console.log('[SSE] Server error event:', event);
         }
@@ -156,7 +158,8 @@ export function useNotificationStream(
 
       // Standard open event
       eventSource.onopen = () => {
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
         if (isVerbose) {
           console.log('[SSE] EventSource opened');
         }
@@ -167,7 +170,7 @@ export function useNotificationStream(
       };
 
       // Standard error handler
-      eventSource.onerror = (event) => {
+      eventSource.onerror = event => {
         const eventSource = event.target as EventSource;
         const readyState = eventSource.readyState;
 
@@ -180,7 +183,8 @@ export function useNotificationStream(
         const isPageVisible = typeof document !== 'undefined' && !document.hidden;
 
         // Only log errors in verbose mode to reduce console noise
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
 
         if (readyState === EventSource.CLOSED) {
           // Connection closed - ERR_NETWORK_IO_SUSPENDED is normal when page goes to background
@@ -188,7 +192,7 @@ export function useNotificationStream(
             console.log('[SSE] Connection closed, will reconnect when page is visible');
           }
           setIsConnected(false);
-          
+
           // Only reconnect if page is visible
           if (!isPageVisible) {
             // Page is in background, don't reconnect yet
@@ -214,15 +218,15 @@ export function useNotificationStream(
           scheduleReconnectRef.current?.();
         }
       };
-
     } catch (error) {
       // Only log errors in verbose mode (SSE is non-critical, errors are expected)
-      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      const isVerbose =
+        typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
       if (isVerbose) {
         const errorMessage = error instanceof Error ? error.message : 'Connection failed';
         console.error('[SSE] Failed to connect:', errorMessage);
       }
-      
+
       // Set error state but don't block the app
       setError(error instanceof Error ? error : new Error('Connection failed'));
       setIsConnected(false);
@@ -257,10 +261,7 @@ export function useNotificationStream(
       connect();
 
       // Increase retry delay with backoff (up to max)
-      retryDelayRef.current = Math.min(
-        delay * RETRY_BACKOFF_MULTIPLIER,
-        MAX_RETRY_DELAY
-      );
+      retryDelayRef.current = Math.min(delay * RETRY_BACKOFF_MULTIPLIER, MAX_RETRY_DELAY);
     }, delay);
   }, [connect]);
 
@@ -275,11 +276,12 @@ export function useNotificationStream(
 
     const handleVisibilityChange = () => {
       const isVisible = !document.hidden;
-      
+
       if (isVisible) {
         // Page became visible, reconnect if authenticated
         if (isAuthenticated && !eventSourceRef.current) {
-          const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+          const isVerbose =
+            typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
           if (isVerbose) {
             console.log('[SSE] Page became visible, reconnecting...');
           }
@@ -289,7 +291,8 @@ export function useNotificationStream(
       } else {
         // Page went to background, connection will be suspended by browser
         // ERR_NETWORK_IO_SUSPENDED will occur, which is normal
-        const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+        const isVerbose =
+          typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
         if (isVerbose && isConnected) {
           console.log('[SSE] Page went to background, connection will be suspended');
         }
@@ -297,7 +300,7 @@ export function useNotificationStream(
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
-    
+
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
@@ -312,14 +315,15 @@ export function useNotificationStream(
         // Page is in background, don't connect yet
         return;
       }
-      
+
       shouldReconnectRef.current = true;
       connect();
     }
 
     // Cleanup on unmount
     return () => {
-      const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
+      const isVerbose =
+        typeof window !== 'undefined' && localStorage.getItem('debugSSE') === 'true';
       if (isVerbose) {
         console.log('[SSE] Component unmounting, cleaning up');
       }
@@ -334,4 +338,3 @@ export function useNotificationStream(
     lastNotification,
   };
 }
-

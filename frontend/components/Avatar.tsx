@@ -1,6 +1,6 @@
 /**
  * Avatar Component
- * 
+ *
  * Displays user avatar image with fallback to initials
  */
 
@@ -45,11 +45,3 @@ export default function Avatar({
     </div>
   );
 }
-
-
-
-
-
-
-
-

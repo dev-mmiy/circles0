@@ -26,7 +26,7 @@ jest.mock('next/image', () => ({
 
 // Mock next-intl
 jest.mock('next-intl', () => ({
-  useTranslations: () => (key) => key,
+  useTranslations: () => key => key,
   useLocale: () => 'ja',
   useMessages: () => ({}),
 }));

@@ -32,7 +32,12 @@ export default function Header() {
   // デバッグログ（verbose modeのみ）
   useEffect(() => {
     if (typeof window !== 'undefined' && localStorage.getItem('debugHeader') === 'true') {
-      debugLog.log('[Header] Auth state:', { authLoading, isAuthenticated, hasUser: !!user, showAuthenticatedUI });
+      debugLog.log('[Header] Auth state:', {
+        authLoading,
+        isAuthenticated,
+        hasUser: !!user,
+        showAuthenticatedUI,
+      });
     }
   }, [authLoading, isAuthenticated, user, showAuthenticatedUI]);
 
@@ -60,11 +65,14 @@ export default function Header() {
   }, [authLoading, isAuthenticated, getAccessTokenSilently]);
 
   // Handle new messages from SSE
-  const handleNewMessage = useCallback((_message: MessageEvent) => {
-    // Increment unread count if message is not from current user
-    // Note: We can't determine current user ID here, so we'll reload the count
-    loadUnreadCount();
-  }, [loadUnreadCount]);
+  const handleNewMessage = useCallback(
+    (_message: MessageEvent) => {
+      // Increment unread count if message is not from current user
+      // Note: We can't determine current user ID here, so we'll reload the count
+      loadUnreadCount();
+    },
+    [loadUnreadCount]
+  );
 
   // Use message stream for real-time updates
   // Skip connection in pages that have their own useMessageStream to avoid duplicate connections
@@ -76,7 +84,7 @@ export default function Header() {
   // Load unread count on mount and when authentication state changes
   useEffect(() => {
     loadUnreadCount();
-    
+
     // Refresh unread count every 30 seconds
     const interval = setInterval(() => {
       loadUnreadCount();
@@ -132,16 +140,15 @@ export default function Header() {
                 aria-label={isMobileMenuOpen ? t('closeMenu') : t('openMenu')}
                 aria-expanded={isMobileMenuOpen}
               >
-                {isMobileMenuOpen ? (
-                  <X className="w-6 h-6" />
-                ) : (
-                  <Menu className="w-6 h-6" />
-                )}
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
               </button>
             )}
 
             {/* ロゴ・ホーム */}
-            <Link href="/" className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300">
+            <Link
+              href="/"
+              className="text-xl font-bold text-gray-900 dark:text-gray-100 hover:text-gray-700 dark:hover:text-gray-300"
+            >
               Lifry
             </Link>
           </div>

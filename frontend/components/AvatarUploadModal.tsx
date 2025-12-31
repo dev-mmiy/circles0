@@ -88,9 +88,9 @@ export function AvatarUploadModal({
     const rect = containerRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
-    setDragStart({ 
-      x: e.clientX - cropState.x - centerX, 
-      y: e.clientY - cropState.y - centerY 
+    setDragStart({
+      x: e.clientX - cropState.x - centerX,
+      y: e.clientY - cropState.y - centerY,
     });
   };
 
@@ -125,29 +125,29 @@ export function AvatarUploadModal({
   // Crop image to circular avatar
   /**
    * Crop and resize image to avatar format (circular, 400x400px).
-   * 
+   *
    * This function performs complex coordinate transformations to accurately crop
    * the image based on the user's zoom and position adjustments in the UI.
-   * 
+   *
    * Coordinate System Overview:
    * 1. Natural Image Coordinates: The original image dimensions (img.naturalWidth x img.naturalHeight)
    * 2. Displayed Image Coordinates: The image as shown in the UI (scaled by actualScale)
    * 3. Container Coordinates: The crop area (300x300px circle)
    * 4. Canvas Coordinates: The final output (400x400px square)
-   * 
+   *
    * Transformation Flow:
    * - User adjusts image position (cropState.x, cropState.y) and zoom (cropState.scale)
    * - These adjustments are in displayed image coordinates
    * - We need to convert back to natural image coordinates to crop the correct region
    * - The cropped region is then drawn to a 400x400px canvas with a circular mask
-   * 
+   *
    * Key Calculations:
    * - actualScale = baseScale * cropState.scale (combined scale factor)
    * - displayedSize = naturalSize * actualScale (how big the image appears)
    * - containerCenterInDisplayed = displayedSize/2 - cropState.offset (where container center is in displayed coords)
    * - naturalCenter = containerCenterInDisplayed * (naturalSize / displayedSize) (convert to natural coords)
    * - sourceSize = containerSize / actualScale (crop size in natural coordinates)
-   * 
+   *
    * @returns Promise that resolves to a Blob containing the cropped image
    */
   const cropImageToAvatar = async (): Promise<Blob> => {
@@ -174,24 +174,24 @@ export function AvatarUploadModal({
       // Container size (crop area visible to user, 300x300px circle)
       // This is the size of the circular crop area shown in the UI
       const containerSize = 300;
-      
+
       // Calculate the actual displayed scale
       // baseScale: Initial scale to cover the container (calculated when image loads)
       // cropState.scale: User's zoom adjustment (1.0 = no zoom, >1.0 = zoom in, <1.0 = zoom out)
       // actualScale: Combined scale factor for the displayed image
       const actualScale = baseScale * cropState.scale;
-      
+
       // Calculate displayed dimensions
       const displayedWidth = img.naturalWidth * actualScale;
       const displayedHeight = img.naturalHeight * actualScale;
-      
+
       // Calculate the ratio between displayed size and natural size
       const widthRatio = img.naturalWidth / displayedWidth;
       const heightRatio = img.naturalHeight / displayedHeight;
-      
+
       // The container shows a circular area of radius 150px (diameter 300px)
       // The image is positioned with cropState.x, y relative to container center
-      // 
+      //
       // In the display:
       // - Image is positioned at left: 50%, top: 50% (container center)
       // - Then translated by translate(calc(-50% + cropState.x), calc(-50% + cropState.y))
@@ -205,11 +205,11 @@ export function AvatarUploadModal({
       // So the point at container center in displayed image coordinates is:
       const containerCenterInDisplayedX = displayedWidth / 2 - cropState.x;
       const containerCenterInDisplayedY = displayedHeight / 2 - cropState.y;
-      
+
       // Convert to natural image coordinates
       const naturalCenterX = containerCenterInDisplayedX * widthRatio;
       const naturalCenterY = containerCenterInDisplayedY * heightRatio;
-      
+
       // Calculate source rectangle (square crop from center)
       // We want to crop a square that fits in the circular container
       // The container is 300px, so we need to calculate what size in natural coordinates
@@ -218,16 +218,16 @@ export function AvatarUploadModal({
       // In natural coordinates: containerSize / actualScale
       const containerSizeInNatural = containerSize / actualScale;
       const sourceSize = Math.min(containerSizeInNatural, img.naturalWidth, img.naturalHeight);
-      
+
       // Calculate the center point for cropping
       // Ensure the crop area stays within image bounds
       let sourceX = naturalCenterX - sourceSize / 2;
       let sourceY = naturalCenterY - sourceSize / 2;
-      
+
       // Clamp to image bounds
       sourceX = Math.max(0, Math.min(sourceX, img.naturalWidth - sourceSize));
       sourceY = Math.max(0, Math.min(sourceY, img.naturalHeight - sourceSize));
-      
+
       // Log crop calculation details
       debugLog.log('[AvatarUpload] Crop calculation:', {
         baseScale,
@@ -257,26 +257,20 @@ export function AvatarUploadModal({
       ctx.clip();
 
       // Draw and scale image
-      ctx.drawImage(
-        img,
-        sourceX,
-        sourceY,
-        sourceSize,
-        sourceSize,
-        0,
-        0,
-        avatarSize,
-        avatarSize
-      );
+      ctx.drawImage(img, sourceX, sourceY, sourceSize, sourceSize, 0, 0, avatarSize, avatarSize);
 
       // Convert to blob
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(blob);
-        } else {
-          reject(new Error('Failed to create blob'));
-        }
-      }, originalFile.type, 0.95);
+      canvas.toBlob(
+        blob => {
+          if (blob) {
+            resolve(blob);
+          } else {
+            reject(new Error('Failed to create blob'));
+          }
+        },
+        originalFile.type,
+        0.95
+      );
     });
   };
 
@@ -387,8 +381,14 @@ export function AvatarUploadModal({
                   alt={t('preview')}
                   className="absolute select-none pointer-events-none"
                   style={{
-                    width: imageSize.width > 0 ? `${imageSize.width * baseScale * cropState.scale}px` : 'auto',
-                    height: imageSize.height > 0 ? `${imageSize.height * baseScale * cropState.scale}px` : 'auto',
+                    width:
+                      imageSize.width > 0
+                        ? `${imageSize.width * baseScale * cropState.scale}px`
+                        : 'auto',
+                    height:
+                      imageSize.height > 0
+                        ? `${imageSize.height * baseScale * cropState.scale}px`
+                        : 'auto',
                     objectFit: 'cover',
                     left: '50%',
                     top: '50%',
@@ -422,21 +422,27 @@ export function AvatarUploadModal({
               <p>{t('dragToMove')}</p>
               <p>{t('scrollToZoom')}</p>
             </div>
-            
+
             {/* Zoom controls - placed directly below the image */}
             <div className="flex justify-center items-center space-x-4">
               <button
                 type="button"
-                onClick={() => setCropState(prev => ({ ...prev, scale: Math.max(0.5, prev.scale - 0.05) }))}
+                onClick={() =>
+                  setCropState(prev => ({ ...prev, scale: Math.max(0.5, prev.scale - 0.05) }))
+                }
                 className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50"
                 disabled={cropState.scale <= 0.5}
               >
                 {t('zoomOut')}
               </button>
-              <span className="text-sm text-gray-600 dark:text-gray-400">{Math.round(cropState.scale * 100)}%</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {Math.round(cropState.scale * 100)}%
+              </span>
               <button
                 type="button"
-                onClick={() => setCropState(prev => ({ ...prev, scale: Math.min(3, prev.scale + 0.05) }))}
+                onClick={() =>
+                  setCropState(prev => ({ ...prev, scale: Math.min(3, prev.scale + 0.05) }))
+                }
                 className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50"
                 disabled={cropState.scale >= 3}
               >
@@ -533,9 +539,7 @@ export function AvatarUploadModal({
             </button>
           </div>
         </div>
-
       </div>
     </div>
   );
 }
-

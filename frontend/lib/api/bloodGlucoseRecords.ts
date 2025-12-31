@@ -47,18 +47,20 @@ export async function getBloodGlucoseRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/blood-glucose-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch blood glucose records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch blood glucose records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -77,18 +79,20 @@ export async function getBloodGlucoseRecord(
   accessToken: string
 ): Promise<BloodGlucoseRecord> {
   const url = `${apiClient}/api/v1/blood-glucose-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch blood glucose record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch blood glucose record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -107,19 +111,21 @@ export async function createBloodGlucoseRecord(
   accessToken: string
 ): Promise<BloodGlucoseRecord> {
   const url = `${apiClient}/api/v1/blood-glucose-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create blood glucose record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create blood glucose record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -139,19 +145,21 @@ export async function updateBloodGlucoseRecord(
   accessToken: string
 ): Promise<BloodGlucoseRecord> {
   const url = `${apiClient}/api/v1/blood-glucose-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update blood glucose record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update blood glucose record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -170,18 +178,20 @@ export async function deleteBloodGlucoseRecord(
   accessToken: string
 ): Promise<void> {
   const url = `${apiClient}/api/v1/blood-glucose-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete blood glucose record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete blood glucose record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -189,4 +199,3 @@ export async function deleteBloodGlucoseRecord(
     throw error;
   }
 }
-

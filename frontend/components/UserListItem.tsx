@@ -35,7 +35,7 @@ export default function UserListItem({
   className = '',
 }: UserListItemProps) {
   const isCurrentUser = user.id === currentUserId;
-  
+
   // Size configurations
   const sizeConfig = {
     sm: {
@@ -82,8 +82,14 @@ export default function UserListItem({
               className={`${config.avatarClass} rounded-full object-cover`}
             />
           ) : (
-            <div className={`${config.avatarClass} rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center`}>
-              <span className={`text-blue-600 dark:text-blue-300 font-semibold ${size === 'lg' ? 'text-lg' : size === 'md' ? 'text-base' : 'text-sm'}`}>
+            <div
+              className={`${config.avatarClass} rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center`}
+            >
+              <span
+                className={`text-blue-600 dark:text-blue-300 font-semibold ${
+                  size === 'lg' ? 'text-lg' : size === 'md' ? 'text-base' : 'text-sm'
+                }`}
+              >
                 {user.nickname?.charAt(0).toUpperCase() || '?'}
               </span>
             </div>
@@ -92,7 +98,9 @@ export default function UserListItem({
 
         {/* User info */}
         <div className="flex-1 min-w-0">
-          <p className={`${config.nicknameClass} font-medium text-gray-900 dark:text-gray-100 truncate`}>
+          <p
+            className={`${config.nicknameClass} font-medium text-gray-900 dark:text-gray-100 truncate`}
+          >
             {user.nickname || 'Unknown User'}
           </p>
           {user.username && (
@@ -109,12 +117,7 @@ export default function UserListItem({
       </Link>
 
       {/* Action button */}
-      {actionButton && (
-        <div className="ml-4 flex-shrink-0">
-          {actionButton}
-        </div>
-      )}
+      {actionButton && <div className="ml-4 flex-shrink-0">{actionButton}</div>}
     </div>
   );
 }
-

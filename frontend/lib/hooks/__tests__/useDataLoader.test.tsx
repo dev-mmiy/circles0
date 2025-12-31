@@ -43,7 +43,7 @@ const mockUseAuth0 = useAuth0 as jest.MockedFunction<typeof useAuth0>;
 
 describe('useDataLoader', () => {
   const mockGetAccessTokenSilently = jest.fn();
-  
+
   beforeEach(() => {
     jest.clearAllMocks();
     mockGetAccessToken.mockResolvedValue('test-token');
@@ -56,7 +56,7 @@ describe('useDataLoader', () => {
       loginWithRedirect: jest.fn(),
       logout: jest.fn(),
     } as any);
-    
+
     mockGetAccessTokenSilently.mockResolvedValue('test-token');
   });
 
@@ -91,7 +91,7 @@ describe('useDataLoader', () => {
     it('should handle loading state correctly', async () => {
       const mockLoadFn = jest.fn().mockImplementation(
         () =>
-          new Promise((resolve) => {
+          new Promise(resolve => {
             setTimeout(() => {
               resolve({ items: [], total: 0 });
             }, 50);
@@ -279,7 +279,7 @@ describe('useDataLoader', () => {
     it('should retry on network errors', async () => {
       const networkError = new Error('Network error');
       (networkError as any).code = 'ECONNABORTED';
-      
+
       const mockLoadFn = jest
         .fn()
         .mockRejectedValueOnce(networkError)
@@ -383,4 +383,3 @@ describe('useDataLoader', () => {
     });
   });
 });
-

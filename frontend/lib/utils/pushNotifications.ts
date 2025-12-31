@@ -1,6 +1,6 @@
 /**
  * Web Push Notification utilities
- * 
+ *
  * Handles:
  * - Service Worker registration
  * - Push subscription management
@@ -175,7 +175,9 @@ export async function unsubscribeFromPushNotifications(
 
     // Remove subscription from server
     const response = await fetch(
-      `${API_BASE_URL}/api/v1/push-subscriptions/unregister?endpoint=${encodeURIComponent(subscription.endpoint)}`,
+      `${API_BASE_URL}/api/v1/push-subscriptions/unregister?endpoint=${encodeURIComponent(
+        subscription.endpoint
+      )}`,
       {
         method: 'DELETE',
         headers: {
@@ -222,7 +224,3 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
   }
   return window.btoa(binary);
 }
-
-
-
-

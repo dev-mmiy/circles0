@@ -27,11 +27,11 @@ export default function SearchPage() {
   const { user } = useUser();
   const { categories, diseases: allDiseases } = useDisease();
   const searchParams = useSearchParams();
-  
+
   // Get initial tab and query from URL params
   const urlTab = searchParams.get('type') as SearchTab | null;
   const urlQuery = searchParams.get('q') || '';
-  
+
   const [activeTab, setActiveTab] = useState<SearchTab>(
     urlTab && ['diseases', 'users', 'hashtags'].includes(urlTab) ? urlTab : 'diseases'
   );
@@ -64,7 +64,10 @@ export default function SearchPage() {
           accessToken = await getAccessTokenSilently();
         } catch (tokenError) {
           // If token retrieval fails, proceed without token
-          console.warn('Failed to get access token for user search, proceeding without authentication:', tokenError);
+          console.warn(
+            'Failed to get access token for user search, proceeding without authentication:',
+            tokenError
+          );
         }
       }
       return await searchUsers(params, accessToken);
@@ -95,7 +98,7 @@ export default function SearchPage() {
   };
 
   // Format categories for search component
-  const formattedCategories = categories.map((cat) => {
+  const formattedCategories = categories.map(cat => {
     return {
       id: cat.id,
       name: getCategoryName(cat),
@@ -103,7 +106,7 @@ export default function SearchPage() {
   });
 
   // Format diseases for user search component
-  const formattedDiseases = allDiseases.map((disease) => ({
+  const formattedDiseases = allDiseases.map(disease => ({
     id: disease.id,
     name: disease.name,
     translations: disease.translations,
@@ -116,7 +119,9 @@ export default function SearchPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">{t('title')}</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+              {t('title')}
+            </h1>
             <p className="text-gray-600 dark:text-gray-400">{t('subtitle')}</p>
           </div>
 
@@ -162,7 +167,7 @@ export default function SearchPage() {
               {activeTab === 'diseases' ? (
                 <DiseaseSearch
                   onSearch={handleDiseaseSearch}
-                  onSelect={(disease) => {
+                  onSelect={disease => {
                     // Switch to users tab and search for users with this disease
                     setActiveTab('users');
                     setSelectedDiseaseId(disease.id);
@@ -180,7 +185,9 @@ export default function SearchPage() {
                 />
               ) : (
                 <HashtagSearch
-                  initialHashtag={activeTab === 'hashtags' && urlQuery ? urlQuery.replace(/^#/, '') : undefined}
+                  initialHashtag={
+                    activeTab === 'hashtags' && urlQuery ? urlQuery.replace(/^#/, '') : undefined
+                  }
                 />
               )}
             </div>
@@ -188,7 +195,9 @@ export default function SearchPage() {
 
           {/* Info Card */}
           <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">{t('hintsTitle')}</h3>
+            <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-200 mb-2">
+              {t('hintsTitle')}
+            </h3>
             <ul className="space-y-2 text-sm text-blue-800 dark:text-blue-200">
               {activeTab === 'diseases' ? (
                 <>

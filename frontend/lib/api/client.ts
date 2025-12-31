@@ -34,10 +34,11 @@ function shouldRetry(error: AxiosError, retryCount: number): boolean {
   }
 
   // Retry on timeout errors
-  const isTimeout = error.code === 'ECONNABORTED' || 
-                   error.message?.includes('timeout') ||
-                   error.message?.includes('exceeded');
-  
+  const isTimeout =
+    error.code === 'ECONNABORTED' ||
+    error.message?.includes('timeout') ||
+    error.message?.includes('exceeded');
+
   if (isTimeout) {
     return true;
   }
@@ -50,17 +51,18 @@ function shouldRetry(error: AxiosError, retryCount: number): boolean {
   // Retry on network errors (no response)
   if (error.request && !error.response) {
     // Check for DNS resolution errors
-    const isDnsError = error.code === 'ENOTFOUND' || 
-                       error.code === 'EAI_AGAIN' ||
-                       error.message?.includes('ERR_NAME_NOT_RESOLVED') ||
-                       error.message?.includes('getaddrinfo') ||
-                       error.message?.includes('ENOTFOUND');
-    
+    const isDnsError =
+      error.code === 'ENOTFOUND' ||
+      error.code === 'EAI_AGAIN' ||
+      error.message?.includes('ERR_NAME_NOT_RESOLVED') ||
+      error.message?.includes('getaddrinfo') ||
+      error.message?.includes('ENOTFOUND');
+
     // Retry DNS errors (temporary DNS issues)
     if (isDnsError) {
       return true;
     }
-    
+
     // Retry other network errors
     return true;
   }
@@ -88,7 +90,7 @@ export const apiClient = axios.create({
   // Add adapter to handle requests in WSL2 environment
   adapter: typeof window !== 'undefined' ? undefined : undefined, // Use default adapter
   // Ensure requests are not blocked
-  validateStatus: (status) => status < 500, // Don't throw on 4xx errors
+  validateStatus: status => status < 500, // Don't throw on 4xx errors
 });
 
 /**
@@ -106,23 +108,23 @@ export function setAuthToken(token: string | null) {
  * Request interceptor to add auth token and set baseURL dynamically
  */
 apiClient.interceptors.request.use(
-  (config) => {
+  config => {
     // Set baseURL dynamically at request time to ensure correct URL
     if (!config.baseURL || config.baseURL === '') {
       config.baseURL = getApiBaseUrlDynamic();
     }
-    
+
     // Initialize retry count if not set
     if (!(config as any).__retryCount) {
       (config as any).__retryCount = 0;
     }
-    
+
     // Token will be set via setAuthToken function
     const requestId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const requestStartTime = Date.now();
     (config as any).__requestId = requestId;
     (config as any).__requestStartTime = requestStartTime;
-    
+
     // Only log requests in verbose mode (set via localStorage.debugApiClient = 'true')
     if (typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true') {
       debugLog.log('[apiClient] Request:', {
@@ -132,10 +134,10 @@ apiClient.interceptors.request.use(
         retryCount: (config as any).__retryCount,
       });
     }
-    
+
     return config;
   },
-  (error) => {
+  error => {
     debugLog.error('[apiClient] Request interceptor error:', error, {
       timestamp: new Date().toISOString(),
     });
@@ -147,14 +149,15 @@ apiClient.interceptors.request.use(
  * Response interceptor for error handling
  */
 apiClient.interceptors.response.use(
-  (response) => {
+  response => {
     const requestStartTime = (response.config as any).__requestStartTime;
     const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
-    
+
     // Only log slow requests (>1000ms) or when verbose mode is enabled
-    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
+    const isVerbose =
+      typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
     const isSlow = elapsed && elapsed > 1000;
-    
+
     if (isVerbose || isSlow) {
       const url = response.config.url || '';
       debugLog.log('[apiClient] Response:', {
@@ -164,13 +167,14 @@ apiClient.interceptors.response.use(
         ...(isSlow && { warning: 'Slow request detected' }),
       });
     }
-    
+
     return response;
   },
   async (error: AxiosError) => {
     // Only log verbose error details in verbose mode
-    const isVerbose = typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
-    
+    const isVerbose =
+      typeof window !== 'undefined' && localStorage.getItem('debugApiClient') === 'true';
+
     if (isVerbose) {
       debugLog.log('[apiClient] Error handler called', {
         hasResponse: !!error.response,
@@ -185,12 +189,12 @@ apiClient.interceptors.response.use(
       const errorInfo = extractErrorInfo(error);
       const status = error.response.status;
       const retryCount = (error.config as any)?.__retryCount || 0;
-      
+
       // Check if we should retry this error
       if (shouldRetry(error, retryCount)) {
         const delay = getRetryDelay(retryCount);
         (error.config as any).__retryCount = retryCount + 1;
-        
+
         debugLog.warn('[apiClient] API Error - Will retry:', {
           status,
           statusText: error.response.statusText,
@@ -199,21 +203,21 @@ apiClient.interceptors.response.use(
           maxRetries: RETRY_CONFIG.maxRetries,
           retryDelay: delay,
         });
-        
+
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         // Retry the request
         return apiClient.request(error.config!);
       }
-      
+
       // Handle 401/403 errors - redirect to login
       if (requiresAuthRedirect(errorInfo)) {
         // Only redirect if we're in the browser
         if (typeof window !== 'undefined') {
           // Clear any stored auth tokens
           setAuthToken(null);
-          
+
           // Store the current URL to redirect back after login
           const currentPath = window.location.pathname;
           // Check if current path is not just a locale prefix (e.g., /ja or /en)
@@ -221,7 +225,7 @@ apiClient.interceptors.response.use(
           if (currentPath && !isLocaleOnly) {
             sessionStorage.setItem('redirectAfterLogin', currentPath);
           }
-          
+
           // Redirect to home page (which will show login button)
           // In a real app, you might want to redirect to a dedicated login page
           // Add locale prefix to home URL
@@ -231,15 +235,15 @@ apiClient.interceptors.response.use(
           }
         }
       }
-      
+
       // For 503 Service Unavailable (feature not available), log as warning instead of error
       // This is expected when features require database migrations
       const errorData = error.response.data as any;
       const isServiceUnavailable = status === 503;
-      const isFeatureNotAvailable = isServiceUnavailable && 
-        (errorData?.detail?.includes('not available') || 
-         errorData?.detail?.includes('migrations'));
-      
+      const isFeatureNotAvailable =
+        isServiceUnavailable &&
+        (errorData?.detail?.includes('not available') || errorData?.detail?.includes('migrations'));
+
       if (isFeatureNotAvailable) {
         // Log as warning for expected service unavailable errors
         debugLog.warn('[apiClient] Feature Not Available:', {
@@ -258,24 +262,26 @@ apiClient.interceptors.response.use(
       }
     } else if (error.request) {
       // Request made but no response received (network error, timeout, etc.)
-      const isTimeout = error.code === 'ECONNABORTED' || 
-                       error.message?.includes('timeout') ||
-                       error.message?.includes('exceeded');
-      
+      const isTimeout =
+        error.code === 'ECONNABORTED' ||
+        error.message?.includes('timeout') ||
+        error.message?.includes('exceeded');
+
       const requestStartTime = (error.config as any)?.__requestStartTime;
       const elapsed = requestStartTime ? Date.now() - requestStartTime : undefined;
       const retryCount = (error.config as any)?.__retryCount || 0;
-      
+
       // Log network errors concisely
-      const fullUrl = error.config?.baseURL && error.config?.url
-        ? `${error.config.baseURL}${error.config.url}`
-        : error.config?.url || 'unknown';
-      
+      const fullUrl =
+        error.config?.baseURL && error.config?.url
+          ? `${error.config.baseURL}${error.config.url}`
+          : error.config?.url || 'unknown';
+
       // Check if we should retry this request
       if (shouldRetry(error, retryCount)) {
         const delay = getRetryDelay(retryCount);
         (error.config as any).__retryCount = retryCount + 1;
-        
+
         debugLog.warn('[apiClient] Network Error - Will retry:', {
           message: error.message,
           url: error.config?.url,
@@ -285,19 +291,20 @@ apiClient.interceptors.response.use(
           retryCount: retryCount + 1,
           maxRetries: RETRY_CONFIG.maxRetries,
           retryDelay: delay,
-          ...(isTimeout && elapsed && {
-            elapsed: `${elapsed}ms`,
-            timeout: error.config?.timeout,
-          }),
+          ...(isTimeout &&
+            elapsed && {
+              elapsed: `${elapsed}ms`,
+              timeout: error.config?.timeout,
+            }),
         });
-        
+
         // Wait before retrying
         await new Promise(resolve => setTimeout(resolve, delay));
-        
+
         // Retry the request
         return apiClient.request(error.config!);
       }
-      
+
       debugLog.error('[apiClient] Network Error:', {
         message: error.message,
         url: error.config?.url,
@@ -305,10 +312,11 @@ apiClient.interceptors.response.use(
         fullURL: fullUrl,
         isTimeout,
         retryCount,
-        ...(isTimeout && elapsed && {
-          elapsed: `${elapsed}ms`,
-          timeout: error.config?.timeout,
-        }),
+        ...(isTimeout &&
+          elapsed && {
+            elapsed: `${elapsed}ms`,
+            timeout: error.config?.timeout,
+          }),
       });
     } else {
       // Error in request setup
@@ -317,7 +325,7 @@ apiClient.interceptors.response.use(
         url: error.config?.url,
       });
     }
-    
+
     return Promise.reject(error);
   }
 );

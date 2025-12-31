@@ -44,18 +44,20 @@ export async function getBodyFatRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/body-fat-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch body fat records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch body fat records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -74,18 +76,20 @@ export async function getBodyFatRecord(
   accessToken: string
 ): Promise<BodyFatRecord> {
   const url = `${apiClient}/api/v1/body-fat-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch body fat record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch body fat record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -104,19 +108,21 @@ export async function createBodyFatRecord(
   accessToken: string
 ): Promise<BodyFatRecord> {
   const url = `${apiClient}/api/v1/body-fat-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create body fat record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create body fat record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -136,19 +142,21 @@ export async function updateBodyFatRecord(
   accessToken: string
 ): Promise<BodyFatRecord> {
   const url = `${apiClient}/api/v1/body-fat-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update body fat record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update body fat record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -162,23 +170,22 @@ export async function updateBodyFatRecord(
 /**
  * Delete a body fat record.
  */
-export async function deleteBodyFatRecord(
-  recordId: string,
-  accessToken: string
-): Promise<void> {
+export async function deleteBodyFatRecord(recordId: string, accessToken: string): Promise<void> {
   const url = `${apiClient}/api/v1/body-fat-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete body fat record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete body fat record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -186,4 +193,3 @@ export async function deleteBodyFatRecord(
     throw error;
   }
 }
-

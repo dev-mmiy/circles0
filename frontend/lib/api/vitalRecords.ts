@@ -65,18 +65,20 @@ export async function getVitalRecords(
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
   const url = `${apiClient}/api/v1/vital-records?${queryParams.toString()}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch vital records' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch vital records' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -90,23 +92,22 @@ export async function getVitalRecords(
 /**
  * Get a specific vital record by ID.
  */
-export async function getVitalRecord(
-  recordId: string,
-  accessToken: string
-): Promise<VitalRecord> {
+export async function getVitalRecord(recordId: string, accessToken: string): Promise<VitalRecord> {
   const url = `${apiClient}/api/v1/vital-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to fetch vital record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to fetch vital record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -125,19 +126,21 @@ export async function createVitalRecord(
   accessToken: string
 ): Promise<VitalRecord> {
   const url = `${apiClient}/api/v1/vital-records`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to create vital record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to create vital record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -157,19 +160,21 @@ export async function updateVitalRecord(
   accessToken: string
 ): Promise<VitalRecord> {
   const url = `${apiClient}/api/v1/vital-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'PUT',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(data),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to update vital record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to update vital record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
 
@@ -183,23 +188,22 @@ export async function updateVitalRecord(
 /**
  * Delete a vital record.
  */
-export async function deleteVitalRecord(
-  recordId: string,
-  accessToken: string
-): Promise<void> {
+export async function deleteVitalRecord(recordId: string, accessToken: string): Promise<void> {
   const url = `${apiClient}/api/v1/vital-records/${recordId}`;
-  
+
   try {
     const response = await fetch(url, {
       method: 'DELETE',
       headers: {
-        'Authorization': `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ detail: 'Failed to delete vital record' }));
+      const errorData = await response
+        .json()
+        .catch(() => ({ detail: 'Failed to delete vital record' }));
       throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
     }
   } catch (error: any) {
@@ -207,4 +211,3 @@ export async function deleteVitalRecord(
     throw error;
   }
 }
-

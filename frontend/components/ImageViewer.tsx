@@ -18,12 +18,7 @@ interface ImageViewerProps {
   onClose?: () => void;
 }
 
-export default function ImageViewer({
-  images,
-  initialIndex,
-  postId,
-  onClose,
-}: ImageViewerProps) {
+export default function ImageViewer({ images, initialIndex, postId, onClose }: ImageViewerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [scale, setScale] = useState(1);
@@ -119,11 +114,11 @@ export default function ImageViewer({
   }, [currentIndex, images.length]);
 
   const handleZoomIn = useCallback(() => {
-    setScale((prev) => Math.min(5, prev + 0.25));
+    setScale(prev => Math.min(5, prev + 0.25));
   }, []);
 
   const handleZoomOut = useCallback(() => {
-    setScale((prev) => Math.max(0.5, prev - 0.25));
+    setScale(prev => Math.max(0.5, prev - 0.25));
   }, []);
 
   const handleResetZoom = useCallback(() => {
@@ -132,7 +127,7 @@ export default function ImageViewer({
   }, []);
 
   const handleRotate = useCallback(() => {
-    setRotation((prev) => (prev + 90) % 360);
+    setRotation(prev => (prev + 90) % 360);
   }, []);
 
   // Mouse drag handling
@@ -215,7 +210,7 @@ export default function ImageViewer({
     <div
       ref={containerRef}
       className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center"
-      onClick={(e) => {
+      onClick={e => {
         if (e.target === containerRef.current) {
           handleClose();
         }
@@ -303,15 +298,15 @@ export default function ImageViewer({
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
         onMouseLeave={handleMouseUp}
-        onTouchStart={(e) => {
+        onTouchStart={e => {
           handleTouchStart(e);
           handleSwipeStart(e);
         }}
-        onTouchMove={(e) => {
+        onTouchMove={e => {
           handleTouchMove(e);
           handleSwipeMove(e);
         }}
-        onTouchEnd={(e) => {
+        onTouchEnd={e => {
           handleTouchEnd();
           handleSwipeEnd();
         }}
@@ -326,7 +321,9 @@ export default function ImageViewer({
         )}
         <div
           style={{
-            transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px) rotate(${rotation}deg)`,
+            transform: `scale(${scale}) translate(${position.x / scale}px, ${
+              position.y / scale
+            }px) rotate(${rotation}deg)`,
             transition: isDragging ? 'none' : 'transform 0.2s ease-out',
             maxWidth: '100%',
             maxHeight: '100%',
@@ -356,4 +353,3 @@ export default function ImageViewer({
     </div>
   );
 }
-

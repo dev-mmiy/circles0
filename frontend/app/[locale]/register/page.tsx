@@ -70,9 +70,7 @@ export default function RegisterPage() {
         <div className="bg-white rounded-lg shadow-md p-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('title')}</h1>
 
-          <p className="text-gray-600 mb-6">
-            {t('subtitle')}
-          </p>
+          <p className="text-gray-600 mb-6">{t('subtitle')}</p>
 
           {error && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -111,9 +109,7 @@ export default function RegisterPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 placeholder={t('nickname_placeholder')}
               />
-              <p className="mt-1 text-sm text-gray-500">
-                {t('nicknameHelp')}
-              </p>
+              <p className="mt-1 text-sm text-gray-500">{t('nicknameHelp')}</p>
             </div>
 
             {/* Profile Visibility */}
@@ -170,9 +166,7 @@ export default function RegisterPage() {
           </form>
 
           <div className="mt-6 pt-6 border-t border-gray-200">
-            <p className="text-sm text-gray-500 text-center">
-              {t('termsNote')}
-            </p>
+            <p className="text-sm text-gray-500 text-center">{t('termsNote')}</p>
           </div>
         </div>
       </div>

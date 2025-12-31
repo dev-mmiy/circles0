@@ -1,6 +1,6 @@
 /**
  * ChatMessage Component
- * 
+ *
  * Common component for displaying chat messages in both direct messages and group chats
  */
 
@@ -103,7 +103,7 @@ export default function ChatMessage({
   }, [showReactionPicker]);
 
   return (
-    <div 
+    <div
       className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'} relative group`}
       ref={messageRef}
       onMouseEnter={() => {
@@ -169,7 +169,11 @@ export default function ChatMessage({
           }`}
         >
           {isDeleted ? (
-            <span className={`italic ${isOwnMessage ? 'opacity-70' : 'text-gray-500 dark:text-gray-400'}`}>
+            <span
+              className={`italic ${
+                isOwnMessage ? 'opacity-70' : 'text-gray-500 dark:text-gray-400'
+              }`}
+            >
               {deletedMessageText}
             </span>
           ) : (
@@ -193,111 +197,187 @@ export default function ChatMessage({
 
           {/* Reaction add button - shown on hover (PC) or click (mobile) - right next to message bubble */}
           {!isDeleted && onReactionClick && (showReactionButton || showReactionPicker) && (
-            <div 
+            <div
               className={`absolute top-1/2 -translate-y-1/2 z-10 ${
                 isOwnMessage ? 'right-full mr-1' : 'left-full ml-1'
               }`}
               ref={pickerRef}
             >
               <button
-                onClick={(e) => {
+                onClick={e => {
                   e.stopPropagation();
                   setShowReactionPicker(!showReactionPicker);
                 }}
                 className="w-8 h-8 rounded-full bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border-2 border-gray-300 dark:border-gray-600 shadow-lg flex items-center justify-center hover:bg-white dark:hover:bg-gray-800 transition-colors"
                 title={t('addReaction')}
               >
-                <SmilePlus className="w-5 h-5 text-gray-500 dark:text-gray-400 stroke-[2.5]" style={{ fill: 'none' }} />
+                <SmilePlus
+                  className="w-5 h-5 text-gray-500 dark:text-gray-400 stroke-[2.5]"
+                  style={{ fill: 'none' }}
+                />
               </button>
-              
+
               {/* Reaction picker */}
               {showReactionPicker && (
                 <>
                   {/* Mobile overlay */}
-                  <div 
+                  <div
                     className="fixed inset-0 bg-black/50 z-40 md:hidden"
-                    onClick={(e) => {
+                    onClick={e => {
                       e.stopPropagation();
                       setShowReactionPicker(false);
                       setShowReactionButton(false);
                     }}
                   />
                   {/* Reaction picker */}
-                  <div 
+                  <div
                     className={`fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:absolute md:top-0 md:left-auto md:right-auto md:translate-x-0 md:translate-y-0 ${
                       isOwnMessage ? 'md:right-full md:mr-2' : 'md:left-full md:ml-2'
                     } bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 p-3 z-50 md:z-20 w-[90vw] max-w-[320px]`}
                   >
-                  {/* Quick reactions row */}
-                  <div className="flex gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
-                    {['like', 'love', 'haha', 'wow', 'sad'].map((type) => {
-                      const emojiMap: Record<string, string> = {
-                        like: '👍',
-                        love: '❤️',
-                        haha: '😂',
-                        wow: '😮',
-                        sad: '😢',
-                      };
-                      const isCurrentUserReacted = reactions?.some(
-                        r => r.user_id === currentUserId && r.reaction_type === type
-                      );
-                      
-                      return (
-                        <button
-                          key={type}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onReactionClick(type);
-                            setShowReactionPicker(false);
-                            setShowReactionButton(false);
-                          }}
-                          className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
-                            isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
-                          }`}
-                          title={t(`types.${type}` as any) || type}
-                        >
-                          <span className="text-2xl">{emojiMap[type]}</span>
-                        </button>
-                      );
-                    })}
+                    {/* Quick reactions row */}
+                    <div className="flex gap-2 mb-3 pb-3 border-b border-gray-200 dark:border-gray-700">
+                      {['like', 'love', 'haha', 'wow', 'sad'].map(type => {
+                        const emojiMap: Record<string, string> = {
+                          like: '👍',
+                          love: '❤️',
+                          haha: '😂',
+                          wow: '😮',
+                          sad: '😢',
+                        };
+                        const isCurrentUserReacted = reactions?.some(
+                          r => r.user_id === currentUserId && r.reaction_type === type
+                        );
+
+                        return (
+                          <button
+                            key={type}
+                            onClick={e => {
+                              e.stopPropagation();
+                              onReactionClick(type);
+                              setShowReactionPicker(false);
+                              setShowReactionButton(false);
+                            }}
+                            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
+                              isCurrentUserReacted
+                                ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600'
+                                : ''
+                            }`}
+                            title={t(`types.${type}` as any) || type}
+                          >
+                            <span className="text-2xl">{emojiMap[type]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* All reactions grid */}
+                    <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
+                      {[
+                        'like',
+                        'love',
+                        'haha',
+                        'wow',
+                        'sad',
+                        'angry',
+                        'thumbs_up',
+                        'thumbs_down',
+                        'clap',
+                        'fire',
+                        'party',
+                        'pray',
+                        'heart_eyes',
+                        'kiss',
+                        'thinking',
+                        'cool',
+                        'ok_hand',
+                        'victory',
+                        'muscle',
+                        'point_up',
+                        'point_down',
+                        'wave',
+                        'handshake',
+                        'fist_bump',
+                        'rocket',
+                        'star',
+                        'trophy',
+                        'medal',
+                        'crown',
+                        'gem',
+                        'balloon',
+                        'cake',
+                        'gift',
+                        'confetti',
+                        'sparkles',
+                        'rainbow',
+                      ].map(type => {
+                        const emojiMap: Record<string, string> = {
+                          like: '👍',
+                          love: '❤️',
+                          haha: '😂',
+                          wow: '😮',
+                          sad: '😢',
+                          angry: '😠',
+                          thumbs_up: '👍',
+                          thumbs_down: '👎',
+                          clap: '👏',
+                          fire: '🔥',
+                          party: '🎉',
+                          pray: '🙏',
+                          heart_eyes: '😍',
+                          kiss: '😘',
+                          thinking: '🤔',
+                          cool: '😎',
+                          ok_hand: '👌',
+                          victory: '✌️',
+                          muscle: '💪',
+                          point_up: '👆',
+                          point_down: '👇',
+                          wave: '👋',
+                          handshake: '🤝',
+                          fist_bump: '👊',
+                          rocket: '🚀',
+                          star: '⭐',
+                          trophy: '🏆',
+                          medal: '🏅',
+                          crown: '👑',
+                          gem: '💎',
+                          balloon: '🎈',
+                          cake: '🎂',
+                          gift: '🎁',
+                          confetti: '🎊',
+                          sparkles: '✨',
+                          rainbow: '🌈',
+                        };
+                        const isCurrentUserReacted = reactions?.some(
+                          r => r.user_id === currentUserId && r.reaction_type === type
+                        );
+                        const isQuickReaction = ['like', 'love', 'haha', 'wow', 'sad'].includes(
+                          type
+                        );
+
+                        return (
+                          <button
+                            key={type}
+                            onClick={e => {
+                              e.stopPropagation();
+                              onReactionClick(type);
+                              setShowReactionPicker(false);
+                              setShowReactionButton(false);
+                            }}
+                            className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
+                              isCurrentUserReacted
+                                ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600'
+                                : ''
+                            } ${isQuickReaction ? 'opacity-60' : ''}`}
+                            title={t(`types.${type}` as any) || type}
+                          >
+                            <span className="text-xl">{emojiMap[type]}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                  
-                  {/* All reactions grid */}
-                  <div className="grid grid-cols-6 gap-2 max-h-64 overflow-y-auto">
-                    {['like', 'love', 'haha', 'wow', 'sad', 'angry', 'thumbs_up', 'thumbs_down', 'clap', 'fire', 'party', 'pray', 'heart_eyes', 'kiss', 'thinking', 'cool', 'ok_hand', 'victory', 'muscle', 'point_up', 'point_down', 'wave', 'handshake', 'fist_bump', 'rocket', 'star', 'trophy', 'medal', 'crown', 'gem', 'balloon', 'cake', 'gift', 'confetti', 'sparkles', 'rainbow'].map((type) => {
-                      const emojiMap: Record<string, string> = {
-                        like: '👍', love: '❤️', haha: '😂', wow: '😮', sad: '😢', angry: '😠',
-                        thumbs_up: '👍', thumbs_down: '👎', clap: '👏', fire: '🔥', party: '🎉', pray: '🙏',
-                        heart_eyes: '😍', kiss: '😘', thinking: '🤔', cool: '😎', ok_hand: '👌', victory: '✌️',
-                        muscle: '💪', point_up: '👆', point_down: '👇', wave: '👋', handshake: '🤝', fist_bump: '👊',
-                        rocket: '🚀', star: '⭐', trophy: '🏆', medal: '🏅', crown: '👑', gem: '💎',
-                        balloon: '🎈', cake: '🎂', gift: '🎁', confetti: '🎊', sparkles: '✨', rainbow: '🌈',
-                      };
-                      const isCurrentUserReacted = reactions?.some(
-                        r => r.user_id === currentUserId && r.reaction_type === type
-                      );
-                      const isQuickReaction = ['like', 'love', 'haha', 'wow', 'sad'].includes(type);
-                      
-                      return (
-                        <button
-                          key={type}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onReactionClick(type);
-                            setShowReactionPicker(false);
-                            setShowReactionButton(false);
-                          }}
-                          className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-all hover:scale-110 ${
-                            isCurrentUserReacted ? 'bg-blue-50 dark:bg-blue-900 ring-2 ring-blue-400 dark:ring-blue-600' : ''
-                          } ${isQuickReaction ? 'opacity-60' : ''}`}
-                          title={t(`types.${type}` as any) || type}
-                        >
-                          <span className="text-xl">{emojiMap[type]}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
                 </>
               )}
             </div>
@@ -323,7 +403,11 @@ export default function ChatMessage({
             isOwnMessage ? 'flex-row-reverse' : 'flex-row'
           }`}
         >
-          <span className={`text-xs text-gray-500 dark:text-gray-400 ${isOwnMessage ? 'text-right' : 'text-left'}`}>
+          <span
+            className={`text-xs text-gray-500 dark:text-gray-400 ${
+              isOwnMessage ? 'text-right' : 'text-left'
+            }`}
+          >
             {formatTime(createdAt)}
           </span>
           {isOwnMessage && !isDeleted && onDelete && (

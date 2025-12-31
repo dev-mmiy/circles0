@@ -1,6 +1,6 @@
 /**
  * Locale utility functions
- * 
+ *
  * Helper functions for working with i18n locales
  */
 
@@ -12,12 +12,12 @@
 export function getLocaleFromPathname(pathname: string): string {
   const segments = pathname.split('/').filter(Boolean);
   const firstSegment = segments[0];
-  
+
   // Check if first segment is a valid locale
   if (firstSegment === 'ja' || firstSegment === 'en') {
     return firstSegment;
   }
-  
+
   // Default to 'ja' if no locale found
   return 'ja';
 }
@@ -30,7 +30,7 @@ export function getCurrentLocale(): string {
   if (typeof window === 'undefined') {
     return 'ja'; // Default for SSR
   }
-  
+
   return getLocaleFromPathname(window.location.pathname);
 }
 
@@ -42,18 +42,17 @@ export function getCurrentLocale(): string {
  */
 export function addLocalePrefix(path: string, locale?: string): string {
   const currentLocale = locale || getCurrentLocale();
-  
+
   // Check if path already has a locale prefix
   const segments = path.split('/').filter(Boolean);
   if (segments.length > 0 && (segments[0] === 'ja' || segments[0] === 'en')) {
     // Path already has locale prefix, return as is
     return path.startsWith('/') ? path : `/${path}`;
   }
-  
+
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-  
+
   // Add locale prefix
   return `/${currentLocale}/${cleanPath}`;
 }
-

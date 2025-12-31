@@ -23,9 +23,7 @@ export default function PostImageViewerPage() {
   // Load post
   const loadPost = useCallback(async () => {
     try {
-      const accessToken = isAuthenticated
-        ? await getAccessTokenSilently()
-        : undefined;
+      const accessToken = isAuthenticated ? await getAccessTokenSilently() : undefined;
 
       const fetchedPost = await getPost(postId, accessToken);
       setPost(fetchedPost);
@@ -73,4 +71,3 @@ export default function PostImageViewerPage() {
     </ImageViewerPageWrapper>
   );
 }
-

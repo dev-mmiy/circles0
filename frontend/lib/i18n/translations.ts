@@ -37,17 +37,16 @@ const translations: Translations = {
 /**
  * Get translation for a key based on user's preferred language
  */
-export function getTranslation(
-  locale: string | undefined,
-  key: string
-): string {
+export function getTranslation(locale: string | undefined, key: string): string {
   // Default to Japanese if locale is not specified
   const normalizedLocale = locale?.toLowerCase() || 'ja-jp';
 
   // Support both 'ja-jp' and 'ja' formats
-  const localeKey = normalizedLocale.includes('ja') ? 'ja-jp' :
-                    normalizedLocale.includes('en') ? 'en-us' :
-                    'ja-jp';
+  const localeKey = normalizedLocale.includes('ja')
+    ? 'ja-jp'
+    : normalizedLocale.includes('en')
+    ? 'en-us'
+    : 'ja-jp';
 
   const keys = key.split('.');
   let value: any = translations[localeKey];

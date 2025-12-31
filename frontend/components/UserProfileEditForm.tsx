@@ -64,19 +64,19 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       // Clean up form data: remove empty strings and convert to undefined
       // Only include fields that have actually changed
       const cleanedData: UserProfileUpdate = {};
-      
+
       // Helper function to normalize values for comparison
       const normalizeValue = (val: any): any => {
         if (val === '' || val === null || val === undefined) return null;
         if (typeof val === 'string') return val.trim() || null;
         return val;
       };
-      
+
       Object.entries(formData).forEach(([key, value]) => {
         const originalValue = user[key as keyof UserProfile];
         const normalizedValue = normalizeValue(value);
         const normalizedOriginal = normalizeValue(originalValue);
-        
+
         // Special handling for username: skip if unchanged or empty
         if (key === 'username') {
           // If both are null/empty/undefined, skip
@@ -94,14 +94,14 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
           }
           return; // Skip further processing for username
         }
-        
+
         // Only include if value is different from original
         if (normalizedValue !== normalizedOriginal) {
           // If new value is null/empty and original was also null/empty, skip
           if (normalizedValue === null && normalizedOriginal === null) {
             return;
           }
-          
+
           // Include the field if it's changed
           cleanedData[key as keyof UserProfileUpdate] = normalizedValue as any;
         }
@@ -110,22 +110,26 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
       debugLog.log('Submitting cleaned profile data:', cleanedData);
       debugLog.log('Original user data:', { username: user.username, nickname: user.nickname });
       debugLog.log('Form data:', formData);
-      
+
       // Don't send request if nothing changed
       if (Object.keys(cleanedData).length === 0) {
         debugLog.log('No changes detected, skipping save');
         return;
       }
-      
+
       await onSave(cleanedData);
     } catch (err: any) {
       debugLog.error('Error saving profile:', err);
-      
+
       // Handle localized error messages for nickname uniqueness
       if (err.code === 'NICKNAME_ALREADY_EXISTS') {
-        setError(locale === 'ja'
-          ? err.message_ja || 'このニックネームは既に他のユーザーに使用されています。別のニックネームを選んでください。'
-          : err.message || 'This nickname is already taken by another user. Please choose a different nickname.');
+        setError(
+          locale === 'ja'
+            ? err.message_ja ||
+                'このニックネームは既に他のユーザーに使用されています。別のニックネームを選んでください。'
+            : err.message ||
+                'This nickname is already taken by another user. Please choose a different nickname.'
+        );
       } else {
         setError(err instanceof Error ? err.message : t('errors.saveFailed'));
       }
@@ -135,7 +139,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
   };
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6"
+    >
       <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-6">{t('title')}</h2>
 
       {error && (
@@ -146,12 +153,17 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Public Information */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.publicInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+          {t('sections.publicInfo')}
+        </h3>
 
         <div className="space-y-4">
           {/* Nickname (required) */}
           <div>
-            <label htmlFor="nickname" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="nickname"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.nickname')} <span className="text-red-500 dark:text-red-400">*</span>
             </label>
             <input
@@ -168,7 +180,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Username (optional) */}
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.username')}
             </label>
             <input
@@ -184,7 +199,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Bio */}
           <div>
-            <label htmlFor="bio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="bio"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.bio')}
             </label>
             <textarea
@@ -200,7 +218,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Country */}
           <div>
-            <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="country"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.country')}
             </label>
             <select
@@ -211,7 +232,7 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
             >
               <option value="">{t('country.select')}</option>
-              {COUNTRIES.map((country) => (
+              {COUNTRIES.map(country => (
                 <option key={country.code} value={country.code}>
                   {locale === 'ja' ? country.nameJa : country.nameEn}
                 </option>
@@ -223,12 +244,17 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Private Information */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.privateInfo')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+          {t('sections.privateInfo')}
+        </h3>
 
         <div className="grid grid-cols-2 gap-4">
           {/* First Name */}
           <div>
-            <label htmlFor="first_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="first_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.firstName')}
             </label>
             <input
@@ -243,7 +269,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Last Name */}
           <div>
-            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="last_name"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.lastName')}
             </label>
             <input
@@ -258,7 +287,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Phone */}
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="phone"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.phone')}
             </label>
             <input
@@ -274,7 +306,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Date of Birth */}
           <div>
-            <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="date_of_birth"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.dateOfBirth')}
             </label>
             <input
@@ -289,7 +324,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Gender */}
           <div className="col-span-2">
-            <label htmlFor="gender" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="gender"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.gender')}
             </label>
             <select
@@ -309,7 +347,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
           {/* Preferred Language */}
           <div className="col-span-2">
-            <label htmlFor="preferred_language" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="preferred_language"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.preferredLanguage')}
             </label>
             <select
@@ -331,12 +372,17 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
 
       {/* Privacy Settings */}
       <div className="mb-8">
-        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">{t('sections.preferences')}</h3>
+        <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">
+          {t('sections.preferences')}
+        </h3>
 
         <div className="space-y-4">
           {/* Profile Visibility */}
           <div>
-            <label htmlFor="profile_visibility" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label
+              htmlFor="profile_visibility"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
               {t('fields.profileVisibility')}
             </label>
             <select
@@ -362,7 +408,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
             />
-            <label htmlFor="show_email" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="show_email"
+              className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('privacy.showEmail')}
             </label>
           </div>
@@ -377,7 +426,10 @@ export function UserProfileEditForm({ user, onSave, onCancel }: UserProfileEditF
               onChange={handleChange}
               className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
             />
-            <label htmlFor="show_online_status" className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label
+              htmlFor="show_online_status"
+              className="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300"
+            >
               {t('privacy.showOnlineStatus')}
             </label>
           </div>

@@ -34,7 +34,7 @@ export function DiseaseList({
 }: DiseaseListProps) {
   const t = useTranslations('diseaseList');
   const locale = useLocale();
-  
+
   // Get localized disease name based on current locale
   const getDiseaseName = (disease: UserDiseaseDetailed): string => {
     if (!disease.disease) {
@@ -44,16 +44,14 @@ export function DiseaseList({
     // Check if translations exist
     if (disease.disease.translations && disease.disease.translations.length > 0) {
       // Try to find exact language match using current locale
-      const translation = disease.disease.translations.find(
-        (t) => t.language_code === locale
-      );
+      const translation = disease.disease.translations.find(t => t.language_code === locale);
 
       if (translation) {
         return translation.translated_name;
       }
 
       // Fallback to Japanese
-      const jaTranslation = disease.disease.translations.find((t) => t.language_code === 'ja');
+      const jaTranslation = disease.disease.translations.find(t => t.language_code === 'ja');
       if (jaTranslation) {
         return jaTranslation.translated_name;
       }
@@ -104,10 +102,10 @@ export function DiseaseList({
             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
           />
         </svg>
-        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">{t('noDiseases')}</h3>
-        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-          {t('noDiseasesMessage')}
-        </p>
+        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+          {t('noDiseases')}
+        </h3>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('noDiseasesMessage')}</p>
       </div>
     );
   }
@@ -145,24 +143,34 @@ export function DiseaseList({
             {/* Diagnosis Information */}
             {(disease.diagnosis_date || disease.diagnosis_doctor || disease.diagnosis_hospital) && (
               <div className="mb-3 p-2 bg-blue-50 dark:bg-blue-900/30 rounded-lg">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">{t('diagnosisInfo')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                  {t('diagnosisInfo')}
+                </h4>
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   {disease.diagnosis_date && (
                     <div>
-                      <span className="text-gray-600 dark:text-gray-400">{t('diagnosisDate')}:</span>{' '}
-                      <span className="text-gray-900 dark:text-gray-100">{formatDate(disease.diagnosis_date)}</span>
+                      <span className="text-gray-600 dark:text-gray-400">
+                        {t('diagnosisDate')}:
+                      </span>{' '}
+                      <span className="text-gray-900 dark:text-gray-100">
+                        {formatDate(disease.diagnosis_date)}
+                      </span>
                     </div>
                   )}
                   {disease.diagnosis_doctor && (
                     <div>
                       <span className="text-gray-600 dark:text-gray-400">{t('doctor')}:</span>{' '}
-                      <span className="text-gray-900 dark:text-gray-100">{disease.diagnosis_doctor}</span>
+                      <span className="text-gray-900 dark:text-gray-100">
+                        {disease.diagnosis_doctor}
+                      </span>
                     </div>
                   )}
                   {disease.diagnosis_hospital && (
                     <div className="col-span-2">
                       <span className="text-gray-600 dark:text-gray-400">{t('hospital')}:</span>{' '}
-                      <span className="text-gray-900 dark:text-gray-100">{disease.diagnosis_hospital}</span>
+                      <span className="text-gray-900 dark:text-gray-100">
+                        {disease.diagnosis_hospital}
+                      </span>
                     </div>
                   )}
                 </div>
@@ -172,7 +180,9 @@ export function DiseaseList({
             {/* Symptoms */}
             {disease.symptoms && (
               <div className="mb-2">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('symptoms')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {t('symptoms')}
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.symptoms}</p>
               </div>
             )}
@@ -180,7 +190,9 @@ export function DiseaseList({
             {/* Limitations */}
             {disease.limitations && (
               <div className="mb-2">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('limitations')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {t('limitations')}
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.limitations}</p>
               </div>
             )}
@@ -188,7 +200,9 @@ export function DiseaseList({
             {/* Medications */}
             {disease.medications && (
               <div className="mb-2">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('medications')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {t('medications')}
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.medications}</p>
               </div>
             )}
@@ -196,7 +210,9 @@ export function DiseaseList({
             {/* Course */}
             {disease.course && (
               <div className="mb-2">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('course')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {t('course')}
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.course}</p>
               </div>
             )}
@@ -204,7 +220,9 @@ export function DiseaseList({
             {/* Notes */}
             {disease.notes && (
               <div className="mb-2">
-                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">{t('notes')}</h4>
+                <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {t('notes')}
+                </h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">{disease.notes}</p>
               </div>
             )}
@@ -267,7 +285,9 @@ export function DiseaseList({
 
           {/* Inline Edit Form */}
           {editingDiseaseId === disease.id && editForm && (
-            <div className="border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900">{editForm}</div>
+            <div className="border-t dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+              {editForm}
+            </div>
           )}
         </div>
       ))}

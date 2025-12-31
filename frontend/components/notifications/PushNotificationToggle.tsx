@@ -23,15 +23,8 @@ export function PushNotificationToggle({
   className = '',
 }: PushNotificationToggleProps) {
   const t = useTranslations('pushNotifications');
-  const {
-    isSupported,
-    permission,
-    isSubscribed,
-    isLoading,
-    error,
-    subscribe,
-    unsubscribe,
-  } = usePushNotifications();
+  const { isSupported, permission, isSubscribed, isLoading, error, subscribe, unsubscribe } =
+    usePushNotifications();
 
   const handleToggle = async () => {
     if (isSubscribed) {
@@ -64,11 +57,7 @@ export function PushNotificationToggle({
   if (variant === 'switch') {
     return (
       <div className={`flex items-center gap-3 ${className}`}>
-        {showLabel && (
-          <span className="text-sm text-gray-700">
-            {t('pushNotifications')}
-          </span>
-        )}
+        {showLabel && <span className="text-sm text-gray-700">{t('pushNotifications')}</span>}
         <button
           onClick={handleToggle}
           disabled={isLoading}
@@ -86,9 +75,7 @@ export function PushNotificationToggle({
               ${isSubscribed ? 'translate-x-6' : 'translate-x-1'}
             `}
           >
-            {isLoading && (
-              <Loader2 className="w-4 h-4 animate-spin text-gray-400" />
-            )}
+            {isLoading && <Loader2 className="w-4 h-4 animate-spin text-gray-400" />}
           </span>
         </button>
       </div>
@@ -102,9 +89,10 @@ export function PushNotificationToggle({
       disabled={isLoading}
       className={`
         flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors
-        ${isSubscribed
-          ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          : 'bg-blue-600 text-white hover:bg-blue-700'
+        ${
+          isSubscribed
+            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
         }
         ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}
         ${className}
@@ -118,11 +106,7 @@ export function PushNotificationToggle({
       ) : (
         <BellOff className="w-5 h-5" />
       )}
-      {showLabel && (
-        <span>
-          {isSubscribed ? t('enabled') : t('disabled')}
-        </span>
-      )}
+      {showLabel && <span>{isSubscribed ? t('enabled') : t('disabled')}</span>}
     </button>
   );
 }
