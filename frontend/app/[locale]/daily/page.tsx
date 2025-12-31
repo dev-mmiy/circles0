@@ -14,7 +14,7 @@ import { getBloodGlucoseRecords, type BloodGlucoseRecord } from '@/lib/api/blood
 import { getSpO2Records, type SpO2Record } from '@/lib/api/spo2Records';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
-import { Calendar, List, Plus } from 'lucide-react';
+import { Calendar, List, Plus, Filter } from 'lucide-react';
 import BloodPressureHeartRateFormModal from '@/components/BloodPressureHeartRateFormModal';
 import TemperatureFormModal from '@/components/TemperatureFormModal';
 import WeightBodyFatFormModal from '@/components/WeightBodyFatFormModal';
@@ -472,68 +472,20 @@ export default function DailyPage() {
 
             {/* Second Row: Filter */}
             {viewMode === 'list' && (
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('filter.label') || 'フィルター'}:</span>
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'all'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
+              <div className="flex items-center gap-2">
+                <Filter className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                <select
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value as typeof filter)}
+                  className="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
                 >
-                  {t('filter.all')}
-                </button>
-                <button
-                  onClick={() => setFilter('bp_hr')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'bp_hr'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('addBloodPressureHeartRate')}
-                </button>
-                <button
-                  onClick={() => setFilter('weight_fat')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'weight_fat'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('addWeightBodyFat')}
-                </button>
-                <button
-                  onClick={() => setFilter('temperature')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'temperature'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('addTemperature')}
-                </button>
-                <button
-                  onClick={() => setFilter('blood_glucose')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'blood_glucose'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('addBloodGlucose')}
-                </button>
-                <button
-                  onClick={() => setFilter('spo2')}
-                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                    filter === 'spo2'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {t('addSpO2')}
-                </button>
+                  <option value="all">{t('filter.all')}</option>
+                  <option value="bp_hr">{t('addBloodPressureHeartRate')}</option>
+                  <option value="weight_fat">{t('addWeightBodyFat')}</option>
+                  <option value="temperature">{t('addTemperature')}</option>
+                  <option value="blood_glucose">{t('addBloodGlucose')}</option>
+                  <option value="spo2">{t('addSpO2')}</option>
+                </select>
               </div>
             )}
           </div>
