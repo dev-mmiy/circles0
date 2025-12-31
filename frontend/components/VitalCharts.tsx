@@ -221,6 +221,7 @@ export default function VitalCharts({
                   stroke="#ef4444"
                   tick={{ fill: '#6b7280' }}
                   className="dark:text-gray-400"
+                  domain={[30, 210]}
                 />
                 <YAxis
                   yAxisId="hr"
@@ -229,6 +230,7 @@ export default function VitalCharts({
                   stroke="#3b82f6"
                   tick={{ fill: '#6b7280' }}
                   className="dark:text-gray-400"
+                  domain={[30, 210]}
                 />
                 <Tooltip
                   contentStyle={{
@@ -318,7 +320,7 @@ export default function VitalCharts({
                 {weightFatData.some(d => d.weight !== undefined) && (
                   <Line
                     yAxisId="left"
-                    type="monotone"
+                    type="linear"
                     dataKey="weight"
                     stroke="#10b981"
                     strokeWidth={2}
@@ -329,7 +331,7 @@ export default function VitalCharts({
                 {weightFatData.some(d => d.bodyFat !== undefined) && (
                   <Line
                     yAxisId="right"
-                    type="monotone"
+                    type="linear"
                     dataKey="bodyFat"
                     stroke="#059669"
                     strokeWidth={2}
@@ -352,7 +354,7 @@ export default function VitalCharts({
               <AreaChart data={temperatureData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <YAxis stroke="#3b82f6" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#3b82f6" tick={{ fill: '#6b7280' }} domain={[34, 43]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#fff',
@@ -362,7 +364,7 @@ export default function VitalCharts({
                 />
                 <Legend />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="temperature"
                   stroke="#3b82f6"
                   fill="#3b82f6"
@@ -395,7 +397,7 @@ export default function VitalCharts({
                 />
                 <Legend />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="bloodGlucose"
                   stroke="#f97316"
                   fill="#f97316"
@@ -430,7 +432,7 @@ export default function VitalCharts({
                 />
                 <Legend />
                 <Area
-                  type="monotone"
+                  type="linear"
                   dataKey="spo2"
                   stroke="#ec4899"
                   fill="#ec4899"

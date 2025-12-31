@@ -28,15 +28,26 @@ import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
 
 // Dynamically import VitalCharts to avoid SSR issues with Recharts
-const VitalCharts = dynamic(() => import('@/components/VitalCharts'), {
-  ssr: false,
-  loading: () => (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-      <p className="mt-4 text-gray-600 dark:text-gray-400">チャートを読み込み中...</p>
-    </div>
-  ),
-});
+const VitalCharts = dynamic(
+  () => import('@/components/VitalCharts').catch((error) => {
+    console.error('Failed to load VitalCharts:', error);
+    // Return a fallback component if import fails
+    return { default: () => (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+        <div className="text-red-600 dark:text-red-400">チャートの読み込みに失敗しました。ページを再読み込みしてください。</div>
+      </div>
+    )};
+  }),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-400">チャートを読み込み中...</p>
+      </div>
+    ),
+  }
+);
 import type { VitalRecordGroup } from '@/types/vitalRecords';
 
 type ViewMode = 'calendar' | 'list' | 'chart';
@@ -525,54 +536,56 @@ export default function DailyPage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-4">
           <div className="flex flex-col gap-4">
             {/* First Row: View Mode Toggle and Add Button */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              {/* View Mode Toggle */}
+            <div className="flex items-center justify-between gap-4">
+              {/* View Mode Toggle - Icons only on mobile, full buttons on desktop */}
               <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors ${
                     viewMode === 'list'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
+                  title={t('viewMode.list')}
                 >
                   <List className="w-4 h-4" />
-                  <span>{t('viewMode.list')}</span>
+                  <span className="hidden md:inline">{t('viewMode.list')}</span>
                 </button>
                 <button
                   onClick={() => setViewMode('calendar')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors ${
                     viewMode === 'calendar'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
+                  title={t('viewMode.calendar')}
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>{t('viewMode.calendar')}</span>
+                  <span className="hidden md:inline">{t('viewMode.calendar')}</span>
                 </button>
                 <button
                   onClick={() => setViewMode('chart')}
-                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center space-x-2 px-3 py-2 md:px-4 md:py-2 rounded-lg transition-colors ${
                     viewMode === 'chart'
                       ? 'bg-blue-600 text-white'
                       : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
+                  title={t('viewMode.chart') || 'チャート'}
                 >
                   <BarChart3 className="w-4 h-4" />
-                  <span>{t('viewMode.chart') || 'チャート'}</span>
+                  <span className="hidden md:inline">{t('viewMode.chart') || 'チャート'}</span>
                 </button>
               </div>
 
-              {/* Add Record Button */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => openFormModal()}
-                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>記録を追加</span>
-                </button>
-              </div>
+              {/* Add Record Button - Mobile: icon only, Desktop: with text */}
+              <button
+                onClick={() => openFormModal()}
+                className="flex items-center justify-center space-x-2 px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                title="記録を追加"
+              >
+                <Plus className="w-4 h-4" />
+                <span className="hidden md:inline">記録を追加</span>
+              </button>
             </div>
 
             {/* Second Row: Filter */}
