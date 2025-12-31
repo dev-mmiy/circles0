@@ -39,6 +39,7 @@ export default function DailyPage() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDateRecords, setSelectedDateRecords] = useState<VitalRecordGroup[]>([]);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'bp_hr' | 'weight_fat' | 'temperature' | 'blood_glucose' | 'spo2'>('all');
 
   // Load blood pressure records
   const {
@@ -296,7 +297,32 @@ export default function DailyPage() {
   }, [recordsByDate]);
 
   const isLoading = isLoadingBP || isLoadingHR || isLoadingTemp || isLoadingWeight || isLoadingBodyFat || isLoadingBG || isLoadingSpO2;
-  const records = groupedRecords;
+  
+  // Filter records based on selected filter
+  const filteredRecords = useMemo(() => {
+    if (filter === 'all') {
+      return groupedRecords;
+    }
+    
+    return groupedRecords.filter((group) => {
+      switch (filter) {
+        case 'bp_hr':
+          return !!(group.bloodPressure || group.heartRate);
+        case 'weight_fat':
+          return !!(group.weight || group.bodyFat);
+        case 'temperature':
+          return !!group.temperature;
+        case 'blood_glucose':
+          return !!group.bloodGlucose;
+        case 'spo2':
+          return !!group.spo2;
+        default:
+          return true;
+      }
+    });
+  }, [groupedRecords, filter]);
+  
+  const records = filteredRecords;
 
   // Load records when component mounts
   useEffect(() => {
@@ -403,43 +429,113 @@ export default function DailyPage() {
 
         {/* Toolbar */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow mb-6 p-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            {/* View Mode Toggle */}
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode('list')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                <List className="w-4 h-4" />
-                <span>{t('viewMode.list')}</span>
-              </button>
-              <button
-                onClick={() => setViewMode('calendar')}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                  viewMode === 'calendar'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                }`}
-              >
-                <Calendar className="w-4 h-4" />
-                <span>{t('viewMode.calendar')}</span>
-              </button>
+          <div className="flex flex-col gap-4">
+            {/* First Row: View Mode Toggle and Add Button */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              {/* View Mode Toggle */}
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <List className="w-4 h-4" />
+                  <span>{t('viewMode.list')}</span>
+                </button>
+                <button
+                  onClick={() => setViewMode('calendar')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    viewMode === 'calendar'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <Calendar className="w-4 h-4" />
+                  <span>{t('viewMode.calendar')}</span>
+                </button>
+              </div>
+
+              {/* Add Record Button */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => openFormModal()}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>記録を追加</span>
+                </button>
+              </div>
             </div>
 
-            {/* Add Record Button */}
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => openFormModal()}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-              >
-                <Plus className="w-4 h-4" />
-                <span>記録を追加</span>
-              </button>
-            </div>
+            {/* Second Row: Filter */}
+            {viewMode === 'list' && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('filter.label') || 'フィルター'}:</span>
+                <button
+                  onClick={() => setFilter('all')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'all'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('filter.all')}
+                </button>
+                <button
+                  onClick={() => setFilter('bp_hr')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'bp_hr'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('addBloodPressureHeartRate')}
+                </button>
+                <button
+                  onClick={() => setFilter('weight_fat')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'weight_fat'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('addWeightBodyFat')}
+                </button>
+                <button
+                  onClick={() => setFilter('temperature')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'temperature'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('addTemperature')}
+                </button>
+                <button
+                  onClick={() => setFilter('blood_glucose')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'blood_glucose'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('addBloodGlucose')}
+                </button>
+                <button
+                  onClick={() => setFilter('spo2')}
+                  className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    filter === 'spo2'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  {t('addSpO2')}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
