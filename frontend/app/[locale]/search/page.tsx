@@ -29,8 +29,8 @@ export default function SearchPage() {
   const searchParams = useSearchParams();
 
   // Get initial tab and query from URL params
-  const urlTab = searchParams.get('type') as SearchTab | null;
-  const urlQuery = searchParams.get('q') || '';
+  const urlTab = searchParams ? (searchParams.get('type') as SearchTab | null) : null;
+  const urlQuery = searchParams ? (searchParams.get('q') || '') : '';
 
   const [activeTab, setActiveTab] = useState<SearchTab>(
     urlTab && ['diseases', 'users', 'hashtags'].includes(urlTab) ? urlTab : 'diseases'
