@@ -8,14 +8,35 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html lang="ja" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <div style={{ padding: '20px', textAlign: 'center' }}>
-          <h1>Application Error</h1>
-          <p>{error.message || 'An unexpected error occurred'}</p>
-          <button onClick={reset}>Try again</button>
-        </div>
-      </body>
-    </html>
+    <div
+      style={{
+        padding: '40px',
+        textAlign: 'center',
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Application Error</h1>
+      <p style={{ color: '#666', marginBottom: '24px' }}>
+        {error.message || 'An unexpected error occurred'}
+      </p>
+      <button
+        onClick={reset}
+        style={{
+          padding: '12px 24px',
+          backgroundColor: '#0070f3',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontSize: '16px',
+        }}
+      >
+        Try again
+      </button>
+    </div>
   );
 }

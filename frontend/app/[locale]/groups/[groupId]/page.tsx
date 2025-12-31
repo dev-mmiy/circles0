@@ -51,7 +51,7 @@ export default function GroupChatPage() {
   const router = useRouter();
   const params = useNextParams();
   const locale = useLocale();
-  const groupId = params.groupId as string;
+  const groupId = params?.groupId as string;
   const t = useTranslations('groups');
   const tChat = useTranslations('groups.chat');
 

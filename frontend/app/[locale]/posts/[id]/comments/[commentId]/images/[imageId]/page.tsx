@@ -16,10 +16,10 @@ export default function CommentImageViewerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const locale = params.locale as string;
-  const postId = params.id as string;
-  const commentId = params.commentId as string;
-  const imageId = params.imageId as string;
+  const locale = params?.locale as string;
+  const postId = params?.id as string;
+  const commentId = params?.commentId as string;
+  const imageId = params?.imageId as string;
 
   // Load post
   const loadPost = useCallback(async () => {

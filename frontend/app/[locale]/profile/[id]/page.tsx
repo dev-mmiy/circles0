@@ -37,7 +37,7 @@ export default function PublicProfilePage() {
     return tLanguage(languageKey, { defaultValue: languageCode });
   };
   const params = useParams();
-  const userId = params.id as string;
+  const userId = params?.id as string;
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
   const { user: currentUser } = useUser();
   const router = useRouter();

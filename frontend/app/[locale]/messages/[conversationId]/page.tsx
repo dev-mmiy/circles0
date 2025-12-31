@@ -55,7 +55,7 @@ export default function ConversationPage() {
   const router = useRouter();
   const params = useNextParams();
   const locale = useLocale();
-  const conversationId = params.conversationId as string;
+  const conversationId = params?.conversationId as string;
   const t = useTranslations('messages');
   const tConv = useTranslations('messages.conversation');
 

@@ -126,12 +126,13 @@ export async function getAccessToken(
         });
 
         // If this is a retry after a "Missing Refresh Token" error, ignore cache
-        const ignoreCache = attempt > 1 && lastError?.message?.includes('Missing Refresh Token');
+        const ignoreCache = attempt > 1 && (lastError?.message?.includes('Missing Refresh Token') || lastError?.error === 'Missing Refresh Token');
 
         const auth0TokenPromise = getAccessTokenSilently({
           cacheMode: ignoreCache ? 'off' : 'on',
           ignoreCache: ignoreCache,
           timeout: TOKEN_TIMEOUT, // Pass timeout to Auth0
+          audience: process.env.NEXT_PUBLIC_AUTH0_AUDIENCE || 'https://api.disease-community.com',
           scope: 'openid profile email offline_access',
         }).catch(err => {
           // Handle Auth0 specific errors
@@ -141,23 +142,38 @@ export async function getAccessToken(
           });
 
           // If "Missing Refresh Token" error, clear Auth0 cache and suggest re-login
-          if (err?.message?.includes('Missing Refresh Token')) {
+          if (err?.message?.includes('Missing Refresh Token') || err?.error === 'Missing Refresh Token') {
             debugLog.error('[tokenManager] Missing Refresh Token - clearing Auth0 cache', {
               timestamp: new Date().toISOString(),
             });
 
-            // Clear Auth0 cache from localStorage
+            // Clear Auth0 cache from localStorage and sessionStorage
             if (typeof window !== 'undefined') {
               const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID;
               if (clientId) {
-                // Clear Auth0 SPA JS cache
+                // Clear Auth0 SPA JS cache from localStorage
                 Object.keys(localStorage).forEach(key => {
                   if (key.includes('auth0') || key.includes('@@auth0spajs@@')) {
                     localStorage.removeItem(key);
-                    debugLog.log('[tokenManager] Cleared Auth0 cache key:', key);
+                    debugLog.log('[tokenManager] Cleared Auth0 localStorage key:', key);
+                  }
+                });
+                
+                // Clear Auth0 SPA JS cache from sessionStorage
+                Object.keys(sessionStorage).forEach(key => {
+                  if (key.includes('auth0') || key.includes('@@auth0spajs@@')) {
+                    sessionStorage.removeItem(key);
+                    debugLog.log('[tokenManager] Cleared Auth0 sessionStorage key:', key);
                   }
                 });
               }
+            }
+            
+            // If this is the first attempt, suggest user to re-login
+            if (attempt === 1) {
+              debugLog.warn('[tokenManager] Missing Refresh Token detected. User may need to re-login to get a new refresh token.', {
+                timestamp: new Date().toISOString(),
+              });
             }
           }
 

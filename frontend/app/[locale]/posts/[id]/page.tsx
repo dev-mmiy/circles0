@@ -33,7 +33,7 @@ export default function PostDetailPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const postId = params.id as string;
+  const postId = params?.id as string;
 
   // Load post
   const loadPost = useCallback(async () => {
