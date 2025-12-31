@@ -202,14 +202,16 @@ export default function VitalCharts({
                 className="dark:text-gray-400"
               />
               <YAxis 
-                yAxisId="left"
+                yAxisId="bp"
+                label={{ value: '血圧 (mmHg)', angle: -90, position: 'insideLeft' }}
                 stroke="#ef4444"
                 tick={{ fill: '#6b7280' }}
                 className="dark:text-gray-400"
               />
               <YAxis 
-                yAxisId="right"
+                yAxisId="hr"
                 orientation="right"
+                label={{ value: '心拍数 (bpm)', angle: 90, position: 'insideRight' }}
                 stroke="#3b82f6"
                 tick={{ fill: '#6b7280' }}
                 className="dark:text-gray-400"
@@ -222,11 +224,21 @@ export default function VitalCharts({
                   color: 'var(--tooltip-text, #000)',
                 }}
                 wrapperStyle={{ color: 'inherit' }}
+                formatter={(value: any, name: string) => {
+                  if (name === '収縮期血圧 (mmHg)') {
+                    return [`${value} mmHg`, name];
+                  } else if (name === '拡張期血圧 (mmHg)') {
+                    return [`${value} mmHg`, name];
+                  } else if (name === '心拍数 (bpm)') {
+                    return [`${value} bpm`, name];
+                  }
+                  return [value, name];
+                }}
               />
               <Legend />
               {bpHrData.some(d => d.systolic !== undefined) && (
                 <Line 
-                  yAxisId="left"
+                  yAxisId="bp"
                   type="monotone" 
                   dataKey="systolic" 
                   stroke="#ef4444" 
@@ -237,7 +249,7 @@ export default function VitalCharts({
               )}
               {bpHrData.some(d => d.diastolic !== undefined) && (
                 <Line 
-                  yAxisId="left"
+                  yAxisId="bp"
                   type="monotone" 
                   dataKey="diastolic" 
                   stroke="#dc2626" 
@@ -248,7 +260,7 @@ export default function VitalCharts({
               )}
               {bpHrData.some(d => d.heartRate !== undefined) && (
                 <Line 
-                  yAxisId="right"
+                  yAxisId="hr"
                   type="monotone" 
                   dataKey="heartRate" 
                   stroke="#3b82f6" 
