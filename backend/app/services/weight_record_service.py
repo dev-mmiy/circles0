@@ -74,7 +74,7 @@ class WeightRecordService:
         record = db.query(WeightRecord).filter(
             WeightRecord.id == record_id, WeightRecord.user_id == user_id
         ).first()
-        
+
         if not record:
             return None
 
@@ -95,7 +95,7 @@ class WeightRecordService:
         record = db.query(WeightRecord).filter(
             WeightRecord.id == record_id, WeightRecord.user_id == user_id
         ).first()
-        
+
         if not record:
             return False
 
