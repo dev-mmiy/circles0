@@ -1,8 +1,9 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [ main, develop ]
+  # pushでの自動実行を無効化（手動実行のみ）
+  # push:
+  #   branches: [ main, develop ]
   workflow_dispatch:
 
 permissions:

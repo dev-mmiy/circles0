@@ -1,8 +1,10 @@
 name: Light CI Pipeline
 
 on:
-  push:
-    branches: [ feature/* ]
+  # pushでの自動実行を無効化（手動実行のみ）
+  # push:
+  #   branches: [ feature/* ]
+  workflow_dispatch:
 
 permissions:
   contents: read
