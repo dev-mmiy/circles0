@@ -169,9 +169,9 @@ export default function AuthButton() {
             <Image
               src={avatarUrl}
               alt={displayName}
-              width={32}
-              height={32}
-              className="w-8 h-8 rounded-full"
+              width={24}
+              height={24}
+              className="w-6 h-6 rounded-full"
               style={{ width: 'auto', height: 'auto' }}
             />
           )}
