@@ -204,27 +204,61 @@ export default function DailyPage() {
     return map;
   }, [bloodPressureRecords, heartRateRecords, temperatureRecords, weightRecords, bodyFatRecords, bloodGlucoseRecords, spo2Records]);
 
-  // Flatten all records individually for list view (no grouping)
+  // Group records for list view: BP/HR are grouped together, Weight/BodyFat are grouped together, others are individual
   const groupedRecords = useMemo(() => {
     const allRecords: VitalRecordGroup[] = [];
+    const bpHrGroupsByTimestamp = new Map<string, VitalRecordGroup>();
+    const weightFatGroupsByTimestamp = new Map<string, VitalRecordGroup>();
 
-    // Add each blood pressure record as a separate group
+    // Group blood pressure and heart rate by timestamp (together)
     bloodPressureRecords.forEach((record) => {
-      allRecords.push({
-        recordedAt: record.recorded_at,
-        bloodPressure: record,
-      });
+      const key = record.recorded_at;
+      if (!bpHrGroupsByTimestamp.has(key)) {
+        bpHrGroupsByTimestamp.set(key, { recordedAt: key });
+      }
+      bpHrGroupsByTimestamp.get(key)!.bloodPressure = record;
     });
 
-    // Add each heart rate record as a separate group
     heartRateRecords.forEach((record) => {
-      allRecords.push({
-        recordedAt: record.recorded_at,
-        heartRate: record,
-      });
+      const key = record.recorded_at;
+      if (!bpHrGroupsByTimestamp.has(key)) {
+        bpHrGroupsByTimestamp.set(key, { recordedAt: key });
+      }
+      bpHrGroupsByTimestamp.get(key)!.heartRate = record;
     });
 
-    // Add each temperature record as a separate group
+    // Group weight and body fat by timestamp (together)
+    weightRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!weightFatGroupsByTimestamp.has(key)) {
+        weightFatGroupsByTimestamp.set(key, { recordedAt: key });
+      }
+      weightFatGroupsByTimestamp.get(key)!.weight = record;
+    });
+
+    bodyFatRecords.forEach((record) => {
+      const key = record.recorded_at;
+      if (!weightFatGroupsByTimestamp.has(key)) {
+        weightFatGroupsByTimestamp.set(key, { recordedAt: key });
+      }
+      weightFatGroupsByTimestamp.get(key)!.bodyFat = record;
+    });
+
+    // Add BP/HR groups (only if they have BP or HR)
+    bpHrGroupsByTimestamp.forEach((group) => {
+      if (group.bloodPressure || group.heartRate) {
+        allRecords.push(group);
+      }
+    });
+
+    // Add Weight/BodyFat groups (only if they have Weight or BodyFat)
+    weightFatGroupsByTimestamp.forEach((group) => {
+      if (group.weight || group.bodyFat) {
+        allRecords.push(group);
+      }
+    });
+
+    // Add other records individually (temperature, blood glucose, SpO2)
     temperatureRecords.forEach((record) => {
       allRecords.push({
         recordedAt: record.recorded_at,
@@ -232,23 +266,6 @@ export default function DailyPage() {
       });
     });
 
-    // Add each weight record as a separate group
-    weightRecords.forEach((record) => {
-      allRecords.push({
-        recordedAt: record.recorded_at,
-        weight: record,
-      });
-    });
-
-    // Add each body fat record as a separate group
-    bodyFatRecords.forEach((record) => {
-      allRecords.push({
-        recordedAt: record.recorded_at,
-        bodyFat: record,
-      });
-    });
-
-    // Add each blood glucose record as a separate group
     bloodGlucoseRecords.forEach((record) => {
       allRecords.push({
         recordedAt: record.recorded_at,
@@ -256,7 +273,6 @@ export default function DailyPage() {
       });
     });
 
-    // Add each SpO2 record as a separate group
     spo2Records.forEach((record) => {
       allRecords.push({
         recordedAt: record.recorded_at,
