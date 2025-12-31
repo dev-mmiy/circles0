@@ -14,7 +14,7 @@ import { getBloodGlucoseRecords, type BloodGlucoseRecord } from '@/lib/api/blood
 import { getSpO2Records, type SpO2Record } from '@/lib/api/spo2Records';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
-import { Calendar, List, Plus, Filter } from 'lucide-react';
+import { Calendar, List, Plus, Filter, BarChart3 } from 'lucide-react';
 import BloodPressureHeartRateFormModal from '@/components/BloodPressureHeartRateFormModal';
 import TemperatureFormModal from '@/components/TemperatureFormModal';
 import WeightBodyFatFormModal from '@/components/WeightBodyFatFormModal';
@@ -23,11 +23,24 @@ import SpO2FormModal from '@/components/SpO2FormModal';
 import VitalRecordCard from '@/components/VitalRecordCard';
 import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSelector';
 import VitalRecordCalendar from '@/components/VitalRecordCalendar';
+import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
 import { ja } from 'date-fns/locale';
+
+// Dynamically import VitalCharts to avoid SSR issues with Recharts
+const VitalCharts = dynamic(() => import('@/components/VitalCharts'), {
+  ssr: false,
+  loading: () => (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      <p className="mt-4 text-gray-600 dark:text-gray-400">チャートを読み込み中...</p>
+    </div>
+  ),
+});
 import type { VitalRecordGroup } from '@/types/vitalRecords';
 
-type ViewMode = 'calendar' | 'list';
+type ViewMode = 'calendar' | 'list' | 'chart';
+type Period = '1week' | '1month' | '6months' | '1year';
 
 export default function DailyPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
@@ -40,6 +53,7 @@ export default function DailyPage() {
   const [selectedDateRecords, setSelectedDateRecords] = useState<VitalRecordGroup[]>([]);
   const [isDateModalOpen, setIsDateModalOpen] = useState(false);
   const [filter, setFilter] = useState<'all' | 'bp_hr' | 'weight_fat' | 'temperature' | 'blood_glucose' | 'spo2'>('all');
+  const [chartPeriod, setChartPeriod] = useState<Period>('1month');
 
   // Load blood pressure records
   const {
@@ -456,6 +470,17 @@ export default function DailyPage() {
                   <Calendar className="w-4 h-4" />
                   <span>{t('viewMode.calendar')}</span>
                 </button>
+                <button
+                  onClick={() => setViewMode('chart')}
+                  className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                    viewMode === 'chart'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  }`}
+                >
+                  <BarChart3 className="w-4 h-4" />
+                  <span>{t('viewMode.chart') || 'チャート'}</span>
+                </button>
               </div>
 
               {/* Add Record Button */}
@@ -485,6 +510,21 @@ export default function DailyPage() {
                   <option value="temperature">{t('addTemperature')}</option>
                   <option value="blood_glucose">{t('addBloodGlucose')}</option>
                   <option value="spo2">{t('addSpO2')}</option>
+                </select>
+              </div>
+            )}
+            {viewMode === 'chart' && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{t('chart.period') || '期間'}:</span>
+                <select
+                  value={chartPeriod}
+                  onChange={(e) => setChartPeriod(e.target.value as Period)}
+                  className="px-3 py-1.5 rounded-lg text-sm bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer"
+                >
+                  <option value="1week">{t('chart.periods.1week') || '1週間'}</option>
+                  <option value="1month">{t('chart.periods.1month') || '1か月'}</option>
+                  <option value="6months">{t('chart.periods.6months') || '半年'}</option>
+                  <option value="1year">{t('chart.periods.1year') || '1年'}</option>
                 </select>
               </div>
             )}
@@ -537,10 +577,21 @@ export default function DailyPage() {
               </>
             )}
           </div>
-        ) : (
+        ) : viewMode === 'calendar' ? (
           <VitalRecordCalendar
             records={calendarRecords}
             onDateClick={handleDateClick}
+          />
+        ) : (
+          <VitalCharts
+            period={chartPeriod}
+            bloodPressureRecords={bloodPressureRecords}
+            heartRateRecords={heartRateRecords}
+            temperatureRecords={temperatureRecords}
+            weightRecords={weightRecords}
+            bodyFatRecords={bodyFatRecords}
+            bloodGlucoseRecords={bloodGlucoseRecords}
+            spo2Records={spo2Records}
           />
         )}
 

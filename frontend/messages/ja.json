@@ -1226,7 +1226,17 @@
     "authRequired": "このページを表示するにはログインが必要です",
     "viewMode": {
       "list": "リスト",
-      "calendar": "カレンダー"
+      "calendar": "カレンダー",
+      "chart": "チャート"
+    },
+    "chart": {
+      "period": "期間",
+      "periods": {
+        "1week": "1週間",
+        "1month": "1か月",
+        "6months": "半年",
+        "1year": "1年"
+      }
     },
     "filter": {
       "label": "フィルター",
@@ -1258,7 +1268,17 @@
     "authRequired": "このページを表示するにはログインが必要です",
     "viewMode": {
       "list": "リスト",
-      "calendar": "カレンダー"
+      "calendar": "カレンダー",
+      "chart": "チャート"
+    },
+    "chart": {
+      "period": "期間",
+      "periods": {
+        "1week": "1週間",
+        "1month": "1か月",
+        "6months": "半年",
+        "1year": "1年"
+      }
     },
     "addMeal": "食事を記録",
     "noRecords": "記録がありません",
