@@ -377,6 +377,7 @@ export default function PostCard({
                 width={40}
                 height={40}
                 className="w-10 h-10 rounded-full object-cover"
+                style={{ width: 'auto', height: 'auto' }}
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center">

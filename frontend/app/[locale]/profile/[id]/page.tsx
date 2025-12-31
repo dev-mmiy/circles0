@@ -395,6 +395,7 @@ export default function PublicProfilePage() {
                       width={96}
                       height={96}
                       className="w-24 h-24 rounded-full object-cover"
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   ) : (
                     <div className="w-24 h-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">

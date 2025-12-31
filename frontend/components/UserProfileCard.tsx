@@ -104,6 +104,7 @@ export function UserProfileCard({
                     width={80}
                     height={80}
                     className="w-20 h-20 rounded-full border-4 border-white object-cover transition-opacity group-hover:opacity-80"
+                    style={{ width: 'auto', height: 'auto' }}
                   />
                   <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-0 group-hover:bg-opacity-30 rounded-full transition-all">
                     <span className="text-white text-xs opacity-0 group-hover:opacity-100 font-medium">

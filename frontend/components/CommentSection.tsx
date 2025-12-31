@@ -429,6 +429,7 @@ function CommentItem({ comment, postId, onReplyAdded, isReply = false }: Comment
               width={32}
               height={32}
               className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+              style={{ width: 'auto', height: 'auto' }}
             />
           ) : (
             <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center flex-shrink-0">

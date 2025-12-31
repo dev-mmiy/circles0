@@ -80,6 +80,7 @@ export default function UserListItem({
               width={config.avatar}
               height={config.avatar}
               className={`${config.avatarClass} rounded-full object-cover`}
+              style={{ width: 'auto', height: 'auto' }}
             />
           ) : (
             <div

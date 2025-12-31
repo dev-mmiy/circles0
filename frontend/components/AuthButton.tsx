@@ -172,6 +172,7 @@ export default function AuthButton() {
               width={32}
               height={32}
               className="w-8 h-8 rounded-full"
+              style={{ width: 'auto', height: 'auto' }}
             />
           )}
           <span className="text-sm text-gray-700 dark:text-gray-300 font-medium">
