@@ -8,8 +8,8 @@ export default function GlobalError({
   reset: () => void;
 }) {
   return (
-    <html>
-      <body>
+    <html lang="ja" suppressHydrationWarning>
+      <body suppressHydrationWarning>
         <div style={{ padding: '20px', textAlign: 'center' }}>
           <h1>Application Error</h1>
           <p>{error.message || 'An unexpected error occurred'}</p>

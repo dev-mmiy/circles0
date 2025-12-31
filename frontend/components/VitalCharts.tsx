@@ -239,7 +239,7 @@ export default function VitalCharts({
               {bpHrData.some(d => d.systolic !== undefined) && (
                 <Line 
                   yAxisId="bp"
-                  type="monotone" 
+                  type="linear" 
                   dataKey="systolic" 
                   stroke="#ef4444" 
                   strokeWidth={2}
@@ -250,7 +250,7 @@ export default function VitalCharts({
               {bpHrData.some(d => d.diastolic !== undefined) && (
                 <Line 
                   yAxisId="bp"
-                  type="monotone" 
+                  type="linear" 
                   dataKey="diastolic" 
                   stroke="#dc2626" 
                   strokeWidth={2}
@@ -261,7 +261,7 @@ export default function VitalCharts({
               {bpHrData.some(d => d.heartRate !== undefined) && (
                 <Line 
                   yAxisId="hr"
-                  type="monotone" 
+                  type="linear" 
                   dataKey="heartRate" 
                   stroke="#3b82f6" 
                   strokeWidth={2}
