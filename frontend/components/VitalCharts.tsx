@@ -12,9 +12,11 @@ import {
   ResponsiveContainer,
   AreaChart,
   Area,
+  ReferenceLine,
+  Brush,
 } from 'recharts';
-import { format, subDays, subMonths, subYears, parseISO } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { format, subDays, subMonths, subYears, parseISO, startOfMonth, startOfWeek, endOfWeek, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { ja } from 'date-fns/locale/ja';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import type { HeartRateRecord } from '@/lib/api/heartRateRecords';
 import type { TemperatureRecord } from '@/lib/api/temperatureRecords';
@@ -50,43 +52,77 @@ export default function VitalCharts({
   const dateRange = useMemo(() => {
     const now = new Date();
     let startDate: Date;
+    let endDate: Date = now;
 
     switch (period) {
       case '1week':
-        startDate = subDays(now, 7);
+        // 過去7日間を表示（今日を含む7日間）
+        startDate = subDays(now, 6); // 今日を含めて7日間
+        endDate = now;
         break;
       case '1month':
-        startDate = subMonths(now, 1);
+        // その週を含む過去5週分を表示
+        // 現在の週の開始日（日曜日）から過去4週前の週の開始日まで（合計5週間）
+        const currentWeekStart = startOfWeek(now, { weekStartsOn: 0 });
+        startDate = startOfWeek(subDays(currentWeekStart, 7 * 4), { weekStartsOn: 0 }); // 過去4週前の週の開始日
+        // 終了日は現在の週の終了日（土曜日）
+        endDate = endOfWeek(now, { weekStartsOn: 0 });
+        // デバッグログ
+        console.log('[VitalCharts] 1month date range (5 weeks):', {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(endDate, 'yyyy-MM-dd'),
+          now: format(now, 'yyyy-MM-dd'),
+        });
         break;
       case '6months':
-        startDate = subMonths(now, 6);
+        // 過去6か月分を表示するため、現在の月の開始日から過去6か月前の月の開始日まで
+        startDate = startOfMonth(subMonths(now, 6));
         break;
       case '1year':
         startDate = subYears(now, 1);
         break;
     }
 
-    return { startDate, endDate: now };
+    return { startDate, endDate };
   }, [period]);
 
   // Filter records by date range
   const filterByDateRange = <T extends { recorded_at: string }>(records: T[]): T[] => {
-    return records.filter(record => {
+    const filtered = records.filter(record => {
       const recordDate = parseISO(record.recorded_at);
-      return recordDate >= dateRange.startDate && recordDate <= dateRange.endDate;
+      // 日付のみで比較（時刻を無視）
+      const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
+      const startDateOnly = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate());
+      const endDateOnly = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate());
+      return recordDateOnly >= startDateOnly && recordDateOnly <= endDateOnly;
     });
+    
+    // デバッグログ（1か月の場合のみ）
+    if (period === '1month') {
+      console.log('[VitalCharts] filterByDateRange:', {
+        period,
+        totalRecords: records.length,
+        filteredRecords: filtered.length,
+        dateRange: {
+          start: format(dateRange.startDate, 'yyyy-MM-dd'),
+          end: format(dateRange.endDate, 'yyyy-MM-dd'),
+        },
+      });
+    }
+    
+    return filtered;
   };
 
   // Format date for X-axis based on period
-  const formatXAxisDate = (date: string) => {
-    const d = parseISO(date);
+  const formatXAxisDate = (date: string | Date) => {
+    const d = typeof date === 'string' ? parseISO(date) : date;
     switch (period) {
       case '1week':
         return format(d, 'M/d', { locale: ja });
       case '1month':
         return format(d, 'M/d', { locale: ja });
       case '6months':
-        return format(d, 'M/d', { locale: ja });
+        return format(d, 'M月', { locale: ja });
       case '1year':
         return format(d, 'M/d', { locale: ja });
       default:
@@ -94,108 +130,605 @@ export default function VitalCharts({
     }
   };
 
+  // Get month key for grouping (for 1month and 6months periods)
+  const getMonthKey = (date: Date): string => {
+    return format(startOfMonth(date), 'yyyy-MM');
+  };
+
+  // Helper function to aggregate data by month or date
+  const aggregateData = <T extends { recorded_at: string }>(
+    records: T[],
+    getValue: (record: T) => number | undefined,
+    isMonthlyView: boolean
+  ): Array<{ date: string; dateObj: Date; value?: number }> => {
+    const dataMap = new Map<
+      string,
+      { date: string; dateObj: Date; sum: number; count: number }
+    >();
+
+    records.forEach(record => {
+      const recordDate = parseISO(record.recorded_at);
+      const key = isMonthlyView ? getMonthKey(recordDate) : record.recorded_at;
+      const dateObj = isMonthlyView ? startOfMonth(recordDate) : recordDate;
+      const value = getValue(record);
+      
+      if (value === undefined) return;
+
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { date: key, dateObj, sum: 0, count: 0 });
+      }
+      const data = dataMap.get(key)!;
+      data.sum += value;
+      data.count++;
+    });
+
+    return Array.from(dataMap.values())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+      .map(item => ({
+        date: formatXAxisDate(item.dateObj),
+        dateObj: item.dateObj,
+        value: item.count > 0 ? item.sum / item.count : undefined,
+      }));
+  };
+
   // Blood Pressure & Heart Rate Chart
   const bpHrData = useMemo(() => {
     const bpFiltered = filterByDateRange(bloodPressureRecords);
     const hrFiltered = filterByDateRange(heartRateRecords);
+    const isMonthlyView = period === '6months';
 
+    // 1週間または1か月の場合、日単位で集計する
+    const isDailyView = period === '1week' || period === '1month';
+    
     const dataMap = new Map<
       string,
-      { date: string; systolic?: number; diastolic?: number; heartRate?: number }
+      { date: string; dateObj: Date; systolic?: number; diastolic?: number; heartRate?: number; bpCount: number; hrCount: number }
     >();
 
     bpFiltered.forEach(record => {
-      const key = record.recorded_at;
+      const recordDate = parseISO(record.recorded_at);
+      // 1週間または1か月の場合は日単位でキーを作成
+      const key = isMonthlyView 
+        ? getMonthKey(recordDate) 
+        : isDailyView 
+          ? format(recordDate, 'yyyy-MM-dd')
+          : record.recorded_at;
+      const dateObj = isMonthlyView 
+        ? startOfMonth(recordDate) 
+        : isDailyView
+          ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+          : recordDate;
+      
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: key });
+        dataMap.set(key, { date: key, dateObj, bpCount: 0, hrCount: 0 });
       }
       const data = dataMap.get(key)!;
-      data.systolic = record.systolic;
-      data.diastolic = record.diastolic;
+      if (data.systolic === undefined) {
+        data.systolic = record.systolic;
+        data.diastolic = record.diastolic;
+      } else {
+        data.systolic = (data.systolic * data.bpCount + record.systolic) / (data.bpCount + 1);
+        data.diastolic = (data.diastolic! * data.bpCount + record.diastolic) / (data.bpCount + 1);
+      }
+      data.bpCount++;
     });
 
     hrFiltered.forEach(record => {
-      const key = record.recorded_at;
+      const recordDate = parseISO(record.recorded_at);
+      // 1週間または1か月の場合は日単位でキーを作成
+      const key = isMonthlyView 
+        ? getMonthKey(recordDate) 
+        : isDailyView 
+          ? format(recordDate, 'yyyy-MM-dd')
+          : record.recorded_at;
+      const dateObj = isMonthlyView 
+        ? startOfMonth(recordDate) 
+        : isDailyView
+          ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+          : recordDate;
+      
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: key });
+        dataMap.set(key, { date: key, dateObj, bpCount: 0, hrCount: 0 });
       }
       const data = dataMap.get(key)!;
-      data.heartRate = record.bpm;
+      if (data.heartRate === undefined) {
+        data.heartRate = record.bpm;
+      } else {
+        data.heartRate = (data.heartRate * data.hrCount + record.bpm) / (data.hrCount + 1);
+      }
+      data.hrCount++;
     });
 
+    // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
+    if (period === '1week') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; systolic?: number; diastolic?: number; heartRate?: number }> = [];
+      
+      const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        dataByDate.set(dateKey, {
+          systolic: item.systolic,
+          diastolic: item.diastolic,
+          heartRate: item.heartRate,
+        });
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const data = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          systolic: data?.systolic,
+          diastolic: data?.diastolic,
+          heartRate: data?.heartRate,
+        });
+      });
+      
+      return result;
+    }
+
+    // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
+    if (period === '1month') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; systolic?: number; diastolic?: number; heartRate?: number }> = [];
+      
+      const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        dataByDate.set(dateKey, {
+          systolic: item.systolic,
+          diastolic: item.diastolic,
+          heartRate: item.heartRate,
+        });
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const data = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          systolic: data?.systolic,
+          diastolic: data?.diastolic,
+          heartRate: data?.heartRate,
+        });
+      });
+      
+      return result;
+    }
+    
     return Array.from(dataMap.values())
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        ...item,
-        date: formatXAxisDate(item.date),
+        date: formatXAxisDate(item.dateObj),
+        systolic: item.systolic,
+        diastolic: item.diastolic,
+        heartRate: item.heartRate,
       }));
-  }, [bloodPressureRecords, heartRateRecords, period, dateRange]);
+  }, [bloodPressureRecords, heartRateRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // Weight & Body Fat Chart
   const weightFatData = useMemo(() => {
     const weightFiltered = filterByDateRange(weightRecords);
     const fatFiltered = filterByDateRange(bodyFatRecords);
+    const isDailyView = period === '1week' || period === '1month';
 
-    const dataMap = new Map<string, { date: string; weight?: number; bodyFat?: number }>();
+    const dataMap = new Map<string, { date: string; dateObj: Date; weight?: number; bodyFat?: number; weightCount: number; fatCount: number }>();
 
     weightFiltered.forEach(record => {
-      const key = record.recorded_at;
+      const recordDate = parseISO(record.recorded_at);
+      const key = isDailyView ? format(recordDate, 'yyyy-MM-dd') : record.recorded_at;
+      const dateObj = isDailyView 
+        ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+        : recordDate;
+      
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: key });
+        dataMap.set(key, { date: key, dateObj, weightCount: 0, fatCount: 0 });
       }
       const data = dataMap.get(key)!;
-      data.weight = record.value;
+      if (data.weight === undefined) {
+        data.weight = record.value;
+      } else {
+        data.weight = (data.weight * data.weightCount + record.value) / (data.weightCount + 1);
+      }
+      data.weightCount++;
     });
 
     fatFiltered.forEach(record => {
-      const key = record.recorded_at;
+      const recordDate = parseISO(record.recorded_at);
+      const key = isDailyView ? format(recordDate, 'yyyy-MM-dd') : record.recorded_at;
+      const dateObj = isDailyView 
+        ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+        : recordDate;
+      
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: key });
+        dataMap.set(key, { date: key, dateObj, weightCount: 0, fatCount: 0 });
       }
       const data = dataMap.get(key)!;
-      data.bodyFat = record.percentage;
+      if (data.bodyFat === undefined) {
+        data.bodyFat = record.percentage;
+      } else {
+        data.bodyFat = (data.bodyFat * data.fatCount + record.percentage) / (data.fatCount + 1);
+      }
+      data.fatCount++;
     });
 
+    // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
+    if (period === '1week') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; weight?: number; bodyFat?: number }> = [];
+      
+      const dataByDate = new Map<string, { weight?: number; bodyFat?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        dataByDate.set(dateKey, {
+          weight: item.weight,
+          bodyFat: item.bodyFat,
+        });
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const data = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          weight: data?.weight,
+          bodyFat: data?.bodyFat,
+        });
+      });
+      
+      return result;
+    }
+
+    // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
+    if (period === '1month') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; weight?: number; bodyFat?: number }> = [];
+      
+      const dataByDate = new Map<string, { weight?: number; bodyFat?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const recordDate = parseISO(item.date);
+        const dateKey = format(recordDate, 'yyyy-MM-dd');
+        dataByDate.set(dateKey, {
+          weight: item.weight,
+          bodyFat: item.bodyFat,
+        });
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const data = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          weight: data?.weight,
+          bodyFat: data?.bodyFat,
+        });
+      });
+      
+      return result;
+    }
+    
     return Array.from(dataMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(item => ({
         ...item,
         date: formatXAxisDate(item.date),
       }));
-  }, [weightRecords, bodyFatRecords, period, dateRange]);
+  }, [weightRecords, bodyFatRecords, period, dateRange, formatXAxisDate]);
+
+  // Calculate weight Y-axis domain dynamically
+  const weightDomain = useMemo(() => {
+    const weights = weightFatData
+      .map(d => d.weight)
+      .filter((w): w is number => w !== undefined);
+    if (weights.length === 0) return [0, 100];
+    const minWeight = Math.min(...weights);
+    const maxWeight = Math.max(...weights);
+    const minDomain = Math.max(0, minWeight - 10);
+    const maxDomain = maxWeight + 10;
+    // Round to nice numbers for better display (5kg intervals)
+    const roundedMin = Math.floor(minDomain / 5) * 5;
+    const roundedMax = Math.ceil(maxDomain / 5) * 5;
+    return [roundedMin, roundedMax];
+  }, [weightFatData]);
+
+  // Generate weight Y-axis ticks (5kg intervals)
+  const weightTicks = useMemo(() => {
+    const [min, max] = weightDomain;
+    const ticks: number[] = [];
+    for (let i = min; i <= max; i += 5) {
+      ticks.push(i);
+    }
+    return ticks;
+  }, [weightDomain]);
 
   // Temperature Chart
   const temperatureData = useMemo(() => {
     const filtered = filterByDateRange(temperatureRecords);
-    return filtered
-      .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-      .map(record => ({
-        date: formatXAxisDate(record.recorded_at),
-        temperature: record.value,
+    const isMonthlyView = period === '6months';
+    const isDailyView = period === '1week' || period === '1month';
+
+    const dataMap = new Map<
+      string,
+      { date: string; dateObj: Date; sum: number; count: number }
+    >();
+
+    filtered.forEach(record => {
+      const recordDate = parseISO(record.recorded_at);
+      const key = isMonthlyView 
+        ? getMonthKey(recordDate) 
+        : isDailyView 
+          ? format(recordDate, 'yyyy-MM-dd')
+          : record.recorded_at;
+      const dateObj = isMonthlyView 
+        ? startOfMonth(recordDate) 
+        : isDailyView
+          ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+          : recordDate;
+      
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { date: key, dateObj, sum: 0, count: 0 });
+      }
+      const data = dataMap.get(key)!;
+      data.sum += record.value;
+      data.count++;
+    });
+
+    // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
+    if (period === '1week') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; temperature?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const temperature = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          temperature: temperature,
+        });
+      });
+      
+      return result;
+    }
+
+    // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
+    if (period === '1month') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; temperature?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const temperature = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          temperature: temperature,
+        });
+      });
+      
+      return result;
+    }
+    
+    return Array.from(dataMap.values())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+      .map(item => ({
+        date: formatXAxisDate(item.dateObj),
+        temperature: item.count > 0 ? item.sum / item.count : undefined,
       }));
-  }, [temperatureRecords, period, dateRange]);
+  }, [temperatureRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // Blood Glucose Chart
   const bloodGlucoseData = useMemo(() => {
     const filtered = filterByDateRange(bloodGlucoseRecords);
-    return filtered
-      .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-      .map(record => ({
-        date: formatXAxisDate(record.recorded_at),
-        bloodGlucose: record.value,
+    const isMonthlyView = period === '6months';
+    const isDailyView = period === '1week' || period === '1month';
+
+    const dataMap = new Map<
+      string,
+      { date: string; dateObj: Date; sum: number; count: number }
+    >();
+
+    filtered.forEach(record => {
+      const recordDate = parseISO(record.recorded_at);
+      const key = isMonthlyView 
+        ? getMonthKey(recordDate) 
+        : isDailyView 
+          ? format(recordDate, 'yyyy-MM-dd')
+          : record.recorded_at;
+      const dateObj = isMonthlyView 
+        ? startOfMonth(recordDate) 
+        : isDailyView
+          ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+          : recordDate;
+      
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { date: key, dateObj, sum: 0, count: 0 });
+      }
+      const data = dataMap.get(key)!;
+      data.sum += record.value;
+      data.count++;
+    });
+
+    // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
+    if (period === '1week') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; bloodGlucose?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const bloodGlucose = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          bloodGlucose: bloodGlucose,
+        });
+      });
+      
+      return result;
+    }
+
+    // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
+    if (period === '1month') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; bloodGlucose?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const bloodGlucose = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          bloodGlucose: bloodGlucose,
+        });
+      });
+      
+      return result;
+    }
+    
+    return Array.from(dataMap.values())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+      .map(item => ({
+        date: formatXAxisDate(item.dateObj),
+        bloodGlucose: item.count > 0 ? item.sum / item.count : undefined,
       }));
-  }, [bloodGlucoseRecords, period, dateRange]);
+  }, [bloodGlucoseRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // SpO2 Chart
   const spo2Data = useMemo(() => {
     const filtered = filterByDateRange(spo2Records);
-    return filtered
-      .sort((a, b) => new Date(a.recorded_at).getTime() - new Date(b.recorded_at).getTime())
-      .map(record => ({
-        date: formatXAxisDate(record.recorded_at),
-        spo2: record.percentage,
+    const isMonthlyView = period === '6months';
+    const isDailyView = period === '1week' || period === '1month';
+
+    const dataMap = new Map<
+      string,
+      { date: string; dateObj: Date; sum: number; count: number }
+    >();
+
+    filtered.forEach(record => {
+      const recordDate = parseISO(record.recorded_at);
+      const key = isMonthlyView 
+        ? getMonthKey(recordDate) 
+        : isDailyView 
+          ? format(recordDate, 'yyyy-MM-dd')
+          : record.recorded_at;
+      const dateObj = isMonthlyView 
+        ? startOfMonth(recordDate) 
+        : isDailyView
+          ? new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate())
+          : recordDate;
+      
+      if (!dataMap.has(key)) {
+        dataMap.set(key, { date: key, dateObj, sum: 0, count: 0 });
+      }
+      const data = dataMap.get(key)!;
+      data.sum += record.percentage;
+      data.count++;
+    });
+
+    // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
+    if (period === '1week') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; spo2?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const spo2 = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          spo2: spo2,
+        });
+      });
+      
+      return result;
+    }
+
+    // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
+    if (period === '1month') {
+      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; spo2?: number }> = [];
+      
+      const dataByDate = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const dateKey = format(item.dateObj, 'yyyy-MM-dd');
+        if (item.count > 0) {
+          dataByDate.set(dateKey, item.sum / item.count);
+        }
+      });
+      
+      allDays.forEach(day => {
+        const dateKey = format(day, 'yyyy-MM-dd');
+        const spo2 = dataByDate.get(dateKey);
+        result.push({
+          date: formatXAxisDate(day),
+          spo2: spo2,
+        });
+      });
+      
+      return result;
+    }
+
+    return Array.from(dataMap.values())
+      .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
+      .map(item => ({
+        date: formatXAxisDate(item.dateObj),
+        spo2: item.count > 0 ? item.sum / item.count : undefined,
       }));
-  }, [spo2Records, period, dateRange]);
+  }, [spo2Records, period, dateRange, formatXAxisDate, getMonthKey]);
+
+  // Generate week divider lines for 1month period
+  const weekDividers = useMemo(() => {
+    if (period !== '1month') return [];
+    
+    const dividers: string[] = [];
+    const start = startOfWeek(dateRange.startDate, { weekStartsOn: 0 });
+    const end = dateRange.endDate;
+    let currentWeek = new Date(start);
+    
+    while (currentWeek <= end) {
+      dividers.push(formatXAxisDate(currentWeek));
+      currentWeek = new Date(currentWeek);
+      currentWeek.setDate(currentWeek.getDate() + 7);
+    }
+    
+    return dividers;
+  }, [period, dateRange, formatXAxisDate]);
 
   return (
     <div className="space-y-6">
@@ -209,6 +742,17 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={bpHrData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {period === '1month' && weekDividers.map((divider, index) => (
+                  <ReferenceLine
+                    key={`week-divider-${index}`}
+                    x={divider}
+                    yAxisId="bp"
+                    stroke="#9ca3af"
+                    strokeWidth={1}
+                    strokeDasharray="5 5"
+                    isFront={false}
+                  />
+                ))}
                 <XAxis
                   dataKey="date"
                   stroke="#6b7280"
@@ -270,6 +814,7 @@ export default function VitalCharts({
                     dataKey="diastolic"
                     stroke="#dc2626"
                     strokeWidth={2}
+                    strokeDasharray="5 5"
                     name="拡張期血圧 (mmHg)"
                     dot={{ r: 4 }}
                   />
@@ -283,6 +828,15 @@ export default function VitalCharts({
                     strokeWidth={2}
                     name="心拍数 (bpm)"
                     dot={{ r: 4 }}
+                  />
+                )}
+                {period === '1month' && (
+                  <Brush
+                    dataKey="date"
+                    height={30}
+                    stroke="#8884d8"
+                    startIndex={0} // 初期状態で全期間（5週間）を表示
+                    endIndex={bpHrData.length - 1}
                   />
                 )}
               </LineChart>
@@ -301,12 +855,31 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weightFatData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {period === '1month' && weekDividers.map((divider, index) => (
+                  <ReferenceLine
+                    key={`week-divider-${index}`}
+                    x={divider}
+                    yAxisId="left"
+                    stroke="#9ca3af"
+                    strokeWidth={1}
+                    strokeDasharray="5 5"
+                    isFront={false}
+                  />
+                ))}
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <YAxis yAxisId="left" stroke="#10b981" tick={{ fill: '#6b7280' }} />
+                <YAxis 
+                  yAxisId="left" 
+                  stroke="#3b82f6" 
+                  tick={{ fill: '#6b7280' }}
+                  domain={weightDomain}
+                  allowDecimals={false}
+                  ticks={weightTicks}
+                  tickFormatter={(value) => value.toString()}
+                />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  stroke="#059669"
+                  stroke="#f59e0b"
                   tick={{ fill: '#6b7280' }}
                 />
                 <Tooltip
@@ -322,7 +895,7 @@ export default function VitalCharts({
                     yAxisId="left"
                     type="linear"
                     dataKey="weight"
-                    stroke="#10b981"
+                    stroke="#3b82f6"
                     strokeWidth={2}
                     name="体重 (kg)"
                     dot={{ r: 4 }}
@@ -333,10 +906,19 @@ export default function VitalCharts({
                     yAxisId="right"
                     type="linear"
                     dataKey="bodyFat"
-                    stroke="#059669"
+                    stroke="#f59e0b"
                     strokeWidth={2}
                     name="体脂肪率 (%)"
                     dot={{ r: 4 }}
+                  />
+                )}
+                {period === '1month' && (
+                  <Brush
+                    dataKey="date"
+                    height={30}
+                    stroke="#8884d8"
+                    startIndex={0} // 初期状態で全期間（5週間）を表示
+                    endIndex={weightFatData.length - 1}
                   />
                 )}
               </LineChart>
@@ -351,8 +933,18 @@ export default function VitalCharts({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">体温</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={temperatureData}>
+              <LineChart data={temperatureData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {period === '1month' && weekDividers.map((divider, index) => (
+                  <ReferenceLine
+                    key={`week-divider-${index}`}
+                    x={divider}
+                    stroke="#9ca3af"
+                    strokeWidth={1}
+                    strokeDasharray="5 5"
+                    isFront={false}
+                  />
+                ))}
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <YAxis stroke="#3b82f6" tick={{ fill: '#6b7280' }} domain={[34, 43]} />
                 <Tooltip
@@ -363,16 +955,24 @@ export default function VitalCharts({
                   }}
                 />
                 <Legend />
-                <Area
+                <Line
                   type="linear"
                   dataKey="temperature"
                   stroke="#3b82f6"
-                  fill="#3b82f6"
-                  fillOpacity={0.3}
                   strokeWidth={2}
                   name="体温 (°C)"
+                  dot={{ r: 4 }}
                 />
-              </AreaChart>
+                {period === '1month' && (
+                  <Brush
+                    dataKey="date"
+                    height={30}
+                    stroke="#8884d8"
+                    startIndex={0} // 初期状態で全期間（5週間）を表示
+                    endIndex={temperatureData.length - 1}
+                  />
+                )}
+              </LineChart>
             </ResponsiveContainer>
           ) : null}
         </div>
@@ -386,6 +986,16 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={bloodGlucoseData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {period === '1month' && weekDividers.map((divider, index) => (
+                  <ReferenceLine
+                    key={`week-divider-${index}`}
+                    x={divider}
+                    stroke="#9ca3af"
+                    strokeWidth={1}
+                    strokeDasharray="5 5"
+                    isFront={false}
+                  />
+                ))}
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <YAxis stroke="#f97316" tick={{ fill: '#6b7280' }} />
                 <Tooltip
@@ -405,6 +1015,15 @@ export default function VitalCharts({
                   strokeWidth={2}
                   name="血糖値 (mg/dL)"
                 />
+                {period === '1month' && (
+                  <Brush
+                    dataKey="date"
+                    height={30}
+                    stroke="#8884d8"
+                    startIndex={0} // 初期状態で全期間（5週間）を表示
+                    endIndex={bloodGlucoseData.length - 1}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           ) : null}
@@ -421,8 +1040,18 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={spo2Data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                {period === '1month' && weekDividers.map((divider, index) => (
+                  <ReferenceLine
+                    key={`week-divider-${index}`}
+                    x={divider}
+                    stroke="#9ca3af"
+                    strokeWidth={1}
+                    strokeDasharray="5 5"
+                    isFront={false}
+                  />
+                ))}
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <YAxis stroke="#ec4899" tick={{ fill: '#6b7280' }} />
+                <YAxis stroke="#ec4899" tick={{ fill: '#6b7280' }} domain={[70, 100]} />
                 <Tooltip
                   contentStyle={{
                     backgroundColor: '#fff',
@@ -440,6 +1069,15 @@ export default function VitalCharts({
                   strokeWidth={2}
                   name="SpO2 (%)"
                 />
+                {period === '1month' && (
+                  <Brush
+                    dataKey="date"
+                    height={30}
+                    stroke="#8884d8"
+                    startIndex={0} // 初期状態で全期間（5週間）を表示
+                    endIndex={spo2Data.length - 1}
+                  />
+                )}
               </AreaChart>
             </ResponsiveContainer>
           ) : null}

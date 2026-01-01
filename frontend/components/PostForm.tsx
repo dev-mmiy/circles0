@@ -183,7 +183,7 @@ export default function PostForm({
         // Update image URLs
         const newImageUrls = [...imageUrls, ...uploadResponse.urls];
         setImageUrls(newImageUrls);
-
+        
         // Update previews with uploaded URLs
         const newPreviews = [...imagePreviews];
         uploadResponse.urls.forEach((url, index) => {
@@ -202,14 +202,14 @@ export default function PostForm({
       }
     } catch (err: any) {
       debugLog.error('Failed to upload images:', err);
-
+      
       // Handle 503 error (GCS not configured)
       if (err.response?.status === 503) {
         setError(t('errors.uploadServiceNotConfigured'));
       } else {
         setError(err.response?.data?.detail || err.message || t('errors.uploadFailed'));
       }
-
+      
       // Remove failed previews
       setImagePreviews(imagePreviews.slice(0, imagePreviews.length - validFiles.length));
     } finally {
@@ -233,14 +233,14 @@ export default function PostForm({
     // For health records, content is optional (stored in healthRecordData.notes instead)
     // For regular posts, content is required
     if (postType !== 'health_record') {
-      if (!content.trim()) {
-        setError(t('errors.contentRequired'));
-        return;
-      }
+    if (!content.trim()) {
+      setError(t('errors.contentRequired'));
+      return;
+    }
 
-      if (content.length > 5000) {
-        setError(t('errors.contentTooLong'));
-        return;
+    if (content.length > 5000) {
+      setError(t('errors.contentTooLong'));
+      return;
       }
     }
 
@@ -362,7 +362,7 @@ export default function PostForm({
         };
         await updatePost(editingPost.id, updateData, accessToken);
       } else {
-        await createPost(postData, accessToken);
+      await createPost(postData, accessToken);
       }
 
       // Reset form
@@ -1374,29 +1374,29 @@ export default function PostForm({
 
         {/* Textarea for post content - Hide for health records (they use notes field instead) */}
         {!(postType === 'health_record') && (
-          <div className="relative">
-            <textarea
-              value={content}
+        <div className="relative">
+          <textarea
+            value={content}
               onChange={e => setContent(e.target.value)}
-              placeholder={placeholder || t('placeholder')}
-              className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              rows={4}
-              maxLength={5000}
-              disabled={isSubmitting}
-            />
-            {/* Character count in bottom right */}
-            <div className="absolute bottom-2 right-2">
-              <span
-                className={`text-xs ${
+            placeholder={placeholder || t('placeholder')}
+            className="w-full p-3 pr-20 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
+            rows={4}
+            maxLength={5000}
+            disabled={isSubmitting}
+          />
+          {/* Character count in bottom right */}
+          <div className="absolute bottom-2 right-2">
+            <span
+              className={`text-xs ${
                   content.length > 4500
                     ? 'text-red-500 dark:text-red-400'
                     : 'text-gray-500 dark:text-gray-400'
-                }`}
-              >
-                {content.length} / 5000
-              </span>
-            </div>
+              }`}
+            >
+              {content.length} / 5000
+            </span>
           </div>
+        </div>
         )}
 
         {/* Detected hashtags */}
@@ -1435,70 +1435,70 @@ export default function PostForm({
 
         {/* Images - Hide for vital records */}
         {!(postType === 'health_record' && healthRecordType === 'vital') && (
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('imagesLabel')} ({imageUrls.length}/10)
-            </label>
-
-            {/* Image previews */}
-            {imagePreviews.length > 0 && (
-              <div className="mb-3 flex flex-wrap gap-2">
-                {imagePreviews.map((preview, index) => (
+        <div className="mt-4">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            {t('imagesLabel')} ({imageUrls.length}/10)
+          </label>
+          
+          {/* Image previews */}
+          {imagePreviews.length > 0 && (
+            <div className="mb-3 flex flex-wrap gap-2">
+              {imagePreviews.map((preview, index) => (
                   <div key={index} className="relative inline-block group w-20 h-20">
-                    <Image
-                      src={preview.url}
-                      alt={`Image ${index + 1}`}
-                      width={80}
-                      height={80}
-                      className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
-                    />
-                    {uploadingImages && preview.file && (
-                      <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
-                        <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveImage(index)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-red-600"
-                      disabled={isSubmitting || uploadingImages}
-                      title={t('removeImage')}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  <Image
+                    src={preview.url}
+                    alt={`Image ${index + 1}`}
+                    width={80}
+                    height={80}
+                    className="w-20 h-20 object-cover rounded-lg border border-gray-300 dark:border-gray-600"
+                  />
+                  {uploadingImages && preview.file && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 rounded-lg flex items-center justify-center">
+                      <div className="w-6 h-6 border-4 border-white border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(index)}
+                    className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs hover:bg-red-600"
+                    disabled={isSubmitting || uploadingImages}
+                    title={t('removeImage')}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
 
-            {/* Upload options */}
-            {imageUrls.length < 10 && (
-              <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
-                  multiple
-                  onChange={handleFileSelect}
-                  disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
-                  className="hidden"
-                  id="image-upload"
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
-                    isSubmitting || uploadingImages || imageUrls.length >= 10
-                      ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
-                      : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
-                  }`}
-                >
-                  {uploadingImages ? (
-                    <>
-                      <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
-                      {t('uploading')}
-                    </>
-                  ) : (
-                    <>
+          {/* Upload options */}
+          {imageUrls.length < 10 && (
+            <div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                multiple
+                onChange={handleFileSelect}
+                disabled={isSubmitting || uploadingImages || imageUrls.length >= 10}
+                className="hidden"
+                id="image-upload"
+              />
+              <label
+                htmlFor="image-upload"
+                className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium cursor-pointer transition-colors ${
+                  isSubmitting || uploadingImages || imageUrls.length >= 10
+                    ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
+                }`}
+              >
+                {uploadingImages ? (
+                  <>
+                    <div className="w-4 h-4 border-4 border-gray-600 dark:border-gray-400 border-t-transparent rounded-full animate-spin mr-2"></div>
+                    {t('uploading')}
+                  </>
+                ) : (
+                  <>
                       <svg
                         className="w-4 h-4 mr-2"
                         fill="none"
@@ -1511,14 +1511,14 @@ export default function PostForm({
                           strokeWidth={2}
                           d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
-                      </svg>
-                      {t('uploadImage')}
-                    </>
-                  )}
-                </label>
-              </div>
-            )}
-          </div>
+                    </svg>
+                    {t('uploadImage')}
+                  </>
+                )}
+              </label>
+            </div>
+          )}
+        </div>
         )}
 
         {/* Disease selector */}
@@ -1540,10 +1540,10 @@ export default function PostForm({
             {userDiseases
               ?.filter(d => d.is_active)
               .map(disease => (
-                <option key={disease.id} value={disease.id}>
-                  {getDiseaseName(disease)}
-                </option>
-              ))}
+              <option key={disease.id} value={disease.id}>
+                {getDiseaseName(disease)}
+              </option>
+            ))}
           </select>
         </div>
 
@@ -1577,15 +1577,15 @@ export default function PostForm({
                     {t('visibilityDescription.shareDescription')}
                   </div>
                   {visibility !== 'private' && (
-                    <select
-                      value={visibility}
+            <select
+              value={visibility}
                       onChange={e => setVisibility(e.target.value as 'public' | 'followers_only')}
                       className="mt-2 px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      disabled={isSubmitting}
-                    >
-                      <option value="public">{t('visibility.public')}</option>
-                      <option value="followers_only">{t('visibility.followersOnly')}</option>
-                    </select>
+              disabled={isSubmitting}
+            >
+              <option value="public">{t('visibility.public')}</option>
+              <option value="followers_only">{t('visibility.followersOnly')}</option>
+            </select>
                   )}
                 </div>
               </label>
@@ -1616,23 +1616,23 @@ export default function PostForm({
           </div>
 
           <div className="flex items-center justify-end">
-            <button
-              type="submit"
+          <button
+            type="submit"
               disabled={
                 isSubmitting ||
                 (postType !== 'health_record' && !content.trim()) ||
                 (postType === 'health_record' && !healthRecordType)
               }
-              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
                 isSubmitting ||
                 (postType !== 'health_record' && !content.trim()) ||
                 (postType === 'health_record' && !healthRecordType)
-                  ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                  : 'bg-blue-600 text-white hover:bg-blue-700'
-              }`}
-            >
-              {isSubmitting ? t('submitting') : t('submit')}
-            </button>
+                ? 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {isSubmitting ? t('submitting') : t('submit')}
+          </button>
           </div>
         </div>
 
