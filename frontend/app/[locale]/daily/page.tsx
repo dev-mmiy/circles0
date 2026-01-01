@@ -53,11 +53,34 @@ import type { VitalRecordGroup } from '@/types/vitalRecords';
 type ViewMode = 'calendar' | 'list' | 'chart';
 type Period = '1week' | '1month' | '6months' | '1year';
 
+// localStorage keys
+const STORAGE_KEY_VIEW_MODE = 'daily_viewMode';
+const STORAGE_KEY_CHART_PERIOD = 'daily_chartPeriod';
+
+// Helper functions for localStorage
+const getStoredViewMode = (): ViewMode => {
+  if (typeof window === 'undefined') return 'list';
+  const stored = localStorage.getItem(STORAGE_KEY_VIEW_MODE);
+  if (stored === 'list' || stored === 'calendar' || stored === 'chart') {
+    return stored;
+  }
+  return 'list';
+};
+
+const getStoredChartPeriod = (): Period => {
+  if (typeof window === 'undefined') return '1month';
+  const stored = localStorage.getItem(STORAGE_KEY_CHART_PERIOD);
+  if (stored === '1week' || stored === '1month' || stored === '6months' || stored === '1year') {
+    return stored;
+  }
+  return '1month';
+};
+
 export default function DailyPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user } = useUser();
   const t = useTranslations('daily');
-  const [viewMode, setViewMode] = useState<ViewMode>('list');
+  const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedVitalType, setSelectedVitalType] = useState<VitalType | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
@@ -66,7 +89,7 @@ export default function DailyPage() {
   const [filter, setFilter] = useState<
     'all' | 'bp_hr' | 'weight_fat' | 'temperature' | 'blood_glucose' | 'spo2'
   >('all');
-  const [chartPeriod, setChartPeriod] = useState<Period>('1month');
+  const [chartPeriod, setChartPeriod] = useState<Period>(getStoredChartPeriod);
 
   // Load blood pressure records
   const {
@@ -408,6 +431,20 @@ export default function DailyPage() {
   }, [groupedRecords, filter]);
 
   const records = filteredRecords;
+
+  // Save viewMode to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY_VIEW_MODE, viewMode);
+    }
+  }, [viewMode]);
+
+  // Save chartPeriod to localStorage when it changes
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY_CHART_PERIOD, chartPeriod);
+    }
+  }, [chartPeriod]);
 
   // Load records when component mounts
   useEffect(() => {

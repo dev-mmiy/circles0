@@ -259,9 +259,9 @@ export default function VitalCharts({
         const data = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          systolic: data?.systolic,
-          diastolic: data?.diastolic,
-          heartRate: data?.heartRate,
+          systolic: data?.systolic ?? null,
+          diastolic: data?.diastolic ?? null,
+          heartRate: data?.heartRate ?? null,
         });
       });
       
@@ -271,7 +271,7 @@ export default function VitalCharts({
     // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
     if (period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; systolic?: number; diastolic?: number; heartRate?: number }> = [];
+      const result: Array<{ date: string; systolic?: number | null; diastolic?: number | null; heartRate?: number | null }> = [];
       
       const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
@@ -288,9 +288,9 @@ export default function VitalCharts({
         const data = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          systolic: data?.systolic,
-          diastolic: data?.diastolic,
-          heartRate: data?.heartRate,
+          systolic: data?.systolic ?? null,
+          diastolic: data?.diastolic ?? null,
+          heartRate: data?.heartRate ?? null,
         });
       });
       
@@ -356,7 +356,7 @@ export default function VitalCharts({
     // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
     if (period === '1week') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; weight?: number; bodyFat?: number }> = [];
+      const result: Array<{ date: string; weight?: number | null; bodyFat?: number | null }> = [];
       
       const dataByDate = new Map<string, { weight?: number; bodyFat?: number }>();
       Array.from(dataMap.values()).forEach(item => {
@@ -372,8 +372,8 @@ export default function VitalCharts({
         const data = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          weight: data?.weight,
-          bodyFat: data?.bodyFat,
+          weight: data?.weight ?? null,
+          bodyFat: data?.bodyFat ?? null,
         });
       });
       
@@ -383,7 +383,7 @@ export default function VitalCharts({
     // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
     if (period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; weight?: number; bodyFat?: number }> = [];
+      const result: Array<{ date: string; weight?: number | null; bodyFat?: number | null }> = [];
       
       const dataByDate = new Map<string, { weight?: number; bodyFat?: number }>();
       Array.from(dataMap.values()).forEach(item => {
@@ -400,8 +400,8 @@ export default function VitalCharts({
         const data = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          weight: data?.weight,
-          bodyFat: data?.bodyFat,
+          weight: data?.weight ?? null,
+          bodyFat: data?.bodyFat ?? null,
         });
       });
       
@@ -477,7 +477,7 @@ export default function VitalCharts({
     // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
     if (period === '1week') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; temperature?: number }> = [];
+      const result: Array<{ date: string; temperature?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -492,7 +492,7 @@ export default function VitalCharts({
         const temperature = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          temperature: temperature,
+          temperature: temperature ?? null,
         });
       });
       
@@ -502,7 +502,7 @@ export default function VitalCharts({
     // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
     if (period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; temperature?: number }> = [];
+      const result: Array<{ date: string; temperature?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -517,7 +517,7 @@ export default function VitalCharts({
         const temperature = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          temperature: temperature,
+          temperature: temperature ?? null,
         });
       });
       
@@ -567,7 +567,7 @@ export default function VitalCharts({
     // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
     if (period === '1week') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; bloodGlucose?: number }> = [];
+      const result: Array<{ date: string; bloodGlucose?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -582,7 +582,7 @@ export default function VitalCharts({
         const bloodGlucose = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          bloodGlucose: bloodGlucose,
+          bloodGlucose: bloodGlucose ?? null,
         });
       });
       
@@ -592,7 +592,7 @@ export default function VitalCharts({
     // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
     if (period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; bloodGlucose?: number }> = [];
+      const result: Array<{ date: string; bloodGlucose?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -607,7 +607,7 @@ export default function VitalCharts({
         const bloodGlucose = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          bloodGlucose: bloodGlucose,
+          bloodGlucose: bloodGlucose ?? null,
         });
       });
       
@@ -657,7 +657,7 @@ export default function VitalCharts({
     // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
     if (period === '1week') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; spo2?: number }> = [];
+      const result: Array<{ date: string; spo2?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -672,7 +672,7 @@ export default function VitalCharts({
         const spo2 = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          spo2: spo2,
+          spo2: spo2 ?? null,
         });
       });
       
@@ -682,7 +682,7 @@ export default function VitalCharts({
     // 1か月の場合、データがない日も含めて全期間のデータポイントを作成
     if (period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; spo2?: number }> = [];
+      const result: Array<{ date: string; spo2?: number | null }> = [];
       
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
@@ -697,7 +697,7 @@ export default function VitalCharts({
         const spo2 = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day),
-          spo2: spo2,
+          spo2: spo2 ?? null,
         });
       });
       
@@ -740,7 +740,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={bpHrData}>
+              <LineChart data={bpHrData} connectNulls={true}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -805,6 +805,7 @@ export default function VitalCharts({
                     strokeWidth={2}
                     name="収縮期血圧 (mmHg)"
                     dot={{ r: 4 }}
+                    connectNulls={true}
                   />
                 )}
                 {bpHrData.some(d => d.diastolic !== undefined) && (
@@ -817,6 +818,7 @@ export default function VitalCharts({
                     strokeDasharray="5 5"
                     name="拡張期血圧 (mmHg)"
                     dot={{ r: 4 }}
+                    connectNulls={true}
                   />
                 )}
                 {bpHrData.some(d => d.heartRate !== undefined) && (
@@ -828,6 +830,7 @@ export default function VitalCharts({
                     strokeWidth={2}
                     name="心拍数 (bpm)"
                     dot={{ r: 4 }}
+                    connectNulls={true}
                   />
                 )}
                 {period === '1month' && (
@@ -853,7 +856,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weightFatData}>
+              <LineChart data={weightFatData} connectNulls={true}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -869,6 +872,7 @@ export default function VitalCharts({
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <YAxis 
                   yAxisId="left" 
+                  label={{ value: '体重 (kg)', angle: -90, position: 'insideLeft' }}
                   stroke="#3b82f6" 
                   tick={{ fill: '#6b7280' }}
                   domain={weightDomain}
@@ -879,6 +883,7 @@ export default function VitalCharts({
                 <YAxis
                   yAxisId="right"
                   orientation="right"
+                  label={{ value: '体脂肪率 (%)', angle: 90, position: 'insideRight' }}
                   stroke="#f59e0b"
                   tick={{ fill: '#6b7280' }}
                 />
@@ -899,6 +904,7 @@ export default function VitalCharts({
                     strokeWidth={2}
                     name="体重 (kg)"
                     dot={{ r: 4 }}
+                    connectNulls={true}
                   />
                 )}
                 {weightFatData.some(d => d.bodyFat !== undefined) && (
@@ -910,6 +916,7 @@ export default function VitalCharts({
                     strokeWidth={2}
                     name="体脂肪率 (%)"
                     dot={{ r: 4 }}
+                    connectNulls={true}
                   />
                 )}
                 {period === '1month' && (
@@ -933,7 +940,7 @@ export default function VitalCharts({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">体温</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={temperatureData}>
+              <LineChart data={temperatureData} connectNulls={true}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -962,6 +969,7 @@ export default function VitalCharts({
                   strokeWidth={2}
                   name="体温 (°C)"
                   dot={{ r: 4 }}
+                  connectNulls={true}
                 />
                 {period === '1month' && (
                   <Brush
@@ -984,7 +992,7 @@ export default function VitalCharts({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">血糖値</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={bloodGlucoseData}>
+              <AreaChart data={bloodGlucoseData} connectNulls={true}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1014,6 +1022,7 @@ export default function VitalCharts({
                   fillOpacity={0.3}
                   strokeWidth={2}
                   name="血糖値 (mg/dL)"
+                  connectNulls={true}
                 />
                 {period === '1month' && (
                   <Brush
@@ -1038,7 +1047,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={spo2Data}>
+              <AreaChart data={spo2Data} connectNulls={true}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1068,6 +1077,7 @@ export default function VitalCharts({
                   fillOpacity={0.3}
                   strokeWidth={2}
                   name="SpO2 (%)"
+                  connectNulls={true}
                 />
                 {period === '1month' && (
                   <Brush
