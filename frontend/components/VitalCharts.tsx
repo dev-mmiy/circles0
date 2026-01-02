@@ -245,6 +245,35 @@ export default function VitalCharts({
       
       return result;
     }
+
+    // 半年または1年の場合、月単位でデータポイントを作成
+    if (period === '6months' || period === '1year') {
+      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; systolic?: number | null; diastolic?: number | null; heartRate?: number | null }> = [];
+      
+      const dataByMonth = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const monthKey = getMonthKey(item.dateObj);
+        dataByMonth.set(monthKey, {
+          systolic: item.systolic,
+          diastolic: item.diastolic,
+          heartRate: item.heartRate,
+        });
+      });
+      
+      allMonths.forEach(month => {
+        const monthKey = getMonthKey(month);
+        const data = dataByMonth.get(monthKey);
+        result.push({
+          date: formatXAxisDate(month, period),
+          systolic: data?.systolic ?? null,
+          diastolic: data?.diastolic ?? null,
+          heartRate: data?.heartRate ?? null,
+        });
+      });
+      
+      return result;
+    }
     
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
