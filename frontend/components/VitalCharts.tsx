@@ -1081,7 +1081,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={temperatureData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
+              <LineChart data={temperatureData} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
@@ -1098,7 +1098,14 @@ export default function VitalCharts({
                     isFront={false}
                   />
                 ))}
-                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280" 
+                  tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} 
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? 'end' : 'middle'}
+                  height={isMobile ? 60 : 30}
+                />
                 <YAxis stroke="#3b82f6" tick={{ fill: '#6b7280' }} domain={[34, 43]} />
                 <Tooltip
                   contentStyle={{
