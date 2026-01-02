@@ -135,6 +135,7 @@
     "backToConversations": "会話一覧に戻る",
     "sendMessage": "メッセージを送る",
     "newMessage": "メッセージ",
+    "pageTitle": "メッセージ",
     "selectUser": "ユーザーを選択",
     "selectUserPlaceholder": "ユーザー名またはニックネームで検索...",
     "noUserSelected": "ユーザーを選択してください",
@@ -357,11 +358,13 @@
       "newest": "新しい順",
       "oldest": "古い順"
     },
+    "refreshing": "更新中...",
     "filterNotFollowing": "フォロー以外",
     "noFollowingAndMyPosts": "投稿がまだありません",
     "noFollowingAndMyPostsMessage": "フォローしているユーザーや自分の投稿がまだありません",
     "noNotFollowingPosts": "フォロー以外の投稿がまだありません",
-    "noNotFollowingPostsMessage": "フォローしていないユーザーの投稿がまだありません"
+    "noNotFollowingPostsMessage": "フォローしていないユーザーの投稿がまだありません",
+    "pageTitle": "タイムライン"
   },
   "post": {
     "unknownUser": "不明なユーザー",
@@ -1356,12 +1359,6 @@
   },
   "meal": {
     "pageTitle": "食事記録"
-  },
-  "feed": {
-    "pageTitle": "タイムライン"
-  },
-  "messages": {
-    "pageTitle": "メッセージ"
   },
   "groups": {
     "pageTitle": "グループ"

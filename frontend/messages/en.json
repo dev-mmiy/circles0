@@ -135,6 +135,7 @@
     "backToConversations": "Back to conversations",
     "sendMessage": "Send Message",
     "newMessage": "Message",
+    "pageTitle": "Messages",
     "selectUser": "Select User",
     "selectUserPlaceholder": "Search by username or nickname...",
     "noUserSelected": "Please select a user",
@@ -357,11 +358,13 @@
       "newest": "Newest",
       "oldest": "Oldest"
     },
+    "refreshing": "Refreshing...",
     "filterNotFollowing": "Not Following",
     "noFollowingAndMyPosts": "No posts yet",
     "noFollowingAndMyPostsMessage": "No posts from users you follow or your own posts yet",
     "noNotFollowingPosts": "No posts from users you don't follow yet",
-    "noNotFollowingPostsMessage": "No posts from users you don't follow yet"
+    "noNotFollowingPostsMessage": "No posts from users you don't follow yet",
+    "pageTitle": "Feed"
   },
   "post": {
     "unknownUser": "Unknown User",
@@ -1358,12 +1361,6 @@
   },
   "meal": {
     "pageTitle": "Meal Records"
-  },
-  "feed": {
-    "pageTitle": "Feed"
-  },
-  "messages": {
-    "pageTitle": "Messages"
   },
   "groups": {
     "pageTitle": "Groups"

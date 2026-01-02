@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useSearchParams } from 'next/navigation';

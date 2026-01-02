@@ -38,6 +38,7 @@ import { addMessageReaction, removeMessageReaction } from '@/lib/api/messages';
 import ImageViewer, { type ImageViewerImage } from '@/components/ImageViewer';
 import { useImageViewer } from '@/hooks/useImageViewer';
 import { convertMessageImagesToViewerImages } from '@/lib/utils/imageViewerUtils';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 export default function ConversationPage() {
   // Disable Next.js automatic scroll restoration for this page
@@ -58,6 +59,11 @@ export default function ConversationPage() {
   const conversationId = params?.conversationId as string;
   const t = useTranslations('messages');
   const tConv = useTranslations('messages.conversation');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(tConv('title') || t('pageTitle') || 'Messages');
+  }, [t, tConv]);
 
   // 認証とローディング管理の共通フック
   const {
