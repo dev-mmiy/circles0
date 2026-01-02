@@ -52,11 +52,12 @@ Object.defineProperty(window, 'matchMedia', {
 describe('VitalCharts', () => {
   const mockBloodPressureRecords: BloodPressureRecord[] = [
     {
-      id: 1,
+      id: '1',
       systolic: 120,
       diastolic: 80,
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -64,10 +65,11 @@ describe('VitalCharts', () => {
 
   const mockHeartRateRecords: HeartRateRecord[] = [
     {
-      id: 1,
-      heart_rate: 72,
+      id: '1',
+      bpm: 72,
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -75,10 +77,12 @@ describe('VitalCharts', () => {
 
   const mockTemperatureRecords: TemperatureRecord[] = [
     {
-      id: 1,
-      temperature: 36.5,
+      id: '1',
+      value: 36.5,
+      unit: 'celsius',
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -86,10 +90,12 @@ describe('VitalCharts', () => {
 
   const mockWeightRecords: WeightRecord[] = [
     {
-      id: 1,
-      weight: 70,
+      id: '1',
+      value: 70,
+      unit: 'kg',
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -97,10 +103,11 @@ describe('VitalCharts', () => {
 
   const mockBodyFatRecords: BodyFatRecord[] = [
     {
-      id: 1,
-      body_fat_percentage: 15,
+      id: '1',
+      percentage: 15,
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -108,10 +115,11 @@ describe('VitalCharts', () => {
 
   const mockBloodGlucoseRecords: BloodGlucoseRecord[] = [
     {
-      id: 1,
-      blood_glucose: 100,
+      id: '1',
+      value: 100,
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -119,10 +127,11 @@ describe('VitalCharts', () => {
 
   const mockSpO2Records: SpO2Record[] = [
     {
-      id: 1,
-      spo2: 98,
+      id: '1',
+      percentage: 98,
       recorded_at: new Date().toISOString(),
-      user_id: 1,
+      user_id: '1',
+      visibility: 'private',
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -210,11 +219,12 @@ describe('VitalCharts', () => {
     
     const recordsInRange: BloodPressureRecord[] = [
       {
-        id: 1,
+        id: '1',
         systolic: 120,
         diastolic: 80,
         recorded_at: sixMonthsAgo.toISOString(),
-        user_id: 1,
+        user_id: '1',
+        visibility: 'private',
         created_at: sixMonthsAgo.toISOString(),
         updated_at: sixMonthsAgo.toISOString(),
       },
@@ -239,11 +249,12 @@ describe('VitalCharts', () => {
     
     const recordsInRange: BloodPressureRecord[] = [
       {
-        id: 1,
+        id: '1',
         systolic: 120,
         diastolic: 80,
         recorded_at: sixMonthsAgo.toISOString(),
-        user_id: 1,
+        user_id: '1',
+        visibility: 'private',
         created_at: sixMonthsAgo.toISOString(),
         updated_at: sixMonthsAgo.toISOString(),
       },
@@ -333,11 +344,12 @@ describe('VitalCharts', () => {
     
     const oldRecords: BloodPressureRecord[] = [
       {
-        id: 1,
+        id: '1',
         systolic: 120,
         diastolic: 80,
         recorded_at: oldDate.toISOString(),
-        user_id: 1,
+        user_id: '1',
+        visibility: 'private',
         created_at: oldDate.toISOString(),
         updated_at: oldDate.toISOString(),
       },

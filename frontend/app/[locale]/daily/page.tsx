@@ -85,6 +85,7 @@ const getStoredChartPeriod = (): Period => {
 export default function DailyPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user } = useUser();
+  const locale = useLocale();
   const t = useTranslations('daily');
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
