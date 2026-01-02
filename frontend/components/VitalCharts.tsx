@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import {
   LineChart,
   Line,
@@ -15,8 +15,9 @@ import {
   ReferenceLine,
   Brush,
 } from 'recharts';
-import { format, subDays, subMonths, subYears, parseISO, startOfMonth, startOfWeek, endOfWeek, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, subDays, subMonths, subYears, parseISO, startOfMonth, startOfWeek, endOfWeek, endOfMonth, eachDayOfInterval, addDays } from 'date-fns';
 import { ja } from 'date-fns/locale/ja';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import type { HeartRateRecord } from '@/lib/api/heartRateRecords';
 import type { TemperatureRecord } from '@/lib/api/temperatureRecords';
@@ -48,43 +49,85 @@ export default function VitalCharts({
   bloodGlucoseRecords,
   spo2Records,
 }: VitalChartsProps) {
+  // 1週間チャートの場合、表示する週の開始日を管理
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = 今週、1 = 1週間前、-1 = 1週間後
+
   // Calculate date range based on period
   const dateRange = useMemo(() => {
     const now = new Date();
     let startDate: Date;
-    let endDate: Date = now;
+    let endDate: Date;
 
     switch (period) {
       case '1week':
-        // 過去7日間を表示（今日を含む7日間）
-        startDate = subDays(now, 6); // 今日を含めて7日間
-        endDate = now;
+        // 1週間チャート：weekOffsetに基づいて表示する週を決定
+        const weekTargetStart = startOfWeek(subDays(now, weekOffset * 7), { weekStartsOn: 0 });
+        startDate = weekTargetStart;
+        endDate = addDays(weekTargetStart, 6); // 週の終わり（土曜日）
         break;
       case '1month':
-        // その週を含む過去5週分を表示
-        // 現在の週の開始日（日曜日）から過去4週前の週の開始日まで（合計5週間）
-        const currentWeekStart = startOfWeek(now, { weekStartsOn: 0 });
-        startDate = startOfWeek(subDays(currentWeekStart, 7 * 4), { weekStartsOn: 0 }); // 過去4週前の週の開始日
-        // 終了日は現在の週の終了日（土曜日）
-        endDate = endOfWeek(now, { weekStartsOn: 0 });
-        // デバッグログ
-        console.log('[VitalCharts] 1month date range (5 weeks):', {
-          startDate: format(startDate, 'yyyy-MM-dd'),
-          endDate: format(endDate, 'yyyy-MM-dd'),
-          now: format(now, 'yyyy-MM-dd'),
-        });
+        // 1か月チャート：weekOffsetに基づいて表示する5週間を決定
+        // weekOffset = 0: 現在の週を含む5週間
+        // weekOffset = 1: 1か月前の週を含む5週間
+        // 1か月 = 約4週間なので、weekOffset * 4週間分移動
+        const monthCurrentWeekStart = startOfWeek(now, { weekStartsOn: 0 });
+        const monthTargetWeekStart = startOfWeek(subDays(monthCurrentWeekStart, weekOffset * 4 * 7), { weekStartsOn: 0 });
+        startDate = monthTargetWeekStart;
+        endDate = addDays(monthTargetWeekStart, 34); // 5週間分（35日 - 1日 = 34日後）
         break;
       case '6months':
-        // 過去6か月分を表示するため、現在の月の開始日から過去6か月前の月の開始日まで
-        startDate = startOfMonth(subMonths(now, 6));
+        // 半年チャート：weekOffsetに基づいて表示する6か月を決定
+        // weekOffset = 0: 現在の月から過去6か月
+        // weekOffset = 1: 6か月前からさらに6か月前（12か月前から6か月前まで）
+        const sixMonthsEndMonth = weekOffset === 0 ? now : subMonths(now, weekOffset * 6);
+        const sixMonthsStartMonth = subMonths(sixMonthsEndMonth, 6);
+        startDate = startOfMonth(sixMonthsStartMonth);
+        endDate = subDays(startOfMonth(sixMonthsEndMonth), 1); // 終了月の前日まで
         break;
       case '1year':
-        startDate = subYears(now, 1);
+        // 1年チャート：weekOffsetに基づいて表示する1年を決定
+        // weekOffset = 0: 現在の月から過去1年
+        // weekOffset = 1: 1年前からさらに1年前（2年前から1年前まで）
+        const oneYearEndMonth = weekOffset === 0 ? now : subMonths(now, weekOffset * 12);
+        const oneYearStartMonth = subMonths(oneYearEndMonth, 12);
+        startDate = startOfMonth(oneYearStartMonth);
+        endDate = subDays(startOfMonth(oneYearEndMonth), 1); // 終了月の前日まで
         break;
     }
 
     return { startDate, endDate };
-  }, [period]);
+  }, [period, weekOffset]);
+
+  // チャートのナビゲーション関数（全期間共通）
+  const goToPreviousPeriod = () => {
+    setWeekOffset(prev => prev + 1);
+  };
+
+  const goToNextPeriod = () => {
+    setWeekOffset(prev => prev - 1);
+  };
+
+  // チャートのタイトル表示用の日付範囲
+  const periodTitleRange = useMemo(() => {
+    if (period === '1week') {
+      const start = format(dateRange.startDate, 'M/d', { locale: ja });
+      const end = format(dateRange.endDate, 'M/d', { locale: ja });
+      return `${start} - ${end}`;
+    } else if (period === '1month') {
+      const start = format(dateRange.startDate, 'M/d', { locale: ja });
+      const end = format(dateRange.endDate, 'M/d', { locale: ja });
+      return `${start} - ${end}`;
+    } else if (period === '6months') {
+      const start = format(dateRange.startDate, 'yyyy年M月', { locale: ja });
+      const end = format(dateRange.endDate, 'yyyy年M月', { locale: ja });
+      return `${start} - ${end}`;
+    } else if (period === '1year') {
+      const start = format(dateRange.startDate, 'yyyy年M月', { locale: ja });
+      const end = format(dateRange.endDate, 'yyyy年M月', { locale: ja });
+      return `${start} - ${end}`;
+    }
+    return null;
+  }, [period, dateRange]);
 
   // Filter records by date range
   const filterByDateRange = <T extends { recorded_at: string }>(records: T[]): T[] => {
@@ -741,9 +784,45 @@ export default function VitalCharts({
       {/* Blood Pressure & Heart Rate Chart */}
       {bpHrData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            血圧・心拍数
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousPeriod}
+              className="p-1 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
+              aria-label={
+                period === '1week' ? '前の週' :
+                period === '1month' ? '前の期間' :
+                period === '6months' ? '前の半年' :
+                period === '1year' ? '前の年' : ''
+              }
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              血圧・心拍数
+              {periodTitleRange && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  ({periodTitleRange})
+                </span>
+              )}
+            </h3>
+            <button
+              onClick={goToNextPeriod}
+              disabled={weekOffset === 0}
+              className={`p-1 rounded-lg transition-colors ${
+                weekOffset > 0
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={
+                period === '1week' ? '次の週' :
+                period === '1month' ? '次の期間' :
+                period === '6months' ? '次の半年' :
+                period === '1year' ? '次の年' : ''
+              }
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={bpHrData}>
@@ -816,7 +895,7 @@ export default function VitalCharts({
                     stroke="#ef4444"
                     strokeWidth={2}
                     name="収縮期血圧 (mmHg)"
-                    dot={{ r: 4 }}
+                    dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
                 )}
@@ -829,7 +908,7 @@ export default function VitalCharts({
                     strokeWidth={2}
                     strokeDasharray="5 5"
                     name="拡張期血圧 (mmHg)"
-                    dot={{ r: 4 }}
+                    dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
                 )}
@@ -841,17 +920,8 @@ export default function VitalCharts({
                     stroke="#3b82f6"
                     strokeWidth={2}
                     name="心拍数 (bpm)"
-                    dot={{ r: 4 }}
+                    dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
-                  />
-                )}
-                {period === '1month' && (
-                  <Brush
-                    dataKey="date"
-                    height={30}
-                    stroke="#8884d8"
-                    startIndex={0} // 初期状態で全期間（5週間）を表示
-                    endIndex={bpHrData.length - 1}
                   />
                 )}
               </LineChart>
@@ -863,9 +933,40 @@ export default function VitalCharts({
       {/* Weight & Body Fat Chart */}
       {weightFatData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            体重・体脂肪率
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousPeriod}
+              disabled={period !== '1week' && period !== '1month'}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month')
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              体重・体脂肪率
+              {periodTitleRange && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  ({periodTitleRange})
+                </span>
+              )}
+            </h3>
+            <button
+              onClick={goToNextPeriod}
+              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month') && weekOffset > 0
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weightFatData}>
@@ -915,7 +1016,7 @@ export default function VitalCharts({
                     stroke="#3b82f6"
                     strokeWidth={2}
                     name="体重 (kg)"
-                    dot={{ r: 4 }}
+                    dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
                 )}
@@ -927,17 +1028,8 @@ export default function VitalCharts({
                     stroke="#f59e0b"
                     strokeWidth={2}
                     name="体脂肪率 (%)"
-                    dot={{ r: 4 }}
+                    dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
-                  />
-                )}
-                {period === '1month' && (
-                  <Brush
-                    dataKey="date"
-                    height={30}
-                    stroke="#8884d8"
-                    startIndex={0} // 初期状態で全期間（5週間）を表示
-                    endIndex={weightFatData.length - 1}
                   />
                 )}
               </LineChart>
@@ -949,7 +1041,40 @@ export default function VitalCharts({
       {/* Temperature Chart */}
       {temperatureData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">体温</h3>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousPeriod}
+              disabled={period !== '1week' && period !== '1month'}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month')
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              体温
+              {periodTitleRange && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  ({periodTitleRange})
+                </span>
+              )}
+            </h3>
+            <button
+              onClick={goToNextPeriod}
+              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month') && weekOffset > 0
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={temperatureData}>
@@ -983,15 +1108,6 @@ export default function VitalCharts({
                   dot={{ r: 4 }}
                   connectNulls={true}
                 />
-                {period === '1month' && (
-                  <Brush
-                    dataKey="date"
-                    height={30}
-                    stroke="#8884d8"
-                    startIndex={0} // 初期状態で全期間（5週間）を表示
-                    endIndex={temperatureData.length - 1}
-                  />
-                )}
               </LineChart>
             </ResponsiveContainer>
           ) : null}
@@ -1001,7 +1117,40 @@ export default function VitalCharts({
       {/* Blood Glucose Chart */}
       {bloodGlucoseData.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">血糖値</h3>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousPeriod}
+              disabled={period !== '1week' && period !== '1month'}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month')
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              血糖値
+              {periodTitleRange && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  ({periodTitleRange})
+                </span>
+              )}
+            </h3>
+            <button
+              onClick={goToNextPeriod}
+              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month') && weekOffset > 0
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={bloodGlucoseData}>
@@ -1036,15 +1185,6 @@ export default function VitalCharts({
                   name="血糖値 (mg/dL)"
                   connectNulls={true}
                 />
-                {period === '1month' && (
-                  <Brush
-                    dataKey="date"
-                    height={30}
-                    stroke="#8884d8"
-                    startIndex={0} // 初期状態で全期間（5週間）を表示
-                    endIndex={bloodGlucoseData.length - 1}
-                  />
-                )}
               </AreaChart>
             </ResponsiveContainer>
           ) : null}
@@ -1054,9 +1194,40 @@ export default function VitalCharts({
       {/* SpO2 Chart */}
       {spo2Data.length > 0 && (
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
-            血中酸素濃度
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <button
+              onClick={goToPreviousPeriod}
+              disabled={period !== '1week' && period !== '1month'}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month')
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              血中酸素濃度
+              {periodTitleRange && (
+                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
+                  ({periodTitleRange})
+                </span>
+              )}
+            </h3>
+            <button
+              onClick={goToNextPeriod}
+              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
+              className={`p-1 rounded-lg transition-colors ${
+                (period === '1week' || period === '1month') && weekOffset > 0
+                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
+                  : 'opacity-0 cursor-default'
+              }`}
+              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
+            >
+              <ChevronRight className="w-5 h-5" />
+            </button>
+          </div>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={spo2Data}>
@@ -1091,15 +1262,6 @@ export default function VitalCharts({
                   name="SpO2 (%)"
                   connectNulls={true}
                 />
-                {period === '1month' && (
-                  <Brush
-                    dataKey="date"
-                    height={30}
-                    stroke="#8884d8"
-                    startIndex={0} // 初期状態で全期間（5週間）を表示
-                    endIndex={spo2Data.length - 1}
-                  />
-                )}
               </AreaChart>
             </ResponsiveContainer>
           ) : null}

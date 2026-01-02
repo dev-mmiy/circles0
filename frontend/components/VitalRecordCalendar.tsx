@@ -133,7 +133,9 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
                 relative p-2 rounded-lg text-sm transition-all
                 ${
                   !isCurrentMonth
-                    ? 'text-gray-300 dark:text-gray-600'
+                    ? hasRecords
+                      ? 'text-blue-900 dark:text-blue-200'
+                      : 'text-gray-300 dark:text-gray-600'
                     : 'text-gray-900 dark:text-gray-100'
                 }
                 ${isToday ? 'ring-2 ring-blue-500 dark:ring-blue-400' : ''}

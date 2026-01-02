@@ -643,7 +643,7 @@ export default function DailyPage() {
                 </select>
               </div>
             )}
-            {viewMode === 'chart' && (
+            {(viewMode === 'chart' || viewMode === 'calendar') && (
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                   {t('chart.period') || '期間'}:
