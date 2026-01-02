@@ -794,8 +794,8 @@ export default function VitalCharts({
         break;
         
       case '1month':
-        // 毎週の日曜日に縦線
-        const monthStart = startOfWeek(dateRange.startDate, { weekStartsOn: 0 });
+        // 毎週の月曜日に縦線
+        const monthStart = startOfWeek(dateRange.startDate, { weekStartsOn: 1 });
         const monthEnd = dateRange.endDate;
         let currentWeek = new Date(monthStart);
         while (currentWeek <= monthEnd) {
@@ -1136,7 +1136,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
+              <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
@@ -1153,7 +1153,14 @@ export default function VitalCharts({
                     isFront={false}
                   />
                 ))}
-                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280" 
+                  tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} 
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? 'end' : 'middle'}
+                  height={isMobile ? 60 : 30}
+                />
                 <YAxis stroke="#f97316" tick={{ fill: '#6b7280' }} />
                 <Tooltip
                   contentStyle={{
@@ -1192,7 +1199,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={spo2Data} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
+              <AreaChart data={spo2Data} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
@@ -1209,7 +1216,14 @@ export default function VitalCharts({
                     isFront={false}
                   />
                 ))}
-                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
+                <XAxis 
+                  dataKey="date" 
+                  stroke="#6b7280" 
+                  tick={{ fill: '#6b7280', fontSize: isMobile ? 10 : 12 }} 
+                  angle={isMobile ? -45 : 0}
+                  textAnchor={isMobile ? 'end' : 'middle'}
+                  height={isMobile ? 60 : 30}
+                />
                 <YAxis stroke="#ec4899" tick={{ fill: '#6b7280' }} domain={[70, 100]} />
                 <Tooltip
                   contentStyle={{
