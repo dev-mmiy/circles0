@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   LineChart,
   Line,
@@ -14,7 +14,7 @@ import {
   Area,
   ReferenceLine,
 } from 'recharts';
-import { format, parseISO, startOfMonth, startOfWeek, eachDayOfInterval } from 'date-fns';
+import { format, parseISO, startOfMonth, startOfWeek, eachDayOfInterval, eachWeekOfInterval, eachMonthOfInterval, addDays, addWeeks, addMonths, isSunday, endOfMonth } from 'date-fns';
 import { ja } from 'date-fns/locale/ja';
 import { useTranslations } from 'next-intl';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
@@ -115,7 +115,7 @@ export default function VitalCharts({
   const bpHrData = useMemo(() => {
     const bpFiltered = filterRecords(bloodPressureRecords);
     const hrFiltered = filterRecords(heartRateRecords);
-    const isMonthlyView = period === '6months';
+    const isMonthlyView = period === '6months' || period === '1year';
 
     // 1週間または1か月の場合、日単位で集計する
     const isDailyView = period === '1week' || period === '1month';
@@ -358,6 +358,34 @@ export default function VitalCharts({
       
       return result;
     }
+
+    // 半年または1年の場合、月単位でデータポイントを作成
+    if (period === '6months' || period === '1year') {
+      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; weight?: number | null; bodyFat?: number | null }> = [];
+      
+      const dataByMonth = new Map<string, { weight?: number; bodyFat?: number }>();
+      Array.from(dataMap.values()).forEach(item => {
+        const recordDate = parseISO(item.date);
+        const monthKey = getMonthKey(recordDate);
+        dataByMonth.set(monthKey, {
+          weight: item.weight,
+          bodyFat: item.bodyFat,
+        });
+      });
+      
+      allMonths.forEach(month => {
+        const monthKey = getMonthKey(month);
+        const data = dataByMonth.get(monthKey);
+        result.push({
+          date: formatXAxisDate(month, period),
+          weight: data?.weight ?? null,
+          bodyFat: data?.bodyFat ?? null,
+        });
+      });
+      
+      return result;
+    }
     
     return Array.from(dataMap.values())
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
@@ -365,7 +393,7 @@ export default function VitalCharts({
         ...item,
         date: formatXAxisDate(item.date, period),
       }));
-  }, [weightRecords, bodyFatRecords, period, dateRange, formatXAxisDate]);
+  }, [weightRecords, bodyFatRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // Calculate weight Y-axis domain dynamically
   const weightDomain = useMemo(() => {
@@ -396,7 +424,7 @@ export default function VitalCharts({
   // Temperature Chart
   const temperatureData = useMemo(() => {
     const filtered = filterRecords(temperatureRecords);
-    const isMonthlyView = period === '6months';
+    const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
 
     const dataMap = new Map<
@@ -468,6 +496,31 @@ export default function VitalCharts({
         const temperature = dataByDate.get(dateKey);
         result.push({
           date: formatXAxisDate(day, period),
+          temperature: temperature ?? null,
+        });
+      });
+      
+      return result;
+    }
+
+    // 半年または1年の場合、月単位でデータポイントを作成
+    if (period === '6months' || period === '1year') {
+      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; temperature?: number | null }> = [];
+      
+      const dataByMonth = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const monthKey = getMonthKey(item.dateObj);
+        if (item.count > 0) {
+          dataByMonth.set(monthKey, Math.round((item.sum / item.count) * 10) / 10);
+        }
+      });
+      
+      allMonths.forEach(month => {
+        const monthKey = getMonthKey(month);
+        const temperature = dataByMonth.get(monthKey);
+        result.push({
+          date: formatXAxisDate(month, period),
           temperature: temperature ?? null,
         });
       });
@@ -486,7 +539,7 @@ export default function VitalCharts({
   // Blood Glucose Chart
   const bloodGlucoseData = useMemo(() => {
     const filtered = filterRecords(bloodGlucoseRecords);
-    const isMonthlyView = period === '6months';
+    const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
 
     const dataMap = new Map<
@@ -564,6 +617,31 @@ export default function VitalCharts({
       
       return result;
     }
+
+    // 半年または1年の場合、月単位でデータポイントを作成
+    if (period === '6months' || period === '1year') {
+      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; bloodGlucose?: number | null }> = [];
+      
+      const dataByMonth = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const monthKey = getMonthKey(item.dateObj);
+        if (item.count > 0) {
+          dataByMonth.set(monthKey, Math.round((item.sum / item.count) * 10) / 10);
+        }
+      });
+      
+      allMonths.forEach(month => {
+        const monthKey = getMonthKey(month);
+        const bloodGlucose = dataByMonth.get(monthKey);
+        result.push({
+          date: formatXAxisDate(month, period),
+          bloodGlucose: bloodGlucose ?? null,
+        });
+      });
+      
+      return result;
+    }
     
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
@@ -576,7 +654,7 @@ export default function VitalCharts({
   // SpO2 Chart
   const spo2Data = useMemo(() => {
     const filtered = filterRecords(spo2Records);
-    const isMonthlyView = period === '6months';
+    const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
 
     const dataMap = new Map<
@@ -655,6 +733,31 @@ export default function VitalCharts({
       return result;
     }
 
+    // 半年または1年の場合、月単位でデータポイントを作成
+    if (period === '6months' || period === '1year') {
+      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const result: Array<{ date: string; spo2?: number | null }> = [];
+      
+      const dataByMonth = new Map<string, number>();
+      Array.from(dataMap.values()).forEach(item => {
+        const monthKey = getMonthKey(item.dateObj);
+        if (item.count > 0) {
+          dataByMonth.set(monthKey, Math.round((item.sum / item.count) * 10) / 10);
+        }
+      });
+      
+      allMonths.forEach(month => {
+        const monthKey = getMonthKey(month);
+        const spo2 = dataByMonth.get(monthKey);
+        result.push({
+          date: formatXAxisDate(month, period),
+          spo2: spo2 ?? null,
+        });
+      });
+      
+      return result;
+    }
+
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
@@ -663,23 +766,73 @@ export default function VitalCharts({
       }));
   }, [spo2Records, period, dateRange, formatXAxisDate, getMonthKey]);
 
-  // Generate week divider lines for 1month period
-  const weekDividers = useMemo(() => {
-    if (period !== '1month') return [];
-    
+  // Detect if mobile device
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // 768px以下をモバイルとする
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Generate vertical divider lines based on period
+  const verticalDividers = useMemo(() => {
     const dividers: string[] = [];
-    const start = startOfWeek(dateRange.startDate, { weekStartsOn: 0 });
-    const end = dateRange.endDate;
-    let currentWeek = new Date(start);
     
-    while (currentWeek <= end) {
-      dividers.push(formatXAxisDate(currentWeek, period));
-      currentWeek = new Date(currentWeek);
-      currentWeek.setDate(currentWeek.getDate() + 7);
+    switch (period) {
+      case '1week':
+        // 1日ごとに縦線
+        const weekStart = startOfWeek(dateRange.startDate, { weekStartsOn: 0 });
+        const weekEnd = dateRange.endDate;
+        let currentDay = new Date(weekStart);
+        while (currentDay <= weekEnd) {
+          dividers.push(formatXAxisDate(currentDay, period));
+          currentDay = addDays(currentDay, 1);
+        }
+        break;
+        
+      case '1month':
+        // 毎週の日曜日に縦線
+        const monthStart = startOfWeek(dateRange.startDate, { weekStartsOn: 0 });
+        const monthEnd = dateRange.endDate;
+        let currentWeek = new Date(monthStart);
+        while (currentWeek <= monthEnd) {
+          dividers.push(formatXAxisDate(currentWeek, period));
+          currentWeek = addWeeks(currentWeek, 1);
+        }
+        break;
+        
+      case '6months':
+        // 月ごとに縦線
+        const sixMonthsStart = startOfMonth(dateRange.startDate);
+        const sixMonthsEnd = dateRange.endDate;
+        let currentMonth = new Date(sixMonthsStart);
+        while (currentMonth <= sixMonthsEnd) {
+          dividers.push(formatXAxisDate(currentMonth, period));
+          currentMonth = addMonths(currentMonth, 1);
+        }
+        break;
+        
+      case '1year':
+        // PCでは毎月、モバイルでは奇数の月に縦線
+        const yearStart = startOfMonth(dateRange.startDate);
+        const yearEnd = dateRange.endDate;
+        let currentYearMonth = new Date(yearStart);
+        let monthIndex = 0;
+        while (currentYearMonth <= yearEnd) {
+          if (!isMobile || monthIndex % 2 === 0) {
+            dividers.push(formatXAxisDate(currentYearMonth, period));
+          }
+          currentYearMonth = addMonths(currentYearMonth, 1);
+          monthIndex++;
+        }
+        break;
     }
     
     return dividers;
-  }, [period, dateRange, formatXAxisDate]);
+  }, [period, dateRange, formatXAxisDate, isMobile]);
 
   return (
     <div className="space-y-6">
@@ -698,9 +851,9 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={bpHrData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {period === '1month' && weekDividers.map((divider, index) => (
+                {verticalDividers.map((divider, index) => (
                   <ReferenceLine
-                    key={`week-divider-${index}`}
+                    key={`vertical-divider-${index}`}
                     x={divider}
                     yAxisId="bp"
                     stroke="#9ca3af"
@@ -826,9 +979,9 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weightFatData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {period === '1month' && weekDividers.map((divider, index) => (
+                {verticalDividers.map((divider, index) => (
                   <ReferenceLine
-                    key={`week-divider-${index}`}
+                    key={`vertical-divider-${index}`}
                     x={divider}
                     yAxisId="left"
                     stroke="#9ca3af"
@@ -920,9 +1073,9 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={temperatureData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {period === '1month' && weekDividers.map((divider, index) => (
+                {verticalDividers.map((divider, index) => (
                   <ReferenceLine
-                    key={`week-divider-${index}`}
+                    key={`vertical-divider-${index}`}
                     x={divider}
                     stroke="#9ca3af"
                     strokeWidth={1}
@@ -970,9 +1123,9 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {period === '1month' && weekDividers.map((divider, index) => (
+                {verticalDividers.map((divider, index) => (
                   <ReferenceLine
-                    key={`week-divider-${index}`}
+                    key={`vertical-divider-${index}`}
                     x={divider}
                     stroke="#9ca3af"
                     strokeWidth={1}
@@ -1021,9 +1174,9 @@ export default function VitalCharts({
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={spo2Data} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                {period === '1month' && weekDividers.map((divider, index) => (
+                {verticalDividers.map((divider, index) => (
                   <ReferenceLine
-                    key={`week-divider-${index}`}
+                    key={`vertical-divider-${index}`}
                     x={divider}
                     stroke="#9ca3af"
                     strokeWidth={1}
