@@ -242,7 +242,7 @@ export default function VitalCharts({
     // 1週間の場合、データがない日も含めて全期間のデータポイントを作成（1日の平均値で表示）
     if (period === '1week') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const result: Array<{ date: string; systolic?: number; diastolic?: number; heartRate?: number }> = [];
+      const result: Array<{ date: string; systolic?: number | null; diastolic?: number | null; heartRate?: number | null }> = [];
       
       const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
@@ -740,7 +740,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={bpHrData} connectNulls={true}>
+              <LineChart data={bpHrData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -856,7 +856,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weightFatData} connectNulls={true}>
+              <LineChart data={weightFatData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -940,7 +940,7 @@ export default function VitalCharts({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">体温</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={temperatureData} connectNulls={true}>
+              <LineChart data={temperatureData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -992,7 +992,7 @@ export default function VitalCharts({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">血糖値</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={bloodGlucoseData} connectNulls={true}>
+              <AreaChart data={bloodGlucoseData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1047,7 +1047,7 @@ export default function VitalCharts({
           </h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={spo2Data} connectNulls={true}>
+              <AreaChart data={spo2Data}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
