@@ -107,7 +107,7 @@ export default function VitalCharts({
       .map(item => ({
         date: formatXAxisDate(item.dateObj, period),
         dateObj: item.dateObj,
-        value: item.count > 0 ? item.sum / item.count : undefined,
+        value: item.count > 0 ? Math.round((item.sum / item.count) * 10) / 10 : undefined,
       }));
   };
 
@@ -147,8 +147,10 @@ export default function VitalCharts({
         data.systolic = record.systolic;
         data.diastolic = record.diastolic;
       } else {
-        data.systolic = (data.systolic * data.bpCount + record.systolic) / (data.bpCount + 1);
-        data.diastolic = (data.diastolic! * data.bpCount + record.diastolic) / (data.bpCount + 1);
+        const avgSystolic = (data.systolic * data.bpCount + record.systolic) / (data.bpCount + 1);
+        const avgDiastolic = (data.diastolic! * data.bpCount + record.diastolic) / (data.bpCount + 1);
+        data.systolic = Math.round(avgSystolic * 10) / 10;
+        data.diastolic = Math.round(avgDiastolic * 10) / 10;
       }
       data.bpCount++;
     });
@@ -174,7 +176,8 @@ export default function VitalCharts({
       if (data.heartRate === undefined) {
         data.heartRate = record.bpm;
       } else {
-        data.heartRate = (data.heartRate * data.hrCount + record.bpm) / (data.hrCount + 1);
+        const avgHeartRate = (data.heartRate * data.hrCount + record.bpm) / (data.hrCount + 1);
+        data.heartRate = Math.round(avgHeartRate * 10) / 10;
       }
       data.hrCount++;
     });
@@ -275,7 +278,8 @@ export default function VitalCharts({
       if (data.weight === undefined) {
         data.weight = record.value;
       } else {
-        data.weight = (data.weight * data.weightCount + record.value) / (data.weightCount + 1);
+        const avgWeight = (data.weight * data.weightCount + record.value) / (data.weightCount + 1);
+        data.weight = Math.round(avgWeight * 10) / 10;
       }
       data.weightCount++;
     });
@@ -294,7 +298,8 @@ export default function VitalCharts({
       if (data.bodyFat === undefined) {
         data.bodyFat = record.percentage;
       } else {
-        data.bodyFat = (data.bodyFat * data.fatCount + record.percentage) / (data.fatCount + 1);
+        const avgBodyFat = (data.bodyFat * data.fatCount + record.percentage) / (data.fatCount + 1);
+        data.bodyFat = Math.round(avgBodyFat * 10) / 10;
       }
       data.fatCount++;
     });
@@ -429,7 +434,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -454,7 +459,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -474,7 +479,7 @@ export default function VitalCharts({
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
         date: formatXAxisDate(item.dateObj, period),
-        temperature: item.count > 0 ? item.sum / item.count : undefined,
+        temperature: item.count > 0 ? Math.round((item.sum / item.count) * 10) / 10 : undefined,
       }));
   }, [temperatureRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
@@ -519,7 +524,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -544,7 +549,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -564,7 +569,7 @@ export default function VitalCharts({
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
         date: formatXAxisDate(item.dateObj, period),
-        bloodGlucose: item.count > 0 ? item.sum / item.count : undefined,
+        bloodGlucose: item.count > 0 ? Math.round((item.sum / item.count) * 10) / 10 : undefined,
       }));
   }, [bloodGlucoseRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
@@ -609,7 +614,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -634,7 +639,7 @@ export default function VitalCharts({
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.dateObj, 'yyyy-MM-dd');
         if (item.count > 0) {
-          dataByDate.set(dateKey, item.sum / item.count);
+          dataByDate.set(dateKey, Math.round((item.sum / item.count) * 10) / 10);
         }
       });
       
@@ -654,7 +659,7 @@ export default function VitalCharts({
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
         date: formatXAxisDate(item.dateObj, period),
-        spo2: item.count > 0 ? item.sum / item.count : undefined,
+        spo2: item.count > 0 ? Math.round((item.sum / item.count) * 10) / 10 : undefined,
       }));
   }, [spo2Records, period, dateRange, formatXAxisDate, getMonthKey]);
 

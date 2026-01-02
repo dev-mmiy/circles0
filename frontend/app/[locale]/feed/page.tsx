@@ -11,10 +11,16 @@ import { useLocale } from 'next-intl';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { useAuth0 } from '@auth0/auth0-react';
 import PostFormModal from '@/components/PostFormModal';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 export default function FeedPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const t = useTranslations('feed');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle'));
+  }, [t]);
   const locale = useLocale();
   const { userDiseases } = useDisease();
   const [activeTab, setActiveTab] = useState<'default' | 'saved' | 'detailed'>('default');

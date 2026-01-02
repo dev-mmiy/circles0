@@ -13,7 +13,7 @@ import ScrollHandler from '@/components/ScrollHandler';
 import ToasterProvider from '@/components/ToasterProvider';
 
 export const metadata: Metadata = {
-  title: 'Disease Community Platform',
+  title: 'Lifry',
   description: 'A platform for people with diseases to connect and share experiences',
 };
 

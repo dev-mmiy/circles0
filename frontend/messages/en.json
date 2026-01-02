@@ -909,6 +909,7 @@
     "delete": "Delete"
   },
   "searchPage": {
+    "pageTitle": "Search",
     "title": "Search",
     "subtitle": "Search for diseases and users",
     "tabDiseases": "Search from Diseases",
@@ -1100,6 +1101,7 @@
     "placeholder": "Please select a category"
   },
   "homePage": {
+    "pageTitle": "Home",
     "title": "Hello World!",
     "subtitle": "Disease Community Platform",
     "loading": "Loading...",
@@ -1351,6 +1353,31 @@
         "spo2": "SpO2 (%)"
       },
       "noData": "No records found for the selected period"
-    }
+    },
+    "pageTitle": "Daily Records"
+  },
+  "meal": {
+    "pageTitle": "Meal Records"
+  },
+  "feed": {
+    "pageTitle": "Feed"
+  },
+  "messages": {
+    "pageTitle": "Messages"
+  },
+  "groups": {
+    "pageTitle": "Groups"
+  },
+  "profile": {
+    "pageTitle": "Profile"
+  },
+  "search": {
+    "pageTitle": "Search"
+  },
+  "notifications": {
+    "pageTitle": "Notifications"
+  },
+  "blocks": {
+    "pageTitle": "Blocks"
   }
 }

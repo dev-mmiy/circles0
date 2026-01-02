@@ -24,6 +24,7 @@ import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { searchGroups, Group, getGroups } from '@/lib/api/groups';
 import { debugLog } from '@/lib/utils/debug';
 import dynamic from 'next/dynamic';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 // Dynamically import GroupSettingsModal to reduce initial bundle size
 const GroupSettingsModal = dynamic(() => import('@/components/GroupSettingsModal'), {
@@ -37,6 +38,11 @@ export default function MessagesPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('messages');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle'));
+  }, [t]);
 
   // Unified type for conversations and groups
   type ConversationOrGroup =

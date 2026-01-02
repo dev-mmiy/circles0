@@ -26,6 +26,7 @@ import VitalRecordCalendar from '@/components/VitalRecordCalendar';
 import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
 import { ja, enUS } from 'date-fns/locale';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 // Dynamically import VitalCharts to avoid SSR issues with Recharts
 const VitalCharts = dynamic(
@@ -87,6 +88,11 @@ export default function DailyPage() {
   const { user } = useUser();
   const locale = useLocale();
   const t = useTranslations('daily');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle'));
+  }, [t]);
   const [viewMode, setViewMode] = useState<ViewMode>(getStoredViewMode);
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [selectedVitalType, setSelectedVitalType] = useState<VitalType | null>(null);

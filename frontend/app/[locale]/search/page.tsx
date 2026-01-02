@@ -17,12 +17,18 @@ import { searchDiseases, searchUsers } from '@/lib/api/search';
 import { useDisease } from '@/contexts/DiseaseContext';
 import { useUser } from '@/contexts/UserContext';
 import { DiseaseCategory } from '@/lib/api/diseases';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 type SearchTab = 'diseases' | 'users' | 'hashtags';
 
 export default function SearchPage() {
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
   const t = useTranslations('searchPage');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle') || 'Search');
+  }, [t]);
   const locale = useLocale();
   const { user } = useUser();
   const { categories, diseases: allDiseases } = useDisease();

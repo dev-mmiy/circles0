@@ -17,6 +17,7 @@ import { getUserTimezone } from '@/lib/utils/timezone';
 import { Trash2, Plus, Search, Users } from 'lucide-react';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 export default function GroupsPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth0();
@@ -24,6 +25,11 @@ export default function GroupsPage() {
   const router = useRouter();
   const locale = useLocale();
   const t = useTranslations('groups');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle'));
+  }, [t]);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');

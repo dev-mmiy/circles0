@@ -11,6 +11,7 @@ import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
 import PostFormModal from '@/components/PostFormModal';
 import PostCard from '@/components/PostCard';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 type ViewMode = 'calendar' | 'list';
 
@@ -18,6 +19,11 @@ export default function MealPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user } = useUser();
   const t = useTranslations('meal');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle'));
+  }, [t]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
 

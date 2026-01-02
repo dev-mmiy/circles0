@@ -7,9 +7,15 @@ import Header from '@/components/Header';
 import PostCard from '@/components/PostCard';
 import { getFeed, type Post } from '@/lib/api/posts';
 import { Link as I18nLink } from '@/i18n/routing';
+import { setPageTitle } from '@/lib/utils/pageTitle';
 
 export default function Home() {
   const t = useTranslations('homePage');
+  
+  // Set page title
+  useEffect(() => {
+    setPageTitle(t('pageTitle') || 'Home');
+  }, [t]);
   const { getAccessTokenSilently, isAuthenticated, isLoading: authLoading } = useAuth0();
   const [posts, setPosts] = useState<Post[]>([]);
   const [isLoadingPosts, setIsLoadingPosts] = useState(false);
