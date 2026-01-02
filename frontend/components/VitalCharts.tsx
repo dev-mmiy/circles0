@@ -740,8 +740,8 @@ export default function VitalCharts({
     <div className="space-y-6">
       {/* Blood Pressure & Heart Rate Chart */}
       {bpHrData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
             血圧・心拍数
           </h3>
           {typeof window !== 'undefined' ? (
@@ -769,18 +769,24 @@ export default function VitalCharts({
                   yAxisId="bp"
                   label={{ value: '血圧 (mmHg)', angle: -90, position: 'insideLeft' }}
                   stroke="#ef4444"
-                  tick={{ fill: '#6b7280' }}
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
                   className="dark:text-gray-400"
                   domain={[30, 210]}
+                  ticks={[30, 60, 90, 120, 150, 180, 210]}
+                  width={50}
+                  tickMargin={4}
                 />
                 <YAxis
                   yAxisId="hr"
                   orientation="right"
                   label={{ value: '心拍数 (bpm)', angle: 90, position: 'insideRight' }}
                   stroke="#3b82f6"
-                  tick={{ fill: '#6b7280' }}
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
                   className="dark:text-gray-400"
                   domain={[30, 210]}
+                  ticks={[30, 60, 90, 120, 150, 180, 210]}
+                  width={50}
+                  tickMargin={4}
                 />
                 <Tooltip
                   contentStyle={{
@@ -856,8 +862,8 @@ export default function VitalCharts({
 
       {/* Weight & Body Fat Chart */}
       {weightFatData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
             体重・体脂肪率
           </h3>
           {typeof window !== 'undefined' ? (
@@ -942,8 +948,8 @@ export default function VitalCharts({
 
       {/* Temperature Chart */}
       {temperatureData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">体温</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">体温</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={temperatureData}>
@@ -994,8 +1000,8 @@ export default function VitalCharts({
 
       {/* Blood Glucose Chart */}
       {bloodGlucoseData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">血糖値</h3>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">血糖値</h3>
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={bloodGlucoseData}>
@@ -1047,8 +1053,8 @@ export default function VitalCharts({
 
       {/* SpO2 Chart */}
       {spo2Data.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
             血中酸素濃度
           </h3>
           {typeof window !== 'undefined' ? (
@@ -1106,7 +1112,7 @@ export default function VitalCharts({
         temperatureData.length === 0 &&
         bloodGlucoseData.length === 0 &&
         spo2Data.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
             <p className="text-gray-600 dark:text-gray-400">選択した期間に記録がありません</p>
           </div>
         )}
