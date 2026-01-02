@@ -850,7 +850,12 @@ export default function VitalCharts({
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={bpHrData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  vertical={period !== '1month'} 
+                  horizontal={true}
+                />
                 {verticalDividers.map((divider, index) => (
                   <ReferenceLine
                     key={`vertical-divider-${index}`}
@@ -978,7 +983,12 @@ export default function VitalCharts({
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={weightFatData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  vertical={period !== '1month'} 
+                  horizontal={true}
+                />
                 {verticalDividers.map((divider, index) => (
                   <ReferenceLine
                     key={`vertical-divider-${index}`}
@@ -1072,7 +1082,12 @@ export default function VitalCharts({
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={temperatureData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  vertical={period !== '1month'} 
+                  horizontal={true}
+                />
                 {verticalDividers.map((divider, index) => (
                   <ReferenceLine
                     key={`vertical-divider-${index}`}
@@ -1122,7 +1137,12 @@ export default function VitalCharts({
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  vertical={period !== '1month'} 
+                  horizontal={true}
+                />
                 {verticalDividers.map((divider, index) => (
                   <ReferenceLine
                     key={`vertical-divider-${index}`}
@@ -1173,7 +1193,12 @@ export default function VitalCharts({
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={spo2Data} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="#e5e7eb" 
+                  vertical={period !== '1month'} 
+                  horizontal={true}
+                />
                 {verticalDividers.map((divider, index) => (
                   <ReferenceLine
                     key={`vertical-divider-${index}`}
