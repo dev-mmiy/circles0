@@ -2,9 +2,9 @@
 
 import { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { ja, enUS } from 'date-fns/locale';
 import { Edit2, Trash2 } from 'lucide-react';
 import { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import { HeartRateRecord } from '@/lib/api/heartRateRecords';
@@ -67,15 +67,20 @@ export default function VitalRecordCard({
   onRecordDeleted,
 }: VitalRecordCardProps) {
   const { getAccessTokenSilently } = useAuth0();
+  const locale = useLocale();
   const t = useTranslations('postForm.healthRecord.vitalForm');
+  const tDaily = useTranslations('daily');
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editModalType, setEditModalType] = useState<
     'bp_hr' | 'temp' | 'weight_fat' | 'bg' | 'spo2' | null
   >(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
+  // Get date-fns locale based on current locale
+  const dateFnsLocale = locale === 'ja' ? ja : enUS;
+
   const handleDelete = async () => {
-    if (!confirm('この記録を削除してもよろしいですか？')) {
+    if (!confirm(tDaily('confirmDelete'))) {
       return;
     }
 
@@ -113,7 +118,7 @@ export default function VitalRecordCard({
       }
     } catch (error) {
       console.error('Failed to delete record:', error);
-      alert('記録の削除に失敗しました');
+      alert(tDaily('deleteFailed'));
     } finally {
       setIsDeleting(false);
     }
@@ -152,7 +157,11 @@ export default function VitalRecordCard({
     bloodGlucose?.recorded_at ||
     spo2?.recorded_at;
   const displayDate = recordedAt
-    ? format(new Date(recordedAt), 'yyyy年MM月dd日 HH:mm', { locale: ja })
+    ? format(
+        new Date(recordedAt),
+        locale === 'ja' ? 'yyyy年MM月dd日 HH:mm' : 'MMMM dd, yyyy HH:mm',
+        { locale: dateFnsLocale }
+      )
     : '';
 
   const allNotes = [
@@ -178,7 +187,7 @@ export default function VitalRecordCard({
             <button
               onClick={handleEdit}
               className="p-2 text-gray-600 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-              aria-label="編集"
+              aria-label={tDaily('editVital')}
             >
               <Edit2 className="w-5 h-5" />
             </button>
@@ -186,7 +195,7 @@ export default function VitalRecordCard({
               onClick={handleDelete}
               disabled={isDeleting}
               className="p-2 text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
-              aria-label="削除"
+              aria-label={tDaily('delete')}
             >
               <Trash2 className="w-5 h-5" />
             </button>

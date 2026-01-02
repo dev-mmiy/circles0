@@ -13,7 +13,9 @@ import {
   startOfWeek,
   endOfWeek,
 } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { ja, enUS } from 'date-fns/locale';
+import { useLocale } from 'next-intl';
+import { useTranslations } from 'next-intl';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import type { VitalRecordGroup } from '@/types/vitalRecords';
 
@@ -36,7 +38,29 @@ const hasRecords = (group: VitalRecordGroup): boolean => {
 };
 
 export default function VitalRecordCalendar({ records, onDateClick }: VitalRecordCalendarProps) {
+  const locale = useLocale();
+  const t = useTranslations('daily.calendar');
   const [currentMonth, setCurrentMonth] = useState(new Date());
+
+  // 現在のロケールに応じた date-fns ロケールを取得
+  const dateFnsLocale = useMemo(() => {
+    return locale === 'ja' ? ja : enUS;
+  }, [locale]);
+
+  // 曜日ヘッダーをロケールに応じて取得
+  const weekDays = useMemo(() => {
+    if (locale === 'ja') {
+      return ['日', '月', '火', '水', '木', '金', '土'];
+    } else {
+      // 英語の場合は date-fns のロケールから取得
+      const days = [];
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(2024, 0, 7 + i); // 2024年1月7日は日曜日
+        days.push(format(date, 'EEE', { locale: dateFnsLocale }));
+      }
+      return days;
+    }
+  }, [locale, dateFnsLocale]);
 
   // 日付をキーとして記録をグループ化（yyyy-MM-dd形式）
   const recordsByDate = useMemo(() => {
@@ -79,9 +103,6 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
   // 今日の日付
   const today = new Date();
 
-  // 曜日ヘッダー
-  const weekDays = ['日', '月', '火', '水', '木', '金', '土'];
-
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       {/* 月のナビゲーション */}
@@ -89,17 +110,17 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
         <button
           onClick={goToPreviousMonth}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label="前月"
+          aria-label={t('previousMonth')}
         >
           <ChevronLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
         <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          {format(currentMonth, 'yyyy年MM月', { locale: ja })}
+          {format(currentMonth, locale === 'ja' ? 'yyyy年MM月' : 'MMMM yyyy', { locale: dateFnsLocale })}
         </h2>
         <button
           onClick={goToNextMonth}
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-          aria-label="次月"
+          aria-label={t('nextMonth')}
         >
           <ChevronRight className="w-5 h-5 text-gray-600 dark:text-gray-400" />
         </button>
@@ -155,11 +176,11 @@ export default function VitalRecordCalendar({ records, onDateClick }: VitalRecor
 
       {/* 凡例 */}
       <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">凡例</div>
+        <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">{t('legend')}</div>
         <div className="flex flex-wrap gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900/40" />
-            <span className="text-gray-600 dark:text-gray-400">記録がある日</span>
+            <span className="text-gray-600 dark:text-gray-400">{t('hasRecords')}</span>
           </div>
         </div>
       </div>

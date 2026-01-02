@@ -13,11 +13,10 @@ import {
   AreaChart,
   Area,
   ReferenceLine,
-  Brush,
 } from 'recharts';
-import { format, subDays, subMonths, subYears, parseISO, startOfMonth, startOfWeek, endOfWeek, endOfMonth, eachDayOfInterval, addDays } from 'date-fns';
+import { format, parseISO, startOfMonth, startOfWeek, eachDayOfInterval } from 'date-fns';
 import { ja } from 'date-fns/locale/ja';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import type { HeartRateRecord } from '@/lib/api/heartRateRecords';
 import type { TemperatureRecord } from '@/lib/api/temperatureRecords';
@@ -25,8 +24,9 @@ import type { WeightRecord } from '@/lib/api/weightRecords';
 import type { BodyFatRecord } from '@/lib/api/bodyFatRecords';
 import type { BloodGlucoseRecord } from '@/lib/api/bloodGlucoseRecords';
 import type { SpO2Record } from '@/lib/api/spo2Records';
-
-type Period = '1week' | '1month' | '6months' | '1year';
+import { useChartDateRange, type Period } from '@/hooks/useChartDateRange';
+import { filterByDateRange, formatPeriodTitleRange, formatXAxisDate, getMonthKey } from '@/utils/chartUtils';
+import { ChartTitle } from './vitalCharts/ChartTitle';
 
 interface VitalChartsProps {
   period: Period;
@@ -49,54 +49,12 @@ export default function VitalCharts({
   bloodGlucoseRecords,
   spo2Records,
 }: VitalChartsProps) {
+  const t = useTranslations('VitalCharts');
   // 1週間チャートの場合、表示する週の開始日を管理
   const [weekOffset, setWeekOffset] = useState(0); // 0 = 今週、1 = 1週間前、-1 = 1週間後
 
   // Calculate date range based on period
-  const dateRange = useMemo(() => {
-    const now = new Date();
-    let startDate: Date;
-    let endDate: Date;
-
-    switch (period) {
-      case '1week':
-        // 1週間チャート：weekOffsetに基づいて表示する週を決定
-        const weekTargetStart = startOfWeek(subDays(now, weekOffset * 7), { weekStartsOn: 0 });
-        startDate = weekTargetStart;
-        endDate = addDays(weekTargetStart, 6); // 週の終わり（土曜日）
-        break;
-      case '1month':
-        // 1か月チャート：weekOffsetに基づいて表示する5週間を決定
-        // weekOffset = 0: 現在の週を含む5週間
-        // weekOffset = 1: 1か月前の週を含む5週間
-        // 1か月 = 約4週間なので、weekOffset * 4週間分移動
-        const monthCurrentWeekStart = startOfWeek(now, { weekStartsOn: 0 });
-        const monthTargetWeekStart = startOfWeek(subDays(monthCurrentWeekStart, weekOffset * 4 * 7), { weekStartsOn: 0 });
-        startDate = monthTargetWeekStart;
-        endDate = addDays(monthTargetWeekStart, 34); // 5週間分（35日 - 1日 = 34日後）
-        break;
-      case '6months':
-        // 半年チャート：weekOffsetに基づいて表示する6か月を決定
-        // weekOffset = 0: 現在の月から過去6か月
-        // weekOffset = 1: 6か月前からさらに6か月前（12か月前から6か月前まで）
-        const sixMonthsEndMonth = weekOffset === 0 ? now : subMonths(now, weekOffset * 6);
-        const sixMonthsStartMonth = subMonths(sixMonthsEndMonth, 6);
-        startDate = startOfMonth(sixMonthsStartMonth);
-        endDate = subDays(startOfMonth(sixMonthsEndMonth), 1); // 終了月の前日まで
-        break;
-      case '1year':
-        // 1年チャート：weekOffsetに基づいて表示する1年を決定
-        // weekOffset = 0: 現在の月から過去1年
-        // weekOffset = 1: 1年前からさらに1年前（2年前から1年前まで）
-        const oneYearEndMonth = weekOffset === 0 ? now : subMonths(now, weekOffset * 12);
-        const oneYearStartMonth = subMonths(oneYearEndMonth, 12);
-        startDate = startOfMonth(oneYearStartMonth);
-        endDate = subDays(startOfMonth(oneYearEndMonth), 1); // 終了月の前日まで
-        break;
-    }
-
-    return { startDate, endDate };
-  }, [period, weekOffset]);
+  const dateRange = useChartDateRange(period, weekOffset);
 
   // チャートのナビゲーション関数（全期間共通）
   const goToPreviousPeriod = () => {
@@ -109,73 +67,12 @@ export default function VitalCharts({
 
   // チャートのタイトル表示用の日付範囲
   const periodTitleRange = useMemo(() => {
-    if (period === '1week') {
-      const start = format(dateRange.startDate, 'M/d', { locale: ja });
-      const end = format(dateRange.endDate, 'M/d', { locale: ja });
-      return `${start} - ${end}`;
-    } else if (period === '1month') {
-      const start = format(dateRange.startDate, 'M/d', { locale: ja });
-      const end = format(dateRange.endDate, 'M/d', { locale: ja });
-      return `${start} - ${end}`;
-    } else if (period === '6months') {
-      const start = format(dateRange.startDate, 'yyyy年M月', { locale: ja });
-      const end = format(dateRange.endDate, 'yyyy年M月', { locale: ja });
-      return `${start} - ${end}`;
-    } else if (period === '1year') {
-      const start = format(dateRange.startDate, 'yyyy年M月', { locale: ja });
-      const end = format(dateRange.endDate, 'yyyy年M月', { locale: ja });
-      return `${start} - ${end}`;
-    }
-    return null;
+    return formatPeriodTitleRange(period, dateRange);
   }, [period, dateRange]);
 
-  // Filter records by date range
-  const filterByDateRange = <T extends { recorded_at: string }>(records: T[]): T[] => {
-    const filtered = records.filter(record => {
-      const recordDate = parseISO(record.recorded_at);
-      // 日付のみで比較（時刻を無視）
-      const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
-      const startDateOnly = new Date(dateRange.startDate.getFullYear(), dateRange.startDate.getMonth(), dateRange.startDate.getDate());
-      const endDateOnly = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate());
-      return recordDateOnly >= startDateOnly && recordDateOnly <= endDateOnly;
-    });
-    
-    // デバッグログ（1か月の場合のみ）
-    if (period === '1month') {
-      console.log('[VitalCharts] filterByDateRange:', {
-        period,
-        totalRecords: records.length,
-        filteredRecords: filtered.length,
-        dateRange: {
-          start: format(dateRange.startDate, 'yyyy-MM-dd'),
-          end: format(dateRange.endDate, 'yyyy-MM-dd'),
-        },
-      });
-    }
-    
-    return filtered;
-  };
-
-  // Format date for X-axis based on period
-  const formatXAxisDate = (date: string | Date) => {
-    const d = typeof date === 'string' ? parseISO(date) : date;
-    switch (period) {
-      case '1week':
-        return format(d, 'M/d', { locale: ja });
-      case '1month':
-        return format(d, 'M/d', { locale: ja });
-      case '6months':
-        return format(d, 'M月', { locale: ja });
-      case '1year':
-        return format(d, 'M/d', { locale: ja });
-      default:
-        return format(d, 'M/d', { locale: ja });
-    }
-  };
-
-  // Get month key for grouping (for 1month and 6months periods)
-  const getMonthKey = (date: Date): string => {
-    return format(startOfMonth(date), 'yyyy-MM');
+  // Filter records by date range (wrapper for utility function)
+  const filterRecords = <T extends { recorded_at: string }>(records: T[]): T[] => {
+    return filterByDateRange(records, dateRange, period);
   };
 
   // Helper function to aggregate data by month or date
@@ -208,7 +105,7 @@ export default function VitalCharts({
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        date: formatXAxisDate(item.dateObj),
+        date: formatXAxisDate(item.dateObj, period),
         dateObj: item.dateObj,
         value: item.count > 0 ? item.sum / item.count : undefined,
       }));
@@ -216,8 +113,8 @@ export default function VitalCharts({
 
   // Blood Pressure & Heart Rate Chart
   const bpHrData = useMemo(() => {
-    const bpFiltered = filterByDateRange(bloodPressureRecords);
-    const hrFiltered = filterByDateRange(heartRateRecords);
+    const bpFiltered = filterRecords(bloodPressureRecords);
+    const hrFiltered = filterRecords(heartRateRecords);
     const isMonthlyView = period === '6months';
 
     // 1週間または1か月の場合、日単位で集計する
@@ -304,7 +201,7 @@ export default function VitalCharts({
         const diastolic: number | null | undefined = data?.diastolic ?? null;
         const heartRate: number | null | undefined = data?.heartRate ?? null;
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           systolic,
           diastolic,
           heartRate,
@@ -336,7 +233,7 @@ export default function VitalCharts({
         const diastolic: number | null | undefined = data?.diastolic ?? null;
         const heartRate: number | null | undefined = data?.heartRate ?? null;
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           systolic,
           diastolic,
           heartRate,
@@ -349,7 +246,7 @@ export default function VitalCharts({
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        date: formatXAxisDate(item.dateObj),
+        date: formatXAxisDate(item.dateObj, period),
         systolic: item.systolic,
         diastolic: item.diastolic,
         heartRate: item.heartRate,
@@ -358,8 +255,8 @@ export default function VitalCharts({
 
   // Weight & Body Fat Chart
   const weightFatData = useMemo(() => {
-    const weightFiltered = filterByDateRange(weightRecords);
-    const fatFiltered = filterByDateRange(bodyFatRecords);
+    const weightFiltered = filterRecords(weightRecords);
+    const fatFiltered = filterRecords(bodyFatRecords);
     const isDailyView = period === '1week' || period === '1month';
 
     const dataMap = new Map<string, { date: string; dateObj: Date; weight?: number; bodyFat?: number; weightCount: number; fatCount: number }>();
@@ -420,7 +317,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const data = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           weight: data?.weight ?? null,
           bodyFat: data?.bodyFat ?? null,
         });
@@ -448,7 +345,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const data = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           weight: data?.weight ?? null,
           bodyFat: data?.bodyFat ?? null,
         });
@@ -461,7 +358,7 @@ export default function VitalCharts({
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
       .map(item => ({
         ...item,
-        date: formatXAxisDate(item.date),
+        date: formatXAxisDate(item.date, period),
       }));
   }, [weightRecords, bodyFatRecords, period, dateRange, formatXAxisDate]);
 
@@ -493,7 +390,7 @@ export default function VitalCharts({
 
   // Temperature Chart
   const temperatureData = useMemo(() => {
-    const filtered = filterByDateRange(temperatureRecords);
+    const filtered = filterRecords(temperatureRecords);
     const isMonthlyView = period === '6months';
     const isDailyView = period === '1week' || period === '1month';
 
@@ -540,7 +437,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const temperature = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           temperature: temperature ?? null,
         });
       });
@@ -565,7 +462,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const temperature = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           temperature: temperature ?? null,
         });
       });
@@ -576,14 +473,14 @@ export default function VitalCharts({
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        date: formatXAxisDate(item.dateObj),
+        date: formatXAxisDate(item.dateObj, period),
         temperature: item.count > 0 ? item.sum / item.count : undefined,
       }));
   }, [temperatureRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // Blood Glucose Chart
   const bloodGlucoseData = useMemo(() => {
-    const filtered = filterByDateRange(bloodGlucoseRecords);
+    const filtered = filterRecords(bloodGlucoseRecords);
     const isMonthlyView = period === '6months';
     const isDailyView = period === '1week' || period === '1month';
 
@@ -630,7 +527,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const bloodGlucose = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           bloodGlucose: bloodGlucose ?? null,
         });
       });
@@ -655,7 +552,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const bloodGlucose = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           bloodGlucose: bloodGlucose ?? null,
         });
       });
@@ -666,14 +563,14 @@ export default function VitalCharts({
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        date: formatXAxisDate(item.dateObj),
+        date: formatXAxisDate(item.dateObj, period),
         bloodGlucose: item.count > 0 ? item.sum / item.count : undefined,
       }));
   }, [bloodGlucoseRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
   // SpO2 Chart
   const spo2Data = useMemo(() => {
-    const filtered = filterByDateRange(spo2Records);
+    const filtered = filterRecords(spo2Records);
     const isMonthlyView = period === '6months';
     const isDailyView = period === '1week' || period === '1month';
 
@@ -720,7 +617,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const spo2 = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           spo2: spo2 ?? null,
         });
       });
@@ -745,7 +642,7 @@ export default function VitalCharts({
         const dateKey = format(day, 'yyyy-MM-dd');
         const spo2 = dataByDate.get(dateKey);
         result.push({
-          date: formatXAxisDate(day),
+          date: formatXAxisDate(day, period),
           spo2: spo2 ?? null,
         });
       });
@@ -756,7 +653,7 @@ export default function VitalCharts({
     return Array.from(dataMap.values())
       .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime())
       .map(item => ({
-        date: formatXAxisDate(item.dateObj),
+        date: formatXAxisDate(item.dateObj, period),
         spo2: item.count > 0 ? item.sum / item.count : undefined,
       }));
   }, [spo2Records, period, dateRange, formatXAxisDate, getMonthKey]);
@@ -771,7 +668,7 @@ export default function VitalCharts({
     let currentWeek = new Date(start);
     
     while (currentWeek <= end) {
-      dividers.push(formatXAxisDate(currentWeek));
+      dividers.push(formatXAxisDate(currentWeek, period));
       currentWeek = new Date(currentWeek);
       currentWeek.setDate(currentWeek.getDate() + 7);
     }
@@ -783,49 +680,18 @@ export default function VitalCharts({
     <div className="space-y-6">
       {/* Blood Pressure & Heart Rate Chart */}
       {bpHrData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={goToPreviousPeriod}
-              className="p-1 rounded-lg transition-colors hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400"
-              aria-label={
-                period === '1week' ? '前の週' :
-                period === '1month' ? '前の期間' :
-                period === '6months' ? '前の半年' :
-                period === '1year' ? '前の年' : ''
-              }
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              血圧・心拍数
-              {periodTitleRange && (
-                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                  ({periodTitleRange})
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={goToNextPeriod}
-              disabled={weekOffset === 0}
-              className={`p-1 rounded-lg transition-colors ${
-                weekOffset > 0
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={
-                period === '1week' ? '次の週' :
-                period === '1month' ? '次の期間' :
-                period === '6months' ? '次の半年' :
-                period === '1year' ? '次の年' : ''
-              }
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <ChartTitle
+            title={t('chart.titles.bloodPressureHeartRate')}
+            periodRange={periodTitleRange}
+            period={period}
+            weekOffset={weekOffset}
+            onPrevious={goToPreviousPeriod}
+            onNext={goToNextPeriod}
+          />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={bpHrData}>
+              <LineChart data={bpHrData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -846,25 +712,35 @@ export default function VitalCharts({
                 />
                 <YAxis
                   yAxisId="bp"
-                  label={{ value: '血圧 (mmHg)', angle: -90, position: 'insideLeft' }}
+                  label={{ 
+                    value: t('chart.labels.bloodPressure'), 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { textAnchor: 'middle' }
+                  }}
                   stroke="#ef4444"
                   tick={{ fill: '#6b7280', fontSize: 12 }}
                   className="dark:text-gray-400"
                   domain={[30, 210]}
                   ticks={[30, 60, 90, 120, 150, 180, 210]}
-                  width={50}
+                  width={75}
                   tickMargin={4}
                 />
                 <YAxis
                   yAxisId="hr"
                   orientation="right"
-                  label={{ value: '心拍数 (bpm)', angle: 90, position: 'insideRight' }}
+                  label={{ 
+                    value: t('chart.labels.heartRate'), 
+                    angle: 90, 
+                    position: 'insideRight',
+                    style: { textAnchor: 'middle' }
+                  }}
                   stroke="#3b82f6"
                   tick={{ fill: '#6b7280', fontSize: 12 }}
                   className="dark:text-gray-400"
                   domain={[30, 210]}
                   ticks={[30, 60, 90, 120, 150, 180, 210]}
-                  width={50}
+                  width={75}
                   tickMargin={4}
                 />
                 <Tooltip
@@ -894,7 +770,7 @@ export default function VitalCharts({
                     dataKey="systolic"
                     stroke="#ef4444"
                     strokeWidth={2}
-                    name="収縮期血圧 (mmHg)"
+                    name={t('chart.labels.systolic')}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -907,7 +783,7 @@ export default function VitalCharts({
                     stroke="#dc2626"
                     strokeWidth={2}
                     strokeDasharray="5 5"
-                    name="拡張期血圧 (mmHg)"
+                    name={t('chart.labels.diastolic')}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -919,7 +795,7 @@ export default function VitalCharts({
                     dataKey="heartRate"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    name="心拍数 (bpm)"
+                    name={t('chart.labels.heartRate')}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -932,44 +808,18 @@ export default function VitalCharts({
 
       {/* Weight & Body Fat Chart */}
       {weightFatData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={goToPreviousPeriod}
-              disabled={period !== '1week' && period !== '1month'}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month')
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              体重・体脂肪率
-              {periodTitleRange && (
-                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                  ({periodTitleRange})
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={goToNextPeriod}
-              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month') && weekOffset > 0
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <ChartTitle
+            title={t('chart.titles.weightBodyFat')}
+            periodRange={periodTitleRange}
+            period={period}
+            weekOffset={weekOffset}
+            onPrevious={goToPreviousPeriod}
+            onNext={goToNextPeriod}
+          />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weightFatData}>
+              <LineChart data={weightFatData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -985,20 +835,32 @@ export default function VitalCharts({
                 <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
                 <YAxis 
                   yAxisId="left" 
-                  label={{ value: '体重 (kg)', angle: -90, position: 'insideLeft' }}
+                  label={{ 
+                    value: t('chart.labels.weight'), 
+                    angle: -90, 
+                    position: 'insideLeft',
+                    style: { textAnchor: 'middle' }
+                  }}
                   stroke="#3b82f6" 
                   tick={{ fill: '#6b7280' }}
                   domain={weightDomain}
                   allowDecimals={false}
                   ticks={weightTicks}
                   tickFormatter={(value) => value.toString()}
+                  width={75}
                 />
                 <YAxis
                   yAxisId="right"
                   orientation="right"
-                  label={{ value: '体脂肪率 (%)', angle: 90, position: 'insideRight' }}
+                  label={{ 
+                    value: t('chart.labels.bodyFat'), 
+                    angle: 90, 
+                    position: 'insideRight',
+                    style: { textAnchor: 'middle' }
+                  }}
                   stroke="#f59e0b"
                   tick={{ fill: '#6b7280' }}
+                  width={75}
                 />
                 <Tooltip
                   contentStyle={{
@@ -1015,7 +877,7 @@ export default function VitalCharts({
                     dataKey="weight"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    name="体重 (kg)"
+                    name={t('chart.labels.weight')}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -1027,7 +889,7 @@ export default function VitalCharts({
                     dataKey="bodyFat"
                     stroke="#f59e0b"
                     strokeWidth={2}
-                    name="体脂肪率 (%)"
+                    name={t('chart.labels.bodyFat')}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -1040,44 +902,18 @@ export default function VitalCharts({
 
       {/* Temperature Chart */}
       {temperatureData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={goToPreviousPeriod}
-              disabled={period !== '1week' && period !== '1month'}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month')
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              体温
-              {periodTitleRange && (
-                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                  ({periodTitleRange})
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={goToNextPeriod}
-              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month') && weekOffset > 0
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <ChartTitle
+            title={t('chart.titles.temperature')}
+            periodRange={periodTitleRange}
+            period={period}
+            weekOffset={weekOffset}
+            onPrevious={goToPreviousPeriod}
+            onNext={goToNextPeriod}
+          />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={temperatureData}>
+              <LineChart data={temperatureData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1104,7 +940,7 @@ export default function VitalCharts({
                   dataKey="temperature"
                   stroke="#3b82f6"
                   strokeWidth={2}
-                  name="体温 (°C)"
+                  name={t('chart.labels.temperature')}
                   dot={{ r: 4 }}
                   connectNulls={true}
                 />
@@ -1116,44 +952,18 @@ export default function VitalCharts({
 
       {/* Blood Glucose Chart */}
       {bloodGlucoseData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={goToPreviousPeriod}
-              disabled={period !== '1week' && period !== '1month'}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month')
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              血糖値
-              {periodTitleRange && (
-                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                  ({periodTitleRange})
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={goToNextPeriod}
-              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month') && weekOffset > 0
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <ChartTitle
+            title={t('chart.titles.bloodGlucose')}
+            periodRange={periodTitleRange}
+            period={period}
+            weekOffset={weekOffset}
+            onPrevious={goToPreviousPeriod}
+            onNext={goToNextPeriod}
+          />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={bloodGlucoseData}>
+              <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1182,7 +992,7 @@ export default function VitalCharts({
                   fill="#f97316"
                   fillOpacity={0.3}
                   strokeWidth={2}
-                  name="血糖値 (mg/dL)"
+                  name={t('chart.labels.bloodGlucose')}
                   connectNulls={true}
                 />
               </AreaChart>
@@ -1193,44 +1003,18 @@ export default function VitalCharts({
 
       {/* SpO2 Chart */}
       {spo2Data.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
-          <div className="flex items-center justify-between mb-3">
-            <button
-              onClick={goToPreviousPeriod}
-              disabled={period !== '1week' && period !== '1month'}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month')
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '前の週' : period === '1month' ? '前の期間' : ''}
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-              血中酸素濃度
-              {periodTitleRange && (
-                <span className="ml-2 text-sm font-normal text-gray-600 dark:text-gray-400">
-                  ({periodTitleRange})
-                </span>
-              )}
-            </h3>
-            <button
-              onClick={goToNextPeriod}
-              disabled={(period !== '1week' && period !== '1month') || weekOffset === 0}
-              className={`p-1 rounded-lg transition-colors ${
-                (period === '1week' || period === '1month') && weekOffset > 0
-                  ? 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-400'
-                  : 'opacity-0 cursor-default'
-              }`}
-              aria-label={period === '1week' ? '次の週' : period === '1month' ? '次の期間' : ''}
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+          <ChartTitle
+            title={t('chart.titles.spo2')}
+            periodRange={periodTitleRange}
+            period={period}
+            weekOffset={weekOffset}
+            onPrevious={goToPreviousPeriod}
+            onNext={goToNextPeriod}
+          />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={spo2Data}>
+              <AreaChart data={spo2Data} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 {period === '1month' && weekDividers.map((divider, index) => (
                   <ReferenceLine
@@ -1259,7 +1043,7 @@ export default function VitalCharts({
                   fill="#ec4899"
                   fillOpacity={0.3}
                   strokeWidth={2}
-                  name="SpO2 (%)"
+                  name={t('chart.labels.spo2')}
                   connectNulls={true}
                 />
               </AreaChart>
@@ -1275,7 +1059,7 @@ export default function VitalCharts({
         bloodGlucoseData.length === 0 &&
         spo2Data.length === 0 && (
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 text-center">
-            <p className="text-gray-600 dark:text-gray-400">選択した期間に記録がありません</p>
+            <p className="text-gray-600 dark:text-gray-400">{t('chart.noData')}</p>
           </div>
         )}
     </div>

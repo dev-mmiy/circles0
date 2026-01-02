@@ -1226,13 +1226,63 @@
     "authRequired": "Please log in to view this page",
     "viewMode": {
       "list": "List",
-      "calendar": "Calendar"
+      "calendar": "Calendar",
+      "chart": "Chart"
+    },
+    "calendar": {
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
+      "legend": "Legend",
+      "hasRecords": "Days with records"
+    },
+    "chart": {
+      "period": "Period",
+      "periods": {
+        "1week": "1 Week",
+        "1month": "1 Month",
+        "6months": "6 Months",
+        "1year": "1 Year"
+      },
+      "titles": {
+        "bloodPressureHeartRate": "Blood Pressure & Heart Rate",
+        "weightBodyFat": "Weight & Body Fat",
+        "temperature": "Temperature",
+        "bloodGlucose": "Blood Glucose",
+        "spo2": "SpO2"
+      },
+      "labels": {
+        "systolic": "Systolic BP (mmHg)",
+        "diastolic": "Diastolic BP (mmHg)",
+        "heartRate": "Heart Rate (bpm)",
+        "bloodPressure": "Blood Pressure (mmHg)",
+        "weight": "Weight (kg)",
+        "bodyFat": "Body Fat (%)",
+        "temperature": "Temperature (°C)",
+        "bloodGlucose": "Blood Glucose (mg/dL)",
+        "spo2": "SpO2 (%)"
+      },
+      "navigation": {
+        "previousWeek": "Previous Week",
+        "nextWeek": "Next Week",
+        "previousPeriod": "Previous Period",
+        "nextPeriod": "Next Period",
+        "previous6Months": "Previous 6 Months",
+        "next6Months": "Next 6 Months",
+        "previousYear": "Previous Year",
+        "nextYear": "Next Year"
+      },
+      "noData": "No records found for the selected period",
+      "loadError": "Failed to load chart. Please reload the page.",
+      "loading": "Loading chart..."
     },
     "filter": {
+      "label": "Filter",
       "all": "All",
       "vital": "Vital",
       "meal": "Meal"
     },
+    "addRecord": "Add Record",
+    "selectVitalToRecord": "Select vital to record",
     "addVital": "Record Vital",
     "editVital": "Edit Vital Record",
     "editMeal": "Edit Meal Record",
@@ -1251,7 +1301,10 @@
     "loadMore": "Load More",
     "calendarComingSoon": "Calendar view coming soon",
     "vital": "Vital",
-    "meal": "Meal"
+    "meal": "Meal",
+    "confirmDelete": "Are you sure you want to delete this record?",
+    "deleteFailed": "Failed to delete record",
+    "delete": "Delete"
   },
   "meal": {
     "title": "Meal Records",
@@ -1259,12 +1312,45 @@
     "authRequired": "Please log in to view this page",
     "viewMode": {
       "list": "List",
-      "calendar": "Calendar"
+      "calendar": "Calendar",
+      "chart": "Chart"
+    },
+    "chart": {
+      "period": "Period",
+      "periods": {
+        "1week": "1 Week",
+        "1month": "1 Month",
+        "6months": "6 Months",
+        "1year": "1 Year"
+      }
     },
     "addMeal": "Record Meal",
     "noRecords": "No records found",
     "loading": "Loading...",
     "loadMore": "Load More",
     "calendarComingSoon": "Calendar view coming soon"
+  },
+  "VitalCharts": {
+    "chart": {
+      "titles": {
+        "bloodPressureHeartRate": "Blood Pressure & Heart Rate",
+        "weightBodyFat": "Weight & Body Fat",
+        "temperature": "Temperature",
+        "bloodGlucose": "Blood Glucose",
+        "spo2": "SpO2"
+      },
+      "labels": {
+        "systolic": "Systolic BP (mmHg)",
+        "diastolic": "Diastolic BP (mmHg)",
+        "heartRate": "Heart Rate (bpm)",
+        "bloodPressure": "Blood Pressure (mmHg)",
+        "weight": "Weight (kg)",
+        "bodyFat": "Body Fat (%)",
+        "temperature": "Temperature (°C)",
+        "bloodGlucose": "Blood Glucose (mg/dL)",
+        "spo2": "SpO2 (%)"
+      },
+      "noData": "No records found for the selected period"
+    }
   }
 }

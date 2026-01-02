@@ -1229,6 +1229,12 @@
       "calendar": "カレンダー",
       "chart": "チャート"
     },
+    "calendar": {
+      "previousMonth": "前月",
+      "nextMonth": "次月",
+      "legend": "凡例",
+      "hasRecords": "記録がある日"
+    },
     "chart": {
       "period": "期間",
       "periods": {
@@ -1236,7 +1242,38 @@
         "1month": "1か月",
         "6months": "半年",
         "1year": "1年"
-      }
+      },
+      "titles": {
+        "bloodPressureHeartRate": "血圧・心拍数",
+        "weightBodyFat": "体重・体脂肪率",
+        "temperature": "体温",
+        "bloodGlucose": "血糖値",
+        "spo2": "血中酸素濃度（SpO2）"
+      },
+      "labels": {
+        "systolic": "収縮期血圧 (mmHg)",
+        "diastolic": "拡張期血圧 (mmHg)",
+        "heartRate": "心拍数 (bpm)",
+        "bloodPressure": "血圧 (mmHg)",
+        "weight": "体重 (kg)",
+        "bodyFat": "体脂肪率 (%)",
+        "temperature": "体温 (°C)",
+        "bloodGlucose": "血糖値 (mg/dL)",
+        "spo2": "SpO2 (%)"
+      },
+      "navigation": {
+        "previousWeek": "前週",
+        "nextWeek": "次週",
+        "previousPeriod": "前の期間",
+        "nextPeriod": "次の期間",
+        "previous6Months": "前の6か月",
+        "next6Months": "次の6か月",
+        "previousYear": "前年",
+        "nextYear": "翌年"
+      },
+      "noData": "選択した期間の記録が見つかりませんでした",
+      "loadError": "チャートの読み込みに失敗しました。ページを再読み込みしてください。",
+      "loading": "チャートを読み込み中..."
     },
     "filter": {
       "label": "フィルター",
@@ -1260,7 +1297,12 @@
     "loadMore": "さらに読み込む",
     "calendarComingSoon": "カレンダー表示は準備中です",
     "vital": "バイタル",
-    "meal": "食事"
+    "meal": "食事",
+    "addRecord": "記録を追加",
+    "selectVitalToRecord": "記録するバイタルを選択",
+    "confirmDelete": "この記録を削除してもよろしいですか？",
+    "deleteFailed": "記録の削除に失敗しました",
+    "delete": "削除"
   },
   "meal": {
     "title": "食事記録",
@@ -1285,5 +1327,28 @@
     "loading": "読み込み中...",
     "loadMore": "さらに読み込む",
     "calendarComingSoon": "カレンダー表示は準備中です"
+  },
+  "VitalCharts": {
+    "chart": {
+      "titles": {
+        "bloodPressureHeartRate": "血圧・心拍数",
+        "weightBodyFat": "体重・体脂肪率",
+        "temperature": "体温",
+        "bloodGlucose": "血糖値",
+        "spo2": "血中酸素濃度（SpO2）"
+      },
+      "labels": {
+        "systolic": "収縮期血圧 (mmHg)",
+        "diastolic": "拡張期血圧 (mmHg)",
+        "heartRate": "心拍数 (bpm)",
+        "bloodPressure": "血圧 (mmHg)",
+        "weight": "体重 (kg)",
+        "bodyFat": "体脂肪率 (%)",
+        "temperature": "体温 (°C)",
+        "bloodGlucose": "血糖値 (mg/dL)",
+        "spo2": "SpO2 (%)"
+      },
+      "noData": "選択した期間の記録が見つかりませんでした"
+    }
   }
 }

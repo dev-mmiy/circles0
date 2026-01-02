@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
 import { getBloodPressureRecords, type BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
@@ -25,27 +25,33 @@ import VitalRecordSelector, { type VitalType } from '@/components/VitalRecordSel
 import VitalRecordCalendar from '@/components/VitalRecordCalendar';
 import dynamic from 'next/dynamic';
 import { format } from 'date-fns';
-import { ja } from 'date-fns/locale';
+import { ja, enUS } from 'date-fns/locale';
 
 // Dynamically import VitalCharts to avoid SSR issues with Recharts
 const VitalCharts = dynamic(
   () => import('@/components/VitalCharts').catch((error) => {
     console.error('Failed to load VitalCharts:', error);
     // Return a fallback component if import fails
-    return { default: () => (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-        <div className="text-red-600 dark:text-red-400">チャートの読み込みに失敗しました。ページを再読み込みしてください。</div>
-      </div>
-    )};
+    return { default: () => {
+      const t = useTranslations('daily');
+      return (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+          <div className="text-red-600 dark:text-red-400">{t('chart.loadError')}</div>
+        </div>
+      );
+    }};
   }),
   {
     ssr: false,
-    loading: () => (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600 dark:text-gray-400">チャートを読み込み中...</p>
-      </div>
-    ),
+    loading: () => {
+      const t = useTranslations('daily');
+      return (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">{t('chart.loading')}</p>
+        </div>
+      );
+    },
   }
 );
 import type { VitalRecordGroup } from '@/types/vitalRecords';
@@ -618,10 +624,10 @@ export default function DailyPage() {
               <button
                 onClick={() => openFormModal()}
                 className="flex items-center justify-center space-x-2 px-3 py-2 md:px-4 md:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                title="記録を追加"
+                title={t('addRecord')}
               >
                 <Plus className="w-4 h-4" />
-                <span className="hidden md:inline">記録を追加</span>
+                <span className="hidden md:inline">{t('addRecord')}</span>
               </button>
             </div>
 
@@ -735,7 +741,7 @@ export default function DailyPage() {
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    記録するバイタルを選択
+                    {t('selectVitalToRecord')}
                   </h2>
                   <button
                     onClick={() => setIsFormModalOpen(false)}
@@ -824,7 +830,7 @@ export default function DailyPage() {
               <div className="relative bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto z-10">
                 <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    {format(selectedDate, 'yyyy年MM月dd日', { locale: ja })}
+                    {format(selectedDate, locale === 'ja' ? 'yyyy年MM月dd日' : 'MMMM dd, yyyy', { locale: locale === 'ja' ? ja : enUS })}
                   </h2>
                   <button
                     onClick={() => {
