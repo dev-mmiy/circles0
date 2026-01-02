@@ -1110,7 +1110,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={temperatureData} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
+              <LineChart data={temperatureData} margin={{ top: 10, right: isMobile ? 10 : 20, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
@@ -1172,7 +1172,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
+              <AreaChart data={bloodGlucoseData} margin={{ top: 10, right: isMobile ? 10 : 20, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
@@ -1235,7 +1235,7 @@ export default function VitalCharts({
           />
           {typeof window !== 'undefined' ? (
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={spo2Data} margin={{ top: 10, right: isMobile ? 0 : 5, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
+              <AreaChart data={spo2Data} margin={{ top: 10, right: isMobile ? 10 : 20, left: isMobile ? 0 : 5, bottom: isMobile ? 30 : 5 }}>
                 <CartesianGrid 
                   strokeDasharray="3 3" 
                   stroke="#e5e7eb" 
