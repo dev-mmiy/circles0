@@ -257,11 +257,14 @@ export default function VitalCharts({
       allDays.forEach(day => {
         const dateKey = format(day, 'yyyy-MM-dd');
         const data = dataByDate.get(dateKey);
+        const systolic: number | null | undefined = data?.systolic ?? null;
+        const diastolic: number | null | undefined = data?.diastolic ?? null;
+        const heartRate: number | null | undefined = data?.heartRate ?? null;
         result.push({
           date: formatXAxisDate(day),
-          systolic: data?.systolic ?? null,
-          diastolic: data?.diastolic ?? null,
-          heartRate: data?.heartRate ?? null,
+          systolic,
+          diastolic,
+          heartRate,
         });
       });
       
@@ -286,11 +289,14 @@ export default function VitalCharts({
       allDays.forEach(day => {
         const dateKey = format(day, 'yyyy-MM-dd');
         const data = dataByDate.get(dateKey);
+        const systolic: number | null | undefined = data?.systolic ?? null;
+        const diastolic: number | null | undefined = data?.diastolic ?? null;
+        const heartRate: number | null | undefined = data?.heartRate ?? null;
         result.push({
           date: formatXAxisDate(day),
-          systolic: data?.systolic ?? null,
-          diastolic: data?.diastolic ?? null,
-          heartRate: data?.heartRate ?? null,
+          systolic,
+          diastolic,
+          heartRate,
         });
       });
       
