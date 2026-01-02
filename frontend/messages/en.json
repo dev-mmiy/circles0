@@ -1309,7 +1309,8 @@
     "meal": "Meal",
     "confirmDelete": "Are you sure you want to delete this record?",
     "deleteFailed": "Failed to delete record",
-    "delete": "Delete"
+    "delete": "Delete",
+    "pageTitle": "Daily Records"
   },
   "meal": {
     "title": "Meal Records",

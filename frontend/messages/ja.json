@@ -1307,7 +1307,8 @@
     "selectVitalToRecord": "記録するバイタルを選択",
     "confirmDelete": "この記録を削除してもよろしいですか？",
     "deleteFailed": "記録の削除に失敗しました",
-    "delete": "削除"
+    "delete": "削除",
+    "pageTitle": "日々の記録"
   },
   "meal": {
     "title": "食事記録",
