@@ -1256,15 +1256,24 @@
         "spo2": "血中酸素濃度（SpO2）"
       },
       "labels": {
-        "systolic": "収縮期血圧 (mmHg)",
-        "diastolic": "拡張期血圧 (mmHg)",
-        "heartRate": "心拍数 (bpm)",
-        "bloodPressure": "血圧 (mmHg)",
-        "weight": "体重 (kg)",
-        "bodyFat": "体脂肪率 (%)",
-        "temperature": "体温 (°C)",
-        "bloodGlucose": "血糖値 (mg/dL)",
-        "spo2": "SpO2 (%)"
+        "systolic": "収縮期血圧",
+        "diastolic": "拡張期血圧",
+        "heartRate": "心拍数",
+        "bloodPressure": "血圧",
+        "weight": "体重",
+        "bodyFat": "体脂肪率",
+        "temperature": "体温",
+        "bloodGlucose": "血糖値",
+        "spo2": "SpO2"
+      },
+      "units": {
+        "mmHg": "mmHg",
+        "bpm": "bpm",
+        "kg": "kg",
+        "percent": "%",
+        "celsius": "°C",
+        "fahrenheit": "°F",
+        "mgdL": "mg/dL"
       },
       "navigation": {
         "previousWeek": "前週",

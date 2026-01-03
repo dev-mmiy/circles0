@@ -1256,15 +1256,24 @@
         "spo2": "SpO2"
       },
       "labels": {
-        "systolic": "Systolic BP (mmHg)",
-        "diastolic": "Diastolic BP (mmHg)",
-        "heartRate": "Heart Rate (bpm)",
-        "bloodPressure": "Blood Pressure (mmHg)",
-        "weight": "Weight (kg)",
-        "bodyFat": "Body Fat (%)",
-        "temperature": "Temperature (°C)",
-        "bloodGlucose": "Blood Glucose (mg/dL)",
-        "spo2": "SpO2 (%)"
+        "systolic": "Systolic BP",
+        "diastolic": "Diastolic BP",
+        "heartRate": "Heart Rate",
+        "bloodPressure": "Blood Pressure",
+        "weight": "Weight",
+        "bodyFat": "Body Fat",
+        "temperature": "Temperature",
+        "bloodGlucose": "Blood Glucose",
+        "spo2": "SpO2"
+      },
+      "units": {
+        "mmHg": "mmHg",
+        "bpm": "bpm",
+        "kg": "kg",
+        "percent": "%",
+        "celsius": "°C",
+        "fahrenheit": "°F",
+        "mgdL": "mg/dL"
       },
       "navigation": {
         "previousWeek": "Previous Week",
