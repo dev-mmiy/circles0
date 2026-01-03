@@ -147,6 +147,46 @@ export default function PostForm({
   }, [content]);
 
   // Set default recorded_at when vital or meal type is selected (only for new records)
+  // Auto-calculate total nutrition from items
+  useEffect(() => {
+    if (postType === 'health_record' && healthRecordType === 'meal' && healthRecordData.items) {
+      const totalNutrition = (healthRecordData.items || []).reduce((acc: any, item: any) => {
+        if (item.nutrition) {
+          return {
+            calories: (acc.calories || 0) + (item.nutrition.calories || 0),
+            protein: (acc.protein || 0) + (item.nutrition.protein || 0),
+            carbs: (acc.carbs || 0) + (item.nutrition.carbs || 0),
+            fat: (acc.fat || 0) + (item.nutrition.fat || 0),
+            sodium: (acc.sodium || 0) + (item.nutrition.sodium || 0),
+            potassium: (acc.potassium || 0) + (item.nutrition.potassium || 0),
+            phosphorus: (acc.phosphorus || 0) + (item.nutrition.phosphorus || 0),
+          };
+        }
+        return acc;
+      }, {});
+      
+      // Only update if there are items with nutrition
+      if (Object.keys(totalNutrition).length > 0) {
+        const currentNutrition = healthRecordData.nutrition || {};
+        const hasChanged = 
+          Math.round(totalNutrition.calories || 0) !== Math.round(currentNutrition.calories || 0) ||
+          Math.round((totalNutrition.protein || 0) * 100) !== Math.round((currentNutrition.protein || 0) * 100) ||
+          Math.round((totalNutrition.carbs || 0) * 10) !== Math.round((currentNutrition.carbs || 0) * 10) ||
+          Math.round((totalNutrition.fat || 0) * 10) !== Math.round((currentNutrition.fat || 0) * 10) ||
+          Math.round((totalNutrition.sodium || 0) * 10) !== Math.round((currentNutrition.sodium || 0) * 10) ||
+          Math.round((totalNutrition.potassium || 0) * 10) !== Math.round((currentNutrition.potassium || 0) * 10) ||
+          Math.round((totalNutrition.phosphorus || 0) * 10) !== Math.round((currentNutrition.phosphorus || 0) * 10);
+        
+        if (hasChanged) {
+          setHealthRecordData(prev => ({
+            ...prev,
+            nutrition: totalNutrition,
+          }));
+        }
+      }
+    }
+  }, [postType, healthRecordType, healthRecordData.items]);
+
   useEffect(() => {
     if (!editingPost && (healthRecordType === 'vital' || healthRecordType === 'meal')) {
       setHealthRecordData(prev => {
@@ -1065,6 +1105,9 @@ export default function PostForm({
                       </button>
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
+                      <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                        {t('healthRecord.mealForm.amount')}:
+                      </label>
                       <input
                         type="number"
                         step="0.1"
@@ -1082,18 +1125,6 @@ export default function PostForm({
                         className="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         disabled={isSubmitting}
                       />
-                      <input
-                        type="text"
-                        value={item.unit || ''}
-                        onChange={e => {
-                          const items = [...(healthRecordData.items || [])];
-                          items[index] = { ...items[index], unit: e.target.value };
-                          setHealthRecordData({ ...healthRecordData, items });
-                        }}
-                        placeholder={item.type === 'menu' ? '1食' : '100g'}
-                        className="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                        disabled={isSubmitting}
-                      />
                       <button
                         type="button"
                         onClick={() => setShowNutritionMap(prev => ({ ...prev, [itemKey]: !showNutrition }))}
@@ -1108,6 +1139,23 @@ export default function PostForm({
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('healthRecord.mealForm.nutrition')}
                         </label>
+                        <div className="mb-2">
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                            {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
+                          </label>
+                          <input
+                            type="text"
+                            value={item.unit || ''}
+                            onChange={e => {
+                              const items = [...(healthRecordData.items || [])];
+                              items[index] = { ...items[index], unit: e.target.value };
+                              setHealthRecordData({ ...healthRecordData, items });
+                            }}
+                            placeholder={item.type === 'menu' ? '1食' : '100g'}
+                            className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                            disabled={isSubmitting}
+                          />
+                        </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <div>
                             <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
@@ -1328,7 +1376,7 @@ export default function PostForm({
               </div>
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.nutrition')}
+              {t('healthRecord.mealForm.totalNutrition') || t('healthRecord.mealForm.nutrition')} ({t('healthRecord.mealForm.autoCalculated') || '自動計算'})
             </label>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
               <div>
@@ -1337,21 +1385,10 @@ export default function PostForm({
                 </label>
                 <input
                   type="number"
-                  value={healthRecordData.nutrition?.calories != null ? String(healthRecordData.nutrition.calories) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        calories: value === '' ? undefined : (value === '0' ? 0 : parseInt(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="500"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.calories != null ? String(Math.round(healthRecordData.nutrition.calories)) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
@@ -1409,21 +1446,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.fat != null ? String(healthRecordData.nutrition.fat) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        fat: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="15"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.fat != null ? String(Math.round(healthRecordData.nutrition.fat * 10) / 10) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
@@ -1433,21 +1459,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.sodium != null ? String(healthRecordData.nutrition.sodium) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        sodium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="500"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.sodium != null ? String(Math.round(healthRecordData.nutrition.sodium * 10) / 10) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
@@ -1457,21 +1472,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.potassium != null ? String(healthRecordData.nutrition.potassium) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        potassium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="300"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.potassium != null ? String(Math.round(healthRecordData.nutrition.potassium * 10) / 10) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
@@ -1481,21 +1485,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.phosphorus != null ? String(healthRecordData.nutrition.phosphorus) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        phosphorus: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="200"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.phosphorus != null ? String(Math.round(healthRecordData.nutrition.phosphorus * 10) / 10) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
             </div>
