@@ -1112,14 +1112,15 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.01"
-                  value={healthRecordData.nutrition?.protein || ''}
+                  value={healthRecordData.nutrition?.protein ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        protein: e.target.value ? parseFloat(e.target.value) : undefined,
+                        protein: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
                       },
                     });
                   }}
@@ -1158,14 +1159,15 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.fat || ''}
+                  value={healthRecordData.nutrition?.fat ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        fat: e.target.value ? parseFloat(e.target.value) : undefined,
+                        fat: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
                       },
                     });
                   }}
@@ -1181,14 +1183,15 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.sodium || ''}
+                  value={healthRecordData.nutrition?.sodium ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        sodium: e.target.value ? parseFloat(e.target.value) : undefined,
+                        sodium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
                       },
                     });
                   }}
@@ -1204,14 +1207,15 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.potassium || ''}
+                  value={healthRecordData.nutrition?.potassium ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        potassium: e.target.value ? parseFloat(e.target.value) : undefined,
+                        potassium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
                       },
                     });
                   }}
