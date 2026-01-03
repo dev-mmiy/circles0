@@ -1092,11 +1092,12 @@ export default function PostForm({
                   value={healthRecordData.nutrition?.calories || ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        calories: e.target.value ? parseInt(e.target.value) : undefined,
+                        calories: value === '' ? undefined : (value === '0' ? 0 : parseInt(value) || undefined),
                       },
                     });
                   }}
@@ -1139,11 +1140,12 @@ export default function PostForm({
                   value={healthRecordData.nutrition?.carbs ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
+                    const value = e.target.value;
                     setHealthRecordData({
                       ...healthRecordData,
                       nutrition: {
                         ...nutrition,
-                        carbs: e.target.value ? parseFloat(e.target.value) : undefined,
+                        carbs: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
                       },
                     });
                   }}
