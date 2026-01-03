@@ -81,6 +81,16 @@ export default function PostForm({
         const minutes = String(date.getMinutes()).padStart(2, '0');
         data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
       }
+      
+      // Convert legacy foods array to items array if items doesn't exist
+      if (healthRecordType === 'meal' && !data.items && data.foods && Array.isArray(data.foods)) {
+        data.items = data.foods.map((food: any) => ({
+          type: 'food',
+          name: food.name || '',
+          amount: food.amount,
+          unit: food.unit || '100g',
+        }));
+      }
     } else {
       // If creating new meal record with initial values
       if (initialMealDate && initialMealType) {
@@ -91,6 +101,8 @@ export default function PostForm({
         const minutes = String(initialMealDate.getMinutes()).padStart(2, '0');
         data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
         data.meal_type = initialMealType;
+        data.items = [];
+        data.newItemType = 'food';
       }
     }
     return data;
@@ -1005,79 +1017,103 @@ export default function PostForm({
               disabled={isSubmitting}
             />
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.foods')}
+              {t('healthRecord.mealForm.items') || 'アイテム'}
             </label>
             <div className="mb-4 space-y-2">
-              {(healthRecordData.foods || []).map((food: any, index: number) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={food.name || ''}
-                    onChange={e => {
-                      const foods = [...(healthRecordData.foods || [])];
-                      foods[index] = { ...foods[index], name: e.target.value };
-                      setHealthRecordData({ ...healthRecordData, foods });
-                    }}
-                    placeholder={t('healthRecord.mealForm.foodName')}
-                    className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={food.amount || ''}
-                    onChange={e => {
-                      const foods = [...(healthRecordData.foods || [])];
-                      foods[index] = {
-                        ...foods[index],
-                        amount: e.target.value ? parseFloat(e.target.value) : undefined,
-                      };
-                      setHealthRecordData({ ...healthRecordData, foods });
-                    }}
-                    placeholder={t('healthRecord.mealForm.amount')}
-                    className="w-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <input
-                    type="text"
-                    value={food.unit || ''}
-                    onChange={e => {
-                      const foods = [...(healthRecordData.foods || [])];
-                      foods[index] = { ...foods[index], unit: e.target.value };
-                      setHealthRecordData({ ...healthRecordData, foods });
-                    }}
-                    placeholder="g"
-                    className="w-20 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const foods = [...(healthRecordData.foods || [])];
-                      foods.splice(index, 1);
-                      setHealthRecordData({ ...healthRecordData, foods });
-                    }}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                    disabled={isSubmitting}
-                  >
-                    ×
-                  </button>
+              {(healthRecordData.items || []).map((item: any, index: number) => (
+                <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                  <div className="flex items-start space-x-2 mb-2">
+                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded">
+                      {item.type === 'menu' ? t('healthRecord.mealForm.menu') : t('healthRecord.mealForm.food')}
+                    </span>
+                    <input
+                      type="text"
+                      value={item.name || ''}
+                      onChange={e => {
+                        const items = [...(healthRecordData.items || [])];
+                        items[index] = { ...items[index], name: e.target.value };
+                        setHealthRecordData({ ...healthRecordData, items });
+                      }}
+                      placeholder={item.type === 'menu' ? t('healthRecord.mealForm.menuName') : t('healthRecord.mealForm.foodName')}
+                      className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const items = [...(healthRecordData.items || [])];
+                        items.splice(index, 1);
+                        setHealthRecordData({ ...healthRecordData, items });
+                      }}
+                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                      disabled={isSubmitting}
+                    >
+                      ×
+                    </button>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={item.amount != null ? String(item.amount) : ''}
+                      onChange={e => {
+                        const items = [...(healthRecordData.items || [])];
+                        const value = e.target.value;
+                        items[index] = {
+                          ...items[index],
+                          amount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                        };
+                        setHealthRecordData({ ...healthRecordData, items });
+                      }}
+                      placeholder={t('healthRecord.mealForm.amount')}
+                      className="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                    <input
+                      type="text"
+                      value={item.unit || ''}
+                      onChange={e => {
+                        const items = [...(healthRecordData.items || [])];
+                        items[index] = { ...items[index], unit: e.target.value };
+                        setHealthRecordData({ ...healthRecordData, items });
+                      }}
+                      placeholder={item.type === 'menu' ? '1食' : '100g'}
+                      className="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                      disabled={isSubmitting}
+                    />
+                  </div>
                 </div>
               ))}
-              <button
-                type="button"
-                onClick={() => {
-                  const foods = [
-                    ...(healthRecordData.foods || []),
-                    { name: '', amount: undefined, unit: 'g' },
-                  ];
-                  setHealthRecordData({ ...healthRecordData, foods });
-                }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                disabled={isSubmitting}
-              >
-                + {t('healthRecord.mealForm.addFood')}
-              </button>
+              <div className="flex items-center space-x-2">
+                <select
+                  value={healthRecordData.newItemType || 'food'}
+                  onChange={e => setHealthRecordData({ ...healthRecordData, newItemType: e.target.value })}
+                  className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  disabled={isSubmitting}
+                >
+                  <option value="menu">{t('healthRecord.mealForm.menu')}</option>
+                  <option value="food">{t('healthRecord.mealForm.food')}</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const items = [
+                      ...(healthRecordData.items || []),
+                      {
+                        type: healthRecordData.newItemType || 'food',
+                        name: '',
+                        amount: undefined,
+                        unit: (healthRecordData.newItemType || 'food') === 'menu' ? '1食' : '100g',
+                      },
+                    ];
+                    setHealthRecordData({ ...healthRecordData, items });
+                  }}
+                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  + {t('healthRecord.mealForm.addItem')}
+                </button>
+              </div>
             </div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.mealForm.nutrition')}
@@ -1089,7 +1125,7 @@ export default function PostForm({
                 </label>
                 <input
                   type="number"
-                  value={healthRecordData.nutrition?.calories ?? ''}
+                  value={healthRecordData.nutrition?.calories != null ? String(healthRecordData.nutrition.calories) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
