@@ -49,7 +49,7 @@ export default function VitalCharts({
   bloodGlucoseRecords,
   spo2Records,
 }: VitalChartsProps) {
-  const t = useTranslations('VitalCharts');
+  const t = useTranslations('daily');
   // 1週間チャートの場合、表示する週の開始日を管理
   const [weekOffset, setWeekOffset] = useState(0); // 0 = 今週、1 = 1週間前、-1 = 1週間後
 
