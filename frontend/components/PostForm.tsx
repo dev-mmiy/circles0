@@ -287,7 +287,7 @@ export default function PostForm({
       const accessToken = await getAccessTokenSilently();
 
       // Prepare health_record_data with ISO format for recorded_at
-      let processedHealthRecordData = healthRecordData;
+      let processedHealthRecordData = { ...healthRecordData };
       if (postType === 'health_record' && healthRecordData.recorded_at) {
         // Convert datetime-local format (YYYY-MM-DDTHH:mm) to ISO string
         const recordedAt = healthRecordData.recorded_at;
@@ -295,10 +295,19 @@ export default function PostForm({
           recordedAt.includes('T') && !recordedAt.includes('Z') && !recordedAt.includes('+')
             ? new Date(recordedAt).toISOString()
             : recordedAt;
-        processedHealthRecordData = {
-          ...healthRecordData,
-          recorded_at: isoDate,
-        };
+        processedHealthRecordData.recorded_at = isoDate;
+      }
+      
+      // Remove newItemType from processed data (it's only for UI state)
+      if (processedHealthRecordData.newItemType) {
+        delete processedHealthRecordData.newItemType;
+      }
+      
+      // For meal records, ensure items array is present (even if empty)
+      if (postType === 'health_record' && healthRecordType === 'meal') {
+        if (!processedHealthRecordData.items) {
+          processedHealthRecordData.items = [];
+        }
       }
 
       // Validate vital record measurements
