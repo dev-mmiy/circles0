@@ -905,7 +905,7 @@ export default function VitalCharts({
                 <YAxis
                   yAxisId="bp"
                   label={{ 
-                    value: t('chart.labels.bloodPressure'), 
+                    value: `${t('chart.labels.bloodPressure')} (${t('chart.units.mmHg')})`, 
                     angle: -90, 
                     position: 'insideLeft',
                     style: { textAnchor: 'middle' }
@@ -922,7 +922,7 @@ export default function VitalCharts({
                   yAxisId="hr"
                   orientation="right"
                   label={{ 
-                    value: t('chart.labels.heartRate'), 
+                    value: `${t('chart.labels.heartRate')} (${t('chart.units.bpm')})`, 
                     angle: 90, 
                     position: 'insideRight',
                     style: { textAnchor: 'middle' }
@@ -974,7 +974,7 @@ export default function VitalCharts({
                     dataKey="systolic"
                     stroke="#ef4444"
                     strokeWidth={2}
-                    name={t('chart.labels.systolic')}
+                    name={`${t('chart.labels.systolic')} (${t('chart.units.mmHg')})`}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -987,7 +987,7 @@ export default function VitalCharts({
                     stroke="#dc2626"
                     strokeWidth={2}
                     strokeDasharray="5 5"
-                    name={t('chart.labels.diastolic')}
+                    name={`${t('chart.labels.diastolic')} (${t('chart.units.mmHg')})`}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -999,7 +999,7 @@ export default function VitalCharts({
                     dataKey="heartRate"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    name={t('chart.labels.heartRate')}
+                    name={`${t('chart.labels.heartRate')} (${t('chart.units.bpm')})`}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -1045,7 +1045,7 @@ export default function VitalCharts({
                 <YAxis 
                   yAxisId="left" 
                   label={{ 
-                    value: t('chart.labels.weight'), 
+                    value: `${t('chart.labels.weight')} (${t('chart.units.kg')})`, 
                     angle: -90, 
                     position: 'insideLeft',
                     style: { textAnchor: 'middle' }
@@ -1062,7 +1062,7 @@ export default function VitalCharts({
                   yAxisId="right"
                   orientation="right"
                   label={{ 
-                    value: t('chart.labels.bodyFat'), 
+                    value: `${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`, 
                     angle: 90, 
                     position: 'insideRight',
                     style: { textAnchor: 'middle' }
@@ -1100,7 +1100,7 @@ export default function VitalCharts({
                     dataKey="weight"
                     stroke="#3b82f6"
                     strokeWidth={2}
-                    name={t('chart.labels.weight')}
+                    name={`${t('chart.labels.weight')} (${t('chart.units.kg')})`}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -1112,7 +1112,7 @@ export default function VitalCharts({
                     dataKey="bodyFat"
                     stroke="#f59e0b"
                     strokeWidth={2}
-                    name={t('chart.labels.bodyFat')}
+                    name={`${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`}
                     dot={period === '1week' ? { r: 4 } : false}
                     connectNulls={true}
                   />
@@ -1189,7 +1189,7 @@ export default function VitalCharts({
                   dataKey="temperature"
                   stroke="#3b82f6"
                   strokeWidth={2}
-                  name={t('chart.labels.temperature')}
+                  name={`${t('chart.labels.temperature')} (${t('chart.units.celsius')})`}
                   dot={{ r: 4 }}
                   connectNulls={true}
                 />
@@ -1258,7 +1258,7 @@ export default function VitalCharts({
                   fill="#f97316"
                   fillOpacity={0.3}
                   strokeWidth={2}
-                  name={t('chart.labels.bloodGlucose')}
+                  name={`${t('chart.labels.bloodGlucose')} (${t('chart.units.mgdL')})`}
                   connectNulls={true}
                 />
               </AreaChart>
@@ -1326,7 +1326,7 @@ export default function VitalCharts({
                   fill="#ec4899"
                   fillOpacity={0.3}
                   strokeWidth={2}
-                  name={t('chart.labels.spo2')}
+                  name={`${t('chart.labels.spo2')} (${t('chart.units.percent')})`}
                   connectNulls={true}
                 />
               </AreaChart>

@@ -208,7 +208,7 @@ export default function VitalRecordCard({
               {bloodPressure.systolic !== undefined && (
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {tDaily('chart.labels.systolic').replace(/\s*\([^)]*\)\s*/g, '')}:
+                    {tDaily('chart.labels.systolic')}:
                   </span>
                   <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                     {bloodPressure.systolic} mmHg
@@ -218,7 +218,7 @@ export default function VitalRecordCard({
               {bloodPressure.diastolic !== undefined && (
                 <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {tDaily('chart.labels.diastolic').replace(/\s*\([^)]*\)\s*/g, '')}:
+                    {tDaily('chart.labels.diastolic')}:
                   </span>
                   <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                     {bloodPressure.diastolic} mmHg
@@ -231,7 +231,7 @@ export default function VitalRecordCard({
           {heartRate && (
             <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.heartRate').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.heartRate')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {heartRate.bpm} bpm
@@ -242,7 +242,7 @@ export default function VitalRecordCard({
           {temperature && (
             <div className="flex items-center justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.temperature').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.temperature')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {temperature.value} {temperature.unit === 'celsius' ? '°C' : '°F'}
@@ -253,7 +253,7 @@ export default function VitalRecordCard({
           {weight && (
             <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.weight').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.weight')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {weight.value} {weight.unit}
@@ -264,7 +264,7 @@ export default function VitalRecordCard({
           {bodyFat && (
             <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.bodyFat').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.bodyFat')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {bodyFat.percentage}%
@@ -275,7 +275,7 @@ export default function VitalRecordCard({
           {bloodGlucose && (
             <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.bloodGlucose').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.bloodGlucose')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {bloodGlucose.value} mg/dL
@@ -292,7 +292,7 @@ export default function VitalRecordCard({
           {spo2 && (
             <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {tDaily('chart.labels.spo2').replace(/\s*\([^)]*\)\s*/g, '')}:
+                {tDaily('chart.labels.spo2')}:
               </span>
               <span className="text-sm text-gray-900 dark:text-gray-100 font-semibold">
                 {spo2.percentage.toFixed(1)}%
