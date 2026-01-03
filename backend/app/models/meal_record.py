@@ -46,11 +46,18 @@ class MealRecord(Base):
         comment="Type of meal: 'breakfast', 'lunch', 'dinner', 'snack'"
     )
     
-    # Foods (stored as JSON array)
+    # Foods (stored as JSON array) - DEPRECATED: Use items instead
     foods = Column(
         JSONB,
         nullable=True,
-        comment="Array of foods consumed: [{'name': str, 'amount': float, 'unit': str}, ...]"
+        comment="Array of foods consumed: [{'name': str, 'amount': float, 'unit': str}, ...] - DEPRECATED: Use items instead"
+    )
+    
+    # Items (stored as JSON array) - Can contain both menus and foods
+    items = Column(
+        JSONB,
+        nullable=True,
+        comment="Array of items consumed: [{'type': 'menu'|'food', 'id': UUID, 'name': str, 'amount': float, 'unit': str, 'nutrition': {...}}, ...]"
     )
     
     # Nutrition (stored as JSON)

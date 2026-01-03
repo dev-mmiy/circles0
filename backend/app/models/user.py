@@ -121,6 +121,12 @@ class User(Base):
     meal_records = relationship(
         "MealRecord", back_populates="user", cascade="all, delete-orphan"
     )
+    foods = relationship(
+        "Food", back_populates="user", cascade="all, delete-orphan"
+    )
+    menus = relationship(
+        "Menu", back_populates="user", cascade="all, delete-orphan"
+    )
     blood_pressure_records = relationship(
         "BloodPressureRecord", back_populates="user", cascade="all, delete-orphan"
     )

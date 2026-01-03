@@ -26,6 +26,8 @@ from .push_subscription import PushSubscription
 from .user import User
 from .user_field_visibility import UserFieldVisibility
 from .meal_record import MealRecord
+from .food import Food, FoodNutrition
+from .menu import Menu, MenuIngredient, MenuNutrition
 from .blood_pressure_record import BloodPressureRecord
 from .heart_rate_record import HeartRateRecord
 from .temperature_record import TemperatureRecord
@@ -71,6 +73,11 @@ __all__ = [
     "GroupMessageReaction",
     "PushSubscription",
     "MealRecord",
+    "Food",
+    "FoodNutrition",
+    "Menu",
+    "MenuIngredient",
+    "MenuNutrition",
     "BloodPressureRecord",
     "HeartRateRecord",
     "TemperatureRecord",
