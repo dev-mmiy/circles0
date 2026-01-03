@@ -965,23 +965,33 @@ export default function PostForm({
 
         {postType === 'health_record' && healthRecordType === 'meal' && (
           <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.mealType')}
-            </label>
-            <select
-              value={healthRecordData.meal_type || ''}
-              onChange={e =>
-                setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
-              disabled={isSubmitting}
-            >
-              <option value="">{t('healthRecord.mealForm.selectMealType')}</option>
-              <option value="breakfast">{t('healthRecord.mealForm.breakfast')}</option>
-              <option value="lunch">{t('healthRecord.mealForm.lunch')}</option>
-              <option value="dinner">{t('healthRecord.mealForm.dinner')}</option>
-              <option value="snack">{t('healthRecord.mealForm.snack')}</option>
-            </select>
+            {/* Meal Type - Hidden if initialMealType is provided */}
+            {initialMealType ? (
+              <input
+                type="hidden"
+                value={healthRecordData.meal_type || initialMealType}
+              />
+            ) : (
+              <>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  {t('healthRecord.mealForm.mealType')}
+                </label>
+                <select
+                  value={healthRecordData.meal_type || ''}
+                  onChange={e =>
+                    setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
+                  disabled={isSubmitting}
+                >
+                  <option value="">{t('healthRecord.mealForm.selectMealType')}</option>
+                  <option value="breakfast">{t('healthRecord.mealForm.breakfast')}</option>
+                  <option value="lunch">{t('healthRecord.mealForm.lunch')}</option>
+                  <option value="dinner">{t('healthRecord.mealForm.dinner')}</option>
+                  <option value="snack">{t('healthRecord.mealForm.snack')}</option>
+                </select>
+              </>
+            )}
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
               {t('healthRecord.mealForm.recordedAt')}
             </label>
@@ -1161,218 +1171,6 @@ export default function PostForm({
                   }}
                   placeholder="15"
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
-                />
-              </div>
-            </div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.notes')}
-            </label>
-            <textarea
-              value={healthRecordData.notes || ''}
-              onChange={e => setHealthRecordData({ ...healthRecordData, notes: e.target.value })}
-              placeholder={t('healthRecord.mealForm.notes')}
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400"
-              rows={3}
-              disabled={isSubmitting}
-            />
-          </div>
-        )}
-
-        {postType === 'health_record' && healthRecordType === 'meal' && (
-          <div className="mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.mealType')}
-            </label>
-            <select
-              value={healthRecordData.meal_type || ''}
-              onChange={e =>
-                setHealthRecordData({ ...healthRecordData, meal_type: e.target.value })
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
-              disabled={isSubmitting}
-            >
-              <option value="">{t('healthRecord.mealForm.selectMealType')}</option>
-              <option value="breakfast">{t('healthRecord.mealForm.breakfast')}</option>
-              <option value="lunch">{t('healthRecord.mealForm.lunch')}</option>
-              <option value="dinner">{t('healthRecord.mealForm.dinner')}</option>
-              <option value="snack">{t('healthRecord.mealForm.snack')}</option>
-            </select>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.recordedAt')}
-            </label>
-            <input
-              type="datetime-local"
-              value={healthRecordData.recorded_at || ''}
-              onChange={e =>
-                setHealthRecordData({ ...healthRecordData, recorded_at: e.target.value })
-              }
-              className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 mb-4"
-              disabled={isSubmitting}
-            />
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.foods')}
-            </label>
-            <div className="space-y-2 mb-4">
-              {(healthRecordData.foods || []).map((food: any, index: number) => (
-                <div key={index} className="flex items-center space-x-2">
-                  <input
-                    type="text"
-                    value={food.name || ''}
-                    onChange={e => {
-                      const newFoods = [...(healthRecordData.foods || [])];
-                      newFoods[index] = { ...newFoods[index], name: e.target.value };
-                      setHealthRecordData({ ...healthRecordData, foods: newFoods });
-                    }}
-                    placeholder={t('healthRecord.mealForm.foodName')}
-                    className="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={food.amount || ''}
-                    onChange={e => {
-                      const newFoods = [...(healthRecordData.foods || [])];
-                      newFoods[index] = {
-                        ...newFoods[index],
-                        amount: e.target.value ? parseFloat(e.target.value) : undefined,
-                        unit: 'g',
-                      };
-                      setHealthRecordData({ ...healthRecordData, foods: newFoods });
-                    }}
-                    placeholder={t('healthRecord.mealForm.amount')}
-                    className="w-24 p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                    disabled={isSubmitting}
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">g</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const newFoods = (healthRecordData.foods || []).filter(
-                        (_: any, i: number) => i !== index
-                      );
-                      setHealthRecordData({ ...healthRecordData, foods: newFoods });
-                    }}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                    disabled={isSubmitting}
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M6 18L18 6M6 6l12 12"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => {
-                  setHealthRecordData({
-                    ...healthRecordData,
-                    foods: [
-                      ...(healthRecordData.foods || []),
-                      { name: '', amount: undefined, unit: 'g' },
-                    ],
-                  });
-                }}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                disabled={isSubmitting}
-              >
-                {t('healthRecord.mealForm.addFood')}
-              </button>
-            </div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              {t('healthRecord.mealForm.nutrition')}
-            </label>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div>
-                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {t('healthRecord.mealForm.calories')} (kcal)
-                </label>
-                <input
-                  type="number"
-                  value={healthRecordData.nutrition?.calories || ''}
-                  onChange={e =>
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...healthRecordData.nutrition,
-                        calories: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="500"
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {t('healthRecord.mealForm.protein')} (g)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={healthRecordData.nutrition?.protein || ''}
-                  onChange={e =>
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...healthRecordData.nutrition,
-                        protein: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="20"
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {t('healthRecord.mealForm.carbs')} (g)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={healthRecordData.nutrition?.carbs || ''}
-                  onChange={e =>
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...healthRecordData.nutrition,
-                        carbs: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="60"
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
-                />
-              </div>
-              <div>
-                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {t('healthRecord.mealForm.fat')} (g)
-                </label>
-                <input
-                  type="number"
-                  step="0.1"
-                  value={healthRecordData.nutrition?.fat || ''}
-                  onChange={e =>
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...healthRecordData.nutrition,
-                        fat: e.target.value ? parseFloat(e.target.value) : undefined,
-                      },
-                    })
-                  }
-                  placeholder="15"
-                  className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
                 />
               </div>
