@@ -1168,6 +1168,20 @@ export default function VitalCharts({
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
+                  formatter={(value: any, name: string) => {
+                    // Remove units from measurement names (anything in parentheses)
+                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
+                    
+                    // Determine unit based on the original name
+                    let unit = '';
+                    if (name.includes('°C')) {
+                      unit = ' °C';
+                    } else if (name.includes('°F')) {
+                      unit = ' °F';
+                    }
+                    
+                    return [`${value}${unit}`, nameWithoutUnit];
+                  }}
                 />
                 <Legend />
                 <Line
