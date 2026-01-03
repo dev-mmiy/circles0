@@ -1398,21 +1398,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.01"
-                  value={healthRecordData.nutrition?.protein != null ? String(healthRecordData.nutrition.protein) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        protein: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="20"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.protein != null ? String(Math.round(healthRecordData.nutrition.protein * 100) / 100) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
@@ -1422,21 +1411,10 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.carbs != null ? String(healthRecordData.nutrition.carbs) : ''}
-                  onChange={e => {
-                    const nutrition = healthRecordData.nutrition || {};
-                    const value = e.target.value;
-                    setHealthRecordData({
-                      ...healthRecordData,
-                      nutrition: {
-                        ...nutrition,
-                        carbs: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                      },
-                    });
-                  }}
-                  placeholder="60"
-                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  disabled={isSubmitting}
+                  value={healthRecordData.nutrition?.carbs != null ? String(Math.round(healthRecordData.nutrition.carbs * 10) / 10) : ''}
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                  disabled={true}
+                  readOnly
                 />
               </div>
               <div>
