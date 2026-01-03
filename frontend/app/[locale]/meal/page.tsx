@@ -20,6 +20,7 @@ export default function MealPage() {
   const { isAuthenticated, isLoading: authLoading, getAccessTokenSilently } = useAuth0();
   const { user } = useUser();
   const t = useTranslations('meal');
+  const tDaily = useTranslations('daily');
   
   // Set page title
   useEffect(() => {
@@ -59,7 +60,7 @@ export default function MealPage() {
       },
       [isAuthenticated, user, getAccessTokenSilently]
     ),
-    pageSize: 20,
+    pageSize: 100, // Load more records to cover past 30 days
     autoLoad: false, // Manually control loading after auth check
   });
 
