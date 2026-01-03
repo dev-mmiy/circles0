@@ -1089,7 +1089,7 @@ export default function PostForm({
                 </label>
                 <input
                   type="number"
-                  value={healthRecordData.nutrition?.calories || ''}
+                  value={healthRecordData.nutrition?.calories ?? ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
