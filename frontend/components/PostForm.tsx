@@ -1111,7 +1111,7 @@ export default function PostForm({
                 </label>
                 <input
                   type="number"
-                  step="0.1"
+                  step="0.01"
                   value={healthRecordData.nutrition?.protein || ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
@@ -1170,6 +1170,75 @@ export default function PostForm({
                     });
                   }}
                   placeholder="15"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  {t('healthRecord.mealForm.sodium')} (mg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={healthRecordData.nutrition?.sodium || ''}
+                  onChange={e => {
+                    const nutrition = healthRecordData.nutrition || {};
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...nutrition,
+                        sodium: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    });
+                  }}
+                  placeholder="500"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  {t('healthRecord.mealForm.potassium')} (mg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={healthRecordData.nutrition?.potassium || ''}
+                  onChange={e => {
+                    const nutrition = healthRecordData.nutrition || {};
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...nutrition,
+                        potassium: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    });
+                  }}
+                  placeholder="300"
+                  className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  disabled={isSubmitting}
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                  {t('healthRecord.mealForm.phosphorus')} (mg)
+                </label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={healthRecordData.nutrition?.phosphorus || ''}
+                  onChange={e => {
+                    const nutrition = healthRecordData.nutrition || {};
+                    setHealthRecordData({
+                      ...healthRecordData,
+                      nutrition: {
+                        ...nutrition,
+                        phosphorus: e.target.value ? parseFloat(e.target.value) : undefined,
+                      },
+                    });
+                  }}
+                  placeholder="200"
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   disabled={isSubmitting}
                 />

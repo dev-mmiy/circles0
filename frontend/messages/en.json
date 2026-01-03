@@ -490,6 +490,9 @@
         "protein": "Protein",
         "carbs": "Carbs",
         "fat": "Fat",
+        "sodium": "Sodium",
+        "potassium": "Potassium",
+        "phosphorus": "Phosphorus",
         "notes": "Notes"
       }
     },

@@ -24,6 +24,9 @@ class NutritionInfo(BaseModel):
     protein: Optional[float] = Field(None, ge=0.0)
     carbs: Optional[float] = Field(None, ge=0.0)
     fat: Optional[float] = Field(None, ge=0.0)
+    sodium: Optional[float] = Field(None, ge=0.0, description="Sodium (mg)")
+    potassium: Optional[float] = Field(None, ge=0.0, description="Potassium (mg)")
+    phosphorus: Optional[float] = Field(None, ge=0.0, description="Phosphorus (mg)")
 
 
 class MealRecordBase(BaseModel):

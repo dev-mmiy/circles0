@@ -126,6 +126,8 @@ class MenuNutrition(Base):
     fat = Column(Numeric(10, 2), nullable=True, comment="Fat (g)")
     fiber = Column(Numeric(10, 2), nullable=True, comment="Fiber (g)")
     sodium = Column(Numeric(10, 2), nullable=True, comment="Sodium (mg)")
+    potassium = Column(Numeric(10, 2), nullable=True, comment="Potassium (mg)")
+    phosphorus = Column(Numeric(10, 2), nullable=True, comment="Phosphorus (mg)")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(
         DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow

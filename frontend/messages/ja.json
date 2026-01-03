@@ -490,6 +490,9 @@
         "protein": "タンパク質",
         "carbs": "炭水化物",
         "fat": "脂質",
+        "sodium": "塩分",
+        "potassium": "カリウム",
+        "phosphorus": "リン",
         "notes": "メモ"
       }
     },
