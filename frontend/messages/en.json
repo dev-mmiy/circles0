@@ -1322,6 +1322,7 @@
     "pageTitle": "Daily Records"
   },
   "meal": {
+    "pageTitle": "Meal Records",
     "title": "Meal Records",
     "subtitle": "Manage your meal records",
     "authRequired": "Please log in to view this page",
@@ -1368,9 +1369,6 @@
       "noData": "No records found for the selected period"
     },
     "pageTitle": "Daily Records"
-  },
-  "meal": {
-    "pageTitle": "Meal Records"
   },
   "groups": {
     "pageTitle": "Groups"

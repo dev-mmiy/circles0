@@ -1320,6 +1320,7 @@
     "pageTitle": "日々の記録"
   },
   "meal": {
+    "pageTitle": "食事記録",
     "title": "食事記録",
     "subtitle": "食事の記録を管理します",
     "authRequired": "このページを表示するにはログインが必要です",
@@ -1366,9 +1367,6 @@
       "noData": "選択した期間の記録が見つかりませんでした"
     },
     "pageTitle": "日々の記録"
-  },
-  "meal": {
-    "pageTitle": "食事記録"
   },
   "groups": {
     "pageTitle": "グループ"
