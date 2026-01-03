@@ -944,14 +944,26 @@ export default function VitalCharts({
                   }}
                   wrapperStyle={{ color: 'inherit' }}
                   formatter={(value: any, name: string) => {
-                    if (name === '収縮期血圧 (mmHg)') {
-                      return [`${value} mmHg`, name];
-                    } else if (name === '拡張期血圧 (mmHg)') {
-                      return [`${value} mmHg`, name];
-                    } else if (name === '心拍数 (bpm)') {
-                      return [`${value} bpm`, name];
+                    // Remove units from measurement names (anything in parentheses)
+                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
+                    
+                    // Determine unit based on the original name
+                    let unit = '';
+                    if (name.includes('mmHg')) {
+                      unit = ' mmHg';
+                    } else if (name.includes('bpm')) {
+                      unit = ' bpm';
+                    } else if (name.includes('°C') || name.includes('°F')) {
+                      unit = name.includes('°C') ? ' °C' : ' °F';
+                    } else if (name.includes('kg')) {
+                      unit = ' kg';
+                    } else if (name.includes('%')) {
+                      unit = '%';
+                    } else if (name.includes('mg/dL')) {
+                      unit = ' mg/dL';
                     }
-                    return [value, name];
+                    
+                    return [`${value}${unit}`, nameWithoutUnit];
                   }}
                 />
                 <Legend />
@@ -1064,6 +1076,20 @@ export default function VitalCharts({
                     backgroundColor: '#fff',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                  }}
+                  formatter={(value: any, name: string) => {
+                    // Remove units from measurement names (anything in parentheses)
+                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
+                    
+                    // Determine unit based on the original name
+                    let unit = '';
+                    if (name.includes('kg')) {
+                      unit = ' kg';
+                    } else if (name.includes('%')) {
+                      unit = '%';
+                    }
+                    
+                    return [`${value}${unit}`, nameWithoutUnit];
                   }}
                 />
                 <Legend />
@@ -1204,6 +1230,11 @@ export default function VitalCharts({
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
                   }}
+                  formatter={(value: any, name: string) => {
+                    // Remove units from measurement names (anything in parentheses)
+                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
+                    return [`${value} mg/dL`, nameWithoutUnit];
+                  }}
                 />
                 <Legend />
                 <Area
@@ -1266,6 +1297,11 @@ export default function VitalCharts({
                     backgroundColor: '#fff',
                     border: '1px solid #e5e7eb',
                     borderRadius: '8px',
+                  }}
+                  formatter={(value: any, name: string) => {
+                    // Remove units from measurement names (anything in parentheses)
+                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
+                    return [`${value}%`, nameWithoutUnit];
                   }}
                 />
                 <Legend />
