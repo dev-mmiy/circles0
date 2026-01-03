@@ -117,6 +117,7 @@ export default function PostForm({
   const [healthRecordData, setHealthRecordData] = useState<Record<string, any>>(
     initializeHealthRecordData()
   );
+  const [showNutritionMap, setShowNutritionMap] = useState<Record<string, boolean>>({});
   const [content, setContent] = useState(editingPost?.content || '');
   const [visibility, setVisibility] = useState<'public' | 'followers_only' | 'private'>(
     (editingPost?.visibility as 'public' | 'followers_only' | 'private') || 'public'
