@@ -1029,70 +1029,272 @@ export default function PostForm({
               {t('healthRecord.mealForm.items') || 'アイテム'}
             </label>
             <div className="mb-4 space-y-2">
-              {(healthRecordData.items || []).map((item: any, index: number) => (
-                <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
-                  <div className="flex items-start space-x-2 mb-2">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded">
-                      {item.type === 'menu' ? t('healthRecord.mealForm.menu') : t('healthRecord.mealForm.food')}
-                    </span>
-                    <input
-                      type="text"
-                      value={item.name || ''}
-                      onChange={e => {
-                        const items = [...(healthRecordData.items || [])];
-                        items[index] = { ...items[index], name: e.target.value };
-                        setHealthRecordData({ ...healthRecordData, items });
-                      }}
-                      placeholder={item.type === 'menu' ? t('healthRecord.mealForm.menuName') : t('healthRecord.mealForm.foodName')}
-                      className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      disabled={isSubmitting}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const items = [...(healthRecordData.items || [])];
-                        items.splice(index, 1);
-                        setHealthRecordData({ ...healthRecordData, items });
-                      }}
-                      className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
-                      disabled={isSubmitting}
-                    >
-                      ×
-                    </button>
+              {(healthRecordData.items || []).map((item: any, index: number) => {
+                const itemKey = `item-${index}`;
+                const showNutrition = showNutritionMap[itemKey] || false;
+                return (
+                  <div key={index} className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                    <div className="flex items-start space-x-2 mb-2">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 px-2 py-1 bg-gray-200 dark:bg-gray-600 rounded">
+                        {item.type === 'menu' ? t('healthRecord.mealForm.menu') : t('healthRecord.mealForm.food')}
+                      </span>
+                      <input
+                        type="text"
+                        value={item.name || ''}
+                        onChange={e => {
+                          const items = [...(healthRecordData.items || [])];
+                          items[index] = { ...items[index], name: e.target.value };
+                          setHealthRecordData({ ...healthRecordData, items });
+                        }}
+                        placeholder={item.type === 'menu' ? t('healthRecord.mealForm.menuName') : t('healthRecord.mealForm.foodName')}
+                        className="flex-1 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const items = [...(healthRecordData.items || [])];
+                          items.splice(index, 1);
+                          setHealthRecordData({ ...healthRecordData, items });
+                        }}
+                        className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg"
+                        disabled={isSubmitting}
+                      >
+                        ×
+                      </button>
+                    </div>
+                    <div className="flex items-center space-x-2 mb-2">
+                      <input
+                        type="number"
+                        step="0.1"
+                        value={item.amount != null ? String(item.amount) : ''}
+                        onChange={e => {
+                          const items = [...(healthRecordData.items || [])];
+                          const value = e.target.value;
+                          items[index] = {
+                            ...items[index],
+                            amount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                          };
+                          setHealthRecordData({ ...healthRecordData, items });
+                        }}
+                        placeholder={t('healthRecord.mealForm.amount')}
+                        className="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <input
+                        type="text"
+                        value={item.unit || ''}
+                        onChange={e => {
+                          const items = [...(healthRecordData.items || [])];
+                          items[index] = { ...items[index], unit: e.target.value };
+                          setHealthRecordData({ ...healthRecordData, items });
+                        }}
+                        placeholder={item.type === 'menu' ? '1食' : '100g'}
+                        className="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        disabled={isSubmitting}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowNutritionMap(prev => ({ ...prev, [itemKey]: !showNutrition }))}
+                        className="ml-auto px-3 py-1 text-xs text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg"
+                        disabled={isSubmitting}
+                      >
+                        {showNutrition ? t('healthRecord.mealForm.hideNutrition') : t('healthRecord.mealForm.showNutrition')}
+                      </button>
+                    </div>
+                    {showNutrition && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          {t('healthRecord.mealForm.nutrition')}
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.calories')}
+                            </label>
+                            <input
+                              type="number"
+                              value={item.nutrition?.calories != null ? String(item.nutrition.calories) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    calories: value === '' ? undefined : (value === '0' ? 0 : parseInt(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="500"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.protein')}
+                            </label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              value={item.nutrition?.protein != null ? String(item.nutrition.protein) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    protein: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="20"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.carbs')}
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={item.nutrition?.carbs != null ? String(item.nutrition.carbs) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    carbs: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="60"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.fat')}
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={item.nutrition?.fat != null ? String(item.nutrition.fat) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    fat: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="15"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.sodium')} (mg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={item.nutrition?.sodium != null ? String(item.nutrition.sodium) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    sodium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="500"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.potassium')} (mg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={item.nutrition?.potassium != null ? String(item.nutrition.potassium) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    potassium: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="300"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.phosphorus')} (mg)
+                            </label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={item.nutrition?.phosphorus != null ? String(item.nutrition.phosphorus) : ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                const value = e.target.value;
+                                const nutrition = items[index].nutrition || {};
+                                items[index] = {
+                                  ...items[index],
+                                  nutrition: {
+                                    ...nutrition,
+                                    phosphorus: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  },
+                                };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              placeholder="200"
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="number"
-                      step="0.1"
-                      value={item.amount != null ? String(item.amount) : ''}
-                      onChange={e => {
-                        const items = [...(healthRecordData.items || [])];
-                        const value = e.target.value;
-                        items[index] = {
-                          ...items[index],
-                          amount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                        };
-                        setHealthRecordData({ ...healthRecordData, items });
-                      }}
-                      placeholder={t('healthRecord.mealForm.amount')}
-                      className="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      disabled={isSubmitting}
-                    />
-                    <input
-                      type="text"
-                      value={item.unit || ''}
-                      onChange={e => {
-                        const items = [...(healthRecordData.items || [])];
-                        items[index] = { ...items[index], unit: e.target.value };
-                        setHealthRecordData({ ...healthRecordData, items });
-                      }}
-                      placeholder={item.type === 'menu' ? '1食' : '100g'}
-                      className="w-20 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                      disabled={isSubmitting}
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
               <div className="flex items-center space-x-2">
                 <select
                   value={healthRecordData.newItemType || 'food'}

@@ -491,6 +491,8 @@
         "edit": "編集",
         "delete": "削除",
         "nutrition": "栄養成分",
+        "showNutrition": "栄養成分を表示",
+        "hideNutrition": "栄養成分を非表示",
         "calories": "カロリー",
         "protein": "タンパク質",
         "carbs": "炭水化物",

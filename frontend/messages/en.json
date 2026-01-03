@@ -491,6 +491,8 @@
         "edit": "Edit",
         "delete": "Delete",
         "nutrition": "Nutrition",
+        "showNutrition": "Show Nutrition",
+        "hideNutrition": "Hide Nutrition",
         "calories": "Calories",
         "protein": "Protein",
         "carbs": "Carbs",
