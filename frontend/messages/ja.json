@@ -482,6 +482,9 @@
         "foodName": "食材名",
         "amount": "量",
         "addFood": "食材を追加",
+        "noFoods": "食材がありません",
+        "edit": "編集",
+        "delete": "削除",
         "nutrition": "栄養成分",
         "calories": "カロリー",
         "protein": "タンパク質",
@@ -1342,7 +1345,9 @@
     "noRecords": "記録がありません",
     "loading": "読み込み中...",
     "loadMore": "さらに読み込む",
-    "calendarComingSoon": "カレンダー表示は準備中です"
+    "calendarComingSoon": "カレンダー表示は準備中です",
+    "today": "今日",
+    "yesterday": "昨日"
   },
   "VitalCharts": {
     "chart": {

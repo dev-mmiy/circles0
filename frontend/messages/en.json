@@ -482,6 +482,9 @@
         "foodName": "Food Name",
         "amount": "Amount",
         "addFood": "Add Food",
+        "noFoods": "No foods",
+        "edit": "Edit",
+        "delete": "Delete",
         "nutrition": "Nutrition",
         "calories": "Calories",
         "protein": "Protein",
@@ -1344,7 +1347,9 @@
     "noRecords": "No records found",
     "loading": "Loading...",
     "loadMore": "Load More",
-    "calendarComingSoon": "Calendar view coming soon"
+    "calendarComingSoon": "Calendar view coming soon",
+    "today": "Today",
+    "yesterday": "Yesterday"
   },
   "VitalCharts": {
     "chart": {

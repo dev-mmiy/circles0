@@ -39,6 +39,8 @@ interface PostFormProps {
   hideHealthRecordTypeSelector?: boolean;
   visibleMeasurements?: VisibleMeasurement[]; // 表示する測定項目を指定（未指定の場合は全て表示）
   editingPost?: Post; // Post to edit (for edit mode)
+  initialMealDate?: Date | null; // Initial date for meal record
+  initialMealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null; // Initial meal type
 }
 
 export default function PostForm({
@@ -50,6 +52,8 @@ export default function PostForm({
   hideHealthRecordTypeSelector = false,
   visibleMeasurements,
   editingPost,
+  initialMealDate,
+  initialMealType,
 }: PostFormProps) {
   const { getAccessTokenSilently } = useAuth0();
   const t = useTranslations('postForm');
@@ -58,21 +62,36 @@ export default function PostForm({
 
   // Initialize healthRecordData, converting recorded_at from ISO to datetime-local format if needed
   const initializeHealthRecordData = (): Record<string, any> => {
-    if (!editingPost?.health_record_data) return {};
-    const data = { ...editingPost.health_record_data };
-    if (
-      data.recorded_at &&
-      typeof data.recorded_at === 'string' &&
-      data.recorded_at.includes('T')
-    ) {
-      // Convert ISO string to datetime-local format
-      const date = new Date(data.recorded_at);
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const hours = String(date.getHours()).padStart(2, '0');
-      const minutes = String(date.getMinutes()).padStart(2, '0');
-      data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
+    const data: Record<string, any> = {};
+    
+    // If editing, use existing data
+    if (editingPost?.health_record_data) {
+      Object.assign(data, editingPost.health_record_data);
+      if (
+        data.recorded_at &&
+        typeof data.recorded_at === 'string' &&
+        data.recorded_at.includes('T')
+      ) {
+        // Convert ISO string to datetime-local format
+        const date = new Date(data.recorded_at);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const hours = String(date.getHours()).padStart(2, '0');
+        const minutes = String(date.getMinutes()).padStart(2, '0');
+        data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
+      }
+    } else {
+      // If creating new meal record with initial values
+      if (initialMealDate && initialMealType) {
+        const year = initialMealDate.getFullYear();
+        const month = String(initialMealDate.getMonth() + 1).padStart(2, '0');
+        const day = String(initialMealDate.getDate()).padStart(2, '0');
+        const hours = String(initialMealDate.getHours()).padStart(2, '0');
+        const minutes = String(initialMealDate.getMinutes()).padStart(2, '0');
+        data.recorded_at = `${year}-${month}-${day}T${hours}:${minutes}`;
+        data.meal_type = initialMealType;
+      }
     }
     return data;
   };

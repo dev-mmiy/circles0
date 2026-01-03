@@ -34,6 +34,8 @@ interface PostFormModalProps {
   initialHealthRecordType?: 'diary' | 'symptom' | 'vital' | 'meal' | 'medication' | 'exercise';
   visibleMeasurements?: VisibleMeasurement[];
   editingPost?: Post; // Post to edit (for edit mode)
+  initialMealDate?: Date | null; // Initial date for meal record
+  initialMealType?: 'breakfast' | 'lunch' | 'dinner' | 'snack' | null; // Initial meal type
 }
 
 export default function PostFormModal({
@@ -44,6 +46,8 @@ export default function PostFormModal({
   initialHealthRecordType,
   visibleMeasurements,
   editingPost,
+  initialMealDate,
+  initialMealType,
 }: PostFormModalProps) {
   const t = useTranslations('postForm');
   const tDaily = useTranslations('daily');
@@ -191,6 +195,8 @@ export default function PostFormModal({
                 }
                 visibleMeasurements={editingPost ? inferVisibleMeasurements() : visibleMeasurements}
                 editingPost={editingPost}
+                initialMealDate={initialMealDate}
+                initialMealType={initialMealType}
               />
             </div>
           </div>

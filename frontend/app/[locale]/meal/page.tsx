@@ -5,12 +5,13 @@ import { useAuth0 } from '@auth0/auth0-react';
 import { useTranslations } from 'next-intl';
 import Header from '@/components/Header';
 import { ErrorDisplay } from '@/components/ErrorDisplay';
-import { getUserPosts, type Post } from '@/lib/api/posts';
+import { getUserPosts, deletePost, type Post } from '@/lib/api/posts';
 import { useUser } from '@/contexts/UserContext';
 import { useDataLoader } from '@/lib/hooks/useDataLoader';
 import { Calendar, List, Plus } from 'lucide-react';
 import PostFormModal from '@/components/PostFormModal';
 import PostCard from '@/components/PostCard';
+import MealTimeline from '@/components/meals/MealTimeline';
 import { setPageTitle } from '@/lib/utils/pageTitle';
 
 type ViewMode = 'calendar' | 'list';
@@ -26,6 +27,9 @@ export default function MealPage() {
   }, [t]);
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner' | 'snack' | null>(null);
+  const [editingPost, setEditingPost] = useState<Post | null>(null);
 
   // Data loader for meal records
   const {
@@ -70,7 +74,38 @@ export default function MealPage() {
   const handlePostCreated = useCallback(() => {
     refresh();
     setIsFormModalOpen(false);
+    setSelectedDate(null);
+    setSelectedMealType(null);
+    setEditingPost(null);
   }, [refresh]);
+
+  // Handle add food button click
+  const handleAddFood = useCallback((date: Date, mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack') => {
+    setSelectedDate(date);
+    setSelectedMealType(mealType);
+    setIsFormModalOpen(true);
+  }, []);
+
+  // Handle edit food
+  const handleEditFood = useCallback((post: Post) => {
+    setEditingPost(post);
+    setIsFormModalOpen(true);
+  }, []);
+
+  // Handle delete food
+  const handleDeleteFood = useCallback(async (postId: string) => {
+    if (!confirm(tDaily('confirmDelete'))) {
+      return;
+    }
+    try {
+      const token = await getAccessTokenSilently();
+      await deletePost(postId, token);
+      refresh();
+    } catch (error) {
+      console.error('Failed to delete meal record:', error);
+      alert(tDaily('deleteFailed'));
+    }
+  }, [getAccessTokenSilently, refresh, tDaily]);
 
   if (authLoading) {
     return (
@@ -153,35 +188,18 @@ export default function MealPage() {
 
         {/* Content */}
         {viewMode === 'list' ? (
-          <div className="space-y-4">
+          <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
             {isLoading && records.length === 0 ? (
               <div className="flex items-center justify-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               </div>
-            ) : records.length === 0 ? (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-                <p className="text-gray-600 dark:text-gray-400">{t('noRecords')}</p>
-              </div>
             ) : (
-              <>
-                {records.map(record => (
-                  <PostCard
-                    key={record.id}
-                    post={record}
-                    onPostUpdated={refresh}
-                    onPostDeleted={refresh}
-                  />
-                ))}
-                {hasMore && (
-                  <button
-                    onClick={loadMore}
-                    disabled={isLoadingMore}
-                    className="w-full py-3 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors disabled:opacity-50"
-                  >
-                    {isLoadingMore ? t('loading') : t('loadMore')}
-                  </button>
-                )}
-              </>
+              <MealTimeline
+                records={records}
+                onAddFood={handleAddFood}
+                onEditFood={handleEditFood}
+                onDeleteFood={handleDeleteFood}
+              />
             )}
           </div>
         ) : (
@@ -194,10 +212,18 @@ export default function MealPage() {
         {isFormModalOpen && (
           <PostFormModal
             isOpen={isFormModalOpen}
-            onClose={() => setIsFormModalOpen(false)}
+            onClose={() => {
+              setIsFormModalOpen(false);
+              setSelectedDate(null);
+              setSelectedMealType(null);
+              setEditingPost(null);
+            }}
             onPostCreated={handlePostCreated}
             initialPostType="health_record"
             initialHealthRecordType="meal"
+            initialMealDate={selectedDate}
+            initialMealType={selectedMealType}
+            editingPost={editingPost}
           />
         )}
       </div>
