@@ -1113,7 +1113,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.01"
-                  value={healthRecordData.nutrition?.protein ?? ''}
+                  value={healthRecordData.nutrition?.protein != null ? String(healthRecordData.nutrition.protein) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
@@ -1137,7 +1137,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.carbs ?? ''}
+                  value={healthRecordData.nutrition?.carbs != null ? String(healthRecordData.nutrition.carbs) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
@@ -1161,7 +1161,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.fat ?? ''}
+                  value={healthRecordData.nutrition?.fat != null ? String(healthRecordData.nutrition.fat) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
@@ -1185,7 +1185,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.sodium ?? ''}
+                  value={healthRecordData.nutrition?.sodium != null ? String(healthRecordData.nutrition.sodium) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
@@ -1209,7 +1209,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.potassium ?? ''}
+                  value={healthRecordData.nutrition?.potassium != null ? String(healthRecordData.nutrition.potassium) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
@@ -1233,7 +1233,7 @@ export default function PostForm({
                 <input
                   type="number"
                   step="0.1"
-                  value={healthRecordData.nutrition?.phosphorus ?? ''}
+                  value={healthRecordData.nutrition?.phosphorus != null ? String(healthRecordData.nutrition.phosphorus) : ''}
                   onChange={e => {
                     const nutrition = healthRecordData.nutrition || {};
                     const value = e.target.value;
