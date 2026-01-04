@@ -1383,7 +1383,6 @@ export default function PostForm({
                       name: '',
                       amount: undefined,
                       unit: '',
-                      unitAmount: undefined,
                     },
                     ];
                     setHealthRecordData({ ...healthRecordData, items });
