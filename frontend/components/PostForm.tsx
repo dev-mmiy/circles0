@@ -1214,10 +1214,10 @@ export default function PostForm({
                                 {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
                               </label>
                               <select
-                                value={item.unit || ''}
+                                value={item.unit || 'g'}
                                 onChange={e => {
                                   const items = [...(healthRecordData.items || [])];
-                                  const newUnit = e.target.value;
+                                  const newUnit = e.target.value || 'g'; // Default to 'g' if empty
                                   // Set default unitAmount based on unit
                                   let defaultUnitAmount: number | undefined = undefined;
                                   if (newUnit === 'g' || newUnit === 'ml') {
