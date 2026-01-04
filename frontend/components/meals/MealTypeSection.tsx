@@ -50,28 +50,18 @@ export default function MealTypeSection({
       ) : (
         <div className="space-y-2">
           {records.map(record => {
-            // Support both new items array and legacy foods array
             const items = record.health_record_data?.items || [];
-            const foods = record.health_record_data?.foods || [];
             const nutrition = record.health_record_data?.nutrition;
-            
-            // Use items if available, otherwise fall back to foods
-            const displayItems = items.length > 0 ? items : foods.map((food: any) => ({
-              type: 'food',
-              name: food.name,
-              amount: food.amount,
-              unit: food.unit || 'g',
-            }));
             
             return (
               <div
                 key={record.id}
                 className="bg-gray-50 dark:bg-gray-700/50 rounded p-2 space-y-1"
               >
-                {/* Items/Foods */}
-                {displayItems.length > 0 && (
+                {/* Items */}
+                {items.length > 0 && (
                   <div className="space-y-1">
-                    {displayItems.map((item: any, index: number) => (
+                    {items.map((item: any, index: number) => (
                       <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
                         • {item.name}
                         {item.amount != null && (
