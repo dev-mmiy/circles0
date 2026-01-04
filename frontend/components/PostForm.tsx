@@ -1166,37 +1166,49 @@ export default function PostForm({
                           {t('healthRecord.mealForm.nutrition')}
                         </label>
                         <div className="mb-2 space-y-2">
-                          <div>
-                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
-                            </label>
-                            <select
-                              value={item.unit || ''}
-                              onChange={e => {
-                                const items = [...(healthRecordData.items || [])];
-                                items[index] = { ...items[index], unit: e.target.value };
-                                setHealthRecordData({ ...healthRecordData, items });
-                              }}
-                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                              disabled={isSubmitting}
-                            >
-                              <option value="">{t('healthRecord.mealForm.selectUnit') || '選択してください'}</option>
-                              <option value="g">{t('healthRecord.mealForm.unitG') || 'g'}</option>
-                              <option value="ml">{t('healthRecord.mealForm.unitMl') || 'ml'}</option>
-                              <option value="大さじ">{t('healthRecord.mealForm.unitTablespoon') || '大さじ'}</option>
-                              <option value="小さじ">{t('healthRecord.mealForm.unitTeaspoon') || '小さじ'}</option>
-                              <option value="カップ">{t('healthRecord.mealForm.unitCup') || 'カップ'}</option>
-                              <option value="個">{t('healthRecord.mealForm.unitPiece') || '個'}</option>
-                              <option value="袋">{t('healthRecord.mealForm.unitBag') || '袋'}</option>
-                              <option value="枚">{t('healthRecord.mealForm.unitSheet') || '枚'}</option>
-                              <option value="人分">{t('healthRecord.mealForm.unitServing') || '人分'}</option>
-                            </select>
-                          </div>
-                          {/* For g or ml, show base amount input (e.g., 100g, 200ml) */}
-                          {(item.unit === 'g' || item.unit === 'ml') && (
+                          <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('healthRecord.mealForm.baseAmount') || '基準量'} ({item.unit})
+                                {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
+                              </label>
+                              <select
+                                value={item.unit || ''}
+                                onChange={e => {
+                                  const items = [...(healthRecordData.items || [])];
+                                  const newUnit = e.target.value;
+                                  // Set default unitAmount based on unit
+                                  let defaultUnitAmount: number | undefined = undefined;
+                                  if (newUnit === 'g' || newUnit === 'ml') {
+                                    defaultUnitAmount = 100;
+                                  } else if (newUnit) {
+                                    defaultUnitAmount = 1;
+                                  }
+                                  items[index] = { 
+                                    ...items[index], 
+                                    unit: newUnit,
+                                    unitAmount: item.unitAmount != null ? item.unitAmount : defaultUnitAmount,
+                                  };
+                                  setHealthRecordData({ ...healthRecordData, items });
+                                }}
+                                className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                disabled={isSubmitting}
+                              >
+                                <option value="">{t('healthRecord.mealForm.selectUnit') || '選択してください'}</option>
+                                <option value="g">{t('healthRecord.mealForm.unitG') || 'g'}</option>
+                                <option value="ml">{t('healthRecord.mealForm.unitMl') || 'ml'}</option>
+                                <option value="大さじ">{t('healthRecord.mealForm.unitTablespoon') || '大さじ'}</option>
+                                <option value="小さじ">{t('healthRecord.mealForm.unitTeaspoon') || '小さじ'}</option>
+                                <option value="カップ">{t('healthRecord.mealForm.unitCup') || 'カップ'}</option>
+                                <option value="個">{t('healthRecord.mealForm.unitPiece') || '個'}</option>
+                                <option value="袋">{t('healthRecord.mealForm.unitBag') || '袋'}</option>
+                                <option value="枚">{t('healthRecord.mealForm.unitSheet') || '枚'}</option>
+                                <option value="人分">{t('healthRecord.mealForm.unitServing') || '人分'}</option>
+                              </select>
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                {t('healthRecord.mealForm.baseAmount') || '基準量'}
+                                {item.unit && (item.unit === 'g' || item.unit === 'ml') && ` (${item.unit})`}
                               </label>
                               <input
                                 type="number"
@@ -1211,12 +1223,12 @@ export default function PostForm({
                                   };
                                   setHealthRecordData({ ...healthRecordData, items });
                                 }}
-                                placeholder={item.unit === 'g' ? '100' : '200'}
+                                placeholder={item.unit === 'g' || item.unit === 'ml' ? '100' : item.unit ? '1' : ''}
                                 className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 disabled={isSubmitting}
                               />
                             </div>
-                          )}
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <div>
