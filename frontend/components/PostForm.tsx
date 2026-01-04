@@ -1394,12 +1394,13 @@ export default function PostForm({
                   onClick={() => {
                     const items = [
                       ...(healthRecordData.items || []),
-                      {
-                        type: healthRecordData.newItemType || 'food',
-                        name: '',
-                        amount: undefined,
-                        unit: (healthRecordData.newItemType || 'food') === 'menu' ? '1食' : '100g',
-                      },
+                    {
+                      type: healthRecordData.newItemType || 'food',
+                      name: '',
+                      amount: undefined,
+                      unit: '',
+                      unitAmount: undefined,
+                    },
                     ];
                     setHealthRecordData({ ...healthRecordData, items });
                   }}
