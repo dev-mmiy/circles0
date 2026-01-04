@@ -1139,22 +1139,57 @@ export default function PostForm({
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                           {t('healthRecord.mealForm.nutrition')}
                         </label>
-                        <div className="mb-2">
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                            {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
-                          </label>
-                          <input
-                            type="text"
-                            value={item.unit || ''}
-                            onChange={e => {
-                              const items = [...(healthRecordData.items || [])];
-                              items[index] = { ...items[index], unit: e.target.value };
-                              setHealthRecordData({ ...healthRecordData, items });
-                            }}
-                            placeholder={item.type === 'menu' ? '1食' : '100g'}
-                            className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                            disabled={isSubmitting}
-                          />
+                        <div className="mb-2 space-y-2">
+                          <div>
+                            <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                              {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
+                            </label>
+                            <select
+                              value={item.unit || ''}
+                              onChange={e => {
+                                const items = [...(healthRecordData.items || [])];
+                                items[index] = { ...items[index], unit: e.target.value };
+                                setHealthRecordData({ ...healthRecordData, items });
+                              }}
+                              className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              disabled={isSubmitting}
+                            >
+                              <option value="">{t('healthRecord.mealForm.selectUnit') || '選択してください'}</option>
+                              <option value="g">{t('healthRecord.mealForm.unitG') || 'g'}</option>
+                              <option value="ml">{t('healthRecord.mealForm.unitMl') || 'ml'}</option>
+                              <option value="大さじ">{t('healthRecord.mealForm.unitTablespoon') || '大さじ'}</option>
+                              <option value="小さじ">{t('healthRecord.mealForm.unitTeaspoon') || '小さじ'}</option>
+                              <option value="カップ">{t('healthRecord.mealForm.unitCup') || 'カップ'}</option>
+                              <option value="個">{t('healthRecord.mealForm.unitPiece') || '個'}</option>
+                              <option value="袋">{t('healthRecord.mealForm.unitBag') || '袋'}</option>
+                              <option value="枚">{t('healthRecord.mealForm.unitSheet') || '枚'}</option>
+                              <option value="人分">{t('healthRecord.mealForm.unitServing') || '人分'}</option>
+                            </select>
+                          </div>
+                          {(item.unit === 'g' || item.unit === 'ml') && (
+                            <div>
+                              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                {t('healthRecord.mealForm.unitAmount') || '分量'}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.1"
+                                value={item.unitAmount != null ? String(item.unitAmount) : ''}
+                                onChange={e => {
+                                  const items = [...(healthRecordData.items || [])];
+                                  const value = e.target.value;
+                                  items[index] = {
+                                    ...items[index],
+                                    unitAmount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  };
+                                  setHealthRecordData({ ...healthRecordData, items });
+                                }}
+                                placeholder={item.unit === 'g' ? '100' : '200'}
+                                className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                disabled={isSubmitting}
+                              />
+                            </div>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <div>
