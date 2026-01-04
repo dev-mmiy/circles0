@@ -1106,11 +1106,15 @@ export default function PostForm({
                     </div>
                     <div className="flex items-center space-x-2 mb-2">
                       <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                        {t('healthRecord.mealForm.amount')}:
+                        {item.unit === 'g' || item.unit === 'ml' 
+                          ? `${t('healthRecord.mealForm.amount')} (${item.unit})`
+                          : item.unit 
+                            ? `${t('healthRecord.mealForm.multiplier') || '倍率'} (${item.unit})`
+                            : t('healthRecord.mealForm.amount')}:
                       </label>
                       <input
                         type="number"
-                        step="0.1"
+                        step="0.01"
                         value={item.amount != null ? String(item.amount) : ''}
                         onChange={e => {
                           const items = [...(healthRecordData.items || [])];
@@ -1121,7 +1125,11 @@ export default function PostForm({
                           };
                           setHealthRecordData({ ...healthRecordData, items });
                         }}
-                        placeholder={t('healthRecord.mealForm.amount')}
+                        placeholder={item.unit === 'g' || item.unit === 'ml' 
+                          ? (item.unit === 'g' ? '100' : '200')
+                          : item.unit 
+                            ? '1'
+                            : t('healthRecord.mealForm.amount')}
                         className="w-24 p-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                         disabled={isSubmitting}
                       />

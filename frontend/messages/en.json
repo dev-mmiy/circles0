@@ -482,6 +482,7 @@
         "items": "Items",
         "foodName": "Food Name",
         "amount": "Amount",
+        "multiplier": "Multiplier",
         "addFood": "Add Food",
         "addItem": "Add Item",
         "menu": "Menu",
