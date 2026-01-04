@@ -1218,7 +1218,7 @@ export default function PostForm({
                                 onChange={e => {
                                   const items = [...(healthRecordData.items || [])];
                                   const newUnit = e.target.value || 'g'; // Default to 'g' if empty
-                                  // Set default unitAmount based on unit
+                                  // Set default unitAmount based on unit (always update when unit changes)
                                   let defaultUnitAmount: number | undefined = undefined;
                                   if (newUnit === 'g' || newUnit === 'ml') {
                                     defaultUnitAmount = 100;
@@ -1228,7 +1228,7 @@ export default function PostForm({
                                   items[index] = { 
                                     ...items[index], 
                                     unit: newUnit,
-                                    unitAmount: item.unitAmount != null ? item.unitAmount : defaultUnitAmount,
+                                    unitAmount: defaultUnitAmount, // Always set to default when unit changes
                                   };
                                   setHealthRecordData({ ...healthRecordData, items });
                                 }}
