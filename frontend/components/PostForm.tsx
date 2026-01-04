@@ -1169,6 +1169,29 @@ export default function PostForm({
                           <div className="grid grid-cols-2 gap-2">
                             <div>
                               <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                {t('healthRecord.mealForm.baseAmount') || '基準量'}
+                                {item.unit && (item.unit === 'g' || item.unit === 'ml') && ` (${item.unit})`}
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.unitAmount != null ? String(item.unitAmount) : ''}
+                                onChange={e => {
+                                  const items = [...(healthRecordData.items || [])];
+                                  const value = e.target.value;
+                                  items[index] = {
+                                    ...items[index],
+                                    unitAmount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  };
+                                  setHealthRecordData({ ...healthRecordData, items });
+                                }}
+                                placeholder={item.unit === 'g' || item.unit === 'ml' ? '100' : item.unit ? '1' : ''}
+                                className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                disabled={isSubmitting}
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
                                 {t('healthRecord.mealForm.nutritionUnit') || '栄養成分の単位'}
                               </label>
                               <select
@@ -1204,29 +1227,6 @@ export default function PostForm({
                                 <option value="枚">{t('healthRecord.mealForm.unitSheet') || '枚'}</option>
                                 <option value="人分">{t('healthRecord.mealForm.unitServing') || '人分'}</option>
                               </select>
-                            </div>
-                            <div>
-                              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                                {t('healthRecord.mealForm.baseAmount') || '基準量'}
-                                {item.unit && (item.unit === 'g' || item.unit === 'ml') && ` (${item.unit})`}
-                              </label>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={item.unitAmount != null ? String(item.unitAmount) : ''}
-                                onChange={e => {
-                                  const items = [...(healthRecordData.items || [])];
-                                  const value = e.target.value;
-                                  items[index] = {
-                                    ...items[index],
-                                    unitAmount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                                  };
-                                  setHealthRecordData({ ...healthRecordData, items });
-                                }}
-                                placeholder={item.unit === 'g' || item.unit === 'ml' ? '100' : item.unit ? '1' : ''}
-                                className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                disabled={isSubmitting}
-                              />
                             </div>
                           </div>
                         </div>
