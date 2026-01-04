@@ -504,6 +504,8 @@
         "unitSheet": "Sheet",
         "unitServing": "Serving",
         "unitAmount": "Amount",
+        "baseAmount": "Base Amount",
+        "consumedAmount": "Consumed Amount",
         "totalNutrition": "Total Nutrition",
         "autoCalculated": "Auto Calculated",
         "showNutrition": "Show Nutrition",

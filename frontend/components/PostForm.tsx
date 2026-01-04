@@ -1117,26 +1117,34 @@ export default function PostForm({
                     <div className="flex items-center space-x-2 mb-2">
                       <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
                         {item.unit === 'g' || item.unit === 'ml' 
-                          ? `${t('healthRecord.mealForm.amount')} (${item.unit})`
+                          ? `${t('healthRecord.mealForm.consumedAmount') || '摂取量'} (${item.unit})`
                           : item.unit 
-                            ? `${t('healthRecord.mealForm.multiplier') || '倍率'} (${item.unit})`
+                            ? `${t('healthRecord.mealForm.amount')} (${item.unit})`
                             : t('healthRecord.mealForm.amount')}:
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step={item.unit === 'g' || item.unit === 'ml' ? "0.01" : "1"}
                         value={item.amount != null ? String(item.amount) : ''}
                         onChange={e => {
                           const items = [...(healthRecordData.items || [])];
                           const value = e.target.value;
-                          items[index] = {
-                            ...items[index],
-                            amount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
-                          };
+                          // For non-g/ml units, only allow integers
+                          if (item.unit && item.unit !== 'g' && item.unit !== 'ml') {
+                            items[index] = {
+                              ...items[index],
+                              amount: value === '' ? undefined : parseInt(value) || undefined,
+                            };
+                          } else {
+                            items[index] = {
+                              ...items[index],
+                              amount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                            };
+                          }
                           setHealthRecordData({ ...healthRecordData, items });
                         }}
                         placeholder={item.unit === 'g' || item.unit === 'ml' 
-                          ? (item.unit === 'g' ? '100' : '200')
+                          ? '150'
                           : item.unit 
                             ? '1'
                             : t('healthRecord.mealForm.amount')}
@@ -1184,6 +1192,31 @@ export default function PostForm({
                               <option value="人分">{t('healthRecord.mealForm.unitServing') || '人分'}</option>
                             </select>
                           </div>
+                          {/* For g or ml, show base amount input (e.g., 100g, 200ml) */}
+                          {(item.unit === 'g' || item.unit === 'ml') && (
+                            <div>
+                              <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
+                                {t('healthRecord.mealForm.baseAmount') || '基準量'} ({item.unit})
+                              </label>
+                              <input
+                                type="number"
+                                step="0.01"
+                                value={item.unitAmount != null ? String(item.unitAmount) : ''}
+                                onChange={e => {
+                                  const items = [...(healthRecordData.items || [])];
+                                  const value = e.target.value;
+                                  items[index] = {
+                                    ...items[index],
+                                    unitAmount: value === '' ? undefined : (value === '0' || value === '0.' || value.startsWith('0.') ? parseFloat(value) || 0 : parseFloat(value) || undefined),
+                                  };
+                                  setHealthRecordData({ ...healthRecordData, items });
+                                }}
+                                placeholder={item.unit === 'g' ? '100' : '200'}
+                                className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                disabled={isSubmitting}
+                              />
+                            </div>
+                          )}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                           <div>

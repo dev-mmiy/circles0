@@ -504,6 +504,8 @@
         "unitSheet": "枚",
         "unitServing": "人分",
         "unitAmount": "分量",
+        "baseAmount": "基準量",
+        "consumedAmount": "摂取量",
         "totalNutrition": "合計栄養成分",
         "autoCalculated": "自動計算",
         "showNutrition": "栄養成分を表示",
