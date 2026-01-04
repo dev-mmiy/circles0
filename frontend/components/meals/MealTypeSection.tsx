@@ -53,17 +53,25 @@ export default function MealTypeSection({
             const items = record.health_record_data?.items || [];
             const nutrition = record.health_record_data?.nutrition;
             
+            // Debug: Log record data
+            console.log('[MealTypeSection] Record:', {
+              id: record.id,
+              items: items,
+              itemsLength: items.length,
+              health_record_data: record.health_record_data,
+            });
+            
             return (
               <div
                 key={record.id}
                 className="bg-gray-50 dark:bg-gray-700/50 rounded p-2 space-y-1"
               >
                 {/* Items */}
-                {items.length > 0 && (
+                {items.length > 0 ? (
                   <div className="space-y-1">
                     {items.map((item: any, index: number) => (
                       <div key={index} className="text-sm text-gray-700 dark:text-gray-300">
-                        • {item.name}
+                        • {item.name || '(名前なし)'}
                         {item.amount != null && (
                           <span className="text-gray-500 dark:text-gray-400 ml-1">
                             ({item.amount}{item.unit || 'g'})
@@ -71,6 +79,10 @@ export default function MealTypeSection({
                         )}
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  <div className="text-xs text-gray-400 dark:text-gray-500 italic">
+                    {tHealthRecord('noFoods')}
                   </div>
                 )}
 
