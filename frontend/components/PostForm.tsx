@@ -152,14 +152,33 @@ export default function PostForm({
     if (postType === 'health_record' && healthRecordType === 'meal' && healthRecordData.items) {
       const totalNutrition = (healthRecordData.items || []).reduce((acc: any, item: any) => {
         if (item.nutrition) {
+          // Calculate multiplier based on unit type
+          let multiplier = 1;
+          
+          if (item.unit === 'g' || item.unit === 'ml') {
+            // For g/ml: nutrition is per unitAmount, multiply by (amount / unitAmount)
+            // Example: 100g has 200kcal, consumed 150g → 200 * (150 / 100) = 300kcal
+            if (item.unitAmount && item.unitAmount > 0 && item.amount != null) {
+              multiplier = item.amount / item.unitAmount;
+            } else {
+              multiplier = 0; // No amount or unitAmount, no nutrition
+            }
+          } else if (item.unit && item.amount != null) {
+            // For other units (個, 枚, etc.): nutrition is per unit, multiply by amount
+            // Example: 1個 has 50kcal, consumed 3個 → 50 * 3 = 150kcal
+            multiplier = item.amount;
+          } else {
+            multiplier = 0; // No amount, no nutrition
+          }
+          
           return {
-            calories: (acc.calories || 0) + (item.nutrition.calories || 0),
-            protein: (acc.protein || 0) + (item.nutrition.protein || 0),
-            carbs: (acc.carbs || 0) + (item.nutrition.carbs || 0),
-            fat: (acc.fat || 0) + (item.nutrition.fat || 0),
-            sodium: (acc.sodium || 0) + (item.nutrition.sodium || 0),
-            potassium: (acc.potassium || 0) + (item.nutrition.potassium || 0),
-            phosphorus: (acc.phosphorus || 0) + (item.nutrition.phosphorus || 0),
+            calories: (acc.calories || 0) + ((item.nutrition.calories || 0) * multiplier),
+            protein: (acc.protein || 0) + ((item.nutrition.protein || 0) * multiplier),
+            carbs: (acc.carbs || 0) + ((item.nutrition.carbs || 0) * multiplier),
+            fat: (acc.fat || 0) + ((item.nutrition.fat || 0) * multiplier),
+            sodium: (acc.sodium || 0) + ((item.nutrition.sodium || 0) * multiplier),
+            potassium: (acc.potassium || 0) + ((item.nutrition.potassium || 0) * multiplier),
+            phosphorus: (acc.phosphorus || 0) + ((item.nutrition.phosphorus || 0) * multiplier),
           };
         }
         return acc;
@@ -1431,13 +1450,16 @@ export default function PostForm({
                 <button
                   type="button"
                   onClick={() => {
+                    const newItemUnit = 'g'; // Default to 'g' for all items
+                    const defaultUnitAmount = 100; // Default base amount for g
                     const items = [
                       ...(healthRecordData.items || []),
                     {
                       type: healthRecordData.newItemType || 'food',
                       name: '',
                       amount: undefined,
-                      unit: '',
+                      unit: newItemUnit,
+                      unitAmount: defaultUnitAmount,
                     },
                     ];
                     setHealthRecordData({ ...healthRecordData, items });
