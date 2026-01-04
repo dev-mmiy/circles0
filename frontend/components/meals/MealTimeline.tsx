@@ -41,14 +41,31 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
   const recordsByDateAndMealType = useMemo(() => {
     const map = new Map<string, Map<MealType, Post[]>>();
     
+    // Debug: Log all records
+    console.log('[MealTimeline] All records:', records);
+    console.log('[MealTimeline] Records count:', records.length);
+    
     records.forEach(record => {
+      // Debug: Log each record
+      console.log('[MealTimeline] Processing record:', {
+        id: record.id,
+        health_record_type: record.health_record_type,
+        recorded_at: record.health_record_data?.recorded_at,
+        meal_type: record.health_record_data?.meal_type,
+        items: record.health_record_data?.items,
+        itemsLength: record.health_record_data?.items?.length || 0,
+      });
+      
       if (record.health_record_type !== 'meal' || !record.health_record_data?.recorded_at) {
+        console.log('[MealTimeline] Skipping record - not meal or no recorded_at');
         return;
       }
       
       const recordDate = new Date(record.health_record_data.recorded_at);
       const dateKey = format(recordDate, 'yyyy-MM-dd');
       const mealType = record.health_record_data.meal_type as MealType;
+      
+      console.log('[MealTimeline] Adding record to map:', { dateKey, mealType });
       
       if (!map.has(dateKey)) {
         map.set(dateKey, new Map());
@@ -61,6 +78,14 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
       
       mealTypeMap.get(mealType)!.push(record);
     });
+    
+    console.log('[MealTimeline] Final map:', Array.from(map.entries()).map(([date, mealMap]) => ({
+      date,
+      mealTypes: Array.from(mealMap.entries()).map(([type, posts]) => ({
+        type,
+        count: posts.length,
+      })),
+    })));
     
     return map;
   }, [records]);
