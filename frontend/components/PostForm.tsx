@@ -429,6 +429,16 @@ export default function PostForm({
           measurements: processedHealthRecordData.measurements,
         });
       }
+      
+      // Debug log for meal records
+      if (postType === 'health_record' && healthRecordType === 'meal') {
+        debugLog.log(`[PostForm] ${editingPost ? 'Updating' : 'Creating'} meal record:`, {
+          postData,
+          processedHealthRecordData,
+          items: processedHealthRecordData.items,
+          nutrition: processedHealthRecordData.nutrition,
+        });
+      }
 
       // Use updatePost if editing, otherwise createPost
       if (editingPost) {
