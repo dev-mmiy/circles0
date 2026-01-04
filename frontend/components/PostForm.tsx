@@ -1355,11 +1355,11 @@ export default function PostForm({
                           </div>
                           <div>
                             <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                              {t('healthRecord.mealForm.sodium')} (mg)
+                              {t('healthRecord.mealForm.sodium')} (g)
                             </label>
                             <input
                               type="number"
-                              step="0.1"
+                              step="0.01"
                               value={item.nutrition?.sodium != null ? String(item.nutrition.sodium) : ''}
                               onChange={e => {
                                 const items = [...(healthRecordData.items || [])];
@@ -1374,7 +1374,7 @@ export default function PostForm({
                                 };
                                 setHealthRecordData({ ...healthRecordData, items });
                               }}
-                              placeholder="500"
+                              placeholder="0.5"
                               className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                               disabled={isSubmitting}
                             />
@@ -1528,12 +1528,12 @@ export default function PostForm({
               </div>
               <div>
                 <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">
-                  {t('healthRecord.mealForm.sodium')} (mg)
+                  {t('healthRecord.mealForm.sodium')} (g)
                 </label>
                 <input
                   type="number"
-                  step="0.1"
-                  value={healthRecordData.nutrition?.sodium != null ? String(Math.round(healthRecordData.nutrition.sodium * 10) / 10) : ''}
+                  step="0.01"
+                  value={healthRecordData.nutrition?.sodium != null ? String(Math.round(healthRecordData.nutrition.sodium * 100) / 100) : ''}
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   disabled={true}
                   readOnly
