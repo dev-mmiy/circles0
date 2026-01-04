@@ -1194,7 +1194,7 @@ export default function PostForm({
                               <input
                                 type="number"
                                 step="0.01"
-                                value={item.unitAmount != null ? String(item.unitAmount) : ''}
+                                value={item.unitAmount != null ? String(item.unitAmount) : ((item.unit === 'g' || item.unit === 'ml' || !item.unit) ? '100' : '1')}
                                 onChange={e => {
                                   const items = [...(healthRecordData.items || [])];
                                   const value = e.target.value;
@@ -1204,7 +1204,7 @@ export default function PostForm({
                                   };
                                   setHealthRecordData({ ...healthRecordData, items });
                                 }}
-                                placeholder={item.unit === 'g' || item.unit === 'ml' ? '100' : item.unit ? '1' : ''}
+                                placeholder={item.unit === 'g' || item.unit === 'ml' || !item.unit ? '100' : item.unit ? '1' : ''}
                                 className="w-full p-2 text-xs border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                                 disabled={isSubmitting}
                               />
