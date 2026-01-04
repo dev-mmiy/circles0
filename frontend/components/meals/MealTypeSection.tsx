@@ -26,6 +26,33 @@ export default function MealTypeSection({
 }: MealTypeSectionProps) {
   const tHealthRecord = useTranslations('postForm.healthRecord.mealForm');
 
+  // Calculate total nutrition for all records in this meal type
+  const totalNutrition = records.reduce((acc, record) => {
+    const nutrition = record.health_record_data?.nutrition;
+    if (nutrition) {
+      return {
+        calories: (acc.calories || 0) + (nutrition.calories || 0),
+        protein: (acc.protein || 0) + (nutrition.protein || 0),
+        carbs: (acc.carbs || 0) + (nutrition.carbs || 0),
+        fat: (acc.fat || 0) + (nutrition.fat || 0),
+        sodium: (acc.sodium || 0) + (nutrition.sodium || 0),
+        potassium: (acc.potassium || 0) + (nutrition.potassium || 0),
+        phosphorus: (acc.phosphorus || 0) + (nutrition.phosphorus || 0),
+      };
+    }
+    return acc;
+  }, {
+    calories: 0,
+    protein: 0,
+    carbs: 0,
+    fat: 0,
+    sodium: 0,
+    potassium: 0,
+    phosphorus: 0,
+  });
+
+  const hasNutrition = Object.values(totalNutrition).some(val => val > 0);
+
   return (
     <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
       {/* Meal Type Header */}
@@ -131,6 +158,38 @@ export default function MealTypeSection({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Total Nutrition Summary */}
+      {hasNutrition && (
+        <div className="mt-3 pt-3 border-t-2 border-gray-300 dark:border-gray-600">
+          <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            {tHealthRecord('totalNutrition') || '合計'}
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-400 grid grid-cols-2 gap-1">
+            {totalNutrition.calories > 0 && (
+              <div>{tHealthRecord('calories')}: {Math.round(totalNutrition.calories)} kcal</div>
+            )}
+            {totalNutrition.protein > 0 && (
+              <div>{tHealthRecord('protein')}: {Math.round(totalNutrition.protein * 100) / 100} g</div>
+            )}
+            {totalNutrition.carbs > 0 && (
+              <div>{tHealthRecord('carbs')}: {Math.round(totalNutrition.carbs * 10) / 10} g</div>
+            )}
+            {totalNutrition.fat > 0 && (
+              <div>{tHealthRecord('fat')}: {Math.round(totalNutrition.fat * 10) / 10} g</div>
+            )}
+            {totalNutrition.sodium > 0 && (
+              <div>{tHealthRecord('sodium')}: {Math.round(totalNutrition.sodium * 100) / 100} g</div>
+            )}
+            {totalNutrition.potassium > 0 && (
+              <div>{tHealthRecord('potassium')}: {Math.round(totalNutrition.potassium * 10) / 10} mg</div>
+            )}
+            {totalNutrition.phosphorus > 0 && (
+              <div>{tHealthRecord('phosphorus')}: {Math.round(totalNutrition.phosphorus * 10) / 10} mg</div>
+            )}
+          </div>
         </div>
       )}
     </div>
