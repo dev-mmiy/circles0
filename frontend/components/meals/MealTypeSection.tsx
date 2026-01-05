@@ -169,7 +169,7 @@ export default function MealTypeSection({
           </div>
           <div className="text-xs text-gray-600 dark:text-gray-400 grid grid-cols-2 gap-1">
             {totalNutrition.calories > 0 && (
-              <div>{tHealthRecord('calories')}: {Math.round(totalNutrition.calories)} kcal</div>
+              <div>{tHealthRecord('calories')}: {Math.round(totalNutrition.calories * 10) / 10} kcal</div>
             )}
             {totalNutrition.protein > 0 && (
               <div>{tHealthRecord('protein')}: {Math.round(totalNutrition.protein * 100) / 100} g</div>

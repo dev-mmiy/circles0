@@ -1481,7 +1481,8 @@ export default function PostForm({
                 </label>
                 <input
                   type="number"
-                  value={healthRecordData.nutrition?.calories != null ? String(Math.round(healthRecordData.nutrition.calories)) : ''}
+                  step="0.1"
+                  value={healthRecordData.nutrition?.calories != null ? String(Math.round(healthRecordData.nutrition.calories * 10) / 10) : ''}
                   className="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                   disabled={true}
                   readOnly
