@@ -22,7 +22,7 @@ pytest-cov==4.1.0
 pytest-timeout==2.3.1
 isort==5.12.0
 flake8==7.3.0
-mypy==1.18.2
+mypy==1.19.1
 
 # CORS
 fastapi-cors==0.0.6
