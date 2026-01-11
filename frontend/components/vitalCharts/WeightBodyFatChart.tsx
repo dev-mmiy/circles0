@@ -7,8 +7,14 @@ import type { Period } from '@/hooks/useChartDateRange';
 import dynamic from 'next/dynamic';
 
 // Dynamically import Chart.js component to avoid SSR issues
+// Use a function that returns a promise to ensure it's only loaded on client
 const WeightBodyFatChartClient = dynamic(
-  () => import('./WeightBodyFatChartClient'),
+  () => {
+    if (typeof window === 'undefined') {
+      return Promise.resolve(() => null);
+    }
+    return import('./WeightBodyFatChartClient');
+  },
   {
     ssr: false,
     loading: () => (
