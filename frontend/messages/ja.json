@@ -1396,7 +1396,16 @@
         "bloodGlucose": "血糖値 (mg/dL)",
         "spo2": "SpO2 (%)"
       },
-      "noData": "選択した期間の記録が見つかりませんでした"
+      "noData": "選択した期間の記録が見つかりませんでした",
+      "zoomHint": "ドラッグで移動、マウスホイールでズーム",
+      "units": {
+        "kg": "kg",
+        "percent": "%",
+        "mmHg": "mmHg",
+        "bpm": "bpm",
+        "celsius": "°C",
+        "mgdL": "mg/dL"
+      }
     },
     "pageTitle": "日々の記録"
   },

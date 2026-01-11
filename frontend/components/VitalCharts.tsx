@@ -27,6 +27,7 @@ import type { SpO2Record } from '@/lib/api/spo2Records';
 import { useChartDateRange, type Period } from '@/hooks/useChartDateRange';
 import { filterByDateRange, formatPeriodTitleRange, formatXAxisDate, getMonthKey } from '@/utils/chartUtils';
 import { ChartTitle } from './vitalCharts/ChartTitle';
+import WeightBodyFatChart from './vitalCharts/WeightBodyFatChart';
 
 interface VitalChartsProps {
   period: Period;
@@ -1013,118 +1014,17 @@ export default function VitalCharts({
         </div>
       )}
 
-      {/* Weight & Body Fat Chart */}
-      {weightFatData.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
-          <ChartTitle
-            title={t('chart.titles.weightBodyFat')}
-            periodRange={periodTitleRange}
-            period={period}
-            weekOffset={weekOffset}
-            onPrevious={goToPreviousPeriod}
-            onNext={goToNextPeriod}
-          />
-          {typeof window !== 'undefined' ? (
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={weightFatData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }} style={{ overflow: 'visible' }}>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke="#e5e7eb" 
-                  vertical={period !== '1month'} 
-                  horizontal={true}
-                />
-                {verticalDividers.map((divider, index) => (
-                  <ReferenceLine
-                    key={`vertical-divider-${index}`}
-                    x={divider}
-                    yAxisId="left"
-                    stroke="#9ca3af"
-                    strokeWidth={1}
-                    strokeDasharray="5 5"
-                    isFront={false}
-                  />
-                ))}
-                <XAxis dataKey="date" stroke="#6b7280" tick={{ fill: '#6b7280' }} />
-                <YAxis 
-                  yAxisId="left" 
-                  label={{ 
-                    value: `${t('chart.labels.weight')} (${t('chart.units.kg')})`, 
-                    angle: -90, 
-                    position: 'insideLeft',
-                    style: { textAnchor: 'middle' }
-                  }}
-                  stroke="#3b82f6" 
-                  tick={{ fill: '#6b7280' }}
-                  domain={weightDomain}
-                  allowDecimals={false}
-                  ticks={weightTicks}
-                  tickFormatter={(value) => value.toString()}
-                  width={75}
-                />
-                <YAxis
-                  yAxisId="right"
-                  orientation="right"
-                  label={{ 
-                    value: `${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`, 
-                    angle: 90, 
-                    position: 'insideRight',
-                    style: { textAnchor: 'middle' }
-                  }}
-                  stroke="#f59e0b"
-                  tick={{ fill: '#6b7280' }}
-                  width={75}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: '#fff',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '8px',
-                  }}
-                  formatter={(value: any, name: string) => {
-                    // Remove units from measurement names (anything in parentheses)
-                    const nameWithoutUnit = name.replace(/\s*\([^)]*\)\s*/g, '');
-                    
-                    // Determine unit based on the original name
-                    let unit = '';
-                    if (name.includes('kg')) {
-                      unit = ' kg';
-                    } else if (name.includes('%')) {
-                      unit = '%';
-                    }
-                    
-                    return [`${value}${unit}`, nameWithoutUnit];
-                  }}
-                />
-                <Legend />
-                {weightFatData.some(d => d.weight !== undefined) && (
-                  <Line
-                    yAxisId="left"
-                    type="linear"
-                    dataKey="weight"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    name={`${t('chart.labels.weight')} (${t('chart.units.kg')})`}
-                    dot={period === '1week' ? { r: 4 } : false}
-                    connectNulls={true}
-                  />
-                )}
-                {weightFatData.some(d => d.bodyFat !== undefined) && (
-                  <Line
-                    yAxisId="right"
-                    type="linear"
-                    dataKey="bodyFat"
-                    stroke="#f59e0b"
-                    strokeWidth={2}
-                    name={`${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`}
-                    dot={period === '1week' ? { r: 4 } : false}
-                    connectNulls={true}
-                  />
-                )}
-              </LineChart>
-            </ResponsiveContainer>
-          ) : null}
-        </div>
-      )}
+      {/* Weight & Body Fat Chart - Chart.js version with pan/zoom */}
+      <WeightBodyFatChart
+        weightRecords={weightRecords}
+        bodyFatRecords={bodyFatRecords}
+        period={period}
+        dateRange={dateRange}
+        periodTitleRange={periodTitleRange}
+        weekOffset={weekOffset}
+        onPrevious={goToPreviousPeriod}
+        onNext={goToNextPeriod}
+      />
 
       {/* Temperature Chart */}
       {temperatureData.length > 0 && (
@@ -1340,7 +1240,7 @@ export default function VitalCharts({
 
       {/* No Data Message */}
       {bpHrData.length === 0 &&
-        weightFatData.length === 0 &&
+        (weightRecords.length === 0 && bodyFatRecords.length === 0) &&
         temperatureData.length === 0 &&
         bloodGlucoseData.length === 0 &&
         spo2Data.length === 0 && (

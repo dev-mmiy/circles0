@@ -1398,7 +1398,16 @@
         "bloodGlucose": "Blood Glucose (mg/dL)",
         "spo2": "SpO2 (%)"
       },
-      "noData": "No records found for the selected period"
+      "noData": "No records found for the selected period",
+      "zoomHint": "Drag to pan, mouse wheel to zoom",
+      "units": {
+        "kg": "kg",
+        "percent": "%",
+        "mmHg": "mmHg",
+        "bpm": "bpm",
+        "celsius": "°C",
+        "mgdL": "mg/dL"
+      }
     },
     "pageTitle": "Daily Records"
   },
