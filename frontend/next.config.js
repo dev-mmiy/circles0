@@ -86,6 +86,16 @@ const nextConfig = {
   },
   // Transpile Chart.js packages
   transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns'],
+  // Webpack configuration for Chart.js
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+      };
+    }
+    return config;
+  },
   // Force dynamic rendering for pages that use client-side code
   trailingSlash: false,
   // Service Worker configuration
