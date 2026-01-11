@@ -424,14 +424,17 @@ export default function VitalCharts({
       }));
   }, [weightRecords, bodyFatRecords, period, dateRange, formatXAxisDate, getMonthKey]);
 
-  // Calculate weight Y-axis domain dynamically
+  // Calculate weight Y-axis domain dynamically based on displayed period data
+  // Works for all periods: 1week, 1month, 6months, 1year
   const weightDomain = useMemo(() => {
+    // Filter out null and undefined values, only keep actual weight numbers
     const weights = weightFatData
       .map(d => d.weight)
-      .filter((w): w is number => w !== undefined);
+      .filter((w): w is number => w !== undefined && w !== null && typeof w === 'number');
     if (weights.length === 0) return [0, 100];
     const minWeight = Math.min(...weights);
     const maxWeight = Math.max(...weights);
+    // Set domain: min - 10kg, max + 10kg, rounded to 1kg intervals
     const minDomain = Math.max(0, minWeight - 10);
     const maxDomain = maxWeight + 10;
     // Round to nice numbers for better display (1kg intervals)
