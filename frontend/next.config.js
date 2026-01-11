@@ -85,7 +85,7 @@ const nextConfig = {
     // optimizeCss: true,  // crittersモジュールエラーのため無効化
   },
   // Transpile Chart.js packages
-  transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns'],
+  transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns', 'react-chartjs-2'],
   // Webpack configuration for Chart.js
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -93,6 +93,16 @@ const nextConfig = {
         ...config.resolve.fallback,
         fs: false,
       };
+    }
+    // Ignore Chart.js during server-side builds
+    if (isServer) {
+      config.externals = config.externals || [];
+      config.externals.push({
+        'chart.js': 'commonjs chart.js',
+        'chartjs-plugin-zoom': 'commonjs chartjs-plugin-zoom',
+        'chartjs-adapter-date-fns': 'commonjs chartjs-adapter-date-fns',
+        'react-chartjs-2': 'commonjs react-chartjs-2',
+      });
     }
     return config;
   },
