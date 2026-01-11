@@ -84,6 +84,8 @@ const nextConfig = {
   experimental: {
     // optimizeCss: true,  // crittersモジュールエラーのため無効化
   },
+  // Transpile Chart.js packages
+  transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns'],
   // Force dynamic rendering for pages that use client-side code
   trailingSlash: false,
   // Service Worker configuration
