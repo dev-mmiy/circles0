@@ -1,39 +1,12 @@
 'use client';
 
-import { useMemo, useRef, useEffect } from 'react';
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-} from 'chart.js';
-import zoomPlugin from 'chartjs-plugin-zoom';
-import 'chartjs-adapter-date-fns';
-import { Line } from 'react-chartjs-2';
+import { useMemo, useRef, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { format, parseISO } from 'date-fns';
 import type { WeightRecord } from '@/lib/api/weightRecords';
 import type { BodyFatRecord } from '@/lib/api/bodyFatRecords';
 import type { Period } from '@/hooks/useChartDateRange';
 import { ChartTitle } from './ChartTitle';
-
-// Register Chart.js components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Title,
-  Tooltip,
-  Legend,
-  TimeScale,
-  zoomPlugin
-);
 
 interface WeightBodyFatChartClientProps {
   weightRecords: WeightRecord[];
@@ -57,7 +30,50 @@ export default function WeightBodyFatChartClient({
   onNext,
 }: WeightBodyFatChartClientProps) {
   const t = useTranslations('daily');
-  const chartRef = useRef<ChartJS<'line'>>(null);
+  const [ChartComponents, setChartComponents] = useState<any>(null);
+  const chartRef = useRef<any>(null);
+
+  // Dynamically load Chart.js only on client-side
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    Promise.all([
+      import('chart.js'),
+      import('chartjs-plugin-zoom'),
+      import('chartjs-adapter-date-fns'),
+      import('react-chartjs-2'),
+    ]).then(([chartJs, zoom, adapter, reactChartJs2]) => {
+      const ChartJS = chartJs.Chart;
+      const {
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend,
+        TimeScale,
+      } = chartJs;
+
+      // Register Chart.js components
+      ChartJS.register(
+        CategoryScale,
+        LinearScale,
+        PointElement,
+        LineElement,
+        Title,
+        Tooltip,
+        Legend,
+        TimeScale,
+        zoom.default
+      );
+
+      setChartComponents({
+        ChartJS,
+        Line: reactChartJs2.Line,
+      });
+    });
+  }, []);
 
   // Filter records by date range
   const filterRecords = <T extends { recorded_at: string }>(records: T[]): T[] => {
@@ -147,6 +163,8 @@ export default function WeightBodyFatChartClient({
 
   // Prepare Chart.js data format
   const chartJsData = useMemo(() => {
+    if (!ChartComponents) return null;
+
     // For time scale, data should be in {x, y} format
     const weightData = chartData
       .filter(d => d.weight !== undefined && d.weight !== null)
@@ -182,10 +200,12 @@ export default function WeightBodyFatChartClient({
         },
       ],
     };
-  }, [chartData, period, t]);
+  }, [chartData, period, t, ChartComponents]);
 
   // Chart options
   const options = useMemo(() => {
+    if (!ChartComponents) return null;
+
     const isDark = typeof window !== 'undefined' && document.documentElement.classList.contains('dark');
     const textColor = isDark ? '#d1d5db' : '#374151';
     const gridColor = isDark ? '#374151' : '#e5e7eb';
@@ -308,18 +328,38 @@ export default function WeightBodyFatChartClient({
         },
       },
     };
-  }, [period, weightDomain, t]);
+  }, [period, weightDomain, t, ChartComponents]);
 
   // Reset zoom when period or weekOffset changes
   useEffect(() => {
-    if (chartRef.current) {
+    if (chartRef.current && ChartComponents) {
       chartRef.current.resetZoom();
     }
-  }, [period, weekOffset]);
+  }, [period, weekOffset, ChartComponents]);
 
   if (chartData.length === 0) {
     return null;
   }
+
+  if (!ChartComponents || !chartJsData || !options) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+        <ChartTitle
+          title={t('chart.titles.weightBodyFat')}
+          periodRange={periodTitleRange}
+          period={period}
+          weekOffset={weekOffset}
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
+        <div className="h-[300px] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const { Line } = ChartComponents;
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
