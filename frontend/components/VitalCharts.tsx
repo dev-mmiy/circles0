@@ -27,7 +27,22 @@ import type { SpO2Record } from '@/lib/api/spo2Records';
 import { useChartDateRange, type Period } from '@/hooks/useChartDateRange';
 import { filterByDateRange, formatPeriodTitleRange, formatXAxisDate, getMonthKey } from '@/utils/chartUtils';
 import { ChartTitle } from './vitalCharts/ChartTitle';
-import WeightBodyFatChart from './vitalCharts/WeightBodyFatChart';
+import dynamic from 'next/dynamic';
+
+// Dynamically import WeightBodyFatChart to avoid SSR issues with Chart.js
+const WeightBodyFatChart = dynamic(
+  () => import('./vitalCharts/WeightBodyFatChart'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+        <div className="h-[300px] flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    ),
+  }
+);
 
 interface VitalChartsProps {
   period: Period;
