@@ -434,9 +434,9 @@ export default function VitalCharts({
     const maxWeight = Math.max(...weights);
     const minDomain = Math.max(0, minWeight - 10);
     const maxDomain = maxWeight + 10;
-    // Round to nice numbers for better display (5kg intervals)
-    const roundedMin = Math.floor(minDomain / 5) * 5;
-    const roundedMax = Math.ceil(maxDomain / 5) * 5;
+    // Round to nice numbers for better display (1kg intervals)
+    const roundedMin = Math.floor(minDomain);
+    const roundedMax = Math.ceil(maxDomain);
     return [roundedMin, roundedMax];
   }, [weightFatData]);
 
