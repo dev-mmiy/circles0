@@ -10,9 +10,14 @@ import dynamic from 'next/dynamic';
 // Use a function that returns a promise to ensure it's only loaded on client
 const WeightBodyFatChartClient = dynamic(
   () => {
+    // This check prevents Next.js from trying to resolve the module during build
     if (typeof window === 'undefined') {
-      return Promise.resolve(() => null);
+      // Return a dummy component for SSR
+      return Promise.resolve({
+        default: () => null,
+      });
     }
+    // Only import on client-side
     return import('./WeightBodyFatChartClient');
   },
   {
