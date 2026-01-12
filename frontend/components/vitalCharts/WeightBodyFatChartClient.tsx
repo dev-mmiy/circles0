@@ -344,6 +344,27 @@ export default function WeightBodyFatChartClient({
     }
   }, [period, weekOffset, ChartComponents]);
 
+  if (loadError) {
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+        <ChartTitle
+          title={t('chart.titles.weightBodyFat')}
+          periodRange={periodTitleRange}
+          period={period}
+          weekOffset={weekOffset}
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
+        <div className="h-[300px] flex items-center justify-center">
+          <div className="text-red-600 dark:text-red-400">
+            <p>チャートの読み込みに失敗しました</p>
+            <p className="text-sm mt-2">{loadError}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (chartData.length === 0) {
     return null;
   }
