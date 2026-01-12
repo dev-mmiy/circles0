@@ -367,7 +367,39 @@ export default function WeightBodyFatChartClient({
   }
 
   if (chartData.length === 0) {
-    return null;
+    console.log('[WeightBodyFatChart] No data to display after filtering', {
+      weightRecords: weightRecords.length,
+      bodyFatRecords: bodyFatRecords.length,
+      chartDataLength: chartData.length,
+      dateRange,
+      period,
+      weightRecordsSample: weightRecords.slice(0, 2).map(r => ({ 
+        recorded_at: r.recorded_at, 
+        value: r.value 
+      })),
+      bodyFatRecordsSample: bodyFatRecords.slice(0, 2).map(r => ({ 
+        recorded_at: r.recorded_at, 
+        percentage: r.percentage 
+      })),
+    });
+    // Don't return null, show a message instead
+    return (
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
+        <ChartTitle
+          title={t('chart.titles.weightBodyFat')}
+          periodRange={periodTitleRange}
+          period={period}
+          weekOffset={weekOffset}
+          onPrevious={onPrevious}
+          onNext={onNext}
+        />
+        <div className="h-[300px] flex items-center justify-center">
+          <div className="text-gray-600 dark:text-gray-400">
+            <p>選択した期間にデータがありません</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!ChartComponents || !chartJsData || !options) {
