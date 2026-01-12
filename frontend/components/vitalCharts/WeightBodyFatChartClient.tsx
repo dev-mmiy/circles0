@@ -76,6 +76,7 @@ export default function WeightBodyFatChartClient({
         Line: reactChartJs2.Line,
       });
       setLoadError(null);
+      console.log('[WeightBodyFatChart] Chart.js loaded successfully');
     }).catch((error) => {
       console.error('[WeightBodyFatChart] Failed to load Chart.js:', error);
       setLoadError(error.message || 'Failed to load chart library');
