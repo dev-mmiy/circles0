@@ -37,17 +37,13 @@ export default function WeightBodyFatChartClient({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Use variables to prevent Next.js from statically analyzing imports
-    const chartJsModule = 'chart.js';
-    const zoomModule = 'chartjs-plugin-zoom';
-    const adapterModule = 'chartjs-adapter-date-fns';
-    const reactChartJs2Module = 'react-chartjs-2';
-
+    // Use direct string literals for dynamic imports
+    // Webpack needs to be able to statically analyze the import paths
     Promise.all([
-      import(chartJsModule),
-      import(zoomModule),
-      import(adapterModule),
-      import(reactChartJs2Module),
+      import(/* webpackChunkName: "chartjs" */ 'chart.js'),
+      import(/* webpackChunkName: "chartjs-zoom" */ 'chartjs-plugin-zoom'),
+      import(/* webpackChunkName: "chartjs-adapter" */ 'chartjs-adapter-date-fns'),
+      import(/* webpackChunkName: "react-chartjs" */ 'react-chartjs-2'),
     ]).then(([chartJs, zoom, adapter, reactChartJs2]) => {
       const ChartJS = chartJs.Chart;
       const {

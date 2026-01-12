@@ -86,8 +86,6 @@ const nextConfig = {
   },
   // Transpile Chart.js packages
   transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns', 'react-chartjs-2'],
-  // Exclude Chart.js from server components
-  serverComponentsExternalPackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns', 'react-chartjs-2'],
   // Webpack configuration for Chart.js
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -96,7 +94,7 @@ const nextConfig = {
         fs: false,
       };
     }
-    // Ignore Chart.js during server-side builds and prevent static analysis
+    // Ignore Chart.js during server-side builds
     if (isServer) {
       config.externals = config.externals || [];
       config.externals.push({
@@ -105,14 +103,6 @@ const nextConfig = {
         'chartjs-adapter-date-fns': 'commonjs chartjs-adapter-date-fns',
         'react-chartjs-2': 'commonjs react-chartjs-2',
       });
-    }
-    // Prevent webpack from trying to resolve Chart.js during build
-    config.resolve.alias = config.resolve.alias || {};
-    if (isServer) {
-      config.resolve.alias['chart.js'] = false;
-      config.resolve.alias['chartjs-plugin-zoom'] = false;
-      config.resolve.alias['chartjs-adapter-date-fns'] = false;
-      config.resolve.alias['react-chartjs-2'] = false;
     }
     return config;
   },
