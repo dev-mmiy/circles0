@@ -169,6 +169,22 @@ export default function WeightBodyFatChartClient({
     return [roundedMin, roundedMax];
   }, [chartData]);
 
+  // Calculate body fat Y-axis domain
+  const bodyFatDomain = useMemo(() => {
+    const bodyFats = chartData
+      .map(d => d.bodyFat)
+      .filter((f): f is number => f !== undefined && f !== null && typeof f === 'number');
+    if (bodyFats.length === 0) return [0, 50];
+    const minBodyFat = Math.min(...bodyFats);
+    const maxBodyFat = Math.max(...bodyFats);
+    const minDomain = Math.max(0, minBodyFat - 1);
+    const maxDomain = maxBodyFat + 1;
+    // Round to 1 decimal place for better display
+    const roundedMin = Math.floor(minDomain * 10) / 10;
+    const roundedMax = Math.ceil(maxDomain * 10) / 10;
+    return [roundedMin, roundedMax];
+  }, [chartData]);
+
   // Prepare Chart.js data format
   const chartJsData = useMemo(() => {
     if (!ChartComponents) return null;
@@ -326,8 +342,12 @@ export default function WeightBodyFatChartClient({
             text: `${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`,
             color: textColor,
           },
+          min: bodyFatDomain[0],
+          max: bodyFatDomain[1],
           ticks: {
             color: textColor,
+            stepSize: 1,
+            callback: (value: any) => `${value}%`,
           },
           grid: {
             drawOnChartArea: false,
@@ -336,7 +356,7 @@ export default function WeightBodyFatChartClient({
         },
       },
     };
-  }, [period, weightDomain, t, ChartComponents]);
+  }, [period, weightDomain, bodyFatDomain, t, ChartComponents]);
 
   // Reset zoom when period or weekOffset changes
   useEffect(() => {
