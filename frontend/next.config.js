@@ -86,6 +86,8 @@ const nextConfig = {
   },
   // Transpile Chart.js packages
   transpilePackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns', 'react-chartjs-2'],
+  // Exclude Chart.js from server components
+  serverComponentsExternalPackages: ['chart.js', 'chartjs-plugin-zoom', 'chartjs-adapter-date-fns', 'react-chartjs-2'],
   // Webpack configuration for Chart.js
   webpack: (config, { isServer }) => {
     if (!isServer) {
