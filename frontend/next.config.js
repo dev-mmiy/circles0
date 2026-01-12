@@ -96,7 +96,7 @@ const nextConfig = {
         fs: false,
       };
     }
-    // Ignore Chart.js during server-side builds
+    // Ignore Chart.js during server-side builds and prevent static analysis
     if (isServer) {
       config.externals = config.externals || [];
       config.externals.push({
@@ -105,6 +105,14 @@ const nextConfig = {
         'chartjs-adapter-date-fns': 'commonjs chartjs-adapter-date-fns',
         'react-chartjs-2': 'commonjs react-chartjs-2',
       });
+    }
+    // Prevent webpack from trying to resolve Chart.js during build
+    config.resolve.alias = config.resolve.alias || {};
+    if (isServer) {
+      config.resolve.alias['chart.js'] = false;
+      config.resolve.alias['chartjs-plugin-zoom'] = false;
+      config.resolve.alias['chartjs-adapter-date-fns'] = false;
+      config.resolve.alias['react-chartjs-2'] = false;
     }
     return config;
   },
