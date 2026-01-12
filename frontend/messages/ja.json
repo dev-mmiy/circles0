@@ -1318,8 +1318,7 @@
       },
       "loading": "読み込み中...",
       "loadError": "チャートの読み込みに失敗しました",
-      "zoomHint": "ドラッグで移動、マウスホイールでズーム"
-    },
+      "zoomHint": "ドラッグで移動、マウスホイールでズーム",
       "units": {
         "mmHg": "mmHg",
         "bpm": "bpm",
@@ -1334,15 +1333,12 @@
         "nextWeek": "次週",
         "previousPeriod": "前の期間",
         "nextPeriod": "次の期間",
-        "previous6Months": "前の6か月",
-        "next6Months": "次の6か月",
+        "previous6Months": "6か月前",
+        "next6Months": "6か月後",
         "previousYear": "前年",
-        "nextYear": "翌年"
+        "nextYear": "次年"
       },
-      "noData": "選択した期間の記録が見つかりませんでした",
-      "loadError": "チャートの読み込みに失敗しました。ページを再読み込みしてください。",
-      "loading": "チャートを読み込み中...",
-      "zoomHint": "ドラッグで移動、マウスホイールでズーム"
+      "noData": "選択した期間の記録が見つかりませんでした"
     },
     "filter": {
       "label": "フィルター",
