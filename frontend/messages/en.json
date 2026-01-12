@@ -1368,7 +1368,8 @@
         "1month": "1 Month",
         "6months": "6 Months",
         "1year": "1 Year"
-      }
+      },
+      "zoomHint": "Drag to pan, mouse wheel to zoom"
     },
     "addMeal": "Record Meal",
     "noRecords": "No records found",

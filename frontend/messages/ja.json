@@ -1297,6 +1297,33 @@
         "spo2": "SpO2"
       },
       "units": {
+        "kg": "kg",
+        "percent": "%",
+        "mmHg": "mmHg",
+        "bpm": "bpm",
+        "celsius": "°C",
+        "mgdL": "mg/dL"
+      },
+      "zoomHint": "ドラッグで移動、マウスホイールでズーム",
+      "noData": "選択した期間の記録が見つかりませんでした",
+      "navigation": {
+        "previousWeek": "前週",
+        "nextWeek": "次週",
+        "previousPeriod": "前の期間",
+        "nextPeriod": "次の期間",
+        "previous6Months": "6か月前",
+        "next6Months": "6か月後",
+        "previousYear": "前年",
+        "nextYear": "次年"
+      },
+      "loading": "読み込み中...",
+      "loadError": "チャートの読み込みに失敗しました"
+        "bodyFat": "体脂肪率",
+        "temperature": "体温",
+        "bloodGlucose": "血糖値",
+        "spo2": "SpO2"
+      },
+      "units": {
         "mmHg": "mmHg",
         "bpm": "bpm",
         "kg": "kg",
@@ -1317,7 +1344,8 @@
       },
       "noData": "選択した期間の記録が見つかりませんでした",
       "loadError": "チャートの読み込みに失敗しました。ページを再読み込みしてください。",
-      "loading": "チャートを読み込み中..."
+      "loading": "チャートを読み込み中...",
+      "zoomHint": "ドラッグで移動、マウスホイールでズーム"
     },
     "filter": {
       "label": "フィルター",
