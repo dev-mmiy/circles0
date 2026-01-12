@@ -31,6 +31,7 @@ export default function WeightBodyFatChartClient({
 }: WeightBodyFatChartClientProps) {
   const t = useTranslations('daily');
   const [ChartComponents, setChartComponents] = useState<any>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const chartRef = useRef<any>(null);
 
   // Dynamically load Chart.js only on client-side
@@ -74,6 +75,10 @@ export default function WeightBodyFatChartClient({
         ChartJS,
         Line: reactChartJs2.Line,
       });
+      setLoadError(null);
+    }).catch((error) => {
+      console.error('[WeightBodyFatChart] Failed to load Chart.js:', error);
+      setLoadError(error.message || 'Failed to load chart library');
     });
   }, []);
 
