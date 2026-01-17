@@ -1,24 +1,18 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import type { WeightRecord } from '@/lib/api/weightRecords';
-import type { BodyFatRecord } from '@/lib/api/bodyFatRecords';
+import type { BloodGlucoseRecord } from '@/lib/api/bloodGlucoseRecords';
 import type { Period } from '@/hooks/useChartDateRange';
 import dynamic from 'next/dynamic';
 
-// Dynamically import Chart.js component to avoid SSR issues
-// Use a function that returns a promise to ensure it's only loaded on client
-const WeightBodyFatChartClient = dynamic(
+const BloodGlucoseChartClient = dynamic(
   () => {
-    // This check prevents Next.js from trying to resolve the module during build
     if (typeof window === 'undefined') {
-      // Return a dummy component for SSR
       return Promise.resolve({
         default: () => null,
       });
     }
-    // Only import on client-side
-    return import('./WeightBodyFatChartClient');
+    return import('./BloodGlucoseChartClient');
   },
   {
     ssr: false,
@@ -32,9 +26,8 @@ const WeightBodyFatChartClient = dynamic(
   }
 );
 
-interface WeightBodyFatChartProps {
-  weightRecords: WeightRecord[];
-  bodyFatRecords: BodyFatRecord[];
+interface BloodGlucoseChartProps {
+  bloodGlucoseRecords: BloodGlucoseRecord[];
   period: Period;
   dateRange: { startDate: Date; endDate: Date };
   periodTitleRange: string | null;
@@ -45,7 +38,7 @@ interface WeightBodyFatChartProps {
   zoomedDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
-export default function WeightBodyFatChart(props: WeightBodyFatChartProps) {
+export default function BloodGlucoseChart(props: BloodGlucoseChartProps) {
   // Always render chart, even if there's no data, to allow period navigation
-  return <WeightBodyFatChartClient {...props} />;
+  return <BloodGlucoseChartClient {...props} />;
 }

@@ -3,15 +3,15 @@
 import { useMemo, useRef, useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { format, parseISO, startOfMonth, eachDayOfInterval, eachMonthOfInterval } from 'date-fns';
-import type { WeightRecord } from '@/lib/api/weightRecords';
-import type { BodyFatRecord } from '@/lib/api/bodyFatRecords';
+import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
+import type { HeartRateRecord } from '@/lib/api/heartRateRecords';
 import type { Period } from '@/hooks/useChartDateRange';
 import { ChartTitle } from './ChartTitle';
-import { getMonthKey } from '@/utils/chartUtils';
+import { formatXAxisDate, getMonthKey } from '@/utils/chartUtils';
 
-interface WeightBodyFatChartClientProps {
-  weightRecords: WeightRecord[];
-  bodyFatRecords: BodyFatRecord[];
+interface BloodPressureHeartRateChartClientProps {
+  bloodPressureRecords: BloodPressureRecord[];
+  heartRateRecords: HeartRateRecord[];
   period: Period;
   dateRange: { startDate: Date; endDate: Date };
   periodTitleRange: string | null;
@@ -22,9 +22,9 @@ interface WeightBodyFatChartClientProps {
   zoomedDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
-export default function WeightBodyFatChartClient({
-  weightRecords,
-  bodyFatRecords,
+export default function BloodPressureHeartRateChartClient({
+  bloodPressureRecords,
+  heartRateRecords,
   period,
   dateRange,
   periodTitleRange,
@@ -33,7 +33,7 @@ export default function WeightBodyFatChartClient({
   onNext,
   onZoomChange,
   zoomedDateRange,
-}: WeightBodyFatChartClientProps) {
+}: BloodPressureHeartRateChartClientProps) {
   const t = useTranslations('daily');
   const [ChartComponents, setChartComponents] = useState<any>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -43,8 +43,6 @@ export default function WeightBodyFatChartClient({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Use direct string literals for dynamic imports
-    // Webpack needs to be able to statically analyze the import paths
     Promise.all([
       import(/* webpackChunkName: "chartjs" */ 'chart.js'),
       import(/* webpackChunkName: "chartjs-zoom" */ 'chartjs-plugin-zoom'),
@@ -63,7 +61,6 @@ export default function WeightBodyFatChartClient({
         TimeScale,
       } = chartJs;
 
-      // Register Chart.js components
       ChartJS.register(
         CategoryScale,
         LinearScale,
@@ -81,9 +78,8 @@ export default function WeightBodyFatChartClient({
         Line: reactChartJs2.Line,
       });
       setLoadError(null);
-      console.log('[WeightBodyFatChart] Chart.js loaded successfully');
     }).catch((error) => {
-      console.error('[WeightBodyFatChart] Failed to load Chart.js:', error);
+      console.error('[BloodPressureHeartRateChart] Failed to load Chart.js:', error);
       setLoadError(error.message || 'Failed to load chart library');
     });
   }, []);
@@ -91,15 +87,14 @@ export default function WeightBodyFatChartClient({
   // Prepare data for Chart.js
   // Note: Records are already filtered by zoomed date range in daily/page.tsx
   const chartData = useMemo(() => {
-    const weightFiltered = weightRecords;
-    const fatFiltered = bodyFatRecords;
+    const bpFiltered = bloodPressureRecords;
+    const hrFiltered = heartRateRecords;
     const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
 
-    // Create a map to aggregate data by date
-    const dataMap = new Map<string, { date: Date; weight?: number; bodyFat?: number; weightCount: number; fatCount: number }>();
+    const dataMap = new Map<string, { date: Date; systolic?: number; diastolic?: number; heartRate?: number; bpCount: number; hrCount: number }>();
 
-    weightFiltered.forEach(record => {
+    bpFiltered.forEach(record => {
       const recordDate = parseISO(record.recorded_at);
       const key = isMonthlyView 
         ? getMonthKey(recordDate) 
@@ -113,19 +108,22 @@ export default function WeightBodyFatChartClient({
           : recordDate;
       
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: dateObj, weightCount: 0, fatCount: 0 });
+        dataMap.set(key, { date: dateObj, bpCount: 0, hrCount: 0 });
       }
       const data = dataMap.get(key)!;
-      if (data.weight === undefined) {
-        data.weight = record.value;
+      if (data.systolic === undefined) {
+        data.systolic = record.systolic;
+        data.diastolic = record.diastolic;
       } else {
-        const avgWeight = (data.weight * data.weightCount + record.value) / (data.weightCount + 1);
-        data.weight = Math.round(avgWeight * 10) / 10;
+        const avgSystolic = (data.systolic * data.bpCount + record.systolic) / (data.bpCount + 1);
+        const avgDiastolic = (data.diastolic! * data.bpCount + record.diastolic) / (data.bpCount + 1);
+        data.systolic = Math.round(avgSystolic * 10) / 10;
+        data.diastolic = Math.round(avgDiastolic * 10) / 10;
       }
-      data.weightCount++;
+      data.bpCount++;
     });
 
-    fatFiltered.forEach(record => {
+    hrFiltered.forEach(record => {
       const recordDate = parseISO(record.recorded_at);
       const key = isMonthlyView 
         ? getMonthKey(recordDate) 
@@ -139,27 +137,28 @@ export default function WeightBodyFatChartClient({
           : recordDate;
       
       if (!dataMap.has(key)) {
-        dataMap.set(key, { date: dateObj, weightCount: 0, fatCount: 0 });
+        dataMap.set(key, { date: dateObj, bpCount: 0, hrCount: 0 });
       }
       const data = dataMap.get(key)!;
-      if (data.bodyFat === undefined) {
-        data.bodyFat = record.percentage;
+      if (data.heartRate === undefined) {
+        data.heartRate = record.bpm;
       } else {
-        const avgBodyFat = (data.bodyFat * data.fatCount + record.percentage) / (data.fatCount + 1);
-        data.bodyFat = Math.round(avgBodyFat * 10) / 10;
+        const avgHeartRate = (data.heartRate * data.hrCount + record.bpm) / (data.hrCount + 1);
+        data.heartRate = Math.round(avgHeartRate * 10) / 10;
       }
-      data.fatCount++;
+      data.hrCount++;
     });
 
-    // Handle different periods - always generate date range even if no data
+    // Handle different periods
     if (period === '1week' || period === '1month') {
       const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const dataByDate = new Map<string, { weight?: number; bodyFat?: number }>();
+      const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.date, 'yyyy-MM-dd');
         dataByDate.set(dateKey, {
-          weight: item.weight,
-          bodyFat: item.bodyFat,
+          systolic: item.systolic,
+          diastolic: item.diastolic,
+          heartRate: item.heartRate,
         });
       });
 
@@ -168,20 +167,22 @@ export default function WeightBodyFatChartClient({
         const data = dataByDate.get(dateKey);
         return {
           date: day,
-          weight: data?.weight ?? null,
-          bodyFat: data?.bodyFat ?? null,
+          systolic: data?.systolic ?? null,
+          diastolic: data?.diastolic ?? null,
+          heartRate: data?.heartRate ?? null,
         };
       });
     }
 
     if (period === '6months' || period === '1year') {
       const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
-      const dataByMonth = new Map<string, { weight?: number; bodyFat?: number }>();
+      const dataByMonth = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
         const monthKey = getMonthKey(item.date);
         dataByMonth.set(monthKey, {
-          weight: item.weight,
-          bodyFat: item.bodyFat,
+          systolic: item.systolic,
+          diastolic: item.diastolic,
+          heartRate: item.heartRate,
         });
       });
 
@@ -190,73 +191,69 @@ export default function WeightBodyFatChartClient({
         const data = dataByMonth.get(monthKey);
         return {
           date: month,
-          weight: data?.weight ?? null,
-          bodyFat: data?.bodyFat ?? null,
+          systolic: data?.systolic ?? null,
+          diastolic: data?.diastolic ?? null,
+          heartRate: data?.heartRate ?? null,
         };
       });
     }
 
-    // Fallback: return sorted data from map
     return Array.from(dataMap.values())
       .sort((a, b) => a.date.getTime() - b.date.getTime())
       .map(item => ({
         date: item.date,
-        weight: item.weight ?? null,
-        bodyFat: item.bodyFat ?? null,
+        systolic: item.systolic ?? null,
+        diastolic: item.diastolic ?? null,
+        heartRate: item.heartRate ?? null,
       }));
-  }, [weightRecords, bodyFatRecords, period, dateRange]);
+  }, [bloodPressureRecords, heartRateRecords, period, dateRange]);
 
-  // Calculate weight Y-axis domain
-  const weightDomain = useMemo(() => {
-    const weights = chartData
-      .map(d => d.weight)
-      .filter((w): w is number => w !== undefined && w !== null && typeof w === 'number');
-    if (weights.length === 0) return [0, 100];
-    const minWeight = Math.min(...weights);
-    const maxWeight = Math.max(...weights);
-    const minDomain = Math.max(0, minWeight - 10);
-    const maxDomain = maxWeight + 10;
-    const roundedMin = Math.floor(minDomain);
-    const roundedMax = Math.ceil(maxDomain);
-    return [roundedMin, roundedMax];
+  // Calculate Y-axis domains
+  const bpDomain = useMemo(() => {
+    const sysValues = chartData.map(d => d.systolic).filter((v): v is number => v !== null && v !== undefined);
+    const diaValues = chartData.map(d => d.diastolic).filter((v): v is number => v !== null && v !== undefined);
+    const allValues = [...sysValues, ...diaValues];
+    if (allValues.length === 0) return [30, 210];
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const minDomain = Math.max(30, Math.floor((min - 10) / 10) * 10);
+    const maxDomain = Math.ceil((max + 10) / 10) * 10;
+    return [minDomain, maxDomain];
   }, [chartData]);
 
-  // Calculate body fat Y-axis domain
-  const bodyFatDomain = useMemo(() => {
-    const bodyFats = chartData
-      .map(d => d.bodyFat)
-      .filter((f): f is number => f !== undefined && f !== null && typeof f === 'number');
-    if (bodyFats.length === 0) return [0, 50];
-    const minBodyFat = Math.min(...bodyFats);
-    const maxBodyFat = Math.max(...bodyFats);
-    const minDomain = Math.max(0, minBodyFat - 1);
-    const maxDomain = maxBodyFat + 1;
-    // Round to 1 decimal place for better display
-    const roundedMin = Math.floor(minDomain * 10) / 10;
-    const roundedMax = Math.ceil(maxDomain * 10) / 10;
-    return [roundedMin, roundedMax];
+  const hrDomain = useMemo(() => {
+    const hrValues = chartData.map(d => d.heartRate).filter((v): v is number => v !== null && v !== undefined);
+    if (hrValues.length === 0) return [30, 210];
+    const min = Math.min(...hrValues);
+    const max = Math.max(...hrValues);
+    const minDomain = Math.max(30, Math.floor((min - 10) / 10) * 10);
+    const maxDomain = Math.ceil((max + 10) / 10) * 10;
+    return [minDomain, maxDomain];
   }, [chartData]);
 
   // Prepare Chart.js data format
   const chartJsData = useMemo(() => {
     if (!ChartComponents) return null;
 
-    // For time scale, data should be in {x, y} format
-    const weightData = chartData
-      .filter(d => d.weight !== undefined && d.weight !== null)
-      .map(d => ({ x: d.date.getTime(), y: d.weight! }));
+    const systolicData = chartData
+      .filter(d => d.systolic !== null && d.systolic !== undefined)
+      .map(d => ({ x: d.date.getTime(), y: d.systolic! }));
     
-    const bodyFatData = chartData
-      .filter(d => d.bodyFat !== undefined && d.bodyFat !== null)
-      .map(d => ({ x: d.date.getTime(), y: d.bodyFat! }));
+    const diastolicData = chartData
+      .filter(d => d.diastolic !== null && d.diastolic !== undefined)
+      .map(d => ({ x: d.date.getTime(), y: d.diastolic! }));
+
+    const heartRateData = chartData
+      .filter(d => d.heartRate !== null && d.heartRate !== undefined)
+      .map(d => ({ x: d.date.getTime(), y: d.heartRate! }));
 
     return {
       datasets: [
         {
-          label: `${t('chart.labels.weight')} (${t('chart.units.kg')})`,
-          data: weightData,
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          label: `${t('chart.labels.systolic')} (${t('chart.units.mmHg')})`,
+          data: systolicData,
+          borderColor: '#ef4444',
+          backgroundColor: 'rgba(239, 68, 68, 0.1)',
           yAxisID: 'y',
           pointRadius: period === '1week' ? 4 : 0,
           pointHoverRadius: 5,
@@ -264,10 +261,22 @@ export default function WeightBodyFatChartClient({
           spanGaps: false,
         },
         {
-          label: `${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`,
-          data: bodyFatData,
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
+          label: `${t('chart.labels.diastolic')} (${t('chart.units.mmHg')})`,
+          data: diastolicData,
+          borderColor: '#dc2626',
+          backgroundColor: 'rgba(220, 38, 38, 0.1)',
+          yAxisID: 'y',
+          pointRadius: period === '1week' ? 4 : 0,
+          pointHoverRadius: 5,
+          tension: 0.1,
+          borderDash: [5, 5],
+          spanGaps: false,
+        },
+        {
+          label: `${t('chart.labels.heartRate')} (${t('chart.units.bpm')})`,
+          data: heartRateData,
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
           yAxisID: 'y1',
           pointRadius: period === '1week' ? 4 : 0,
           pointHoverRadius: 5,
@@ -314,15 +323,12 @@ export default function WeightBodyFatChartClient({
               const value = context.parsed.y;
               if (value === null) return null;
               
-              // Remove units from label for display
               const nameWithoutUnit = label.replace(/\s*\([^)]*\)\s*/g, '');
-              
-              // Determine unit
               let unit = '';
-              if (label.includes('kg')) {
-                unit = ' kg';
-              } else if (label.includes('%')) {
-                unit = '%';
+              if (label.includes('mmHg')) {
+                unit = ' mmHg';
+              } else if (label.includes('bpm')) {
+                unit = ' bpm';
               }
               
               return `${nameWithoutUnit}: ${value}${unit}`;
@@ -337,7 +343,7 @@ export default function WeightBodyFatChartClient({
             threshold: 10,
           },
           onPanStart: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== onPanStart called =====');
+            console.log('[BloodPressureHeartRateChart] ===== onPanStart called =====');
           },
           zoom: {
             wheel: {
@@ -349,15 +355,18 @@ export default function WeightBodyFatChartClient({
             mode: 'x' as const,
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== User zoom complete =====');
+            console.log('[BloodPressureHeartRateChart] ===== onZoomComplete called =====');
+            console.log('[BloodPressureHeartRateChart] Chart:', !!chart, 'onZoomChange:', !!onZoomChange);
             
             if (!chart || !onZoomChange) {
+              console.log('[BloodPressureHeartRateChart] Missing chart or onZoomChange, returning');
               return;
             }
             
             const scales = chart.scales;
             const xScale = scales.x;
             if (!xScale) {
+              console.log('[BloodPressureHeartRateChart] No xScale found');
               return;
             }
             
@@ -365,6 +374,13 @@ export default function WeightBodyFatChartClient({
             let min = xScale.min;
             let max = xScale.max;
             
+            console.log('[BloodPressureHeartRateChart] xScale min/max:', { 
+              min, 
+              max, 
+              minType: typeof min, 
+              maxType: typeof max 
+            });
+            
             // Convert to Date objects
             let startDate: Date;
             let endDate: Date;
@@ -376,6 +392,7 @@ export default function WeightBodyFatChartClient({
             } else if (typeof min === 'string') {
               startDate = new Date(min);
             } else {
+              console.log('[BloodPressureHeartRateChart] Invalid min value:', min);
               return;
             }
             
@@ -386,28 +403,34 @@ export default function WeightBodyFatChartClient({
             } else if (typeof max === 'string') {
               endDate = new Date(max);
             } else {
+              console.log('[BloodPressureHeartRateChart] Invalid max value:', max);
               return;
             }
             
             // Check if dates are valid
             if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[WeightBodyFatChart] Calling onZoomChange after user zoom:', {
+              console.log('[BloodPressureHeartRateChart] Zoom complete, calling onZoomChange:', {
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
               });
               onZoomChange(startDate, endDate);
+            } else {
+              console.log('[BloodPressureHeartRateChart] Invalid dates:', { startDate, endDate });
             }
           },
           onPanComplete: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== User pan complete (drag) =====');
+            console.log('[BloodPressureHeartRateChart] ===== onPanComplete called =====');
+            console.log('[BloodPressureHeartRateChart] Chart:', !!chart, 'onZoomChange:', !!onZoomChange);
             
             if (!chart || !onZoomChange) {
+              console.log('[BloodPressureHeartRateChart] Missing chart or onZoomChange, returning');
               return;
             }
             
             const scales = chart.scales;
             const xScale = scales.x;
             if (!xScale) {
+              console.log('[BloodPressureHeartRateChart] No xScale found');
               return;
             }
             
@@ -415,6 +438,13 @@ export default function WeightBodyFatChartClient({
             let min = xScale.min;
             let max = xScale.max;
             
+            console.log('[BloodPressureHeartRateChart] xScale min/max:', { 
+              min, 
+              max, 
+              minType: typeof min, 
+              maxType: typeof max 
+            });
+            
             // Convert to Date objects
             let startDate: Date;
             let endDate: Date;
@@ -426,6 +456,7 @@ export default function WeightBodyFatChartClient({
             } else if (typeof min === 'string') {
               startDate = new Date(min);
             } else {
+              console.log('[BloodPressureHeartRateChart] Invalid min value:', min);
               return;
             }
             
@@ -436,17 +467,23 @@ export default function WeightBodyFatChartClient({
             } else if (typeof max === 'string') {
               endDate = new Date(max);
             } else {
+              console.log('[BloodPressureHeartRateChart] Invalid max value:', max);
               return;
             }
             
             // Check if dates are valid
             if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[WeightBodyFatChart] Calling onZoomChange after user pan:', {
+              console.log('[BloodPressureHeartRateChart] Pan complete, calling onZoomChange:', {
                 startDate: startDate.toISOString(),
                 endDate: endDate.toISOString(),
               });
               onZoomChange(startDate, endDate);
+            } else {
+              console.log('[BloodPressureHeartRateChart] Invalid dates:', { startDate, endDate });
             }
+          },
+          onPan: ({ chart }: { chart: any }) => {
+            console.log('[BloodPressureHeartRateChart] onPan event fired');
           },
         },
       },
@@ -477,13 +514,13 @@ export default function WeightBodyFatChartClient({
           position: 'left' as const,
           title: {
             display: true,
-            text: `${t('chart.labels.weight')} (${t('chart.units.kg')})`,
+            text: `${t('chart.labels.bloodPressure')} (${t('chart.units.mmHg')})`,
             color: textColor,
           },
-          min: weightDomain[0],
-          max: weightDomain[1],
+          min: bpDomain[0],
+          max: bpDomain[1],
           ticks: {
-            stepSize: 5,
+            stepSize: 10,
             color: textColor,
             callback: (value: any) => value.toString(),
           },
@@ -497,15 +534,15 @@ export default function WeightBodyFatChartClient({
           position: 'right' as const,
           title: {
             display: true,
-            text: `${t('chart.labels.bodyFat')} (${t('chart.units.percent')})`,
+            text: `${t('chart.labels.heartRate')} (${t('chart.units.bpm')})`,
             color: textColor,
           },
-          min: bodyFatDomain[0],
-          max: bodyFatDomain[1],
+          min: hrDomain[0],
+          max: hrDomain[1],
           ticks: {
+            stepSize: 10,
             color: textColor,
-            stepSize: 1,
-            callback: (value: any) => `${value}%`,
+            callback: (value: any) => value.toString(),
           },
           grid: {
             drawOnChartArea: false,
@@ -514,157 +551,20 @@ export default function WeightBodyFatChartClient({
         },
       },
     };
-  }, [period, weightDomain, bodyFatDomain, t, ChartComponents, onZoomChange, dateRange, zoomedDateRange]);
-
-  // Track previous scale values to detect changes
-  const prevScaleRef = useRef<{ min: number | null; max: number | null } | null>(null);
+  }, [period, bpDomain, hrDomain, t, ChartComponents, onZoomChange, dateRange, zoomedDateRange]);
 
   // Reset zoom when period or weekOffset changes
   useEffect(() => {
     if (chartRef.current && ChartComponents) {
       chartRef.current.resetZoom();
-      prevScaleRef.current = null;
     }
   }, [period, weekOffset, ChartComponents]);
-
-  // Maintain scale after data updates (only when zoomedDateRange is explicitly set, not during pan/zoom)
-  useEffect(() => {
-    if (!chartRef.current || !ChartComponents) return;
-    
-    const chart = chartRef.current;
-    if (!chart.scales || !chart.scales.x) return;
-    
-    // Only maintain scale if zoomedDateRange is set (user has explicitly zoomed)
-    // If zoomedDateRange is null, let Chart.js handle the scale naturally
-    if (!zoomedDateRange) {
-      // For initial load, set to dateRange
-      const targetMin = dateRange.startDate.getTime();
-      const targetMax = dateRange.endDate.getTime();
-      
-      const currentMin = typeof chart.scales.x.min === 'number' ? chart.scales.x.min : (typeof chart.scales.x.min === 'string' ? new Date(chart.scales.x.min).getTime() : null);
-      const currentMax = typeof chart.scales.x.max === 'number' ? chart.scales.x.max : (typeof chart.scales.x.max === 'string' ? new Date(chart.scales.x.max).getTime() : null);
-      
-      const minDiff = currentMin !== null ? Math.abs(currentMin - targetMin) : Infinity;
-      const maxDiff = currentMax !== null ? Math.abs(currentMax - targetMax) : Infinity;
-      
-      // Update if scale is significantly different (more than 1 day difference)
-      if (minDiff > 86400000 || maxDiff > 86400000) {
-        console.log('[WeightBodyFatChart] Setting initial date range:', {
-          target: { min: targetMin, max: targetMax },
-          current: { min: currentMin, max: currentMax },
-        });
-        chart.scales.x.min = targetMin;
-        chart.scales.x.max = targetMax;
-        chart.update('none');
-        prevScaleRef.current = {
-          min: targetMin,
-          max: targetMax,
-        };
-      }
-      return;
-    }
-    
-    // If zoomedDateRange is set, only update if the scale has drifted significantly
-    // This allows pan/zoom to work while still maintaining the zoomed range after data updates
-    const targetMin = zoomedDateRange.startDate.getTime();
-    const targetMax = zoomedDateRange.endDate.getTime();
-    
-    const currentMin = typeof chart.scales.x.min === 'number' ? chart.scales.x.min : (typeof chart.scales.x.min === 'string' ? new Date(chart.scales.x.min).getTime() : null);
-    const currentMax = typeof chart.scales.x.max === 'number' ? chart.scales.x.max : (typeof chart.scales.x.max === 'string' ? new Date(chart.scales.x.max).getTime() : null);
-    
-    const minDiff = currentMin !== null ? Math.abs(currentMin - targetMin) : Infinity;
-    const maxDiff = currentMax !== null ? Math.abs(currentMax - targetMax) : Infinity;
-    
-    // Only update if scale has drifted significantly (more than 1 day difference)
-    // This prevents interfering with active pan/zoom operations
-    if (minDiff > 86400000 || maxDiff > 86400000) {
-      console.log('[WeightBodyFatChart] Maintaining zoomed date range after data update:', {
-        target: { min: targetMin, max: targetMax },
-        current: { min: currentMin, max: currentMax },
-      });
-      chart.scales.x.min = targetMin;
-      chart.scales.x.max = targetMax;
-      chart.update('none');
-      prevScaleRef.current = {
-        min: targetMin,
-        max: targetMax,
-      };
-    }
-  }, [ChartComponents, zoomedDateRange, dateRange, weightRecords.length, bodyFatRecords.length]);
-
-  // Removed periodic scale change monitoring - only use explicit user interactions (onPanComplete, onZoomComplete, mouse events)
-
-  // Add event listeners to chart after it's created
-  useEffect(() => {
-    if (!chartRef.current || !ChartComponents) return;
-
-    const chart = chartRef.current;
-
-    // Listen for chart update events
-    const canvas = chart.canvas;
-    if (canvas) {
-      
-      let isDragging = false;
-      let startX = 0;
-
-      const handleMouseDown = (e: MouseEvent) => {
-        isDragging = true;
-        startX = e.clientX;
-      };
-
-      const handleMouseMove = (e: MouseEvent) => {
-        // Silent - no logging for mouse move
-      };
-
-      const handleMouseUp = (e: MouseEvent) => {
-        if (isDragging) {
-          isDragging = false;
-          
-          // Wait a bit for Chart.js to update the scale after pan
-          setTimeout(() => {
-            // Get current scale values
-            if (chart && chart.scales && chart.scales.x) {
-              const xScale = chart.scales.x;
-              const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
-              const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
-              
-              if (onZoomChange && min !== null && max !== null) {
-                const startDate = new Date(min);
-                const endDate = new Date(max);
-                
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                  console.log('[WeightBodyFatChart] ===== User mouse drag complete =====');
-                  console.log('[WeightBodyFatChart] Calling onZoomChange after mouse drag:', {
-                    startDate: startDate.toISOString(),
-                    endDate: endDate.toISOString(),
-                  });
-                  onZoomChange(startDate, endDate);
-                }
-              }
-            }
-          }, 150);
-        }
-      };
-
-      canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
-      canvas.addEventListener('mouseup', handleMouseUp);
-      canvas.addEventListener('mouseleave', handleMouseUp);
-
-      return () => {
-        canvas.removeEventListener('mousedown', handleMouseDown);
-        canvas.removeEventListener('mousemove', handleMouseMove);
-        canvas.removeEventListener('mouseup', handleMouseUp);
-        canvas.removeEventListener('mouseleave', handleMouseUp);
-      };
-    }
-  }, [ChartComponents, onZoomChange]);
 
   if (loadError) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
         <ChartTitle
-          title={t('chart.titles.weightBodyFat')}
+          title={t('chart.titles.bloodPressureHeartRate')}
           periodRange={periodTitleRange}
           period={period}
           weekOffset={weekOffset}
@@ -685,7 +585,7 @@ export default function WeightBodyFatChartClient({
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
         <ChartTitle
-          title={t('chart.titles.weightBodyFat')}
+          title={t('chart.titles.bloodPressureHeartRate')}
           periodRange={periodTitleRange}
           period={period}
           weekOffset={weekOffset}
@@ -704,7 +604,7 @@ export default function WeightBodyFatChartClient({
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
       <ChartTitle
-        title={t('chart.titles.weightBodyFat')}
+        title={t('chart.titles.bloodPressureHeartRate')}
         periodRange={periodTitleRange}
         period={period}
         weekOffset={weekOffset}
