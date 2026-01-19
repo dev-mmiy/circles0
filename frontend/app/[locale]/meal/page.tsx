@@ -224,7 +224,7 @@ export default function MealPage() {
             initialHealthRecordType="meal"
             initialMealDate={selectedDate}
             initialMealType={selectedMealType}
-            editingPost={editingPost}
+            editingPost={editingPost ?? undefined}
           />
         )}
       </div>

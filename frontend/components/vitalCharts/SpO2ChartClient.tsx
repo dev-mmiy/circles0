@@ -17,6 +17,7 @@ interface SpO2ChartClientProps {
   onPrevious: () => void;
   onNext: () => void;
   onZoomChange?: (startDate: Date, endDate: Date) => void;
+  zoomedDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
 export default function SpO2ChartClient({
