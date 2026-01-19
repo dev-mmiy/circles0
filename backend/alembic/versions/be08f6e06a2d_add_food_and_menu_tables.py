@@ -1,7 +1,7 @@
 """add_food_and_menu_tables
 
 Revision ID: be08f6e06a2d
-Revises: change_spo2_percentage_to_decimal
+Revises: change_spo2_to_decimal
 Create Date: 2026-01-03 11:59:58.005906
 
 """
@@ -14,7 +14,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision: str = 'be08f6e06a2d'
-down_revision: Union[str, None] = 'change_spo2_percentage_to_decimal'
+down_revision: Union[str, None] = 'change_spo2_to_decimal'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

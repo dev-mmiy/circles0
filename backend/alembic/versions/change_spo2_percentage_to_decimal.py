@@ -1,6 +1,6 @@
 """change spo2 percentage to decimal
 
-Revision ID: change_spo2_percentage_to_decimal
+Revision ID: change_spo2_to_decimal
 Revises: create_separate_vital_tables
 Create Date: 2025-01-02 02:00:00.000000
 

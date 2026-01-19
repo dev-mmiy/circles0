@@ -76,7 +76,7 @@ def get_current_user_from_query(
     Raises:
         HTTPException: If token is invalid or missing, or user not found
     """
-    logger.debug("[get_current_user_from_query] Starting authentication")
+    logger.info("[get_current_user_from_query] Starting authentication")
     
     # Try query parameter first (for SSE)
     auth_token = token
@@ -86,7 +86,7 @@ def get_current_user_from_query(
         authorization = request.headers.get("Authorization")
         if authorization and authorization.startswith("Bearer "):
             auth_token = authorization.split(" ")[1]
-            logger.debug("[get_current_user_from_query] Using token from Authorization header")
+            logger.info("[get_current_user_from_query] Using token from Authorization header")
     
     if not auth_token:
         logger.warning("[get_current_user_from_query] No authentication token provided")
@@ -97,11 +97,13 @@ def get_current_user_from_query(
     
     try:
         # Verify token and get user info
+        logger.info(f"[get_current_user_from_query] Verifying token...")
         user_info = auth0_service.get_user_info(auth_token)
         auth0_id = extract_auth0_id(user_info)
-        logger.debug(f"[get_current_user_from_query] Authentication successful: auth0_id={auth0_id}")
+        logger.info(f"[get_current_user_from_query] Authentication successful: auth0_id={auth0_id}")
         
         # Get user from database
+        logger.info(f"[get_current_user_from_query] Querying database for user with auth0_id={auth0_id}")
         user = UserService.get_user_by_auth0_id(db, auth0_id)
         if not user:
             logger.warning(f"[get_current_user_from_query] User not found: auth0_id={auth0_id}")
@@ -110,7 +112,7 @@ def get_current_user_from_query(
                 detail="User not found",
             )
         
-        logger.debug(f"[get_current_user_from_query] User found: user_id={user.id}")
+        logger.info(f"[get_current_user_from_query] User found: user_id={user.id}")
         return user
     except HTTPException:
         raise

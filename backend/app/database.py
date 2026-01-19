@@ -3,6 +3,23 @@ Database configuration and session management.
 """
 
 import os
+from pathlib import Path
+
+# Load .env file before reading environment variables
+# This ensures DATABASE_URL is loaded from .env file if it exists
+try:
+    from dotenv import load_dotenv
+    
+    # Load .env file from backend directory
+    env_file = Path(__file__).parent.parent / ".env"
+    if env_file.exists() and env_file.is_file():
+        load_dotenv(dotenv_path=str(env_file.resolve()), override=False, verbose=False)
+except ImportError:
+    # dotenv not available, skip loading
+    pass
+except Exception:
+    # Silently ignore errors if .env file cannot be loaded
+    pass
 
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
@@ -13,11 +30,12 @@ Base = declarative_base()
 
 # Database URL from environment variable
 # Handle empty string case (Cloud Run may set empty string instead of None)
+# For local development, use 'localhost' instead of 'postgres'
 DATABASE_URL = (
     os.getenv(
-        "DATABASE_URL", "postgresql://postgres:postgres@postgres:5432/disease_community"
+        "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/disease_community"
     )
-    or "postgresql://postgres:postgres@postgres:5432/disease_community"
+    or "postgresql://postgres:postgres@localhost:5432/disease_community"
 )
 
 # Convert asyncpg URL to psycopg2 URL (for synchronous operations)
