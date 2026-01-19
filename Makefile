@@ -67,13 +67,19 @@ db-current: ## 現在のマイグレーション状態を表示
 	./scripts/migrate.sh dev current
 
 # 開発環境の起動
-dev: ## 開発環境を起動
+dev: ## 開発環境を起動 (Docker Compose)
 	@echo "🚀 Starting development environment..."
 	docker compose up -d
 	@echo "✅ Development environment started!"
 	@echo "🌐 Frontend: http://localhost:3000"
 	@echo "🌐 Backend: http://localhost:8000"
 	@echo "🌐 API Docs: http://localhost:8000/docs"
+
+# ローカル開発環境の起動（Colima/asdf環境用）
+dev-local: ## ローカル開発環境を起動（バックエンドとフロントエンドを直接起動）
+	@echo "🚀 Starting local development environment..."
+	@chmod +x scripts/start-local-dev.sh
+	@./scripts/start-local-dev.sh
 
 # 開発環境の停止
 stop: ## 開発環境を停止
