@@ -217,9 +217,6 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
     // Clear cache on mount to ensure fresh data on page navigation
     // This prevents issues with stale cached data on subsequent page loads
     cacheRef.current = null;
-    debugLog.log('[useDataLoader] Component mounted, resetting state', {
-      timestamp: new Date().toISOString(),
-    });
     return () => {
       isMountedRef.current = false;
       // Clear loading state on unmount
@@ -275,7 +272,6 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
       // Prevent duplicate requests: Only one request at a time (except for refresh)
       // This prevents race conditions and unnecessary API calls
       if (isLoadingRef.current && !isRefresh) {
-        debugLog.log('[useDataLoader] Request already in progress, skipping duplicate');
         return;
       }
 
@@ -315,25 +311,16 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
         // This must complete before making API calls
         if (isAuthenticated) {
           try {
-            debugLog.log('[useDataLoader] Getting token before API call...', {
-              timestamp: new Date().toISOString(),
-              hasToken: !!apiClient.defaults.headers.common['Authorization'],
-            });
-
             // Get token - tokenManager handles its own timeout (15s per attempt, 3 attempts)
             // We don't add an additional timeout here to avoid conflicts
             const token = await getAccessTokenFromManager(getAccessTokenSilently);
 
             if (!isMountedRef.current) {
-              debugLog.log('[useDataLoader] Component unmounted after token retrieval, aborting');
               isLoadingRef.current = false;
               return;
             }
 
             setAuthToken(token);
-            debugLog.log('[useDataLoader] Token set in API client', {
-              timestamp: new Date().toISOString(),
-            });
           } catch (tokenError: any) {
             debugLog.error('[useDataLoader] Failed to get token:', tokenError, {
               timestamp: new Date().toISOString(),
@@ -391,25 +378,11 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
         }
 
         if (!isMountedRef.current) {
-          debugLog.log('[useDataLoader] Component unmounted before API call');
           return;
         }
 
         // Load data - ensure token is set before this point
-        debugLog.log('[useDataLoader] Calling loadFn...', {
-          skip,
-          pageSize,
-          hasToken: !!apiClient.defaults.headers.common['Authorization'],
-          timestamp: new Date().toISOString(),
-        });
-        const loadStartTime = Date.now();
         const result = await memoizedLoadFn.current(skip, pageSize);
-        const loadElapsed = Date.now() - loadStartTime;
-        debugLog.log('[useDataLoader] loadFn completed', {
-          elapsed: loadElapsed,
-          itemsCount: result.items?.length,
-          timestamp: new Date().toISOString(),
-        });
 
         if (!isMountedRef.current) return;
 
@@ -483,15 +456,9 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
             if (cacheAge < cacheTtl && errorInfo.type !== ErrorType.UNAUTHORIZED) {
               // Only use cache for non-auth errors (network errors, etc.)
               // Auth errors should not use cached data
-              debugLog.log('[useDataLoader] Using cached data due to non-auth error');
               setItems(cacheRef.current.items);
             } else {
               // Clear cache on auth errors or expired cache
-              debugLog.log('[useDataLoader] Clearing cache due to error', {
-                errorType: errorInfo.type,
-                cacheAge,
-                cacheExpired: cacheAge >= cacheTtl,
-              });
               cacheRef.current = null;
             }
           }
@@ -514,15 +481,8 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
   // Load function (public API)
   const load = useCallback(
     async (reset: boolean = true) => {
-      debugLog.log('[useDataLoader] load() called', {
-        reset,
-        isLoadingRef: isLoadingRef.current,
-        timestamp: new Date().toISOString(),
-      });
-
       // Prevent duplicate requests
       if (isLoadingRef.current && !reset) {
-        debugLog.log('[useDataLoader] Load already in progress, skipping');
         return;
       }
 
@@ -600,11 +560,6 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
 
       // If not authenticated, don't load
       if (!isAuthenticated) {
-        debugLog.log('[useDataLoader] Not authenticated, skipping auto-load', {
-          authLoading,
-          isAuthenticated,
-          timestamp: new Date().toISOString(),
-        });
         return;
       }
     }
@@ -614,21 +569,10 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
     const authStateKey = requireAuth ? `auth-${isAuthenticated}-${authLoading}` : 'no-auth';
 
     if (hasAutoLoadedRef.current && lastAuthStateRef.current === authStateKey) {
-      debugLog.log('[useDataLoader] Already loaded for this auth state, skipping', {
-        authStateKey,
-        timestamp: new Date().toISOString(),
-      });
       return;
     }
 
     // Step 3: Mark as loading for this auth state
-    debugLog.log('[useDataLoader] Starting auto-load...', {
-      authStateKey,
-      isAuthenticated,
-      authLoading,
-      requireAuth,
-      timestamp: new Date().toISOString(),
-    });
 
     hasAutoLoadedRef.current = true;
     lastAuthStateRef.current = authStateKey;
@@ -640,19 +584,9 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
       const cacheAge = Date.now() - cacheRef.current.timestamp;
       const MAX_CACHE_AGE_FOR_OPTIMISTIC_UI = 30 * 1000; // 30 seconds
       if (cacheAge < MAX_CACHE_AGE_FOR_OPTIMISTIC_UI) {
-        debugLog.log('[useDataLoader] Using cached data while loading fresh data', {
-          cacheAge,
-          itemsCount: cacheRef.current.items.length,
-          timestamp: new Date().toISOString(),
-        });
         setItems(cacheRef.current.items);
         setIsLoading(false);
       } else {
-        debugLog.log('[useDataLoader] Cache too old for optimistic UI, waiting for fresh data', {
-          cacheAge,
-          maxAge: MAX_CACHE_AGE_FOR_OPTIMISTIC_UI,
-          timestamp: new Date().toISOString(),
-        });
         // Clear old cache to force fresh load
         cacheRef.current = null;
       }
@@ -669,13 +603,8 @@ export function useDataLoader<T>(options: UseDataLoaderOptions<T>): UseDataLoade
         await new Promise(resolve => setTimeout(resolve, 50));
 
         if (isCancelled || !isMountedRef.current) {
-          debugLog.log('[useDataLoader] Load cancelled or component unmounted');
           return;
         }
-
-        debugLog.log('[useDataLoader] Executing load...', {
-          timestamp: new Date().toISOString(),
-        });
 
         // Use ref to get latest load function
         if (loadFnRef.current) {

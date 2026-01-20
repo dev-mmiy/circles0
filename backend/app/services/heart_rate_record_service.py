@@ -51,11 +51,35 @@ class HeartRateRecordService:
         user_id: UUID,
         skip: int = 0,
         limit: int = 20,
+        start_date: Optional[datetime] = None,
+        end_date: Optional[datetime] = None,
     ) -> List[HeartRateRecord]:
         """Get heart rate records for a specific user."""
+        query = db.query(HeartRateRecord).filter(
+            HeartRateRecord.user_id == user_id
+        )
+        
+        # 日付範囲フィルタを追加
+        # start_dateはその日の00:00:00から、end_dateはその日の23:59:59.999999までを含める
+        from datetime import timezone
+        
+        if start_date:
+            if start_date.tzinfo is not None:
+                start_date_utc = start_date.astimezone(timezone.utc)
+                start_date_only = start_date_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+            else:
+                start_date_only = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+            query = query.filter(HeartRateRecord.recorded_at >= start_date_only)
+        if end_date:
+            if end_date.tzinfo is not None:
+                end_date_utc = end_date.astimezone(timezone.utc)
+                end_date_inclusive = end_date_utc.replace(hour=23, minute=59, second=59, microsecond=999999)
+            else:
+                end_date_inclusive = end_date.replace(hour=23, minute=59, second=59, microsecond=999999)
+            query = query.filter(HeartRateRecord.recorded_at <= end_date_inclusive)
+        
         return (
-            db.query(HeartRateRecord)
-            .filter(HeartRateRecord.user_id == user_id)
+            query
             .order_by(desc(HeartRateRecord.recorded_at))
             .offset(skip)
             .limit(limit)

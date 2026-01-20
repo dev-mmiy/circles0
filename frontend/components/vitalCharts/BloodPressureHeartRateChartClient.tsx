@@ -91,6 +91,9 @@ export default function BloodPressureHeartRateChartClient({
     const hrFiltered = heartRateRecords;
     const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
+    
+    // Use zoomedDateRange if set, otherwise use dateRange
+    const effectiveDateRange = zoomedDateRange || dateRange;
 
     const dataMap = new Map<string, { date: Date; systolic?: number; diastolic?: number; heartRate?: number; bpCount: number; hrCount: number }>();
 
@@ -151,7 +154,7 @@ export default function BloodPressureHeartRateChartClient({
 
     // Handle different periods
     if (period === '1week' || period === '1month') {
-      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allDays = eachDayOfInterval({ start: effectiveDateRange.startDate, end: effectiveDateRange.endDate });
       const dataByDate = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.date, 'yyyy-MM-dd');
@@ -175,7 +178,7 @@ export default function BloodPressureHeartRateChartClient({
     }
 
     if (period === '6months' || period === '1year') {
-      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allMonths = eachMonthOfInterval({ start: effectiveDateRange.startDate, end: effectiveDateRange.endDate });
       const dataByMonth = new Map<string, { systolic?: number; diastolic?: number; heartRate?: number }>();
       Array.from(dataMap.values()).forEach(item => {
         const monthKey = getMonthKey(item.date);
@@ -206,7 +209,7 @@ export default function BloodPressureHeartRateChartClient({
         diastolic: item.diastolic ?? null,
         heartRate: item.heartRate ?? null,
       }));
-  }, [bloodPressureRecords, heartRateRecords, period, dateRange]);
+  }, [bloodPressureRecords, heartRateRecords, period, dateRange, zoomedDateRange]);
 
   // Calculate Y-axis domains
   const bpDomain = useMemo(() => {
@@ -342,8 +345,30 @@ export default function BloodPressureHeartRateChartClient({
             modifierKey: null,
             threshold: 10,
           },
-          onPanStart: ({ chart }: { chart: any }) => {
-            console.log('[BloodPressureHeartRateChart] ===== onPanStart called =====');
+          onPanStart: () => {
+            // Pan started
+          },
+          onPanComplete: ({ chart }: { chart: any }) => {
+            if (!chart || !onZoomChange) {
+              return;
+            }
+            
+            const xScale = chart.scales?.x;
+            if (!xScale) {
+              return;
+            }
+            
+            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
+            
+            if (min !== null && max !== null) {
+              const startDate = new Date(min);
+              const endDate = new Date(max);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                onZoomChange(startDate, endDate);
+              }
+            }
           },
           zoom: {
             wheel: {
@@ -355,135 +380,29 @@ export default function BloodPressureHeartRateChartClient({
             mode: 'x' as const,
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
-            console.log('[BloodPressureHeartRateChart] ===== onZoomComplete called =====');
-            console.log('[BloodPressureHeartRateChart] Chart:', !!chart, 'onZoomChange:', !!onZoomChange);
-            
             if (!chart || !onZoomChange) {
-              console.log('[BloodPressureHeartRateChart] Missing chart or onZoomChange, returning');
               return;
             }
             
-            const scales = chart.scales;
-            const xScale = scales.x;
+            const xScale = chart.scales?.x;
             if (!xScale) {
-              console.log('[BloodPressureHeartRateChart] No xScale found');
               return;
             }
             
-            // Get the zoomed range - for time scale, min/max are typically numbers (timestamps)
-            let min = xScale.min;
-            let max = xScale.max;
+            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
             
-            console.log('[BloodPressureHeartRateChart] xScale min/max:', { 
-              min, 
-              max, 
-              minType: typeof min, 
-              maxType: typeof max 
-            });
-            
-            // Convert to Date objects
-            let startDate: Date;
-            let endDate: Date;
-            
-            if (typeof min === 'number') {
-              startDate = new Date(min);
-            } else if (min instanceof Date) {
-              startDate = min;
-            } else if (typeof min === 'string') {
-              startDate = new Date(min);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid min value:', min);
-              return;
-            }
-            
-            if (typeof max === 'number') {
-              endDate = new Date(max);
-            } else if (max instanceof Date) {
-              endDate = max;
-            } else if (typeof max === 'string') {
-              endDate = new Date(max);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid max value:', max);
-              return;
-            }
-            
-            // Check if dates are valid
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[BloodPressureHeartRateChart] Zoom complete, calling onZoomChange:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-              });
-              onZoomChange(startDate, endDate);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid dates:', { startDate, endDate });
+            if (min !== null && max !== null) {
+              const startDate = new Date(min);
+              const endDate = new Date(max);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                onZoomChange(startDate, endDate);
+              }
             }
           },
-          onPanComplete: ({ chart }: { chart: any }) => {
-            console.log('[BloodPressureHeartRateChart] ===== onPanComplete called =====');
-            console.log('[BloodPressureHeartRateChart] Chart:', !!chart, 'onZoomChange:', !!onZoomChange);
-            
-            if (!chart || !onZoomChange) {
-              console.log('[BloodPressureHeartRateChart] Missing chart or onZoomChange, returning');
-              return;
-            }
-            
-            const scales = chart.scales;
-            const xScale = scales.x;
-            if (!xScale) {
-              console.log('[BloodPressureHeartRateChart] No xScale found');
-              return;
-            }
-            
-            // Get the panned range
-            let min = xScale.min;
-            let max = xScale.max;
-            
-            console.log('[BloodPressureHeartRateChart] xScale min/max:', { 
-              min, 
-              max, 
-              minType: typeof min, 
-              maxType: typeof max 
-            });
-            
-            // Convert to Date objects
-            let startDate: Date;
-            let endDate: Date;
-            
-            if (typeof min === 'number') {
-              startDate = new Date(min);
-            } else if (min instanceof Date) {
-              startDate = min;
-            } else if (typeof min === 'string') {
-              startDate = new Date(min);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid min value:', min);
-              return;
-            }
-            
-            if (typeof max === 'number') {
-              endDate = new Date(max);
-            } else if (max instanceof Date) {
-              endDate = max;
-            } else if (typeof max === 'string') {
-              endDate = new Date(max);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid max value:', max);
-              return;
-            }
-            
-            // Check if dates are valid
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[BloodPressureHeartRateChart] Pan complete, calling onZoomChange:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-              });
-              onZoomChange(startDate, endDate);
-            } else {
-              console.log('[BloodPressureHeartRateChart] Invalid dates:', { startDate, endDate });
-            }
-          },
-          onPan: ({ chart }: { chart: any }) => {
-            console.log('[BloodPressureHeartRateChart] onPan event fired');
+          onPan: () => {
+            // Pan event
           },
         },
       },
@@ -559,6 +478,57 @@ export default function BloodPressureHeartRateChartClient({
       chartRef.current.resetZoom();
     }
   }, [period, weekOffset, ChartComponents]);
+
+  // Add event listeners to chart after it's created for drag/pan detection
+  useEffect(() => {
+    if (!chartRef.current || !ChartComponents) return;
+
+    const chart = chartRef.current;
+
+    // Listen for chart update events
+    const canvas = chart.canvas;
+    if (canvas) {
+      let isDragging = false;
+
+      const handleMouseDown = () => {
+        isDragging = true;
+      };
+
+      const handleMouseUp = () => {
+        if (isDragging) {
+          isDragging = false;
+          
+          // Wait a bit for Chart.js to update the scale after pan
+          setTimeout(() => {
+            if (chart?.scales?.x && onZoomChange) {
+              const xScale = chart.scales.x;
+              const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+              const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
+              
+              if (min !== null && max !== null) {
+                const startDate = new Date(min);
+                const endDate = new Date(max);
+                
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  onZoomChange(startDate, endDate);
+                }
+              }
+            }
+          }, 150);
+        }
+      };
+
+      canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mouseup', handleMouseUp);
+      canvas.addEventListener('mouseleave', handleMouseUp);
+
+      return () => {
+        canvas.removeEventListener('mousedown', handleMouseDown);
+        canvas.removeEventListener('mouseup', handleMouseUp);
+        canvas.removeEventListener('mouseleave', handleMouseUp);
+      };
+    }
+  }, [ChartComponents, onZoomChange]);
 
   if (loadError) {
     return (

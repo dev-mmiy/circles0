@@ -88,6 +88,9 @@ export default function SpO2ChartClient({
     const filtered = spo2Records;
     const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
+    
+    // Use zoomedDateRange if set, otherwise use dateRange
+    const effectiveDateRange = zoomedDateRange || dateRange;
 
     const dataMap = new Map<string, { date: Date; sum: number; count: number }>();
 
@@ -113,7 +116,7 @@ export default function SpO2ChartClient({
     });
 
     if (period === '1week' || period === '1month') {
-      const allDays = eachDayOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allDays = eachDayOfInterval({ start: effectiveDateRange.startDate, end: effectiveDateRange.endDate });
       const dataByDate = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
         const dateKey = format(item.date, 'yyyy-MM-dd');
@@ -133,7 +136,7 @@ export default function SpO2ChartClient({
     }
 
     if (period === '6months' || period === '1year') {
-      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allMonths = eachMonthOfInterval({ start: effectiveDateRange.startDate, end: effectiveDateRange.endDate });
       const dataByMonth = new Map<string, number>();
       Array.from(dataMap.values()).forEach(item => {
         const monthKey = getMonthKey(item.date);
@@ -158,7 +161,7 @@ export default function SpO2ChartClient({
         date: item.date,
         spo2: item.count > 0 ? Math.round((item.sum / item.count) * 10) / 10 : null,
       }));
-  }, [spo2Records, period, dateRange]);
+  }, [spo2Records, period, dateRange, zoomedDateRange]);
 
   const spo2Domain = useMemo(() => {
     const values = chartData.map(d => d.spo2).filter((v): v is number => v !== null && v !== undefined);
@@ -242,8 +245,8 @@ export default function SpO2ChartClient({
             modifierKey: null,
             threshold: 10,
           },
-          onPanStart: ({ chart }: { chart: any }) => {
-            console.log('[SpO2Chart] ===== onPanStart called =====');
+          onPanStart: () => {
+            // Pan started
           },
           zoom: {
             wheel: {
@@ -295,70 +298,28 @@ export default function SpO2ChartClient({
             }
           },
           onPanComplete: ({ chart }: { chart: any }) => {
-            console.log('[SpO2Chart] ===== onPanComplete called =====');
-            console.log('[SpO2Chart] Chart:', !!chart, 'onZoomChange:', !!onZoomChange);
-            
             if (!chart || !onZoomChange) {
-              console.log('[SpO2Chart] Missing chart or onZoomChange, returning');
               return;
             }
             
-            const scales = chart.scales;
-            const xScale = scales.x;
+            const xScale = chart.scales?.x;
             if (!xScale) {
-              console.log('[SpO2Chart] No xScale found');
               return;
             }
             
-            // Get the panned range
-            let min = xScale.min;
-            let max = xScale.max;
+            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
             
-            console.log('[SpO2Chart] xScale min/max:', { 
-              min, 
-              max, 
-              minType: typeof min, 
-              maxType: typeof max 
-            });
-            
-            // Convert to Date objects
-            let startDate: Date;
-            let endDate: Date;
-            
-            if (typeof min === 'number') {
-              startDate = new Date(min);
-            } else if (min instanceof Date) {
-              startDate = min;
-            } else if (typeof min === 'string') {
-              startDate = new Date(min);
-            } else {
-              console.log('[SpO2Chart] Invalid min value:', min);
-              return;
-            }
-            
-            if (typeof max === 'number') {
-              endDate = new Date(max);
-            } else if (max instanceof Date) {
-              endDate = max;
-            } else if (typeof max === 'string') {
-              endDate = new Date(max);
-            } else {
-              console.log('[SpO2Chart] Invalid max value:', max);
-              return;
-            }
-            
-            // Check if dates are valid
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[SpO2Chart] Pan complete, calling onZoomChange:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-              });
-              onZoomChange(startDate, endDate);
-            } else {
-              console.log('[SpO2Chart] Invalid dates:', { startDate, endDate });
+            if (min !== null && max !== null) {
+              const startDate = new Date(min);
+              const endDate = new Date(max);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                onZoomChange(startDate, endDate);
+              }
             }
           },
-          onPan: ({ chart }: { chart: any }) => {
+          onPan: () => {
             console.log('[SpO2Chart] onPan event fired');
           },
         },

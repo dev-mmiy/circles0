@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import type { BloodPressureRecord } from '@/lib/api/bloodPressureRecords';
 import type { HeartRateRecord } from '@/lib/api/heartRateRecords';
@@ -95,6 +95,7 @@ interface VitalChartsProps {
   spo2Records: SpO2Record[];
   onZoomChange?: (startDate: Date, endDate: Date) => void;
   onPeriodChange?: () => void;
+  onDateRangeChange?: (dateRange: { startDate: Date; endDate: Date }) => void;
   zoomedDateRange?: { startDate: Date; endDate: Date } | null;
 }
 
@@ -109,6 +110,7 @@ export default function VitalCharts({
   spo2Records,
   onZoomChange,
   onPeriodChange,
+  onDateRangeChange,
   zoomedDateRange,
 }: VitalChartsProps) {
   const t = useTranslations('daily');
@@ -117,6 +119,25 @@ export default function VitalCharts({
 
   // Calculate date range based on period
   const dateRange = useChartDateRange(period, weekOffset);
+  
+  // 実際の表示日付範囲を決定（zoomedDateRangeが優先）
+  const effectiveDateRange = useMemo(() => {
+    return zoomedDateRange || dateRange;
+  }, [zoomedDateRange, dateRange]);
+  
+  // 日付範囲が変更されたときに親に通知
+  // weekOffsetやperiodが変更されたときだけ呼ぶ（zoomedDateRangeの変更はonZoomChangeで処理される）
+  useEffect(() => {
+    // zoomedDateRangeが設定されている場合は、onZoomChangeで処理されるためスキップ
+    if (zoomedDateRange) {
+      return;
+    }
+    
+    if (onDateRangeChange) {
+      onDateRangeChange(dateRange);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [weekOffset, period]); // dateRangeはweekOffsetとperiodに依存しているため、依存配列から除外
 
   // チャートのナビゲーション関数（全期間共通）
   const goToPreviousPeriod = () => {

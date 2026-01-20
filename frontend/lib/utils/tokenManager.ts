@@ -60,10 +60,6 @@ export async function getAccessToken(
   if (!forceRefresh) {
     const cached = getCachedToken();
     if (cached) {
-      debugLog.log('[tokenManager] Using cached token', {
-        cacheAge: tokenExpiry ? Date.now() - (tokenExpiry - TOKEN_CACHE_DURATION) : 0,
-        timestamp: new Date().toISOString(),
-      });
       return cached;
     }
   }
@@ -78,22 +74,15 @@ export async function getAccessToken(
     if (tokenCache === tokenValue || !tokenExpiry || Date.now() < tokenExpiry) {
       tokenCache = tokenValue;
       tokenExpiry = Date.now() + TOKEN_CACHE_DURATION;
-      debugLog.log('[tokenManager] Using token from API client', {
-        timestamp: new Date().toISOString(),
-      });
       return tokenValue;
     } else {
       // Token in API client is different or expired, clear it
-      debugLog.log('[tokenManager] Token in API client is expired or different, clearing', {
-        timestamp: new Date().toISOString(),
-      });
       delete apiClient.defaults.headers.common['Authorization'];
     }
   }
 
   // If a request is already in progress, reuse that promise
   if (tokenPromise) {
-    debugLog.log('[tokenManager] Reusing existing token request');
     try {
       const token = await tokenPromise;
       return token;
@@ -105,9 +94,6 @@ export async function getAccessToken(
   }
 
   // Start new token request with retry logic
-  debugLog.log('[tokenManager] Starting new token request', {
-    timestamp: new Date().toISOString(),
-  });
   const newTokenPromise = (async () => {
     const maxRetries = 2; // 2 retries = 3 total attempts (balanced: reliability vs server load)
     const initialRetryDelay = 1000; // 1 second for first retry
@@ -118,12 +104,6 @@ export async function getAccessToken(
       const startTime = Date.now(); // Move startTime outside try block for catch block access
 
       try {
-        debugLog.log('[tokenManager] Calling getAccessTokenSilently...', {
-          attempt,
-          maxRetries,
-          timeout: TOKEN_TIMEOUT,
-          timestamp: new Date().toISOString(),
-        });
 
         // If this is a retry after a "Missing Refresh Token" error, ignore cache
         const ignoreCache = attempt > 1 && (lastError?.message?.includes('Missing Refresh Token') || lastError?.error === 'Missing Refresh Token');
@@ -211,13 +191,6 @@ export async function getAccessToken(
             clearTimeout(timeoutId);
           }
         }
-        const elapsed = Date.now() - startTime;
-        debugLog.log('[tokenManager] Token retrieved successfully', {
-          elapsed,
-          tokenLength: token?.length,
-          attempt,
-          timestamp: new Date().toISOString(),
-        });
         setToken(token);
         return token;
       } catch (error: any) {

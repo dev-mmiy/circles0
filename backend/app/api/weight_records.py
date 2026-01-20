@@ -2,7 +2,8 @@
 API endpoints for weight records.
 """
 
-from typing import List
+from datetime import datetime
+from typing import List, Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -73,12 +74,14 @@ async def create_weight_record(
 async def get_my_weight_records(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(20, ge=1, le=100, description="Maximum number of records to return"),
+    start_date: Optional[datetime] = Query(None, description="Start date (ISO 8601)"),
+    end_date: Optional[datetime] = Query(None, description="End date (ISO 8601)"),
     db: Session = Depends(get_db),
     current_user: dict = Depends(get_current_user),
 ):
     """Get weight records for the current user."""
     user_id = get_user_id_from_token(db, current_user)
-    records = WeightRecordService.get_user_records(db, user_id, skip, limit)
+    records = WeightRecordService.get_user_records(db, user_id, skip, limit, start_date, end_date)
     return records
 
 

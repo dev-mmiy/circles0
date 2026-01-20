@@ -56,6 +56,7 @@ const VitalCharts = dynamic(
   }
 );
 import type { VitalRecordGroup } from '@/types/vitalRecords';
+import { useChartDateRange, type DateRange } from '@/hooks/useChartDateRange';
 
 type ViewMode = 'calendar' | 'list' | 'chart';
 type Period = '1week' | '1month' | '6months' | '1year';
@@ -104,7 +105,18 @@ export default function DailyPage() {
   >('all');
   const [chartPeriod, setChartPeriod] = useState<Period>(getStoredChartPeriod);
   const [zoomedDateRange, setZoomedDateRange] = useState<{ startDate: Date; endDate: Date } | null>(null);
+  const [chartDateRange, setChartDateRange] = useState<DateRange | null>(null);
   const dataRefreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 初期日付範囲を計算（useChartDateRangeはフックなので直接呼び出す）
+  const initialDateRange = useChartDateRange(chartPeriod, 0);
+  
+  // 初期表示時に日付範囲を設定
+  useEffect(() => {
+    if (viewMode === 'chart' && !chartDateRange) {
+      setChartDateRange(initialDateRange);
+    }
+  }, [viewMode, chartDateRange, initialDateRange]);
   
   // Store refresh functions in refs to avoid useEffect re-runs
   const refreshBPRef = useRef<() => Promise<void>>();
@@ -114,6 +126,13 @@ export default function DailyPage() {
   const refreshBodyFatRef = useRef<() => Promise<void>>();
   const refreshBGRef = useRef<() => Promise<void>>();
   const refreshSpO2Ref = useRef<() => Promise<void>>();
+
+  // 実際に使用する日付範囲を決定
+  // zoomedDateRangeが最優先、次にchartDateRange、最後にinitialDateRange
+  const effectiveDateRange = useMemo(() => {
+    const range = zoomedDateRange || chartDateRange || initialDateRange;
+    return range || { startDate: new Date(), endDate: new Date() };
+  }, [zoomedDateRange, chartDateRange, initialDateRange]);
 
   // Load blood pressure records
   const {
@@ -127,10 +146,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getBloodPressureRecords(skip, limit, token);
+        const items = await getBloodPressureRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
@@ -148,10 +173,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getHeartRateRecords(skip, limit, token);
+        const items = await getHeartRateRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
@@ -169,10 +200,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getTemperatureRecords(skip, limit, token);
+        const items = await getTemperatureRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100,
     autoLoad: false,
@@ -190,10 +227,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getWeightRecords(skip, limit, token);
+        const items = await getWeightRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100,
     autoLoad: false,
@@ -211,10 +254,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getBodyFatRecords(skip, limit, token);
+        const items = await getBodyFatRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100,
     autoLoad: false,
@@ -232,10 +281,16 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getBloodGlucoseRecords(skip, limit, token);
+        const items = await getBloodGlucoseRecords(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100,
     autoLoad: false,
@@ -253,22 +308,57 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
-        const items = await getSpO2Records(skip, limit, token);
+        const items = await getSpO2Records(
+          skip,
+          limit,
+          token,
+          effectiveDateRange?.startDate,
+          effectiveDateRange?.endDate
+        );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
     ),
     pageSize: 100,
     autoLoad: false,
   });
 
-  // Filter records by zoomed date range
+  // Store refresh functions in refs
+  useEffect(() => {
+    refreshBPRef.current = refreshBP;
+  }, [refreshBP]);
+  
+  useEffect(() => {
+    refreshHRRef.current = refreshHR;
+  }, [refreshHR]);
+  
+  useEffect(() => {
+    refreshTempRef.current = refreshTemp;
+  }, [refreshTemp]);
+  
+  useEffect(() => {
+    refreshWeightRef.current = refreshWeight;
+  }, [refreshWeight]);
+  
+  useEffect(() => {
+    refreshBodyFatRef.current = refreshBodyFat;
+  }, [refreshBodyFat]);
+  
+  useEffect(() => {
+    refreshBGRef.current = refreshBG;
+  }, [refreshBG]);
+  
+  useEffect(() => {
+    refreshSpO2Ref.current = refreshSpO2;
+  }, [refreshSpO2]);
+
+  // Filter records by effective date range (for client-side filtering if needed)
+  // Note: This is mainly for backward compatibility. The API should already filter by date range.
   const filterByDateRange = useCallback(<T extends { recorded_at: string }>(
     records: T[],
     dateRange: { startDate: Date; endDate: Date } | null
   ): T[] => {
     if (!dateRange) {
-      console.log('[DailyPage] No zoomed date range, returning all records:', records.length);
       return records;
     }
     
@@ -276,99 +366,24 @@ export default function DailyPage() {
     const endDateOnly = new Date(dateRange.endDate.getFullYear(), dateRange.endDate.getMonth(), dateRange.endDate.getDate());
     endDateOnly.setHours(23, 59, 59, 999); // Include the entire end date
     
-    console.log('[DailyPage] Filtering records:', {
-      totalRecords: records.length,
-      dateRange: {
-        start: startDateOnly.toISOString(),
-        end: endDateOnly.toISOString(),
-      },
-    });
-    
-    const filtered = records.filter(record => {
+    return records.filter(record => {
       const recordDate = parseISO(record.recorded_at);
       const recordDateOnly = new Date(recordDate.getFullYear(), recordDate.getMonth(), recordDate.getDate());
       return recordDateOnly >= startDateOnly && recordDateOnly <= endDateOnly;
     });
-    
-    console.log('[DailyPage] Filtered records count:', filtered.length);
-    return filtered;
   }, []);
 
   // Filter records by zoomed date range
-  const filteredBloodPressureRecords = useMemo(
-    () => filterByDateRange(bloodPressureRecords, zoomedDateRange),
-    [bloodPressureRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredHeartRateRecords = useMemo(
-    () => filterByDateRange(heartRateRecords, zoomedDateRange),
-    [heartRateRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredTemperatureRecords = useMemo(
-    () => filterByDateRange(temperatureRecords, zoomedDateRange),
-    [temperatureRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredWeightRecords = useMemo(
-    () => filterByDateRange(weightRecords, zoomedDateRange),
-    [weightRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredBodyFatRecords = useMemo(
-    () => filterByDateRange(bodyFatRecords, zoomedDateRange),
-    [bodyFatRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredBloodGlucoseRecords = useMemo(
-    () => filterByDateRange(bloodGlucoseRecords, zoomedDateRange),
-    [bloodGlucoseRecords, zoomedDateRange, filterByDateRange]
-  );
-  const filteredSpO2Records = useMemo(
-    () => filterByDateRange(spo2Records, zoomedDateRange),
-    [spo2Records, zoomedDateRange, filterByDateRange]
-  );
+  // Note: We don't need to filter records here because the API already filters by date range.
+  // These filtered records are kept for backward compatibility but should match the API results.
+  const filteredBloodPressureRecords = bloodPressureRecords;
+  const filteredHeartRateRecords = heartRateRecords;
+  const filteredTemperatureRecords = temperatureRecords;
+  const filteredWeightRecords = weightRecords;
+  const filteredBodyFatRecords = bodyFatRecords;
+  const filteredBloodGlucoseRecords = bloodGlucoseRecords;
+  const filteredSpO2Records = spo2Records;
 
-  // Debug: Log filtered records count
-  useEffect(() => {
-    console.log('[DailyPage] ===== Record counts updated =====');
-    console.log('[DailyPage] Zoomed date range:', zoomedDateRange ? {
-      start: zoomedDateRange.startDate.toISOString(),
-      end: zoomedDateRange.endDate.toISOString(),
-    } : 'null (showing all records)');
-    console.log('[DailyPage] Record counts:', {
-      bloodPressure: { 
-        total: bloodPressureRecords.length, 
-        filtered: filteredBloodPressureRecords.length,
-        sampleDates: bloodPressureRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      heartRate: { 
-        total: heartRateRecords.length, 
-        filtered: filteredHeartRateRecords.length,
-        sampleDates: heartRateRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      temperature: { 
-        total: temperatureRecords.length, 
-        filtered: filteredTemperatureRecords.length,
-        sampleDates: temperatureRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      weight: { 
-        total: weightRecords.length, 
-        filtered: filteredWeightRecords.length,
-        sampleDates: weightRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      bodyFat: { 
-        total: bodyFatRecords.length, 
-        filtered: filteredBodyFatRecords.length,
-        sampleDates: bodyFatRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      bloodGlucose: { 
-        total: bloodGlucoseRecords.length, 
-        filtered: filteredBloodGlucoseRecords.length,
-        sampleDates: bloodGlucoseRecords.slice(0, 3).map(r => r.recorded_at),
-      },
-      spo2: { 
-        total: spo2Records.length, 
-        filtered: filteredSpO2Records.length,
-        sampleDates: spo2Records.slice(0, 3).map(r => r.recorded_at),
-      },
-    });
-  }, [zoomedDateRange, bloodPressureRecords.length, filteredBloodPressureRecords.length, heartRateRecords.length, filteredHeartRateRecords.length, temperatureRecords.length, filteredTemperatureRecords.length, weightRecords.length, filteredWeightRecords.length, bodyFatRecords.length, filteredBodyFatRecords.length, bloodGlucoseRecords.length, filteredBloodGlucoseRecords.length, spo2Records.length, filteredSpO2Records.length]);
 
   // Group records by date (yyyy-MM-dd) for calendar view
   const recordsByDate = useMemo(() => {
@@ -581,173 +596,70 @@ export default function DailyPage() {
   // Reset zoomed date range when chart period changes
   useEffect(() => {
     setZoomedDateRange(null);
-  }, [chartPeriod]);
-
-  // Trigger data refresh when zoomedDateRange changes (after debounce)
+    setChartDateRange(initialDateRange);
+  }, [chartPeriod, initialDateRange]);
+  
+  // effectiveDateRangeが変更されたときにデータを再取得
+  // 注意: これは初期ロード時にも発火する可能性があるため、viewModeとisAuthenticatedをチェック
   useEffect(() => {
-    if (!zoomedDateRange) {
+    // 初期ロード時や、チャートビューでない場合はスキップ
+    if (!isAuthenticated || authLoading || viewMode !== 'chart') {
       return;
     }
-
-    // Clear any existing timeout
-    if (dataRefreshTimeoutRef.current) {
-      clearTimeout(dataRefreshTimeoutRef.current);
+    
+    // refresh関数が設定されていることを確認
+    if (!refreshBPRef.current || !refreshHRRef.current || !refreshTempRef.current) {
+      return;
     }
-
-    // Set up debounced data refresh
-    console.log('[DailyPage] Setting timeout for data fetch (500ms delay)');
-    dataRefreshTimeoutRef.current = setTimeout(async () => {
-      console.log('[DailyPage] ===== Starting data fetch for zoomed date range =====');
-      console.log('[DailyPage] Date range:', {
-        startDate: zoomedDateRange.startDate.toISOString(),
-        endDate: zoomedDateRange.endDate.toISOString(),
-      });
-
-      // Reload data for the new date range
-      if (isAuthenticated && user && !authLoading) {
-        const startTime = Date.now();
-        try {
-          console.log('[DailyPage] Fetching blood pressure records...');
-          if (refreshBPRef.current) {
-            await refreshBPRef.current();
-            console.log('[DailyPage] ✓ Blood pressure records fetched');
-          } else {
-            console.warn('[DailyPage] refreshBPRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching heart rate records...');
-          if (refreshHRRef.current) {
-            await refreshHRRef.current();
-            console.log('[DailyPage] ✓ Heart rate records fetched');
-          } else {
-            console.warn('[DailyPage] refreshHRRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching temperature records...');
-          if (refreshTempRef.current) {
-            await refreshTempRef.current();
-            console.log('[DailyPage] ✓ Temperature records fetched');
-          } else {
-            console.warn('[DailyPage] refreshTempRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching weight records...');
-          if (refreshWeightRef.current) {
-            await refreshWeightRef.current();
-            console.log('[DailyPage] ✓ Weight records fetched');
-          } else {
-            console.warn('[DailyPage] refreshWeightRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching body fat records...');
-          if (refreshBodyFatRef.current) {
-            await refreshBodyFatRef.current();
-            console.log('[DailyPage] ✓ Body fat records fetched');
-          } else {
-            console.warn('[DailyPage] refreshBodyFatRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching blood glucose records...');
-          if (refreshBGRef.current) {
-            await refreshBGRef.current();
-            console.log('[DailyPage] ✓ Blood glucose records fetched');
-          } else {
-            console.warn('[DailyPage] refreshBGRef.current is not set');
-          }
-
-          console.log('[DailyPage] Fetching SpO2 records...');
-          if (refreshSpO2Ref.current) {
-            await refreshSpO2Ref.current();
-            console.log('[DailyPage] ✓ SpO2 records fetched');
-          } else {
-            console.warn('[DailyPage] refreshSpO2Ref.current is not set');
-          }
-
-          const elapsed = Date.now() - startTime;
-          console.log('[DailyPage] ===== All data fetched successfully in', elapsed, 'ms =====');
-        } catch (error) {
-          console.error('[DailyPage] ===== Failed to fetch data =====');
-          console.error('[DailyPage] Error:', error);
-          console.error('[DailyPage] Error details:', {
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-          });
-        }
-      } else {
-        console.warn('[DailyPage] Cannot fetch data - auth check failed:', {
-          isAuthenticated,
-          hasUser: !!user,
-          authLoading,
-        });
+    
+    // データを再取得
+    const refreshAllData = async () => {
+      // 認証チェック
+      if (!isAuthenticated || !user || authLoading) {
+        return;
       }
-    }, 500); // Debounce 500ms
-
-    // Cleanup function
-    return () => {
-      if (dataRefreshTimeoutRef.current) {
-        clearTimeout(dataRefreshTimeoutRef.current);
-        dataRefreshTimeoutRef.current = null;
+      
+      try {
+        await Promise.all([
+          refreshBPRef.current?.(),
+          refreshHRRef.current?.(),
+          refreshTempRef.current?.(),
+          refreshWeightRef.current?.(),
+          refreshBodyFatRef.current?.(),
+          refreshBGRef.current?.(),
+          refreshSpO2Ref.current?.(),
+        ]);
+      } catch (error) {
+        console.error('[DailyPage] Error during data refresh:', error);
       }
     };
-  }, [zoomedDateRange, isAuthenticated, user, authLoading]);
+    
+    refreshAllData();
+  }, [effectiveDateRange, isAuthenticated, user, authLoading, viewMode]);
+
+  // zoomedDateRangeが変更されたときのデータ再取得は、effectiveDateRangeの変更を監視するuseEffectに統合済み
+  // effectiveDateRangeはzoomedDateRangeを含むため、zoomedDateRangeが変更されると自動的にeffectiveDateRangeも更新される
 
   // Load records when component mounts
   useEffect(() => {
     if (isAuthenticated && user && !authLoading) {
-      console.log('[DailyPage] ===== Initial data load =====');
-      console.log('[DailyPage] Auth state:', { isAuthenticated, hasUser: !!user, authLoading });
-      
       // Load all vital records
       const loadAll = async () => {
-        const startTime = Date.now();
         try {
-          console.log('[DailyPage] Starting initial data load...');
-          
-          console.log('[DailyPage] Calling refreshBP()...');
-          await refreshBP();
-          console.log('[DailyPage] refreshBP() completed');
-          
-          console.log('[DailyPage] Calling refreshHR()...');
-          await refreshHR();
-          console.log('[DailyPage] refreshHR() completed');
-          
-          console.log('[DailyPage] Calling refreshTemp()...');
-          await refreshTemp();
-          console.log('[DailyPage] refreshTemp() completed');
-          
-          console.log('[DailyPage] Calling refreshWeight()...');
-          await refreshWeight();
-          console.log('[DailyPage] refreshWeight() completed');
-          
-          console.log('[DailyPage] Calling refreshBodyFat()...');
-          await refreshBodyFat();
-          console.log('[DailyPage] refreshBodyFat() completed');
-          
-          console.log('[DailyPage] Calling refreshBG()...');
-          await refreshBG();
-          console.log('[DailyPage] refreshBG() completed');
-          
-          console.log('[DailyPage] Calling refreshSpO2()...');
-          await refreshSpO2();
-          console.log('[DailyPage] refreshSpO2() completed');
-          
-          const elapsed = Date.now() - startTime;
-          console.log('[DailyPage] Initial data load completed in', elapsed, 'ms');
+          await Promise.all([
+            refreshBP(),
+            refreshHR(),
+            refreshTemp(),
+            refreshWeight(),
+            refreshBodyFat(),
+            refreshBG(),
+            refreshSpO2(),
+          ]);
         } catch (error) {
           console.error('[DailyPage] Failed to load records:', error);
-          console.error('[DailyPage] Error details:', {
-            message: error instanceof Error ? error.message : String(error),
-            stack: error instanceof Error ? error.stack : undefined,
-          });
         }
       };
       loadAll();
-    } else {
-      console.log('[DailyPage] Skipping initial data load - auth not ready:', {
-        isAuthenticated,
-        hasUser: !!user,
-        authLoading,
-      });
     }
   }, [
     isAuthenticated,
@@ -1004,86 +916,14 @@ export default function DailyPage() {
             bloodGlucoseRecords={filteredBloodGlucoseRecords}
             spo2Records={filteredSpO2Records}
             zoomedDateRange={zoomedDateRange}
+            onDateRangeChange={(dateRange) => {
+              setChartDateRange(dateRange);
+            }}
             onZoomChange={(startDate, endDate) => {
-              console.log('[DailyPage] ===== User zoom/drag event =====');
-              console.log('[DailyPage] Date range:', { 
-                startDate: startDate.toISOString(), 
-                endDate: endDate.toISOString() 
-              });
-              
-              // Immediately update zoomedDateRange to keep chart position
-              // This will trigger the useEffect that handles data refresh
               setZoomedDateRange({ startDate, endDate });
             }}
-            onPeriodChange={async () => {
-              console.log('[DailyPage] ===== Period changed via arrow buttons =====');
-              
-              // Log current record counts before refresh
-              const beforeCounts = {
-                bloodPressure: bloodPressureRecords.length,
-                heartRate: heartRateRecords.length,
-                temperature: temperatureRecords.length,
-                weight: weightRecords.length,
-                bodyFat: bodyFatRecords.length,
-                bloodGlucose: bloodGlucoseRecords.length,
-                spo2: spo2Records.length,
-              };
-              console.log('[DailyPage] Record counts BEFORE refresh:', beforeCounts);
-              
-              // Reload data when period changes via arrow buttons
-              if (isAuthenticated && user && !authLoading) {
-                console.log('[DailyPage] Starting data refresh...', {
-                  isAuthenticated,
-                  hasUser: !!user,
-                  authLoading,
-                });
-                
-                const startTime = Date.now();
-                try {
-                  console.log('[DailyPage] Calling refreshBP()...');
-                  await refreshBP();
-                  console.log('[DailyPage] refreshBP() completed');
-                  
-                  console.log('[DailyPage] Calling refreshHR()...');
-                  await refreshHR();
-                  console.log('[DailyPage] refreshHR() completed');
-                  
-                  console.log('[DailyPage] Calling refreshTemp()...');
-                  await refreshTemp();
-                  console.log('[DailyPage] refreshTemp() completed');
-                  
-                  console.log('[DailyPage] Calling refreshWeight()...');
-                  await refreshWeight();
-                  console.log('[DailyPage] refreshWeight() completed');
-                  
-                  console.log('[DailyPage] Calling refreshBodyFat()...');
-                  await refreshBodyFat();
-                  console.log('[DailyPage] refreshBodyFat() completed');
-                  
-                  console.log('[DailyPage] Calling refreshBG()...');
-                  await refreshBG();
-                  console.log('[DailyPage] refreshBG() completed');
-                  
-                  console.log('[DailyPage] Calling refreshSpO2()...');
-                  await refreshSpO2();
-                  console.log('[DailyPage] refreshSpO2() completed');
-                  
-                  const elapsed = Date.now() - startTime;
-                  console.log('[DailyPage] All refresh operations completed in', elapsed, 'ms');
-                } catch (error) {
-                  console.error('[DailyPage] Failed to reload records after period change:', error);
-                  console.error('[DailyPage] Error details:', {
-                    message: error instanceof Error ? error.message : String(error),
-                    stack: error instanceof Error ? error.stack : undefined,
-                  });
-                }
-              } else {
-                console.warn('[DailyPage] Cannot refresh data - auth check failed:', {
-                  isAuthenticated,
-                  hasUser: !!user,
-                  authLoading,
-                });
-              }
+            onPeriodChange={() => {
+              // Note: Data refresh will be triggered automatically when effectiveDateRange changes
             }}
           />
         )}

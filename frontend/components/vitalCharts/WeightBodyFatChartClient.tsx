@@ -95,6 +95,9 @@ export default function WeightBodyFatChartClient({
     const fatFiltered = bodyFatRecords;
     const isMonthlyView = period === '6months' || period === '1year';
     const isDailyView = period === '1week' || period === '1month';
+    
+    // Use zoomedDateRange if set, otherwise use dateRange
+    const effectiveDateRange = zoomedDateRange || dateRange;
 
     // Create a map to aggregate data by date
     const dataMap = new Map<string, { date: Date; weight?: number; bodyFat?: number; weightCount: number; fatCount: number }>();
@@ -175,7 +178,7 @@ export default function WeightBodyFatChartClient({
     }
 
     if (period === '6months' || period === '1year') {
-      const allMonths = eachMonthOfInterval({ start: dateRange.startDate, end: dateRange.endDate });
+      const allMonths = eachMonthOfInterval({ start: effectiveDateRange.startDate, end: effectiveDateRange.endDate });
       const dataByMonth = new Map<string, { weight?: number; bodyFat?: number }>();
       Array.from(dataMap.values()).forEach(item => {
         const monthKey = getMonthKey(item.date);
@@ -204,7 +207,7 @@ export default function WeightBodyFatChartClient({
         weight: item.weight ?? null,
         bodyFat: item.bodyFat ?? null,
       }));
-  }, [weightRecords, bodyFatRecords, period, dateRange]);
+  }, [weightRecords, bodyFatRecords, period, dateRange, zoomedDateRange]);
 
   // Calculate weight Y-axis domain
   const weightDomain = useMemo(() => {
@@ -336,8 +339,8 @@ export default function WeightBodyFatChartClient({
             modifierKey: null,
             threshold: 10,
           },
-          onPanStart: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== onPanStart called =====');
+          onPanStart: () => {
+            // Pan started
           },
           zoom: {
             wheel: {
@@ -349,103 +352,47 @@ export default function WeightBodyFatChartClient({
             mode: 'x' as const,
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== User zoom complete =====');
-            
             if (!chart || !onZoomChange) {
               return;
             }
             
-            const scales = chart.scales;
-            const xScale = scales.x;
+            const xScale = chart.scales?.x;
             if (!xScale) {
               return;
             }
             
-            // Get the zoomed range - for time scale, min/max are typically numbers (timestamps)
-            let min = xScale.min;
-            let max = xScale.max;
+            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
             
-            // Convert to Date objects
-            let startDate: Date;
-            let endDate: Date;
-            
-            if (typeof min === 'number') {
-              startDate = new Date(min);
-            } else if (min instanceof Date) {
-              startDate = min;
-            } else if (typeof min === 'string') {
-              startDate = new Date(min);
-            } else {
-              return;
-            }
-            
-            if (typeof max === 'number') {
-              endDate = new Date(max);
-            } else if (max instanceof Date) {
-              endDate = max;
-            } else if (typeof max === 'string') {
-              endDate = new Date(max);
-            } else {
-              return;
-            }
-            
-            // Check if dates are valid
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[WeightBodyFatChart] Calling onZoomChange after user zoom:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-              });
-              onZoomChange(startDate, endDate);
+            if (min !== null && max !== null) {
+              const startDate = new Date(min);
+              const endDate = new Date(max);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                onZoomChange(startDate, endDate);
+              }
             }
           },
           onPanComplete: ({ chart }: { chart: any }) => {
-            console.log('[WeightBodyFatChart] ===== User pan complete (drag) =====');
-            
             if (!chart || !onZoomChange) {
               return;
             }
             
-            const scales = chart.scales;
-            const xScale = scales.x;
+            const xScale = chart.scales?.x;
             if (!xScale) {
               return;
             }
             
-            // Get the panned range
-            let min = xScale.min;
-            let max = xScale.max;
+            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
             
-            // Convert to Date objects
-            let startDate: Date;
-            let endDate: Date;
-            
-            if (typeof min === 'number') {
-              startDate = new Date(min);
-            } else if (min instanceof Date) {
-              startDate = min;
-            } else if (typeof min === 'string') {
-              startDate = new Date(min);
-            } else {
-              return;
-            }
-            
-            if (typeof max === 'number') {
-              endDate = new Date(max);
-            } else if (max instanceof Date) {
-              endDate = max;
-            } else if (typeof max === 'string') {
-              endDate = new Date(max);
-            } else {
-              return;
-            }
-            
-            // Check if dates are valid
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              console.log('[WeightBodyFatChart] Calling onZoomChange after user pan:', {
-                startDate: startDate.toISOString(),
-                endDate: endDate.toISOString(),
-              });
-              onZoomChange(startDate, endDate);
+            if (min !== null && max !== null) {
+              const startDate = new Date(min);
+              const endDate = new Date(max);
+              
+              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                onZoomChange(startDate, endDate);
+              }
             }
           },
         },
@@ -633,11 +580,6 @@ export default function WeightBodyFatChartClient({
                 const endDate = new Date(max);
                 
                 if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                  console.log('[WeightBodyFatChart] ===== User mouse drag complete =====');
-                  console.log('[WeightBodyFatChart] Calling onZoomChange after mouse drag:', {
-                    startDate: startDate.toISOString(),
-                    endDate: endDate.toISOString(),
-                  });
                   onZoomChange(startDate, endDate);
                 }
               }
@@ -647,39 +589,16 @@ export default function WeightBodyFatChartClient({
       };
 
       canvas.addEventListener('mousedown', handleMouseDown);
-      canvas.addEventListener('mousemove', handleMouseMove);
       canvas.addEventListener('mouseup', handleMouseUp);
       canvas.addEventListener('mouseleave', handleMouseUp);
 
       return () => {
         canvas.removeEventListener('mousedown', handleMouseDown);
-        canvas.removeEventListener('mousemove', handleMouseMove);
         canvas.removeEventListener('mouseup', handleMouseUp);
         canvas.removeEventListener('mouseleave', handleMouseUp);
       };
     }
-  }, [ChartComponents, onZoomChange]);
-
-  if (loadError) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
-        <ChartTitle
-          title={t('chart.titles.weightBodyFat')}
-          periodRange={periodTitleRange}
-          period={period}
-          weekOffset={weekOffset}
-          onPrevious={onPrevious}
-          onNext={onNext}
-        />
-        <div className="h-[300px] flex items-center justify-center">
-          <div className="text-red-600 dark:text-red-400">
-            <p>チャートの読み込みに失敗しました</p>
-            <p className="text-sm mt-2">{loadError}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  }, [chartRef, ChartComponents, onZoomChange]);
 
   if (!ChartComponents || !chartJsData || !options) {
     return (
@@ -711,12 +630,7 @@ export default function WeightBodyFatChartClient({
         onPrevious={onPrevious}
         onNext={onNext}
       />
-      <div style={{ height: '300px', position: 'relative' }}>
-        <Line ref={chartRef} data={chartJsData} options={options} />
-      </div>
-      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-        {t('chart.zoomHint') || 'ドラッグで移動、マウスホイールでズーム'}
-      </div>
+      <Line data={chartJsData} options={options} />
     </div>
   );
 }

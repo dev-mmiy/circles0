@@ -41,11 +41,22 @@ export interface UpdateBloodGlucoseRecordData {
 export async function getBloodGlucoseRecords(
   skip: number = 0,
   limit: number = 20,
-  accessToken: string
+  accessToken: string,
+  startDate?: Date,
+  endDate?: Date
 ): Promise<BloodGlucoseRecord[]> {
   const queryParams = new URLSearchParams();
   queryParams.append('skip', skip.toString());
   queryParams.append('limit', limit.toString());
+  
+  // 日付範囲パラメータを追加
+  if (startDate) {
+    queryParams.append('start_date', startDate.toISOString());
+  }
+  if (endDate) {
+    queryParams.append('end_date', endDate.toISOString());
+  }
+  
   const url = `${apiClient}/api/v1/blood-glucose-records?${queryParams.toString()}`;
 
   try {
