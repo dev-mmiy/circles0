@@ -674,6 +674,52 @@ export default function WeightBodyFatChartClient({
     }
   }, [ChartComponents, onZoomChange]);
 
+  // Hide tooltip on mobile when clicking outside chart area
+  useEffect(() => {
+    if (!chartRef.current || !ChartComponents || !chartJsData) return;
+
+    // Check if device is mobile (touch device)
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isMobile) return;
+
+    let handleOutsideClick: ((e: MouseEvent | TouchEvent) => void) | null = null;
+
+    // Use a small delay to ensure chart is fully rendered
+    const timeoutId = setTimeout(() => {
+      const chart = chartRef.current;
+      if (!chart || !chart.canvas) return;
+
+      // Get chart container - find the parent div that wraps the chart
+      const canvas = chart.canvas;
+      const chartContainer = canvas.closest('div[style*="height"]') || canvas.parentElement?.parentElement;
+      if (!chartContainer) return;
+
+      handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+        const target = e.target as HTMLElement;
+        // Check if click is outside the chart container
+        if (chartContainer && !chartContainer.contains(target)) {
+          // Hide tooltip by setting active elements to empty
+          if (chart.tooltip && chart.canvas) {
+            chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+            chart.update('none');
+          }
+        }
+      };
+
+      // Add event listeners for both mouse and touch events
+      document.addEventListener('click', handleOutsideClick, true);
+      document.addEventListener('touchend', handleOutsideClick, true);
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (handleOutsideClick) {
+        document.removeEventListener('click', handleOutsideClick, true);
+        document.removeEventListener('touchend', handleOutsideClick, true);
+      }
+    };
+  }, [ChartComponents, chartJsData]);
+
   if (!ChartComponents || !chartJsData || !options) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-2">
@@ -704,7 +750,12 @@ export default function WeightBodyFatChartClient({
         onPrevious={onPrevious}
         onNext={onNext}
       />
-      <Line data={chartJsData} options={options} />
+      <div style={{ height: '300px', position: 'relative' }}>
+        <Line ref={chartRef} data={chartJsData} options={options} />
+      </div>
+      <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+        {t('chart.zoomHint') || 'ドラッグで移動、マウスホイールでズーム'}
+      </div>
     </div>
   );
 }

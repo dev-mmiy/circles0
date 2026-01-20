@@ -305,10 +305,10 @@ export default function SpO2ChartClient({
             // Use a small delay to ensure Chart.js has updated the scale
             setTimeout(() => {
               const xScale = chart.scales?.x;
-              if (!xScale) {
-                return;
-              }
-              
+            if (!xScale) {
+              return;
+            }
+            
               const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
               const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
               
@@ -316,10 +316,10 @@ export default function SpO2ChartClient({
                 const startDate = new Date(min);
                 const endDate = new Date(max);
                 
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                  onZoomChange(startDate, endDate);
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+              onZoomChange(startDate, endDate);
                 }
-              }
+            }
             }, 50);
           },
           onPan: () => {
@@ -508,6 +508,52 @@ export default function SpO2ChartClient({
       };
     }
   }, [ChartComponents, onZoomChange]);
+
+  // Hide tooltip on mobile when clicking outside chart area
+  useEffect(() => {
+    if (!chartRef.current || !ChartComponents || !chartJsData) return;
+
+    // Check if device is mobile (touch device)
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (!isMobile) return;
+
+    let handleOutsideClick: ((e: MouseEvent | TouchEvent) => void) | null = null;
+
+    // Use a small delay to ensure chart is fully rendered
+    const timeoutId = setTimeout(() => {
+      const chart = chartRef.current;
+      if (!chart || !chart.canvas) return;
+
+      // Get chart container - find the parent div that wraps the chart
+      const canvas = chart.canvas;
+      const chartContainer = canvas.closest('div[style*="height"]') || canvas.parentElement?.parentElement;
+      if (!chartContainer) return;
+
+      handleOutsideClick = (e: MouseEvent | TouchEvent) => {
+        const target = e.target as HTMLElement;
+        // Check if click is outside the chart container
+        if (chartContainer && !chartContainer.contains(target)) {
+          // Hide tooltip by setting active elements to empty
+          if (chart.tooltip && chart.canvas) {
+            chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+            chart.update('none');
+          }
+        }
+      };
+
+      // Add event listeners for both mouse and touch events
+      document.addEventListener('click', handleOutsideClick, true);
+      document.addEventListener('touchend', handleOutsideClick, true);
+    }, 200);
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (handleOutsideClick) {
+        document.removeEventListener('click', handleOutsideClick, true);
+        document.removeEventListener('touchend', handleOutsideClick, true);
+      }
+    };
+  }, [ChartComponents, chartJsData]);
 
   if (loadError) {
     return (
