@@ -353,22 +353,25 @@ export default function BloodPressureHeartRateChartClient({
               return;
             }
             
-            const xScale = chart.scales?.x;
-            if (!xScale) {
-              return;
-            }
-            
-            const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
-            const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
-            
-            if (min !== null && max !== null) {
-              const startDate = new Date(min);
-              const endDate = new Date(max);
-              
-              if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                onZoomChange(startDate, endDate);
+            // Use a small delay to ensure Chart.js has updated the scale
+            setTimeout(() => {
+              const xScale = chart.scales?.x;
+              if (!xScale) {
+                return;
               }
-            }
+              
+              const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+              const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
+              
+              if (min !== null && max !== null) {
+                const startDate = new Date(min);
+                const endDate = new Date(max);
+                
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  onZoomChange(startDate, endDate);
+                }
+              }
+            }, 50);
           },
           zoom: {
             wheel: {
@@ -480,6 +483,7 @@ export default function BloodPressureHeartRateChartClient({
   }, [period, weekOffset, ChartComponents]);
 
   // Add event listeners to chart after it's created for drag/pan detection
+  // Supports both mouse (desktop) and touch (mobile) events
   useEffect(() => {
     if (!chartRef.current || !ChartComponents) return;
 
@@ -489,43 +493,141 @@ export default function BloodPressureHeartRateChartClient({
     const canvas = chart.canvas;
     if (canvas) {
       let isDragging = false;
+      let dragStartX = 0;
+      let panTimeoutId: NodeJS.Timeout | null = null;
 
-      const handleMouseDown = () => {
+      // Common function to check scale and call onZoomChange
+      const checkScaleAndUpdate = () => {
+        if (chart?.scales?.x && onZoomChange) {
+          const xScale = chart.scales.x;
+          const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
+          const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
+          
+          if (min !== null && max !== null) {
+            const startDate = new Date(min);
+            const endDate = new Date(max);
+            
+            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+              onZoomChange(startDate, endDate);
+            }
+          }
+        }
+      };
+
+      // Mouse events (desktop)
+      const handleMouseDown = (e: MouseEvent) => {
         isDragging = true;
+        dragStartX = e.clientX;
+      };
+
+      const handleMouseMove = (e: MouseEvent) => {
+        if (isDragging) {
+          const dragDistance = Math.abs(e.clientX - dragStartX);
+          // Only trigger if drag distance is significant (more than threshold)
+          if (dragDistance > 10) {
+            // Clear any existing timeout
+            if (panTimeoutId) {
+              clearTimeout(panTimeoutId);
+            }
+            
+            // Set a new timeout to check scale after pan
+            panTimeoutId = setTimeout(() => {
+              if (!isDragging) {
+                checkScaleAndUpdate();
+              }
+            }, 100);
+          }
+        }
       };
 
       const handleMouseUp = () => {
         if (isDragging) {
           isDragging = false;
           
-          // Wait a bit for Chart.js to update the scale after pan
+          // Clear any pending timeout
+          if (panTimeoutId) {
+            clearTimeout(panTimeoutId);
+            panTimeoutId = null;
+          }
+          
+          // Wait for Chart.js to update the scale after pan
           setTimeout(() => {
-            if (chart?.scales?.x && onZoomChange) {
-              const xScale = chart.scales.x;
-              const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
-              const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
-              
-              if (min !== null && max !== null) {
-                const startDate = new Date(min);
-                const endDate = new Date(max);
-                
-                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-                  onZoomChange(startDate, endDate);
-                }
-              }
-            }
+            checkScaleAndUpdate();
           }, 150);
         }
       };
 
+      // Touch events (mobile)
+      const handleTouchStart = (e: TouchEvent) => {
+        if (e.touches.length === 1) {
+          isDragging = true;
+          dragStartX = e.touches[0].clientX;
+        }
+      };
+
+      const handleTouchMove = (e: TouchEvent) => {
+        if (isDragging && e.touches.length === 1) {
+          const dragDistance = Math.abs(e.touches[0].clientX - dragStartX);
+          // Only trigger if drag distance is significant (more than threshold)
+          if (dragDistance > 10) {
+            // Clear any existing timeout
+            if (panTimeoutId) {
+              clearTimeout(panTimeoutId);
+            }
+            
+            // Set a new timeout to check scale after pan
+            panTimeoutId = setTimeout(() => {
+              if (!isDragging) {
+                checkScaleAndUpdate();
+              }
+            }, 100);
+          }
+        }
+      };
+
+      const handleTouchEnd = () => {
+        if (isDragging) {
+          isDragging = false;
+          
+          // Clear any pending timeout
+          if (panTimeoutId) {
+            clearTimeout(panTimeoutId);
+            panTimeoutId = null;
+          }
+          
+          // Wait for Chart.js to update the scale after pan
+          setTimeout(() => {
+            checkScaleAndUpdate();
+          }, 150);
+        }
+      };
+
+      // Add mouse event listeners
       canvas.addEventListener('mousedown', handleMouseDown);
+      canvas.addEventListener('mousemove', handleMouseMove);
       canvas.addEventListener('mouseup', handleMouseUp);
       canvas.addEventListener('mouseleave', handleMouseUp);
 
+      // Add touch event listeners
+      canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
+      canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+      canvas.addEventListener('touchend', handleTouchEnd);
+      canvas.addEventListener('touchcancel', handleTouchEnd);
+
       return () => {
+        if (panTimeoutId) {
+          clearTimeout(panTimeoutId);
+        }
+        // Remove mouse event listeners
         canvas.removeEventListener('mousedown', handleMouseDown);
+        canvas.removeEventListener('mousemove', handleMouseMove);
         canvas.removeEventListener('mouseup', handleMouseUp);
         canvas.removeEventListener('mouseleave', handleMouseUp);
+        // Remove touch event listeners
+        canvas.removeEventListener('touchstart', handleTouchStart);
+        canvas.removeEventListener('touchmove', handleTouchMove);
+        canvas.removeEventListener('touchend', handleTouchEnd);
+        canvas.removeEventListener('touchcancel', handleTouchEnd);
       };
     }
   }, [ChartComponents, onZoomChange]);

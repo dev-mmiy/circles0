@@ -634,8 +634,19 @@ export default function DailyPage() {
       }
     };
     
-    refreshAllData();
-  }, [effectiveDateRange, isAuthenticated, user, authLoading, viewMode]);
+    // zoomedDateRangeが変更された場合は即座に更新（デバウンスなし）
+    // それ以外の場合は少し待つ（初期ロード時の連続更新を防ぐ）
+    if (zoomedDateRange) {
+      refreshAllData();
+    } else {
+      // デバウンスを短く（100ms）して、初期ロード時の連続更新を防ぐ
+      const timeoutId = setTimeout(() => {
+        refreshAllData();
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [effectiveDateRange, isAuthenticated, user, authLoading, viewMode, zoomedDateRange]);
 
   // zoomedDateRangeが変更されたときのデータ再取得は、effectiveDateRangeの変更を監視するuseEffectに統合済み
   // effectiveDateRangeはzoomedDateRangeを含むため、zoomedDateRangeが変更されると自動的にeffectiveDateRangeも更新される
