@@ -135,6 +135,8 @@ export default function DailyPage() {
   }, [zoomedDateRange, chartDateRange, initialDateRange]);
 
   // Load blood pressure records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: bloodPressureRecords = [],
     isLoading: isLoadingBP,
@@ -146,22 +148,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getBloodPressureRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
 
   // Load heart rate records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: heartRateRecords = [],
     isLoading: isLoadingHR,
@@ -173,22 +181,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getHeartRateRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100, // Load more records to group by time
     autoLoad: false,
   });
 
   // Load temperature records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: temperatureRecords = [],
     isLoading: isLoadingTemp,
@@ -200,22 +214,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getTemperatureRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100,
     autoLoad: false,
   });
 
   // Load weight records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: weightRecords = [],
     isLoading: isLoadingWeight,
@@ -227,22 +247,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getWeightRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100,
     autoLoad: false,
   });
 
   // Load body fat records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: bodyFatRecords = [],
     isLoading: isLoadingBodyFat,
@@ -254,22 +280,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getBodyFatRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100,
     autoLoad: false,
   });
 
   // Load blood glucose records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: bloodGlucoseRecords = [],
     isLoading: isLoadingBG,
@@ -281,22 +313,28 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getBloodGlucoseRecords(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100,
     autoLoad: false,
   });
 
   // Load SpO2 records
+  // For calendar view: load all records (no date range filter)
+  // For chart view: load records filtered by effectiveDateRange
   const {
     items: spo2Records = [],
     isLoading: isLoadingSpO2,
@@ -308,16 +346,20 @@ export default function DailyPage() {
           throw new Error('Authentication required');
         }
         const token = await getAccessTokenSilently();
+        // For calendar view, don't filter by date range
+        // For chart view, use effectiveDateRange
+        const startDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.startDate;
+        const endDate = viewMode === 'calendar' ? undefined : effectiveDateRange?.endDate;
         const items = await getSpO2Records(
           skip,
           limit,
           token,
-          effectiveDateRange?.startDate,
-          effectiveDateRange?.endDate
+          startDate,
+          endDate
         );
         return { items };
       },
-      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange]
+      [isAuthenticated, user, getAccessTokenSilently, effectiveDateRange, viewMode]
     ),
     pageSize: 100,
     autoLoad: false,
@@ -599,6 +641,36 @@ export default function DailyPage() {
     setChartDateRange(initialDateRange);
   }, [chartPeriod, initialDateRange]);
   
+  // Load data when viewMode changes to calendar (load all records without date filter)
+  useEffect(() => {
+    if (!isAuthenticated || authLoading || viewMode !== 'calendar') {
+      return;
+    }
+    
+    // Refresh all data when switching to calendar view to load all records
+    if (refreshBPRef.current && refreshHRRef.current && refreshTempRef.current) {
+      const refreshAllData = async () => {
+        if (!isAuthenticated || !user || authLoading) {
+          return;
+        }
+        try {
+          await Promise.all([
+            refreshBPRef.current?.(),
+            refreshHRRef.current?.(),
+            refreshTempRef.current?.(),
+            refreshWeightRef.current?.(),
+            refreshBodyFatRef.current?.(),
+            refreshBGRef.current?.(),
+            refreshSpO2Ref.current?.(),
+          ]);
+        } catch (error) {
+          console.error('[DailyPage] Error during calendar data refresh:', error);
+        }
+      };
+      refreshAllData();
+    }
+  }, [viewMode, isAuthenticated, user, authLoading]);
+
   // effectiveDateRangeが変更されたときにデータを再取得
   // 注意: これは初期ロード時にも発火する可能性があるため、viewModeとisAuthenticatedをチェック
   useEffect(() => {
