@@ -17,6 +17,11 @@ export const metadata: Metadata = {
   description: 'A platform for people with diseases to connect and share experiences',
 };
 
+/** Explicitly declare valid [locale] values so /ja and /en always resolve. */
+export function generateStaticParams() {
+  return routing.locales.map(locale => ({ locale }));
+}
+
 export default async function LocaleLayout({
   children,
   params: { locale },

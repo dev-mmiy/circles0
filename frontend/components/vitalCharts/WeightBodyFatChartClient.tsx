@@ -350,6 +350,11 @@ export default function WeightBodyFatChartClient({
               enabled: true,
             },
             mode: 'x' as const,
+            limits: {
+              x: {
+                minRange: 86400000, // 1日（ミリ秒）- 最小ズーム範囲
+              },
+            },
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
             if (!chart || !onZoomChange) {
@@ -365,8 +370,22 @@ export default function WeightBodyFatChartClient({
             const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
             
             if (min !== null && max !== null) {
-              const startDate = new Date(min);
-              const endDate = new Date(max);
+              // 範囲が広がりすぎないように制限（最小1日は保証）
+              const minRange = 86400000; // 1日（ミリ秒）
+              const range = max - min;
+              
+              let clampedMin = min;
+              let clampedMax = max;
+              
+              // 最小範囲を保証
+              if (range < minRange) {
+                const center = (min + max) / 2;
+                clampedMin = center - minRange / 2;
+                clampedMax = center + minRange / 2;
+              }
+              
+              const startDate = new Date(clampedMin);
+              const endDate = new Date(clampedMax);
               
               if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
                 onZoomChange(startDate, endDate);

@@ -252,7 +252,9 @@
     "authenticationRequired": "Authentication is required to perform this action.",
     "createDiseaseFailed": "Failed to create disease.",
     "vitalMeasurementRequired": "Please enter at least one measurement value.",
-    "bloodPressureOrHeartRateRequired": "Please enter either blood pressure or heart rate."
+    "bloodPressureOrHeartRateRequired": "Please enter either blood pressure or heart rate.",
+    "staleOrReloadTitle": "Page failed to load",
+    "staleOrReloadMessage": "This can happen after the page has been open for a while. Try: ① Click \"Retry\" ② Reload the page (F5) ③ If that doesn't help, do a hard reload (Windows: Ctrl+Shift+R / Mac: Cmd+Shift+R) ④ If it still fails, clear your browser cache or try again later."
   },
   "auth": {
     "login": "Login",

@@ -102,6 +102,7 @@ class User(Base):
     )
     last_login_at = Column(DateTime(timezone=True), nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    deleted_at = Column(DateTime(timezone=True), nullable=True)
 
     # リレーション
     # Note: Use 'user_diseases' relationship defined in disease.py to avoid conflicts

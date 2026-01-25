@@ -24,6 +24,13 @@ from app.models import (  # noqa: F401
     User,
 )
 from app.models.post import SavedPost  # noqa: F401
+from app.models.blood_pressure_record import BloodPressureRecord  # noqa: F401
+from app.models.heart_rate_record import HeartRateRecord  # noqa: F401
+from app.models.temperature_record import TemperatureRecord  # noqa: F401
+from app.models.weight_record import WeightRecord  # noqa: F401
+from app.models.body_fat_record import BodyFatRecord  # noqa: F401
+from app.models.blood_glucose_record import BloodGlucoseRecord  # noqa: F401
+from app.models.spo2_record import SpO2Record  # noqa: F401
 
 # Get test database URL from environment variable or use default
 # Default to test database on PostgreSQL (works both locally and in Docker)

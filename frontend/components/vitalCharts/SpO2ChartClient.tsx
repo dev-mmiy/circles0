@@ -256,6 +256,11 @@ export default function SpO2ChartClient({
               enabled: true,
             },
             mode: 'x' as const,
+            limits: {
+              x: {
+                minRange: 86400000, // 1日（ミリ秒）- 最小ズーム範囲
+              },
+            },
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
             if (!chart || !onZoomChange) return;
@@ -292,9 +297,22 @@ export default function SpO2ChartClient({
               return;
             }
             
-            // Check if dates are valid
+            // Check if dates are valid and ensure minimum range
             if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              onZoomChange(startDate, endDate);
+              const minRange = 86400000; // 1日（ミリ秒）
+              const range = endDate.getTime() - startDate.getTime();
+              
+              let clampedStart = startDate;
+              let clampedEnd = endDate;
+              
+              // 最小範囲を保証
+              if (range < minRange) {
+                const center = (startDate.getTime() + endDate.getTime()) / 2;
+                clampedStart = new Date(center - minRange / 2);
+                clampedEnd = new Date(center + minRange / 2);
+              }
+              
+              onZoomChange(clampedStart, clampedEnd);
             }
           },
           onPanComplete: ({ chart }: { chart: any }) => {
@@ -305,10 +323,10 @@ export default function SpO2ChartClient({
             // Use a small delay to ensure Chart.js has updated the scale
             setTimeout(() => {
               const xScale = chart.scales?.x;
-            if (!xScale) {
-              return;
-            }
-            
+              if (!xScale) {
+                return;
+              }
+              
               const min = typeof xScale.min === 'number' ? xScale.min : (typeof xScale.min === 'string' ? new Date(xScale.min).getTime() : null);
               const max = typeof xScale.max === 'number' ? xScale.max : (typeof xScale.max === 'string' ? new Date(xScale.max).getTime() : null);
               
@@ -316,10 +334,10 @@ export default function SpO2ChartClient({
                 const startDate = new Date(min);
                 const endDate = new Date(max);
                 
-            if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              onZoomChange(startDate, endDate);
+                if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
+                  onZoomChange(startDate, endDate);
                 }
-            }
+              }
             }, 50);
           },
           onPan: () => {

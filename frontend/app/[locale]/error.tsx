@@ -4,6 +4,12 @@ import { useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/routing';
 
+/** clientModules や ppr など、Next.js の内部キャッシュずれで出る再読み込みで解消するエラーか */
+function isStaleOrInternalPageError(error: Error | null): boolean {
+  const m = error?.message ?? '';
+  return m.includes('clientModules') || m.includes("'ppr')");
+}
+
 export default function Error({
   error,
   reset,
@@ -14,9 +20,12 @@ export default function Error({
   const t = useTranslations('errors');
 
   useEffect(() => {
-    // Log the error to an error reporting service
     console.error('Application error:', error);
   }, [error]);
+
+  const useStaleMessage = isStaleOrInternalPageError(error);
+  const title = useStaleMessage ? t('staleOrReloadTitle') : t('server');
+  const message = useStaleMessage ? t('staleOrReloadMessage') : (error.message || t('general'));
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -36,8 +45,8 @@ export default function Error({
             />
           </svg>
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">{t('server')}</h1>
-        <p className="text-gray-600 mb-6">{error.message || t('general')}</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">{title}</h1>
+        <p className="text-gray-600 mb-6">{message}</p>
         <div className="flex gap-4 justify-center">
           <button
             onClick={reset}

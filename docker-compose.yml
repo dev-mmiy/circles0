@@ -69,5 +69,26 @@ services:
       - ./frontend:/app
       - /app/node_modules
 
+  # Admin Frontend (work.lifry.com / localhost:3002) - Development
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile
+      target: development
+    container_name: disease-community-frontend-admin
+    ports:
+      - "3002:3002"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - NODE_ENV=development
+      - NEXT_PUBLIC_AUTH0_DOMAIN=dev-2mqgvitlgxdwl5ea.us.auth0.com
+      - NEXT_PUBLIC_AUTH0_CLIENT_ID=YGlRudHFYDfkcMZSgamI9PIrhPsFsLmD
+      - NEXT_PUBLIC_AUTH0_AUDIENCE=https://api.disease-community.com
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend-admin:/app
+      - /app/node_modules
+
 volumes:
   postgres_data:

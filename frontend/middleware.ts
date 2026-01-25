@@ -1,15 +1,8 @@
 import createMiddleware from 'next-intl/middleware';
 import { routing } from './i18n/routing';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 
-const intlMiddleware = createMiddleware({
-  ...routing,
-  // Always use locale prefix
-  localePrefix: 'always',
-
-  // Disable automatic locale detection based on Accept-Language header
-  localeDetection: false,
-});
+const intlMiddleware = createMiddleware(routing);
 
 export default function middleware(request: NextRequest) {
   const response = intlMiddleware(request);

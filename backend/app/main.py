@@ -42,6 +42,9 @@ from app.api.body_fat_records import router as body_fat_records_router
 from app.api.blood_glucose_records import router as blood_glucose_records_router
 from app.api.spo2_records import router as spo2_records_router
 from app.api.timeline import router as timeline_router
+from app.api.admin.audit import router as admin_audit_router
+from app.api.admin.stats import router as admin_stats_router
+from app.api.admin.users import router as admin_users_router
 
 # Try to import push subscriptions router (optional - requires pywebpush)
 try:
@@ -141,6 +144,8 @@ if ENVIRONMENT in ["development", "test"]:
             "http://127.0.0.1:3000",
             "http://localhost:3001",
             "http://127.0.0.1:3001",
+            "http://localhost:3002",
+            "http://127.0.0.1:3002",
         ]
     )
 else:
@@ -148,6 +153,8 @@ else:
     allowed_origins = [
         "https://lifry.com",
         "http://lifry.com",
+        "https://work.lifry.com",
+        "http://work.lifry.com",
         "https://disease-community-frontend-508246122017.asia-northeast1.run.app",
         "https://disease-community-frontend-dev-508246122017.asia-northeast1.run.app",
     ]
@@ -358,6 +365,11 @@ if PUSH_SUBSCRIPTIONS_AVAILABLE:
         prefix="/api/v1/push-subscriptions",
         tags=["push-subscriptions"],
     )
+
+# Admin (work.lifry.com)
+app.include_router(admin_audit_router, prefix="/api/v1/admin")
+app.include_router(admin_stats_router, prefix="/api/v1/admin")
+app.include_router(admin_users_router, prefix="/api/v1/admin")
 
 
 @app.get("/")

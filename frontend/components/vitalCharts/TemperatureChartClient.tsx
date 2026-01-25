@@ -253,6 +253,11 @@ export default function TemperatureChartClient({
               enabled: true,
             },
             mode: 'x' as const,
+            limits: {
+              x: {
+                minRange: 86400000, // 1日（ミリ秒）- 最小ズーム範囲
+              },
+            },
           },
           onZoomComplete: ({ chart }: { chart: any }) => {
             if (!chart || !onZoomChange) return;
@@ -289,9 +294,22 @@ export default function TemperatureChartClient({
               return;
             }
             
-            // Check if dates are valid
+            // Check if dates are valid and ensure minimum range
             if (!isNaN(startDate.getTime()) && !isNaN(endDate.getTime())) {
-              onZoomChange(startDate, endDate);
+              const minRange = 86400000; // 1日（ミリ秒）
+              const range = endDate.getTime() - startDate.getTime();
+              
+              let clampedStart = startDate;
+              let clampedEnd = endDate;
+              
+              // 最小範囲を保証
+              if (range < minRange) {
+                const center = (startDate.getTime() + endDate.getTime()) / 2;
+                clampedStart = new Date(center - minRange / 2);
+                clampedEnd = new Date(center + minRange / 2);
+              }
+              
+              onZoomChange(clampedStart, clampedEnd);
             }
           },
           onPanComplete: ({ chart }: { chart: any }) => {

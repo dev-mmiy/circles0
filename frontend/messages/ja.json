@@ -252,7 +252,9 @@
     "authenticationRequired": "この操作を実行するにはログインが必要です。",
     "createDiseaseFailed": "疾患の作成に失敗しました。",
     "vitalMeasurementRequired": "少なくとも1つの測定値を入力してください。",
-    "bloodPressureOrHeartRateRequired": "血圧または心拍数のいずれかを入力してください。"
+    "bloodPressureOrHeartRateRequired": "血圧または心拍数のいずれかを入力してください。",
+    "staleOrReloadTitle": "ページの読み込みに失敗しました",
+    "staleOrReloadMessage": "しばらく時間が経ってから開いた場合に発生することがあります。次の手順を試してください：①「再試行」をクリック ② ページを再読み込み（F5）③ 改善しない場合はハードリロード（Windows: Ctrl+Shift+R / Mac: Cmd+Shift+R）④ それでも解決しない場合は、ブラウザのキャッシュを削除するか、時間をおいて再度アクセスしてください。"
   },
   "auth": {
     "login": "ログイン",
