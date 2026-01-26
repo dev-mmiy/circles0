@@ -42,7 +42,7 @@ python-jose[cryptography]==3.4.0
 ecdsa==0.19.1
 pyjwt[crypto]==2.10.1
 fastapi-users[sqlalchemy]==15.0.3
-python-multipart==0.0.21
+python-multipart==0.0.22
 
 # Web Push API
 pywebpush==1.14.0
