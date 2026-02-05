@@ -88,9 +88,10 @@ export default function AuthButton() {
   }, [isLoading, isAuthenticated, user, error]);
 
   // デバッグ用ログ（開発環境のみ）
+  // "Invalid state" は Auth0 の認証フロー中に一時的に発生する正常なエラーなのでログに出力しない
   if (process.env.NODE_ENV === 'development') {
-    // Only log in development mode
-    if (error) {
+    // Only log in development mode, excluding "Invalid state" which is expected during auth flow
+    if (error && !error.message?.includes('Invalid state')) {
       console.log('[AuthButton] Error state:', {
         message: error.message,
         name: error.name,
