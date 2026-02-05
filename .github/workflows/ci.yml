@@ -274,5 +274,7 @@ jobs:
         echo "✅ Backend is healthy"
         curl -f -L https://disease-community-frontend-508246122017.asia-northeast1.run.app/ja > /dev/null || exit 1
         echo "✅ Frontend is accessible"
-        curl -f -L https://disease-community-frontend-admin-508246122017.asia-northeast1.run.app > /dev/null || exit 1
-        echo "✅ Admin frontend is accessible"
+        # Admin は未認証で 403 を返すため、200 または 403 を「稼働中」とみなす
+        ADMIN_CODE=$(curl -s -o /dev/null -w "%{http_code}" -L https://disease-community-frontend-admin-508246122017.asia-northeast1.run.app)
+        if [ "$ADMIN_CODE" != "200" ] && [ "$ADMIN_CODE" != "403" ]; then echo "❌ Admin frontend returned $ADMIN_CODE"; exit 1; fi
+        echo "✅ Admin frontend is accessible (HTTP $ADMIN_CODE)"
