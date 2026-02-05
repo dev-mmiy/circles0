@@ -178,6 +178,23 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
+    - name: Build and push frontend-admin image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./frontend-admin
+        push: true
+        target: runner
+        build-args: |
+          NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app
+          NEXT_PUBLIC_AUTH0_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH0_DOMAIN }}
+          NEXT_PUBLIC_AUTH0_CLIENT_ID=${{ secrets.NEXT_PUBLIC_AUTH0_CLIENT_ID }}
+          NEXT_PUBLIC_AUTH0_AUDIENCE=${{ secrets.NEXT_PUBLIC_AUTH0_AUDIENCE }}
+        tags: |
+          gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend-admin:${{ github.sha }}
+          gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend-admin:latest
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
   # Stage 5: デプロイメント（main, developのみ）
   deploy:
     name: Deploy to Cloud Run
@@ -235,6 +252,20 @@ jobs:
           --allow-unauthenticated \
           --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,NEXT_PUBLIC_AUTH0_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH0_DOMAIN }},NEXT_PUBLIC_AUTH0_CLIENT_ID=${{ secrets.NEXT_PUBLIC_AUTH0_CLIENT_ID }},NEXT_PUBLIC_AUTH0_AUDIENCE=${{ secrets.NEXT_PUBLIC_AUTH0_AUDIENCE }},NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://disease-community-frontend-508246122017.asia-northeast1.run.app/callback"
 
+        # 管理サイト（frontend-admin）デプロイ
+        gcloud run deploy disease-community-frontend-admin \
+          --image gcr.io/${{ env.PROJECT_ID }}/disease-community-frontend-admin:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --port 8080 \
+          --timeout 60 \
+          --memory 512Mi \
+          --cpu 1 \
+          --max-instances 2 \
+          --min-instances 0 \
+          --allow-unauthenticated \
+          --set-env-vars="NEXT_PUBLIC_API_URL=https://disease-community-api-508246122017.asia-northeast1.run.app,NEXT_PUBLIC_AUTH0_DOMAIN=${{ secrets.NEXT_PUBLIC_AUTH0_DOMAIN }},NEXT_PUBLIC_AUTH0_CLIENT_ID=${{ secrets.NEXT_PUBLIC_AUTH0_CLIENT_ID }},NEXT_PUBLIC_AUTH0_AUDIENCE=${{ secrets.NEXT_PUBLIC_AUTH0_AUDIENCE }},NEXT_PUBLIC_AUTH0_REDIRECT_URI=https://disease-community-frontend-admin-508246122017.asia-northeast1.run.app/callback"
+
     - name: Health Check
       run: |
         echo "🔍 Testing deployed services..."
@@ -243,3 +274,5 @@ jobs:
         echo "✅ Backend is healthy"
         curl -f -L https://disease-community-frontend-508246122017.asia-northeast1.run.app/ja > /dev/null || exit 1
         echo "✅ Frontend is accessible"
+        curl -f -L https://disease-community-frontend-admin-508246122017.asia-northeast1.run.app > /dev/null || exit 1
+        echo "✅ Admin frontend is accessible"
