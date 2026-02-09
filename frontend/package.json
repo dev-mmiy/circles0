@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@auth0/auth0-react": "^2.11.0",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "chart.js": "^4.5.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "chartjs-plugin-zoom": "^2.2.0",
