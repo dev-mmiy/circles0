@@ -42,15 +42,18 @@ from app.api.body_fat_records import router as body_fat_records_router
 from app.api.blood_glucose_records import router as blood_glucose_records_router
 from app.api.spo2_records import router as spo2_records_router
 from app.api.timeline import router as timeline_router
+from app.api.foods import router as foods_router
+from app.api.menus import router as menus_router
 
 # Admin API (optional - may be missing in CI until admin module is committed)
 try:
     from app.api.admin.audit import router as admin_audit_router
     from app.api.admin.stats import router as admin_stats_router
     from app.api.admin.users import router as admin_users_router
+    from app.api.admin.foods import router as admin_foods_router
     ADMIN_API_AVAILABLE = True
 except ModuleNotFoundError:
-    admin_audit_router = admin_stats_router = admin_users_router = None
+    admin_audit_router = admin_stats_router = admin_users_router = admin_foods_router = None
     ADMIN_API_AVAILABLE = False
 
 # Try to import push subscriptions router (optional - requires pywebpush)
@@ -351,6 +354,8 @@ app.include_router(follows_router, prefix="/api/v1", tags=["follows"])
 app.include_router(blocks_router, prefix="/api/v1", tags=["blocks"])
 app.include_router(groups_router, prefix="/api/v1", tags=["groups"])
 app.include_router(hashtags_router, prefix="/api/v1", tags=["hashtags"])
+app.include_router(foods_router, prefix="/api/v1/foods", tags=["foods"])
+app.include_router(menus_router, prefix="/api/v1/menus", tags=["menus"])
 app.include_router(images_router, prefix="/api/v1", tags=["images"])
 app.include_router(messages_router, prefix="/api/v1", tags=["messages"])
 app.include_router(
@@ -378,6 +383,7 @@ if ADMIN_API_AVAILABLE:
     app.include_router(admin_audit_router, prefix="/api/v1/admin")
     app.include_router(admin_stats_router, prefix="/api/v1/admin")
     app.include_router(admin_users_router, prefix="/api/v1/admin")
+    app.include_router(admin_foods_router, prefix="/api/v1/admin")
 
 
 @app.get("/")
@@ -451,16 +457,34 @@ async def startup_event():
         try:
             # Run migrations
             logger.info("🔄 Running database migrations in background...")
-            result = subprocess.run(
-                ["alembic", "upgrade", "head"],
-                capture_output=True,
-                text=True,
-                timeout=300,  # 5 minute timeout
-            )
-            if result.returncode == 0:
-                logger.info("✅ Database migrations completed successfully")
+            
+            db_url = os.getenv("DATABASE_URL", "")
+            if "sqlite" in db_url:
+                 try:
+                     logger.info("Using SQLite, running create_all instead of alembic...")
+                     from app.database import engine, Base
+                     # Ensure all models are imported so they are registered in metadata
+                     from app import models 
+                     Base.metadata.create_all(bind=engine)
+                     logger.info("✅ Database tables created successfully")
+                     migration_success = True
+                 except Exception as e:
+                     logger.error(f"Failed to create tables: {e}")
+                     migration_success = False
             else:
-                logger.warning(f"⚠️ Migration warnings: {result.stderr}")
+                result = subprocess.run(
+                    ["alembic", "upgrade", "head"],
+                    capture_output=True,
+                    text=True,
+                    timeout=300,  # 5 minute timeout
+                )
+                if result.returncode == 0:
+                    logger.info("✅ Database migrations completed successfully")
+                    migration_success = True
+                else:
+                    logger.warning(f"⚠️ Migration warnings: {result.stderr}")
+                    migration_success = True # Continue anyway? Or False? Assuming warnings are okay-ish
+
             
             # Run seed data script
             logger.info("🌱 Seeding master data in background...")

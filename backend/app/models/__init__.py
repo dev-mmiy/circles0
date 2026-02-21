@@ -4,6 +4,7 @@ SQLAlchemy models package.
 
 from app.database import Base
 
+from .admin_audit_log import AdminAuditLog
 from .block import Block
 from .disease import (
     Disease,

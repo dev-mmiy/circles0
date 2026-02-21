@@ -14,7 +14,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
+from app.utils.db_compat import GUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
 from app.database import Base

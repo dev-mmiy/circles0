@@ -14,7 +14,7 @@ from sqlalchemy import (
     String,
     Text,
 )
-from sqlalchemy.dialects.postgresql import UUID as PostgreSQLUUID
+from app.utils.db_compat import GUID as PostgreSQLUUID
 from sqlalchemy.orm import relationship
 
 from app.database import Base
@@ -39,17 +39,20 @@ class Food(Base):
         comment="null = shared food, set = user-specific food",
     )
     name = Column(String(200), nullable=False, comment="Food name (e.g., 'Rice', 'Apple')")
+    name_kana = Column(String(200), nullable=True, comment="Food name in Kana for sorting/searching")
+    search_keywords = Column(Text, nullable=True, comment="Keywords for searching (e.g., aliases)")
     category = Column(
         String(50),
         nullable=True,
         comment="Food category (e.g., 'Grains', 'Fruits', 'Vegetables')",
     )
     description = Column(Text, nullable=True, comment="Food description")
+    is_deleted = Column(Integer, nullable=False, default=0, comment="0: Active, 1: Deleted")
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     updated_at = Column(
         DateTime, nullable=False, default=datetime.utcnow, onupdate=datetime.utcnow
     )
-
+    
     # Relationships
     user = relationship("User", back_populates="foods")
     nutrition = relationship("FoodNutrition", back_populates="food", cascade="all, delete-orphan")
