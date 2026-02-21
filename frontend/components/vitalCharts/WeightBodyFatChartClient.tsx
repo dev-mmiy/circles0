@@ -490,7 +490,7 @@ export default function WeightBodyFatChartClient({
 
   // Reset zoom when period or weekOffset changes
   useEffect(() => {
-    if (chartRef.current && ChartComponents) {
+    if (chartRef.current && ChartComponents && typeof chartRef.current.resetZoom === 'function') {
       chartRef.current.resetZoom();
       prevScaleRef.current = null;
     }

@@ -148,14 +148,15 @@ describe('VitalCharts', () => {
     spo2Records: mockSpO2Records,
   };
 
-  it('should render all chart sections when data is available', () => {
+  it('should render all chart sections when data is available', async () => {
     render(<VitalCharts {...defaultProps} />);
-    
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
-    expect(screen.getByText('体重・体脂肪率')).toBeInTheDocument();
-    expect(screen.getByText('体温')).toBeInTheDocument();
-    expect(screen.getByText('血糖値')).toBeInTheDocument();
-    expect(screen.getByText('血中酸素濃度')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
+    }, { timeout: 5000 });
+    expect(screen.getByText('chart.titles.weightBodyFat')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.temperature')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodGlucose')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.spo2')).toBeInTheDocument();
   });
 
   it('should render navigation arrows for all periods', () => {
@@ -201,14 +202,14 @@ describe('VitalCharts', () => {
     render(<VitalCharts {...defaultProps} period="1week" />);
     
     // Period range should be displayed in the title
-    const titles = screen.getAllByText(/血圧・心拍数/);
+    const titles = screen.getAllByText(/chart\.titles\.bloodPressureHeartRate/);
     expect(titles.length).toBeGreaterThan(0);
   });
 
   it('should display period range in title for 1month period', () => {
     render(<VitalCharts {...defaultProps} period="1month" />);
     
-    const titles = screen.getAllByText(/血圧・心拍数/);
+    const titles = screen.getAllByText(/chart\.titles\.bloodPressureHeartRate/);
     expect(titles.length).toBeGreaterThan(0);
   });
 
@@ -238,7 +239,7 @@ describe('VitalCharts', () => {
       />
     );
     
-    const titles = screen.getAllByText(/血圧・心拍数/);
+    const titles = screen.getAllByText(/chart\.titles\.bloodPressureHeartRate/);
     expect(titles.length).toBeGreaterThan(0);
   });
 
@@ -268,7 +269,7 @@ describe('VitalCharts', () => {
       />
     );
     
-    const titles = screen.getAllByText(/血圧・心拍数/);
+    const titles = screen.getAllByText(/chart\.titles\.bloodPressureHeartRate/);
     expect(titles.length).toBeGreaterThan(0);
   });
 
@@ -306,7 +307,7 @@ describe('VitalCharts', () => {
       
       // Component should still render after navigation
       await waitFor(() => {
-        expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+        expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
       });
     }
   });
@@ -332,7 +333,7 @@ describe('VitalCharts', () => {
           fireEvent.click(rightButton);
           
           // Component should still render
-          expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+          expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
         }
       });
     }
@@ -364,7 +365,7 @@ describe('VitalCharts', () => {
     );
     
     // Component should render without errors
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
   });
 
   it('should call onDateRangeChange when date range changes', async () => {
@@ -378,7 +379,7 @@ describe('VitalCharts', () => {
     );
     
     // Component should render
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
     
     // onDateRangeChange should be called when component mounts with initial date range
     // Note: The actual implementation may call this during render or in useEffect
@@ -396,7 +397,7 @@ describe('VitalCharts', () => {
     );
     
     // Component should render
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
     
     // onZoomChange should be available for chart components
     // Note: Actual zoom events are handled by Chart.js components
@@ -420,7 +421,7 @@ describe('VitalCharts', () => {
     );
     
     // Component should render with zoomed date range
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
   });
 
   it('should handle null zoomedDateRange prop', () => {
@@ -432,7 +433,7 @@ describe('VitalCharts', () => {
     );
     
     // Component should render without zoomed date range
-    expect(screen.getByText('血圧・心拍数')).toBeInTheDocument();
+    expect(screen.getByText('chart.titles.bloodPressureHeartRate')).toBeInTheDocument();
   });
 });
 

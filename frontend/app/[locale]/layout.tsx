@@ -11,6 +11,7 @@ import { NotificationProvider } from '@/contexts/NotificationContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import ScrollHandler from '@/components/ScrollHandler';
 import ToasterProvider from '@/components/ToasterProvider';
+import QueryClientProviderWrapper from '@/contexts/QueryClientProviderWrapper';
 
 export const metadata: Metadata = {
   title: 'Lifry',
@@ -47,20 +48,22 @@ export default async function LocaleLayout({
     <>
       <ScrollHandler />
       <ThemeProvider>
-        <NextIntlClientProvider messages={messages}>
-          <Auth0ProviderWithConfig>
-            <UserProvider>
-              <DiseaseProvider>
-                <NotificationProvider>
-                  <ApiProvider>
-                    {children}
-                    <ToasterProvider />
-                  </ApiProvider>
-                </NotificationProvider>
-              </DiseaseProvider>
-            </UserProvider>
-          </Auth0ProviderWithConfig>
-        </NextIntlClientProvider>
+        <QueryClientProviderWrapper>
+          <NextIntlClientProvider messages={messages}>
+            <Auth0ProviderWithConfig>
+              <UserProvider>
+                <DiseaseProvider>
+                  <NotificationProvider>
+                    <ApiProvider>
+                      {children}
+                      <ToasterProvider />
+                    </ApiProvider>
+                  </NotificationProvider>
+                </DiseaseProvider>
+              </UserProvider>
+            </Auth0ProviderWithConfig>
+          </NextIntlClientProvider>
+        </QueryClientProviderWrapper>
       </ThemeProvider>
     </>
   );

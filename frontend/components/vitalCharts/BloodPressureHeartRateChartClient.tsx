@@ -496,7 +496,7 @@ export default function BloodPressureHeartRateChartClient({
 
   // Reset zoom when period or weekOffset changes
   useEffect(() => {
-    if (chartRef.current && ChartComponents) {
+    if (chartRef.current && ChartComponents && typeof chartRef.current.resetZoom === 'function') {
       chartRef.current.resetZoom();
     }
   }, [period, weekOffset, ChartComponents]);

@@ -398,6 +398,9 @@
       "private": "Private"
     },
     "mentions": "Mentions",
+    "healthRecord": {
+      "meal": "Meal"
+    },
     "share": {
       "share": "Share",
       "copyUrl": "Copy URL",
@@ -482,6 +485,9 @@
         "recordedAt": "Recorded At",
         "foods": "Foods",
         "items": "Items",
+        "searchPlaceholder": "Search foods and menus...",
+        "noResults": "No results found",
+        "errorLoading": "Failed to load data",
         "foodName": "Food Name",
         "amount": "Amount",
         "multiplier": "Multiplier",

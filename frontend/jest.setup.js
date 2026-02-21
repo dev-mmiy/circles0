@@ -1,5 +1,10 @@
 require('@testing-library/jest-dom');
 
+// Polyfill for Auth0 and other libs that use TextEncoder in Jest
+const { TextEncoder, TextDecoder } = require('util');
+global.TextEncoder = TextEncoder;
+global.TextDecoder = TextDecoder;
+
 // Mock next/navigation
 jest.mock('next/navigation', () => ({
   useRouter: jest.fn(() => ({

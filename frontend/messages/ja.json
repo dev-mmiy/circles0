@@ -398,6 +398,9 @@
       "private": "非公開"
     },
     "mentions": "メンション",
+    "healthRecord": {
+      "meal": "食事"
+    },
     "share": {
       "share": "シェア",
       "copyUrl": "URLをコピー",
@@ -474,14 +477,18 @@
       },
       "mealForm": {
         "mealType": "食事タイプ",
-        "selectMealType": "選択してください",
         "breakfast": "朝食",
         "lunch": "昼食",
         "dinner": "夕食",
         "snack": "間食",
+        "selectMealType": "選択してください",
         "recordedAt": "記録日時",
         "foods": "食材",
         "items": "アイテム",
+        "searchPlaceholder": "食材やメニューを検索...",
+        "noResults": "見つかりませんでした",
+        "errorLoading": "データの読み込みに失敗しました",
+        "menus": "メニュー",
         "foodName": "食材名",
         "amount": "量",
         "multiplier": "倍率",

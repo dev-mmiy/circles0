@@ -21,7 +21,7 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
   const locale = useLocale();
   const t = useTranslations('meal');
   const tHealthRecord = useTranslations('postForm.healthRecord.mealForm');
-  
+
   const dateFnsLocale = locale === 'ja' ? ja : enUS;
 
   // Get date range: today and past 30 days
@@ -40,11 +40,11 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
   // Group records by date and meal type
   const recordsByDateAndMealType = useMemo(() => {
     const map = new Map<string, Map<MealType, Post[]>>();
-    
+
     // Debug: Log all records
     console.log('[MealTimeline] All records:', records);
     console.log('[MealTimeline] Records count:', records.length);
-    
+
     records.forEach(record => {
       // Debug: Log each record
       console.log('[MealTimeline] Processing record:', {
@@ -55,30 +55,30 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
         items: record.health_record_data?.items,
         itemsLength: record.health_record_data?.items?.length || 0,
       });
-      
+
       if (record.health_record_type !== 'meal' || !record.health_record_data?.recorded_at) {
         console.log('[MealTimeline] Skipping record - not meal or no recorded_at');
         return;
       }
-      
+
       const recordDate = new Date(record.health_record_data.recorded_at);
       const dateKey = format(recordDate, 'yyyy-MM-dd');
       const mealType = record.health_record_data.meal_type as MealType;
-      
+
       console.log('[MealTimeline] Adding record to map:', { dateKey, mealType });
-      
+
       if (!map.has(dateKey)) {
         map.set(dateKey, new Map());
       }
-      
+
       const mealTypeMap = map.get(dateKey)!;
       if (!mealTypeMap.has(mealType)) {
         mealTypeMap.set(mealType, []);
       }
-      
+
       mealTypeMap.get(mealType)!.push(record);
     });
-    
+
     console.log('[MealTimeline] Final map:', Array.from(map.entries()).map(([date, mealMap]) => ({
       date,
       mealTypes: Array.from(mealMap.entries()).map(([type, posts]) => ({
@@ -86,7 +86,7 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
         count: posts.length,
       })),
     })));
-    
+
     return map;
   }, [records]);
 
@@ -113,7 +113,7 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
       {dates.map(date => {
         const dateKey = format(date, 'yyyy-MM-dd');
         const mealTypeMap = recordsByDateAndMealType.get(dateKey) || new Map();
-        
+
         return (
           <div key={dateKey} className="bg-white dark:bg-gray-800 rounded-lg shadow p-4">
             {/* Date Header */}
@@ -127,7 +127,7 @@ export default function MealTimeline({ records, onAddFood, onEditFood, onDeleteF
             <div className="space-y-4">
               {mealTypes.map(mealType => {
                 const mealRecords = mealTypeMap.get(mealType) || [];
-                
+
                 return (
                   <MealTypeSection
                     key={mealType}

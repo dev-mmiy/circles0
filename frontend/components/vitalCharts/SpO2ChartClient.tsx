@@ -392,7 +392,7 @@ export default function SpO2ChartClient({
   }, [period, spo2Domain, t, ChartComponents, onZoomChange, dateRange, zoomedDateRange]);
 
   useEffect(() => {
-    if (chartRef.current && ChartComponents) {
+    if (chartRef.current && ChartComponents && typeof chartRef.current.resetZoom === 'function') {
       chartRef.current.resetZoom();
     }
   }, [period, weekOffset, ChartComponents]);
