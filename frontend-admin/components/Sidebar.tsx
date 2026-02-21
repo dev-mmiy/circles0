@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const items = [
   { href: '/', label: 'ダッシュボード' },
   { href: '/users', label: 'ユーザー' },
+  { href: '/foods', label: '食材管理' },
   { href: '/audit', label: '監査ログ' },
 ];
 
@@ -18,11 +19,10 @@ export default function Sidebar() {
           <Link
             key={href}
             href={href}
-            className={`block px-3 py-2 rounded-md text-sm ${
-              pathname === href || (href !== '/' && pathname.startsWith(href))
+            className={`block px-3 py-2 rounded-md text-sm ${pathname === href || (href !== '/' && pathname.startsWith(href))
                 ? 'bg-gray-100 text-gray-900 font-medium'
                 : 'text-gray-600 hover:bg-gray-50'
-            }`}
+              }`}
           >
             {label}
           </Link>
