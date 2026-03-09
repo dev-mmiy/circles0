@@ -157,7 +157,7 @@ jobs:
         password: ${{ secrets.GCP_SA_KEY }}
 
     - name: Build and push backend image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v7
       with:
         context: ./backend
         push: true
@@ -168,7 +168,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Build and push frontend image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v7
       with:
         context: ./frontend
         push: true
@@ -179,7 +179,7 @@ jobs:
         cache-to: type=gha,mode=max
 
     - name: Build and push frontend-admin image
-      uses: docker/build-push-action@v5
+      uses: docker/build-push-action@v7
       with:
         context: ./frontend-admin
         push: true
